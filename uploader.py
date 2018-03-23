@@ -85,6 +85,7 @@ print """
     </html>
     """
 
+os.environ["HOME"] = "/tmp/"
 p = subprocess.Popen(["Rscript", "-e", rmark_render_cmd],\
     stdout=subprocess.PIPE, \
     stderr=subprocess.PIPE)
