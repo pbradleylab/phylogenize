@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title></title>
+  </head>
+  <body>
+    <h1 style="background-color: #6666cc;"><span style="font-family: Barlow;"><span
+          style="color: white;">Phylogenetic regression for microbiome data</span></span></h1>
+    <form name="UserUpload" action="uploader.py" method="POST" autocomplete="off"
+      style="background-color: #efffe5;" enctype="multipart/form-data"><span style="font-family: Barlow;"><br>
+      </span>
+      <ul style="background-color: #efffe5;">
+        <li><span style="font-family: Barlow;"> <strong>OTU/species table:</strong>
+            <input name="abundance_file" required="required" accept="text/tab-separated-values"
+              type="file"></span></li>
+        <li><span style="font-family: Barlow;"><strong>Metadata table: </strong><input
+              name="metadata_file" required="required" accept="text/tab-delimited-values"
+              type="file"></span></li>
+        <li><span style="font-family: Barlow;"><strong>Data type:</strong><input
+              name="dtype" required="required" value="midas" type="radio">MIDAS
+            <input name="dtype" required="required" value="OTUs" disabled="disabled"
+              type="radio">OTUs</span></li>
+        <li><span style="font-family: Barlow;"><strong>Database: </strong><input
+              name="database" value="midas_v1.0" required="required" type="radio">MIDAS
+            1.0 <input name="database" value="midas_v1.2" required="required" disabled="disabled"
+              type="radio">MIDAS 1.2 <input name="database" value="silva" required="required"
+              disabled="disabled" type="radio">SILVA</span></li>
+        <li><span style="font-family: Barlow;"><strong>Phenotype:</strong> <input
+              name="phenotype" value="prevalence" required="required" type="radio">prevalence&nbsp;
+            <input name="phenotype" value="specificity" required="required" type="radio">environmental
+            specificity score <input name="phenotype" value="provided" required="required"
+              type="radio">provided </span></li>
+        <li><span style="font-family: Barlow;"><strong>Phenotype file (if
+              provided):</strong> <input name="phenotype_file" accept="text/tab-delimited-values"
+              type="file"></span></li>
+        <li><span style=" font-family: Barlow;"><strong>Which environment:&nbsp;
+              <textarea name="which_envir" placeholder="Stool" required="required"
+rows="1" maxlength="500"></textarea></strong><br>
+          </span></li>
+        <li><span style="font-family: Barlow;"><strong>Environment prior type:</strong>
+            <input name="prior_type" value="uninformative" required="required" type="radio">uninformative
+            <input name="prior_type" value="uninformative" required="required" type="radio">alpha-diversity
+            <input name="prior_type" value="uninformative" required="required" type="radio">provided</span></li>
+        <li><span style="font-family: Barlow;"><strong>Environment prior file
+              (if provided):</strong> <input name="prior_file" accept="text/tab-delimited-values"
+              type="file"></span></li>
+        <li><span style="font-family: Barlow;"><strong>Minimum number of
+              presence/absence values per gene:</strong> <input name="minimum"
+              value="3" required="required" min="0" max="9999" type="number"></span></li>
+      </ul>
+      <span style="font-family: Barlow;"><input name="submit" value="Submit" formmethod="post"
+type="submit"></span><br>
+    </form>
+  </body>
+</html>
