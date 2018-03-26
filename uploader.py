@@ -4,10 +4,9 @@ import cgi
 import cgitb; cgitb.enable()
 import os, sys
 import uuid
-#from subprocess32 import run
-import subprocess
 from pystalkd.Beanstalkd import Connection
 import bleach
+import tempfile
 
 beanstalk = Connection(host='localhost', port=14711)
 beanstalk.use("phylogenize")
@@ -108,7 +107,7 @@ function reloadIFrame() {
 
 sys.stdout.flush()
 
-os.environ["HOME"] = "/tmp/"
+os.environ["HOME"] = tempfile.mkdtemp()
 beanstalk.put(rmark_render_cmd)
 
 #p = subprocess.Popen(["Rscript", "-e", rmark_render_cmd],\
