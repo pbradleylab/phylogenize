@@ -10,16 +10,22 @@ params:
   abundance_file: "bodysite-averaged.tab"
   metadata_file: "bodysite-metadata.tab"
   phenotype_file: ""
-  db_version: "1.0"
-  which_phenotype: "specificity"
+  db_version: "midas_v1.0"
+  which_phenotype: "prevalence"
   which_envir: "Stool"
   prior_type: "uninformative"
   prior_file: ""
   minimum: 3
 ---
 
+This report was generated automatically by [phylogenize](http://pbradley-dell/~pbradz/phylogenize/) (citation info here), with the following parameters:
+  - Type of input data: "`r params$type`"
+  - Phenotype calculated: "`r params$which_phenotype`"
+  - Environment of interest: "`r params$which_envir`"
+  - Prior probabilities for environments: "`r params$prior_type`"
 
-```{r setup}
+
+```{r setup, warning=FALSE}
 
 DDir = params$data_dir
 IDir = params$in_dir
@@ -56,7 +62,7 @@ metadata <- read.table(file.path(IDir, params$metadata_file),
 
 ```
 
-```{r calculate_phenotype, fig.width = 7, fig.height = 20}
+```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE}
 
 # Calculate the phenotype of interest
 
@@ -65,7 +71,11 @@ if (params$which_phenotype == "prevalence") {
                          params$which_envir,
                          metadata)
   phenoLimits <- quantile(unique(phenotype), c(0.2, 0.8))
-  phenoColors <- c(low.col = "black", hi.col = "orange2")
+  phenoLimitsPhylum <- lapply(trees, function(tr) {
+    phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>% na.omit
+    quantile(unique(phi), c(0.2, 0.8))
+  })
+  phenoColors <- c(low.col = "black", high.col = "orange2")
 } else if (params$which_phenotype == "specificity") {
   if (params$prior_type == "file") {
     prior.file <- read.table(file.path(IDir, params$prior_file))
@@ -78,8 +88,13 @@ if (params$which_phenotype == "prevalence") {
                   params$prior_type,
                   prior.file)
   phenotype <- ess$ess
-  phenoLimits <- c(phenoP - 1 * sd(phenotype),
-                   phenoP + 1 * sd(phenotype))
+  phenoLimitsOverall <- c(phenoP - 1 * sd(phenotype),
+                          phenoP + 1 * sd(phenotype))
+  phenoLimitsPhylum <- lapply(trees, function(tr) {
+    phi <- phenotype[intersect(names(phenotype)), tr$tip.label] %>% na.omit %>%
+      unique
+    c(phenoP - (1 * sd(phi)), phenoP + (1 * sd(phi)))
+  })
   phenoP <- logit(c(ess$priors[ess$priors$env == params$which_envir, "prior"]))
   phenoColors <- c(low.col = "slateblue",
                    mid.col = "gray50",
@@ -94,12 +109,12 @@ if (params$which_phenotype == "prevalence") {
 plotted.pheno.trees <- lapply(1:length(trees), function(tn) {
   gg.cont.tree(trees[[tn]],
                phenotype,
-               cLimits = phenoLimits,
+               cLimits = phenoLimitsPhylum[[tn]],
                colors = phenoColors,
                cName = paste0(names(trees)[tn], ": ", params$which_phenotype))
 })
 names(plotted.pheno.trees) <- names(trees)
-for (phy in names(plotted.pheno.trees)) print(plotted.pheno.trees[[phy]]$tree)
+#for (phy in names(plotted.pheno.trees)) print(plotted.pheno.trees[[phy]]$tree)
 
 write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
 

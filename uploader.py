@@ -7,6 +7,7 @@ import uuid
 #from subprocess32 import run
 import subprocess
 import beanstalkc
+import bleach
 
 beanstalk = beanstalkc.Connection(host='localhost', port=14711)
 beanstalk.use("phylogenize")
@@ -21,23 +22,23 @@ print """\
     """
 sys.stdout.flush()
 
+# store and sanitize form output
+
 form = cgi.FieldStorage()
-abd_f = form['abundance_file']
+abd_f = bleach.clean(form['abundance_file'])
 abd = abd_f.file.read()
-metad_f = form['metadata_file']
+metad_f = bleach.clean(form['metadata_file'])
 mdf = metad_f.file.read()
-dtype = form['dtype'].value
+dtype = bleach.clean(form['dtype'].value)
 db = form['database'].value
-phenotype = form['phenotype'].value
+phenotype = bleach.clean(form['phenotype'].value)
 if phenotype == "provided":
   pheno_file = [l for l in form['phenotype_file'].file.readline()]
-prior_type = form['prior_type'].value
+prior_type = bleach.clean(form['prior_type'].value)
 if prior_type == "provided":
   prior_file = [l for l in form['phenotype_file'].file.readline()]
-minimum = int(form['minimum'].value)
-which_envir = form['which_envir'].value
-
-### NOTE: got to sanitize all this
+minimum = int(bleach.clean(form['minimum'].value))
+which_envir = bleach.clean(form['which_envir'].value)
 
 # make a new random directory
 
