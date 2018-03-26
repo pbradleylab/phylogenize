@@ -10,6 +10,7 @@ library("ape")
 library("fitdistrplus")
 library("ggtree")
 library("phytools")
+library("knitr")
 
 # helper functions
 

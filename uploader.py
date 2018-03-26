@@ -6,14 +6,20 @@ import os, sys
 import uuid
 #from subprocess32 import run
 import subprocess
+import beanstalkc
+
+beanstalk = beanstalkc.Connection(host='localhost', port=14711)
+beanstalk.use("phylogenize")
 
 print "Content-Type: text/html"
 print
 print """\
     <html>
+    <head><link rel="stylesheet" href="phylo.css"> </head>
     <body>
-    <h2>Hello World!</h2>
+    <h2>Your job has been submitted</h2>
     """
+sys.stdout.flush()
 
 form = cgi.FieldStorage()
 abd_f = form['abundance_file']
@@ -25,7 +31,7 @@ db = form['database'].value
 phenotype = form['phenotype'].value
 if phenotype == "provided":
   pheno_file = [l for l in form['phenotype_file'].file.readline()]
-prior_type = form['prior_type']
+prior_type = form['prior_type'].value
 if prior_type == "provided":
   prior_file = [l for l in form['phenotype_file'].file.readline()]
 minimum = int(form['minimum'].value)
@@ -62,7 +68,7 @@ if prior_type == "provided":
     for l in prior_file:
       fh.write(l)
 
-rmark_render_cmd = "rmarkdown::render(\"plm-report-generator.Rmd\", " + \
+rmark_render_cmd = "rmarkdown::render(\"phylogenize-report.Rmd\", " + \
     "output_format = \"html_document\", " + \
     ("output_dir = \"%s\", " % (ODir)) + \
     ("params = list(type = \"%s\", " % (dtype)) + \
@@ -79,17 +85,44 @@ rmark_render_cmd = "rmarkdown::render(\"plm-report-generator.Rmd\", " + \
     ("minimum = %d " % minimum) + \
     "))"
 
-print(rmark_render_cmd)
-print """
+#print(rmark_render_cmd)
+
+print("""
+ Your output will appear <a href="./%s/output">here</a><p>
+""" % (os.path.basename(direc)))
+print("""
+<p>
+<iframe width="50%%" src="%s" frameborder=2 id="progress"></iframe>
+<script>
+window.setInterval("reloadIFrame();", 30000);
+function reloadIFrame() {
+  document.getElementById("progress").src="%s"
+}
+</script>
+<p>
     </body>
     </html>
-    """
+    """ % (os.path.join(os.path.basename(direc), "output", "progress.txt"), \
+    os.path.join(os.path.basename(direc), "output", "progress.txt")))
+
+sys.stdout.flush()
 
 os.environ["HOME"] = "/tmp/"
-p = subprocess.Popen(["Rscript", "-e", rmark_render_cmd],\
-    stdout=subprocess.PIPE, \
-    stderr=subprocess.PIPE)
-PipeOut = p.stdout
-PipeErr = p.stderr
-print(p.communicate())
+beanstalk.put(rmark_render_cmd)
 
+#p = subprocess.Popen(["Rscript", "-e", rmark_render_cmd],\
+#    stdout=subprocess.PIPE, \
+#    stderr=subprocess.PIPE)
+#PipeOut = p.stdout
+#PipeErr = p.stderr
+#
+#sys.stdout.flush()
+#
+#while True:
+#  output = p.stdout.read(1)
+#  if output == '' and p.poll() != None:
+#    break
+#  if output != '':
+#    sys.stdout.write(output)
+#    sys.stdout.write("\n")
+#    sys.stdout.flush()
