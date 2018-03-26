@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import cgi
 import cgitb; cgitb.enable()
@@ -6,20 +6,20 @@ import os, sys
 import uuid
 #from subprocess32 import run
 import subprocess
-import beanstalkc
+from pystalkd.Beanstalkd import Connection
 import bleach
 
-beanstalk = beanstalkc.Connection(host='localhost', port=14711)
+beanstalk = Connection(host='localhost', port=14711)
 beanstalk.use("phylogenize")
 
-print "Content-Type: text/html"
-print
-print """\
+print("Content-Type: text/html")
+print()
+print("""\
     <html>
     <head><link rel="stylesheet" href="phylo.css"> </head>
     <body>
     <h2>Your job has been submitted</h2>
-    """
+    """)
 sys.stdout.flush()
 
 # store and sanitize form output
@@ -88,10 +88,10 @@ rmark_render_cmd = "rmarkdown::render(\"phylogenize-report.Rmd\", " + \
 
 #print(rmark_render_cmd)
 
-print("""
+print(("""
  Your output will appear <a href="./%s/output">here</a><p>
-""" % (os.path.basename(direc)))
-print("""
+""" % (os.path.basename(direc))))
+print(("""
 <p>
 <iframe width="50%%" src="%s" frameborder=2 id="progress"></iframe>
 <script>
@@ -104,7 +104,7 @@ function reloadIFrame() {
     </body>
     </html>
     """ % (os.path.join(os.path.basename(direc), "output", "progress.txt"), \
-    os.path.join(os.path.basename(direc), "output", "progress.txt")))
+    os.path.join(os.path.basename(direc), "output", "progress.txt"))))
 
 sys.stdout.flush()
 
