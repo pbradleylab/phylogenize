@@ -62,7 +62,9 @@ metadata <- read.table(file.path(IDir, params$metadata_file),
 
 ```
 
-```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE}
+First, calculate the phenotype of interest:
+
+```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE}
 
 # Calculate the phenotype of interest
 
@@ -121,7 +123,7 @@ write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
 ```
 
 
-```{r get_associations}
+```{r get_associations, warning = FALSE, message = FALSE}
 results <- result.wrapper.plm(phyla = phyla,
                               pheno = phenotype,
                               tree = trees,
@@ -170,17 +172,35 @@ write.csv(file = file.path(ODir, "all-results.csv"),
           results.matrix)
 ```
 
-```{r gene_assoc_heat_maps}
+```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE}
 cluster.plots <- mapply(gene.presence, pos.sig.thresh, trees,
-                        FUN=function(x, y, z) {
+                        plotted.pheno.trees, names(trees),
+                        FUN=function(x, y, z, w, nt) {
   sig.bin <- x[intersect(rownames(x), y), ]
   names(dimnames(sig.bin)) <- c("gene", "id")
   clust <- hclust(dist(sig.bin, method = "binary"))
   sig.ord <- melt(t(sig.bin[clust$order, ]))
-  p <- ggtree(z, ladderize = TRUE)
-  facet_plot(p, 'heatmap', sig.ord, geom_tile,
-             aes(x = as.numeric(as.factor(gene)),
-                 fill = as.numeric(as.factor(value))))
+  col.df <- data.frame(id = names(w$disp), disp = w$disp)
+  p <- ggtree(z, ladderize = TRUE) %<+% col.df +
+    geom_tippoint(aes(color = disp, shape = '.'))
+  if (params$which_phenotype == "prevalence") {
+    p <- p + scale_color_gradient(low = w$cols["low.col"],
+                                  high = w$cols["high.col"])
+  } else if (params$which_phenotype == "specificity") {
+     p <- p + scale_color_gradient2(low = w$cols["low.col"],
+                                    mid = w$cols["mid.col"],
+                                  high = w$cols["high.col"],
+                                  midpoint = mean(w$lims))   
+  }
+  tmp <- facet_plot(p,
+                    paste0('heatmap: ', nt),
+                    sig.ord,
+                    geom_tile,
+                    aes(x = as.numeric(as.factor(gene)),
+                        fill = as.numeric(as.factor(value)))) +
+    scale_fill_gradient(low = "#000000", high = "slateblue2")
+  print(tmp)
+  return(tmp)
 }, SIMPLIFY = FALSE)
-for (cp in cluster.plots) print(cp)
+#for (cp in cluster.plots) print(cp)
 ```
