@@ -8,6 +8,10 @@ from pystalkd.Beanstalkd import Connection
 import bleach
 import tempfile
 
+def saferead(fn):
+  # this doesn't work yet
+  [bleach.clean(line) for line in fn]
+
 beanstalk = Connection(host='localhost', port=14711)
 beanstalk.use("phylogenize")
 
@@ -24,10 +28,12 @@ sys.stdout.flush()
 # store and sanitize form output
 
 form = cgi.FieldStorage()
-abd_f = bleach.clean(form['abundance_file'])
-abd = abd_f.file.read()
-metad_f = bleach.clean(form['metadata_file'])
-mdf = metad_f.file.read()
+abd_f = form['abundance_file']
+abd = abd_f.file
+#abd = saferead(abd_f)
+metad_f = form['metadata_file']
+#mdf = saferead(metad_f)
+mdf = metad_f.file
 dtype = bleach.clean(form['dtype'].value)
 db = form['database'].value
 phenotype = bleach.clean(form['phenotype'].value)
@@ -52,19 +58,19 @@ os.mkdir(direc)
 os.mkdir(IDir)
 os.mkdir(ODir)
 
-with open(os.path.join(IDir, "abundance.tab"), 'w') as fh:
+with open(os.path.join(IDir, "abundance.tab"), 'wb') as fh:
   for l in abd:
     fh.write(l)
-with open(os.path.join(IDir, "metadata.tab"), 'w') as fh:
+with open(os.path.join(IDir, "metadata.tab"), 'wb') as fh:
   for l in mdf:
     fh.write(l)
 
 if phenotype == "provided":
-  with open(os.path.join(IDir, "phenotype.tab"), 'w') as fh:
+  with open(os.path.join(IDir, "phenotype.tab"), 'wb') as fh:
     for l in pheno_file:
       fh.write(l)
 if prior_type == "provided":
-  with open(os.path.join(IDir, "prior.tab"), 'w') as fh:
+  with open(os.path.join(IDir, "prior.tab"), 'wb') as fh:
     for l in prior_file:
       fh.write(l)
 

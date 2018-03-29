@@ -19,6 +19,7 @@ params:
 ---
 
 This report was generated automatically by [phylogenize](http://pbradley-dell/~pbradz/phylogenize/) (citation info here), with the following parameters:
+
   - Type of input data: "`r params$type`"
   - Phenotype calculated: "`r params$which_phenotype`"
   - Environment of interest: "`r params$which_envir`"
@@ -90,14 +91,14 @@ if (params$which_phenotype == "prevalence") {
                   params$prior_type,
                   prior.file)
   phenotype <- ess$ess
+  phenoP <- logit(c(ess$priors[ess$priors$env == params$which_envir, "prior"]))
   phenoLimitsOverall <- c(phenoP - 1 * sd(phenotype),
                           phenoP + 1 * sd(phenotype))
   phenoLimitsPhylum <- lapply(trees, function(tr) {
-    phi <- phenotype[intersect(names(phenotype)), tr$tip.label] %>% na.omit %>%
+    phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>% na.omit %>%
       unique
     c(phenoP - (1 * sd(phi)), phenoP + (1 * sd(phi)))
   })
-  phenoP <- logit(c(ess$priors[ess$priors$env == params$which_envir, "prior"]))
   phenoColors <- c(low.col = "slateblue",
                    mid.col = "gray50",
                    high.col = "tomato")
