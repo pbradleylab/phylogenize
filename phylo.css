@@ -1,0 +1,54 @@
+body {
+font-family: Barlow, Franklin Gothic, sans-serif;
+font-size: 150%;
+max-width: 80%;
+line-height: 150%;
+font-weight: medium;
+}
+h1,h2,h3,h4,h5,h6 {
+font-family: Barlow, Franklin Gothic, sans-serif;
+font-weight: medium;
+}
+h1 {
+	background-color: #FFFFD0;
+	font-weight: bold;
+	margin: 0px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+h2 {
+	background-color: #FFFFE0;
+	font-weight: normal;
+	margin-top: 5px;
+	margin-bottom: 5px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+h3 {
+	background-color: #E0E0E0;
+	font-weight: normal;
+}
+code {
+background-color: #FFFFD0;
+width: 100%;
+display:block;
+font-family: Inconsolata, Consolas, Courier, monospace;
+font-size: 80%;
+}
+#formlabel {
+	font-weight: normal;
+	background-color: #5577AA;
+	color: #FFFFFF;
+	font-family: Barlow, Franklin Gothic, sans-serif;
+	font-size: 120%;
+	font-style: italic;
+}
+ul {
+	    list-style-type: none;
+			    margin: 0.1in;
+					    padding: 0;
+						}
+
+@media print {
+	#main { margin: 1 in; }
+}
