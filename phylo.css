@@ -43,6 +43,28 @@ font-size: 80%;
 	font-size: 120%;
 	font-style: italic;
 }
+#bigformlabel {
+	font-weight: normal;
+	color: #000000;
+	font-style: normal;
+	font-family: Barlow, Franklin Gothic, sans-serif;
+	font-size: 120%;
+	margin: 0px;
+}
+#infobox {
+	font-size: 75%;
+	line-height: 1;
+	width: 75%;
+	padding: 25px;
+	border: 1px dashed #888888;
+}
+
+#infotitle {
+	font-weight: bold;
+	background-color: #FFFF44;
+	color: #000000;
+	font-style: italic;
+}
 ul {
 	    list-style-type: none;
 			    margin: 0.1in;
@@ -52,3 +74,105 @@ ul {
 @media print {
 	#main { margin: 1 in; }
 }
+
+
+[tooltip]{
+	margin:2px 2px;
+	position:relative;
+	display:inline-block;
+}
+[tooltip]::before {
+	content: "";
+	position: absolute;
+	top:-6px;
+	left:50%;
+	transform: translateX(-50%);
+	border-width: 4px 6px 0 6px;
+	border-style: solid;
+	border-color: rgba(0,0,0,0.7) transparent transparent     transparent;
+	z-index: 99;
+	opacity:0;
+}
+
+[tooltip-position='left']::before{
+	left:0%;
+	top:50%;
+	margin-left:-12px;
+	transform:translatey(-50%) rotate(-90deg) 
+}
+[tooltip-position='top']::before{
+	left:50%;
+}
+[tooltip-position='bottom']::before{
+	top:100%;
+	margin-top:8px;
+	transform: translateX(-50%) translatey(-100%) rotate(-180deg)
+}
+[tooltip-position='right']::before{
+	left:100%;
+	top:50%;
+	margin-left:1px;
+	transform:translatey(-50%) rotate(90deg)
+}
+
+[tooltip]::after {
+	content: attr(tooltip);
+	font-style: normal;
+	line-height: 0.9;
+	position: absolute;
+	left:25%;
+	top:-6px;
+	transform: translateX(-25%)   translateY(-100%);
+	background: rgba(0,0,0,0.9);
+	text-align: center;
+	color: #fff;
+	padding:4px 2px;
+	font-size: 65%;
+	min-width: 80px;
+	border-radius: 5px;
+	pointer-events: none;
+	padding: 4px 4px;
+	z-index:99;
+	opacity:0;
+}
+
+[tooltip-type='advanced']::after{
+	background: rgba(0.8,0.5,0.5,0.9);
+}
+
+[tooltip-position='left']::after{
+	left:0%;
+	top:50%;
+	margin-left:-8px;
+	transform: translateX(-100%)   translateY(-50%);
+}
+[tooltip-position='top']::after{
+	left:50%;
+}
+[tooltip-position='bottom']::after{
+	top:100%;
+	margin-top:8px;
+	transform: translateX(-50%) translateY(0%);
+}
+[tooltip-position='right']::after{
+	left:100%;
+	top:50%;
+	margin-left:8px;
+	transform: translateX(0%)   translateY(-50%);
+}
+
+[tooltip]:hover::after,[tooltip]:hover::before {
+	opacity:1
+}
+.input{
+	margin-left:135px
+}
+
+#formlabel:hover{
+	background: #FFAA88;
+}
+
+/* Tooltip code modified from:
+    https://medium.freecodecamp.org/a-step-by-step-guide-to-making-pure-css-tooltips-3d5a3e237346
+   Thanks!
+*/
