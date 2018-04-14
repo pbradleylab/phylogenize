@@ -122,6 +122,22 @@ if (SixteenS) {
   abd.mtx <- apply(summed.uniq[, which(csu > 0)], 2, function(x) x / sum(x))
 }
 
+### Figure out how many trees to remain
+
+taxa <- rownames(abd.mtx)
+taxa.per.tree <- lapply(trees, function(tr) {
+  intersect(tr$tip.label, taxa)
+})
+saved.phyla <- nw(sapply(taxa.per.tree, length) >= 5)
+trees <- trees[saved.phyla]
+all.possible.taxa <- Reduce(union, lapply(gene.presence, colnames))
+not.observed.taxa <- setdiff(all.possible.taxa, taxa)
+taxa.zero <- matrix(rep(0, length(not.observed.taxa) * ncol(abd.mtx)), 
+  nr = length(not.observed.taxa),
+  byrow = TRUE,
+  dimnames = list(not.observed.taxa, colnames(abd.mtx)))
+abd.mtx <- rbind(abd.mtx, taxa.zero)
+
 ```
 
 First, calculate the phenotype of interest:
