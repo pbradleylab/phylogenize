@@ -82,7 +82,6 @@ if (params$type == "midas") {
 # Read abundance, metadata files
 abd.mtx <- fastread(file.path(IDir, params$abundance_file))
 metadata <- read.table(file.path(IDir, params$metadata_file),
-                       row.names = 1,
                        header = TRUE)
 if (SixteenS) {
   # write out input sequences
