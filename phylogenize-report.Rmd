@@ -10,7 +10,7 @@ params:
   abundance_file: "bodysite-averaged.tab"
   metadata_file: "bodysite-metadata.tab"
   phenotype_file: ""
-	dada2_file: ""
+  dada2_file: ""
   db_version: "midas_v1.0"
   which_phenotype: "prevalence"
   which_envir: "Stool"
@@ -282,5 +282,4 @@ cluster.plots <- mapply(gene.presence, pos.sig.thresh, trees,
   print(tmp)
   return(tmp)
 }, SIMPLIFY = FALSE)
-#for (cp in cluster.plots) print(cp)
 ```

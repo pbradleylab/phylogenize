@@ -31,16 +31,12 @@
               type="file"></li>
 				<li><span id="formlabel" tooltip="Select whether data were calculated from applying MIDAS to metagenomic data, or DADA2 to 16S data.">Data type</span> <input
               name="dtype" required="required" value="midas" type="radio" checked="checked">MIDAS
-            <input name="dtype" required="required" value="16S" disabled="disabled"
+            <input name="dtype" required="required" value="16S" 
               type="radio">16S</li>
-				<li><span id="formlabel" tooltip="Tab-separated values. Should be the output of DADA2 assignSpecies().">DADA2 mapping file</span> <input
-              name="dada2_file" accept="text/tab-delimited-values"
-              type="file"></li>
 				<li><span id="formlabel" tooltip="Select the version of the database that you used to get relative abundances.">Database</span> <input
               name="database" value="midas_v1.0" required="required" type="radio" checked="checked">MIDAS
-            1.0 <input name="database" value="midas_v1.2" required="required" disabled="disabled"
-              type="radio">MIDAS 1.2 <input name="database" value="dada2" required="required"
-              disabled="disabled" type="radio">DADA2-PATRIC</li>
+            1.0 <input name="database" value="midas_v1.2" required="required" 
+              type="radio">MIDAS 1.2</li>
 				<li><span id="formlabel" tooltip="Select whether you want to calculate prevalence or environmental specificity scores, or provide your own phenotype.">Phenotype</span> <input
               name="phenotype" value="prevalence" required="required" type="radio" checked="checked">prevalence&nbsp;
             <input name="phenotype" value="specificity" required="required" type="radio">environmental
