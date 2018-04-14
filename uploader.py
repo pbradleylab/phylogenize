@@ -35,9 +35,6 @@ metad_f = form['metadata_file']
 #mdf = saferead(metad_f)
 mdf = metad_f.file
 dtype = bleach.clean(form['dtype'].value)
-if (dtype == '16S'):
-  dd2_f = form['dada2_file']
-  dd2 = dd2_f.file
 db = form['database'].value
 phenotype = bleach.clean(form['phenotype'].value)
 if phenotype == "provided":
@@ -76,11 +73,6 @@ if prior_type == "provided":
   with open(os.path.join(IDir, "prior.tab"), 'wb') as fh:
     for l in prior_file:
       fh.write(l)
-if dtype == "16S":
-  dd2_file = [l for l in form['dada2_file'].file.readline()]
-  with open(os.path.join(IDir, "dada2.tab"), 'wb') as fh:
-    for l in dd2_file:
-      fh.write(l)
 
 rmark_render_cmd = "rmarkdown::render(\"phylogenize-report.Rmd\", " + \
     "output_format = \"html_document\", " + \
@@ -96,7 +88,6 @@ rmark_render_cmd = "rmarkdown::render(\"phylogenize-report.Rmd\", " + \
     ("which_envir = \"%s\", " % which_envir) + \
     ("prior_type = \"%s\", " % prior_type) + \
     ("prior_file = \"prior.tab\", ") + \
-    ("dada2_file = \"dada2.tab\", ") + \
     ("minimum = %d " % minimum) + \
     "))"
 
