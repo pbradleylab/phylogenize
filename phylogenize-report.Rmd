@@ -202,7 +202,7 @@ write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
 
 
 ```{r get_associations, warning = FALSE, message = FALSE}
-results <- result.wrapper.plm(phyla = phyla,
+results <- result.wrapper.plm(phyla = names(taxa),
                               pheno = phenotype,
                               tree = trees,
                               clusters = taxa,
