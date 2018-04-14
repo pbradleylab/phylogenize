@@ -228,7 +228,7 @@ pos.sig.descs <- Reduce(rbind, lapply(names(pos.sig), function(n) {
         description = gene.annot(pos.sig[[n]]))
 }))
 
-pos.sig.thresh <- mapply(trees, pos.sig, gene.presence,
+pos.sig.thresh <- mapply(trees, pos.sig, gene.presence[names(trees)],
                          FUN = function(tr, x, y) {
   y2 <- y[x, intersect(tr$tip.label, colnames(y))]
   r1 <- rowSums(y2)
@@ -251,7 +251,7 @@ write.csv(file = file.path(ODir, "all-results.csv"),
 ```
 
 ```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE}
-cluster.plots <- mapply(gene.presence, pos.sig.thresh, trees,
+cluster.plots <- mapply(gene.presence[names(trees)], pos.sig.thresh, trees,
                         plotted.pheno.trees, names(trees),
                         FUN=function(x, y, z, w, nt) {
   sig.bin <- x[intersect(rownames(x), y), ]
