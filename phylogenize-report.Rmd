@@ -17,6 +17,7 @@ params:
   prior_type: "uninformative"
   prior_file: ""
   minimum: 3
+  burst_dir: "/home/pbradz/bin/"
 ---
 
 This report was generated automatically by [phylogenize](http://pbradley-dell/~pbradz/phylogenize/) (citation info here), with the following parameters:
@@ -32,6 +33,7 @@ This report was generated automatically by [phylogenize](http://pbradley-dell/~p
 DDir = params$data_dir
 IDir = params$in_dir
 ODir = params$out_dir
+BurstDir = params$burst_dir
 
 dir.create(ODir)
 
@@ -91,7 +93,7 @@ if (SixteenS) {
     nbchar = 99999,
     as.string = TRUE)
 	# map to MIDAS IDs using Burst
-  system2("burst12", args = c("-r",
+  system2(file.path(BurstDir, "burst12"), args = c("-r",
       file.path(DDir, "16s_renamed.frn"),
       "-fr",
       "-q",
