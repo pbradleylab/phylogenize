@@ -126,14 +126,14 @@ if (SixteenS) {
 
 ### Figure out how many trees to remain
 
-taxa <- rownames(abd.mtx)
+taxa.observed <- rownames(abd.mtx)
 taxa.per.tree <- lapply(trees, function(tr) {
-  intersect(tr$tip.label, taxa)
+  intersect(tr$tip.label, taxa.observed)
 })
 saved.phyla <- nw(sapply(taxa.per.tree, length) >= 5)
 trees <- trees[saved.phyla]
 all.possible.taxa <- Reduce(union, lapply(gene.presence, colnames))
-not.observed.taxa <- setdiff(all.possible.taxa, taxa)
+not.observed.taxa <- setdiff(all.possible.taxa, taxa.observed)
 taxa.zero <- matrix(rep(0, length(not.observed.taxa) * ncol(abd.mtx)), 
   nr = length(not.observed.taxa),
   byrow = TRUE,
