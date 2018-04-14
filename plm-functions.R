@@ -11,6 +11,7 @@ library("fitdistrplus")
 library("ggtree")
 library("phytools")
 library("knitr")
+library("seqinr")
 
 # helper functions
 
