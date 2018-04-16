@@ -252,10 +252,11 @@ make.sg.enr.tables <- function(enr) {
     ))})
   )}
 
-perform.enrichments <- function(sigs, signs, results, dirxn = 1, exclude = NULL, ...) {
+perform.enrichments <- function(sigs, signs, results, mapping, dirxn = 1, exclude = NULL, ...) {
   lapply.across.names(c("strong", "med", "weak"), function(x) {
     dirxn.enrich(sigs, signs, results, siglevel = x,
-      exclude = exclude, fdr.method = fdr.bh, dirxn = dirxn, ...)
+      exclude = exclude, fdr.method = fdr.bh, dirxn = dirxn,
+      mapping = mapping, ...)
   })
 }
 

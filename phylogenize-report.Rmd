@@ -46,9 +46,6 @@ if (params$type == "midas") {
 		gene.presence <- readRDS(file.path(DDir, "MIDAS-gene-presence-1.0.rds"))
 		trees <- readRDS(file.path(DDir, "MIDAS_1.0-trees.rds"))
 		phyla <- intersect(names(trees), names(gene.presence))
-		gene.to.fxn <- fread(file.path(DDir, "family.functions"),
-			header = F)
-		colnames(gene.to.fxn) <- c("gene", "function")
 		taxonomy <- data.frame(fread(file.path(DDir,
 					"full-taxonomy.csv")),
 			stringsAsFactors = FALSE)[,-1]
@@ -77,6 +74,21 @@ if (params$type == "midas") {
 				"MIDAS_1.2-taxonomy.csv")),
 		stringsAsFactors = FALSE)[,-1]
 }
+
+gene.to.fxn <- fread(file.path(DDir, "family.functions"),
+	header = F)
+colnames(gene.to.fxn) <- c("gene", "function")
+
+fig.hierarchy <- data.frame(fread(file.path(DDir, "subsys.txt"),
+		header = F,
+	))[,1:4]
+colnames(fig.hierarchy) <-  c("level1", "level2", "level3", "function")
+
+g.mappings <- lapply.across.names(colnames(fig.hierarchy), function(x) {
+	gene.to.subsys <- merge(data.frame(gene.to.fxn),
+		fig.hierarchy[, c(x, "function")],
+		by.x = "function.", by.y = "function")[, -1]
+})
 
 # Read abundance, metadata files
 abd.mtx <- fastread(file.path(IDir, params$abundance_file))
@@ -280,4 +292,18 @@ cluster.plots <- mapply(gene.presence[names(trees)], pos.sig.thresh, trees,
   print(tmp)
   return(tmp)
 }, SIMPLIFY = FALSE)
+```
+
+Enrichment analysis
+
+
+```{r enrichment_analysis, warning = FALSE, message = FALSE}
+enrichments <- perform.enrichments(overall.sigs, 
+	overall.signs,
+	overall.results,
+	mapping = g.mappings,
+	verbose = FALSE)
+enr.table <- make.plm.enr.tables(enrichments)
+write.csv(file=file.path(ODir, "enr-table.csv"), enr.table)
+kable(enr.table)
 ```
