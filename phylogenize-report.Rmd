@@ -298,11 +298,11 @@ Enrichment analysis
 
 
 ```{r enrichment_analysis, warning = FALSE, message = FALSE}
-enrichments <- perform.enrichments(overall.sigs, 
-	overall.signs,
-	overall.results,
-	mapping = g.mappings,
-	verbose = FALSE)
+enrichments <- perform.enrichments(signif,
+    signs,
+    results,
+    mapping = g.mappings,
+    verbose = FALSE)
 enr.table <- make.plm.enr.tables(enrichments)
 write.csv(file=file.path(ODir, "enr-table.csv"), enr.table)
 kable(enr.table)
