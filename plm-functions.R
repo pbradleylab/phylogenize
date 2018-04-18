@@ -120,7 +120,7 @@ tax.annot.slow <- function(tns) {
   sapply(tns, function(tn) taxonomy$species[which(taxonomy$cluster == tn)[1]])
 }
 
-tax.annot <- function(tns) {
+tax.annot <- function(tns, taxonomy) {
   dtt <- data.table(tns)
   merge(dtt, taxonomy, by.x = colnames(dtt)[1], by.y = "cluster", all = T)[tns]$"species" %withnames% tns
 }

@@ -145,11 +145,13 @@ saved.phyla <- nw(sapply(taxa.per.tree, length) >= params$treemin)
 trees <- trees[saved.phyla]
 all.possible.taxa <- Reduce(union, lapply(gene.presence, colnames))
 not.observed.taxa <- setdiff(all.possible.taxa, taxa.observed)
+if (length(not.observed.taxa) > 0) {
 taxa.zero <- matrix(rep(0, length(not.observed.taxa) * ncol(abd.mtx)), 
   nr = length(not.observed.taxa),
   byrow = TRUE,
   dimnames = list(not.observed.taxa, colnames(abd.mtx)))
 abd.mtx <- rbind(abd.mtx, taxa.zero)
+}
 taxa <- lapply(trees, function(x) x$tip.label)
 
 ```
@@ -241,7 +243,7 @@ for (ps in plotted.pheno.subtrees) {
   rp <- ps$rphy
   tr <- ps$tree
   depth <- max(nodeHeights(rp))
-  tIDs <- tax.annot(ps$rphy$tip.label)
+  tIDs <- tax.annot(rp$tip.label, taxonomy)
   newtr <- (tr %<+% data.frame(
     label = rp$tip.label,
     label2 = tIDs
