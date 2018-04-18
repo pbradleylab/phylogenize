@@ -2,7 +2,7 @@
 title: "Phylogenetic linear modeling results"
 output: html_notebook
 params:
-  ncl: 4
+  ncl: 1
   type: "midas"
   out_dir: "output"
   in_dir: "."
@@ -29,7 +29,7 @@ This report was generated automatically by [phylogenize](http://pbradley-dell/~p
   - Prior probabilities for environments: "`r params$prior_type`"
 
 
-```{r setup, warning=FALSE, results="hide", echo=FALSE}
+```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE}
 
 DDir = params$data_dir
 IDir = params$in_dir
@@ -320,6 +320,7 @@ cluster.plots <- mapply(gene.presence[names(trees)], pos.sig.thresh, trees,
   return(tmp)
 }, SIMPLIFY = FALSE)
 ```
+
 ## Enrichment analysis
 
 This process takes the set of genes that are
