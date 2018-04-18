@@ -38,6 +38,7 @@ BurstDir = params$burst_dir
 dir.create(ODir)
 
 source("plm-functions.R")
+source("fisher-enrich.R")
 
 # Read in the correct gene presence/absence matrix and corresponding tree files
 if (params$type == "midas") {
