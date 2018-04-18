@@ -48,7 +48,7 @@ which_envir = bleach.clean(form['which_envir'].value)
 # make a new random directory
 
 while True:
-  direc = os.path.abspath(os.path.join(".", str(uuid.uuid4())))
+  direc = os.path.abspath(os.path.join("./results/", str(uuid.uuid4())))
   if not os.path.exists(direc):
     break
 
@@ -94,7 +94,7 @@ rmark_render_cmd = "rmarkdown::render(\"phylogenize-report.Rmd\", " + \
 #print(rmark_render_cmd)
 
 print(("""
- Your output will appear <a href="./%s/output">here</a><p>
+ Your output will appear <a href="./results/%s/output">here</a><p>
 """ % (os.path.basename(direc))))
 print(("""
 <p>
@@ -108,8 +108,8 @@ function reloadIFrame() {
 <p>
     </body>
     </html>
-    """ % (os.path.join(os.path.basename(direc), "output", "progress.txt"), \
-    os.path.join(os.path.basename(direc), "output", "progress.txt"))))
+    """ % (os.path.join("results", os.path.basename(direc), "output", "progress.txt"), \
+    os.path.join("results", os.path.basename(direc), "output", "progress.txt"))))
 
 sys.stdout.flush()
 
