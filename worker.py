@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import os, sys, beanstalkc
+import os, sys
 import cgi
 import uuid
 import subprocess
@@ -19,10 +19,13 @@ JobErr = [None] * MaxJobs
 JobSlots = range(MaxJobs)
 
 while True:
-  # poll for 10 seconds at a time
-  job = beanstalk.reserve(timeout = 10)
-  # find out which slots are open
+  # poll for 10 seconds at a time, but don't bother polling if no open slots
+  time.sleep(10)
   JobSlots = [i for i in range(MaxJobs) if JobList[i] == None]
+  if len(JobSlots) > 0:
+    job = beanstalk.reserve(timeout = 0)
+  else:
+    job = None
   if not job is None:
     print(("received job #%d out of %d: %s" % (JobN, MaxJobs, job.body)))
     job_file_match = re.search("output_dir = \"([^\"]*)\"", job.body)
@@ -47,8 +50,11 @@ while True:
       else:
         jdelay = 30
       with open(os.path.join(job_file, "progress.txt"), "w") as fh:
-        fh.write("Waiting for the queue to be ready.\n\n" +
-            "There are %d other jobs waiting." % place_in_line)
+        this_message = ("Waiting for the queue to be ready.\n\n" +
+            "There are %d other jobs waiting." % (place_in_line))
+        fh.write(this_message)
+        sys.stdout.write(this_message)
+        print("Delaying %d seconds" % (jdelay))
       beanstalk.put(job.body, delay = jdelay)
   for (N, sub) in enumerate(JobList):
     # Poll to see which have finished, then return them to None and clean up
@@ -56,8 +62,9 @@ while True:
       returncode = sub.poll()
       if not returncode == None:
         # job finished!
+        print("Job #%d finished - cleaning up" % (N))
         JobErr[N].close()
         JobOutput[N].close()
         JobList[N] = None
-
+  # continue forever
 
