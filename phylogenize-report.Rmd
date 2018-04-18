@@ -2,7 +2,7 @@
 title: "Phylogenetic linear modeling results"
 output: html_notebook
 params:
-  ncl: 4
+  ncl: 1
   type: "midas"
   out_dir: "output"
   in_dir: "."
