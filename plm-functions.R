@@ -122,7 +122,7 @@ tax.annot.slow <- function(tns) {
 
 tax.annot <- function(tns, taxonomy) {
   dtt <- data.table(tns)
-  merge(dtt, taxonomy, by.x = colnames(dtt)[1], by.y = "cluster", all = T)[tns]$"species" %withnames% tns
+  merge(dtt, taxonomy, by.x = colnames(dtt)[1], by.y = "cluster", all = T)[tns]$"species" %>% as.character %withnames% tns
 }
 
 # Significance testing
