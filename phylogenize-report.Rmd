@@ -244,7 +244,7 @@ for (ps in plotted.pheno.subtrees) {
   tIDs <- tax.annot(ps$rphy$tip.label)
   newtr <- (tr %<+% data.frame(
     label = rp$tip.label,
-    label2 = tIDs,
+    label2 = tIDs
   )) +
     geom_tiplab(aes(label = label2), size = 0.8) +
     ggplot2::xlim(0, (depth * 1.5))
