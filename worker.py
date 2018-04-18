@@ -11,34 +11,27 @@ import time
 
 beanstalk = Connection(host='localhost', port=14711)
 beanstalk.watch("phylogenize")
+beanstalk.use("phylogenize")
 
-MaxJobs = 1
+MaxJobs = 2
 JobList = [None] * MaxJobs
 JobOutput = [None] * MaxJobs
 JobErr = [None] * MaxJobs
+JobTitle = [None] * MaxJobs
 JobSlots = range(MaxJobs)
 
 while True:
-  # poll for 10 seconds at a time, but don't bother polling if no open slots
-  time.sleep(10)
+  # poll for 5 seconds at a time, but don't bother polling if no open slots
+  time.sleep(5)
   JobSlots = [i for i in range(MaxJobs) if JobList[i] == None]
-  if len(JobSlots) > 0:
-    job = beanstalk.reserve(timeout = 0)
-  else:
-    job = None
+  job = beanstalk.reserve(timeout = 0)
   if not job is None:
-    print(("received job #%d out of %d: %s" % (JobN, MaxJobs, job.body)))
+    print(("received job #%d out of %d: %s" % (MaxJobs - (len(JobSlots)) + 1, MaxJobs, job.body)))
     job_file_match = re.search("output_dir = \"([^\"]*)\"", job.body)
     job_file = job_file_match.group(1)
-    if len(JobSlots) > 0:
-      JobN = JobSlots[0]
-      JobOutput[JobN] = open(os.path.join(job_file, "progress.txt"), 'w')
-      JobErr[JobN] = open(os.path.join(job_file, "stderr.txt"), 'w')
-      JobList[JobN] = subprocess.Popen(["/usr/bin/Rscript", "-e", job.body],\
-          stdout=JobOutput[JobN], \
-          stderr=JobErr[JobN])
-      job.delete()
-    else:
+    job_title = os.path.basename(os.path.dirname(job_file))
+    if len(JobSlots) == 0:
+      print("received job %s, but no open slots" % job_title)
       # no slots free, put it back on the stack and wait
       place_in_line = beanstalk.stats()["current-jobs-delayed"]
       if place_in_line > 10:
@@ -53,18 +46,35 @@ while True:
         this_message = ("Waiting for the queue to be ready.\n\n" +
             "There are %d other jobs waiting." % (place_in_line))
         fh.write(this_message)
-        sys.stdout.write(this_message)
-        print("Delaying %d seconds" % (jdelay))
+        fh.flush()
+      print(this_message)
+      print("Delaying %d seconds" % (jdelay))
       beanstalk.put(job.body, delay = jdelay)
+    elif len(JobSlots) > 0:
+      JobN = JobSlots[0]
+      JobOutput[JobN] = open(os.path.join(job_file, "progress.txt"), 'w')
+      JobErr[JobN] = open(os.path.join(job_file, "stderr.txt"), 'w')
+      JobList[JobN] = subprocess.Popen(["/usr/bin/Rscript", "-e", job.body],\
+          stdout=JobOutput[JobN], \
+          stderr=JobErr[JobN])
+      JobTitle[JobN] = job_title
+      JobOutput[JobN].flush()
+      JobErr[JobN].flush()
+      job.delete()
   for (N, sub) in enumerate(JobList):
     # Poll to see which have finished, then return them to None and clean up
     if not sub == None:
+      JobOutput[N].flush()
+      JobErr[N].flush()
       returncode = sub.poll()
       if not returncode == None:
         # job finished!
-        print("Job #%d finished - cleaning up" % (N))
+        print("Job %s finished running in slot %d - cleaning up" % \
+            (JobTitle[N], N + 1))
         JobErr[N].close()
         JobOutput[N].close()
+        JobTitle[N] = None
         JobList[N] = None
+        print("...done!")
   # continue forever
 
