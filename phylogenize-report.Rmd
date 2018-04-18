@@ -17,6 +17,7 @@ params:
   prior_type: "uninformative"
   prior_file: ""
   minimum: 3
+  treemin: 5
   burst_dir: "/home/pbradz/bin/"
 ---
 
@@ -28,7 +29,7 @@ This report was generated automatically by [phylogenize](http://pbradley-dell/~p
   - Prior probabilities for environments: "`r params$prior_type`"
 
 
-```{r setup, warning=FALSE}
+```{r setup, warning=FALSE, results="hide", echo=FALSE}
 
 DDir = params$data_dir
 IDir = params$in_dir
@@ -140,7 +141,7 @@ taxa.observed <- rownames(abd.mtx)
 taxa.per.tree <- lapply(trees, function(tr) {
   intersect(tr$tip.label, taxa.observed)
 })
-saved.phyla <- nw(sapply(taxa.per.tree, length) >= 5)
+saved.phyla <- nw(sapply(taxa.per.tree, length) >= params$treemin)
 trees <- trees[saved.phyla]
 all.possible.taxa <- Reduce(union, lapply(gene.presence, colnames))
 not.observed.taxa <- setdiff(all.possible.taxa, taxa.observed)
@@ -153,9 +154,20 @@ taxa <- lapply(trees, function(x) x$tip.label)
 
 ```
 
-First, calculate the phenotype of interest:
+## Phenotype calculation
 
-```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE}
+Below, trees for all phyla with at least `r treemin` representatives in the
+input data are presented. Trees are colored according to the phenotype chosen 
+(here, `r params$which_phenotype` in the environment `r params$which_envir`).
+
+For prevalence, the tree is colored black (low prevalence) to orange (high
+prevalence). For specificity, the tree is colored red for taxa that are
+specific for an environment, blue for taxa that are specific for other
+environments (i.e., found less often in the environment chosen), and gray for
+taxa that are neither.
+
+
+```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE}
 
 # Calculate the phenotype of interest
 
@@ -213,8 +225,12 @@ write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
 
 ```
 
+## Associations between genes and taxa
 
-```{r get_associations, warning = FALSE, message = FALSE}
+This table gives an overview of how many genes were significantly associated at
+an FDR of 5%. 
+
+```{r get_associations, warning = FALSE, message = FALSE, results="hide",echo=FALSE}
 results <- result.wrapper.plm(phyla = names(taxa),
                               pheno = phenotype,
                               tree = trees,
@@ -263,7 +279,17 @@ write.csv(file = file.path(ODir, "all-results.csv"),
           results.matrix)
 ```
 
-```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE}
+## Gene association heat maps
+
+The left shows the phenotype painted on tips of the tree as above. The right
+adds a heatmap where blue points represent presence of a gene (aligned with the
+tips of the tree) and black points represent absence. Only
+significantly-associated genes are displayed. Genes are clustered from left to
+right by Jaccard dissimilarity, so genes with similar patterns of inheritance
+will form vertical stripes. Horizontal stripes may be visible for taxa that
+have particularly extreme phenotypes.
+
+```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide"}
 cluster.plots <- mapply(gene.presence[names(trees)], pos.sig.thresh, trees,
                         plotted.pheno.trees, names(trees),
                         FUN=function(x, y, z, w, nt) {
@@ -294,17 +320,30 @@ cluster.plots <- mapply(gene.presence[names(trees)], pos.sig.thresh, trees,
   return(tmp)
 }, SIMPLIFY = FALSE)
 ```
+## Enrichment analysis
 
-Enrichment analysis
+This process takes the set of genes that are
+significant and asks whether there are more than expected by chance in a given
+SEED subsystem.
 
+All SEED categories returned are significant at an FDR of 25%. "Strong", "Med",
+and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
+respectively.
 
-```{r enrichment_analysis, warning = FALSE, message = FALSE}
+```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide"}
 enrichments <- perform.enrichments(signif,
     signs,
     results,
     mapping = g.mappings,
     verbose = FALSE)
 enr.table <- make.plm.enr.tables(enrichments)
+colnames(enr.table) <- c("Gene significance", "Subsystem level",
+  "Phylum", "Subsystem", "q-value")
 write.csv(file=file.path(ODir, "enr-table.csv"), enr.table)
-kable(enr.table)
+```
+
+```{r enrichment_display, warning=FALSE,message=FALSE,echo=FALSE}
+kable(enr.table, row.names = FALSE, format.args = list(digits = 2))
+```
+
 ```
