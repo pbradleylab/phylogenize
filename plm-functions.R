@@ -180,7 +180,7 @@ tipToRoot <- function(phy) phy %>% vcv.phylo %>% diag
 
 # Enrichment 
 
-dirxn.enrich <- function(sigs, signs, results, siglevel = "strong", exclude = NULL, dirxn = 1, ...) {
+dirxn.enrich <- function(sigs, signs, results, siglevel = "strong", exclude = NULL, dirxn = 1, mapping, ...) {
   lapply(
   c(l1 = "level1", l2 = "level2", l3 = "level3"), function(l) {
     # dirxn = 1 is POSITIVE
@@ -191,7 +191,7 @@ dirxn.enrich <- function(sigs, signs, results, siglevel = "strong", exclude = NU
       #print(intersect(sigs[[x]][[siglevel]], nw(signs[[x]] < 0)))
       enr.wrapper(intersect(sigs[[x]][[siglevel]], nw((dirxn * signs[[x]]) > 0)),
           tested = setdiff(names(na.omit(results[[x]][1,])), exclude[[x]]),
-        mapping = mappings[[l]], ...)
+        mapping = mapping[[l]], ...)
     })
   return(enrichments)
   })
