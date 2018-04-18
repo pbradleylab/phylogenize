@@ -325,7 +325,10 @@ cluster.plots <- mapply(gene.presence[names(trees)], pos.sig.thresh, trees,
 
 This process takes the set of genes that are
 significant and asks whether there are more than expected by chance in a given
-SEED subsystem.
+SEED subsystem. Subsystems come in three levels of granularity (referred to
+here as l1, l2, and l3); "l1" subsystems are the most general and
+"l3" are the most specific. </p>
+
 
 All SEED categories returned are significant at an FDR of 25%. "Strong", "Med",
 and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
@@ -338,13 +341,34 @@ enrichments <- perform.enrichments(signif,
     mapping = g.mappings,
     verbose = FALSE)
 enr.table <- make.plm.enr.tables(enrichments)
-colnames(enr.table) <- c("Gene significance", "Subsystem level",
-  "Phylum", "Subsystem", "q-value")
+colnames(enr.table) <- c("Gene_significance", "Subsystem_level",
+  "Phylum", "Subsystem", "q_value")
 write.csv(file=file.path(ODir, "enr-table.csv"), enr.table)
 ```
 
 ```{r enrichment_display, warning=FALSE,message=FALSE,echo=FALSE}
-kable(enr.table, row.names = FALSE, format.args = list(digits = 2))
+options(knitr.table.format = "html") 
+enr.table <- data.frame(enr.table)
+rownames(enr.table) <- NULL
+enr.table %>%
+  mutate(
+    q_value = as.numeric(q_value),
+    Gene_significance = capwords(Gene_significance),
+    Subsystem_level = toupper(Subsystem_level),
+    Phylum = capwords(Phylum),
+    Subsystem = gsub("_", " ", enr.table$Subsystem)
+  ) %>%
+  mutate(
+    q_value = cell_spec(prettyNum(q_value, digits = 2),
+      "html",
+      background = kable.recolor(-log10(q_value),
+        colors = c("#FFFFFF", "#FF8888"),
+        limits = c(-10, -log10(0.25)))
+      )) %>%
+  kable("html", escape = FALSE, align = "l") %>%
+  kable_styling(c("striped", "condensed"))
+    
+#kable(enr.table, row.names = FALSE, format.args = list(digits = 2))
 ```
 
 ```

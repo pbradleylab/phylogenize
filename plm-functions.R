@@ -12,6 +12,8 @@ library("ggtree")
 library("phytools")
 library("knitr")
 library("seqinr")
+library("kableExtra")
+library("scales")
 
 # helper functions
 
@@ -1078,3 +1080,29 @@ gg.cont.tree <- function(phy,
               lims = cLimits,
               disp = cDisplay))
 }
+
+kable.recolor <- function(x, direction = 1, option = "D",
+  na_color = "#BBBBBB", scale_from = NULL, colors = c("#000000","#FFFFFF"),
+  limits = c(-Inf, Inf))
+{
+  if (x < limits[1]) { x[x < limits[1]] <- limits[1] }
+  if (x > limits[2]) { x[x < limits[2]] <- limits[2] }
+  if (is.null(scale_from)) {
+    x <- round(rescale(x, c(1, 256)))
+  }
+  else {
+    x <- round(rescale(x, to = c(1, 256), from = scale_from))
+  }
+  if (direction == -1) { x <- (257 - x) }
+  cmap <- colorRampPalette(colors)(256)
+  color_code <- cmap[x]
+  color_code[is.na(color_code)] <- na_color
+  return(color_code)
+}
+capwords <- function(s, strict = FALSE) {
+  cap <- function(s) paste(toupper(substring(s, 1, 1)),
+    {s <- substring(s, 2); if(strict) tolower(s) else s},
+    sep = "", collapse = " " )
+  sapply(strsplit(s, split = " "), cap, USE.NAMES = !is.null(names(s)))
+}
+
