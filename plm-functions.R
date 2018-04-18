@@ -180,7 +180,7 @@ tipToRoot <- function(phy) phy %>% vcv.phylo %>% diag
 
 # Enrichment 
 
-dirxn.enrich <- function(sigs, signs, results, siglevel = "strong", mapping = mappings, exclude = NULL, dirxn = 1, ...) {
+dirxn.enrich <- function(sigs, signs, results, siglevel = "strong", exclude = NULL, dirxn = 1, ...) {
   lapply(
   c(l1 = "level1", l2 = "level2", l3 = "level3"), function(l) {
     # dirxn = 1 is POSITIVE
