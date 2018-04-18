@@ -156,7 +156,7 @@ taxa <- lapply(trees, function(x) x$tip.label)
 
 ## Phenotype calculation
 
-Below, trees for all phyla with at least `r treemin` representatives in the
+Below, trees for all phyla with at least `r params$treemin` representatives in the
 input data are presented. Trees are colored according to the phenotype chosen 
 (here, `r params$which_phenotype` in the environment `r params$which_envir`).
 
