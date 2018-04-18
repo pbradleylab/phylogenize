@@ -38,6 +38,7 @@ BurstDir = params$burst_dir
 dir.create(ODir)
 
 source("plm-functions.R")
+source("fisher-enrich.R")
 
 # Read in the correct gene presence/absence matrix and corresponding tree files
 if (params$type == "midas") {
@@ -298,9 +299,9 @@ Enrichment analysis
 
 
 ```{r enrichment_analysis, warning = FALSE, message = FALSE}
-enrichments <- perform.enrichments(overall.sigs, 
-	overall.signs,
-	overall.results,
+enrichments <- perform.enrichments(signif,
+	signs,
+	results,
 	mapping = g.mappings,
 	verbose = FALSE)
 enr.table <- make.plm.enr.tables(enrichments)
