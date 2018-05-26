@@ -1105,4 +1105,132 @@ capwords <- function(s, strict = FALSE) {
     sep = "", collapse = " " )
   sapply(strsplit(s, split = " "), cap, USE.NAMES = !is.null(names(s)))
 }
+###
 
+# Terrible XML Hack!
+hack.tree.labels <- function(tree.obj, file, stroke.scale = 0.7, ...) {
+  library(xml2)
+  tip.labels <- with(tree.obj$data, label[isTip])
+  xml <- xmlSVG(print(tree.obj), standalone = TRUE, ...)
+  new.style.text <- " \n .faketip:hover ~ .realtip { \n stroke-width: 5; \n opacity: 1; \n  } \n .faketip:hover ~ .specieslabel { \n opacity: 1; \n } \n " 
+  style.nodes <- xml_find_all(xml, "//*[local-name()='style']")
+  xml_set_text(style.nodes[1], new.style.text)
+  xml.text <- xml_find_all(xml, "//*[local-name()='text']")
+  xml.text.contents <- sapply(xml.text, xml_text)
+  xml.label.indices <- which(xml.text.contents %in% tip.labels)
+  xml.label.heights <- sapply(xml.text, function(x) {
+    xml_attrs(x)["y"]
+  })
+  xml.label.pair <- cbind(label = xml.text.contents,
+    y = xml.label.heights)[xml.label.indices, ]
+  ordered.labels <- xml.label.pair[order(xml.label.pair[, "y"] %>% as.numeric), "label"]
+  xml.lines <- xml_find_all(xml, "//*[local-name()='line']")
+  xml.line.props <- sapply(xml.lines, function(x) xml_attrs(x))
+  xml.x2 <- xml.line.props["x2", ] %>% as.numeric
+  xml.y2 <- xml.line.props["y2", ] %>% as.numeric
+  terminus <- max(xml.x2)
+  xml.y2.sorted <- sort(xml.y2[xml.x2 == terminus])
+  # skootch over, remove tip, add title
+  for (x in xml.text) {
+    label <- xml_text(x)
+    if (label %in% ordered.labels) {
+      xml_set_attr(x, "x", as.character(terminus))
+      xml_set_text(x, " ")
+      xml_add_sibling(x, read_xml(paste0("<title>",
+            label,
+            "</title>")))
+    }
+  }
+  for (l in xml.lines) {
+    l.attr <- xml_attrs(l)
+    l.y2 <- as.numeric(l.attr["y2"])
+    l.x2 <- as.numeric(l.attr["x2"])
+    l.x1 <- as.numeric(l.attr["x1"])
+    # This step is necessary because otherwise mouseover won't work
+    style <- xml_attrs(l)["style"]
+    s.parsed <- style.parse(style)
+    for (n in 1:length(s.parsed)) {
+      xml_set_attr(l, names(s.parsed)[n], s.parsed[n])
+    }
+    xml_set_attr(l, "style", "")
+    if ("stroke-width" %in% names(s.parsed)) {
+      xml_set_attr(l, "stroke-width", (as.numeric(s.parsed["stroke-width"]) * stroke.scale) %>% as.character)
+    }
+    if (!("stroke" %in% names(s.parsed))) {
+      xml_set_attr(l, "stroke", "#000000")
+    }
+    if (l.x2 == terminus) {
+      label <- ordered.labels[which(xml.y2.sorted == l.y2)]
+      xml_set_attr(l, "id", label)
+      xml_set_attr(l, "class", "realtip")
+      new.group <- read_xml("<g class=\"tip\"> </g>")
+      l2 <- xml_add_child(new.group, l)
+      xml_add_child(new.group, l)
+      xml_set_attr(l2, "opacity", "0")
+      xml_set_attr(l2, "pointer-events", "all")
+      xml_set_attr(l2, "stroke-width", 5)
+      xml_set_attr(l2, "class", "faketip")
+      xml_set_attr(l2, "x1",
+        as.character(
+          l.x1 - 100
+          ))
+      xml_set_attr(l2, "x2",
+        as.character(
+          terminus + 100
+          ))
+      xml_add_child(new.group, read_xml(paste0(
+            "<text x=\"",
+            l.x2 + 5,
+            "\" y = \"",
+            l.y2 + 3, 
+            "\" opacity=\"0\" pointer-events=\"all\" style=\"font-family: Arial; font-size: 4px;",
+            " fill: ",
+            xml_attr(l, "stroke"),
+            ";",
+            "\" class=\"specieslabel\"> ",
+            label, 
+            "</text>")))
+      xml_add_child(new.group, read_xml(paste0("<title>",
+            label,
+            "</title>")))
+      xml_replace(l, new.group)
+    }
+  }
+  write_xml(x = xml, file) 
+}
+
+### minimal.example <- function(tree.obj, file, ...) {
+minimal.example <- function(.) {
+  library(xml2)
+  library(ape)
+  library(ggtree)
+  library(svglite)
+  random.tree <- rcoal(50)
+  tree.xml <- xmlSVG(print(ggtree(random.tree) + geom_tiplab()), standalone = TRUE)
+  tree.lines <- xml_find_all(tree.xml, "//*[local-name()='line']")
+  for (l in tree.lines) {
+    new.group <- read_xml("<g> </g>")
+    xml_add_child(new.group, l)
+#    xml_add_child(new.group, read_xml(paste0("<title>",
+#          label,
+#          "</title>")))
+    #xml_add_child(tree.xml, new.group)
+    #xml_remove(l)
+    xml_replace(l, new.group)
+  }
+  return(tree.xml)
+}
+
+style.parse <- function(str) {
+  semi.split <- strsplit(str, ";") %>% sapply(., trimws)
+  if (is.null(dim(semi.split))) {
+    c.split <- trimws(strsplit(semi.split, ":")[[1]])
+    c.output <- c.split[2]
+    names(c.output) <- c.split[1]
+  } else {
+    c.split <- apply(semi.split, 1, function(x) strsplit(x, ":")[[1]]) %>% trimws
+    c.output <- c.split[2, ]
+    names(c.output) <- c.split[1, ]
+  }
+  return(c.output)
+}

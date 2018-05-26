@@ -18,6 +18,7 @@ params:
   prior_file: ""
   minimum: 3
   treemin: 5
+	assume_below_LOD: TRUE
   burst_dir: "/home/pbradz/bin/"
 ---
 
@@ -40,6 +41,9 @@ dir.create(ODir)
 
 source("plm-functions.R")
 source("fisher-enrich.R")
+library(svglite)
+
+knit_hooks$set(custom.plot = hook_plot_custom)
 
 # Read in the correct gene presence/absence matrix and corresponding tree files
 if (params$type == "midas") {
@@ -145,12 +149,12 @@ saved.phyla <- nw(sapply(taxa.per.tree, length) >= params$treemin)
 trees <- trees[saved.phyla]
 all.possible.taxa <- Reduce(union, lapply(gene.presence, colnames))
 not.observed.taxa <- setdiff(all.possible.taxa, taxa.observed)
-if (length(not.observed.taxa) > 0) {
-taxa.zero <- matrix(rep(0, length(not.observed.taxa) * ncol(abd.mtx)), 
-  nr = length(not.observed.taxa),
-  byrow = TRUE,
-  dimnames = list(not.observed.taxa, colnames(abd.mtx)))
-abd.mtx <- rbind(abd.mtx, taxa.zero)
+if ((length(not.observed.taxa) > 0) && (params$assume_below_LOD)) {
+	taxa.zero <- matrix(rep(0, length(not.observed.taxa) * ncol(abd.mtx)), 
+		nr = length(not.observed.taxa),
+		byrow = TRUE,
+		dimnames = list(not.observed.taxa, colnames(abd.mtx)))
+	abd.mtx <- rbind(abd.mtx, taxa.zero)
 }
 taxa <- lapply(trees, function(x) x$tip.label)
 
@@ -211,8 +215,6 @@ if (params$which_phenotype == "prevalence") {
   } else stop(paste0("don't know how to calculate the phenotype ",
                    params$which_phenotype))
 
-
-
 plotted.pheno.trees <- lapply(1:length(trees), function(tn) {
   gg.cont.tree(trees[[tn]],
                phenotype,
@@ -221,7 +223,6 @@ plotted.pheno.trees <- lapply(1:length(trees), function(tn) {
                cName = paste0(names(trees)[tn], ": ", params$which_phenotype))
 })
 names(plotted.pheno.trees) <- names(trees)
-#for (phy in names(plotted.pheno.trees)) print(plotted.pheno.trees[[phy]]$tree)
 
 write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
 
