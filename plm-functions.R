@@ -14,6 +14,7 @@ library("knitr")
 library("seqinr")
 library("kableExtra")
 library("scales")
+library("xml2")
 
 # helper functions
 
@@ -1108,8 +1109,15 @@ capwords <- function(s, strict = FALSE) {
 ###
 
 # Terrible XML Hack!
-hack.tree.labels <- function(tree.obj, file, stroke.scale = 0.7, ...) {
-  library(xml2)
+hack.tree.labels <- function(tree.obj,
+  file,
+  stroke.scale = 0.7,
+  pheno = NULL,
+  pheno.name = NULL,
+  native.tooltip = FALSE,
+  units = "",
+  ...) {
+
   tip.labels <- with(tree.obj$data, label[isTip])
   xml <- xmlSVG(print(tree.obj), standalone = TRUE, ...)
   new.style.text <- " \n .faketip:hover ~ .realtip { \n stroke-width: 5; \n opacity: 1; \n  } \n .faketip:hover ~ .specieslabel { \n opacity: 1; \n } \n " 
@@ -1128,7 +1136,10 @@ hack.tree.labels <- function(tree.obj, file, stroke.scale = 0.7, ...) {
   xml.line.props <- sapply(xml.lines, function(x) xml_attrs(x))
   xml.x2 <- xml.line.props["x2", ] %>% as.numeric
   xml.y2 <- xml.line.props["y2", ] %>% as.numeric
-  terminus <- max(xml.x2)
+  # terminus <- max(xml.x2)
+  uniq.x2 <- unique(xml.x2)
+  count.x2 <- sapply(uniq.x2, function(x) sum(xml.x2 == x))
+  terminus <- uniq.x2[which(count.x2 == length(tip.labels))]
   xml.y2.sorted <- sort(xml.y2[xml.x2 == terminus])
   # skootch over, remove tip, add title
   for (x in xml.text) {
@@ -1136,9 +1147,11 @@ hack.tree.labels <- function(tree.obj, file, stroke.scale = 0.7, ...) {
     if (label %in% ordered.labels) {
       xml_set_attr(x, "x", as.character(terminus))
       xml_set_text(x, " ")
-      xml_add_sibling(x, read_xml(paste0("<title>",
-            label,
-            "</title>")))
+      if (native.tooltip) {
+        xml_add_sibling(x, read_xml(paste0("<title>",
+              label,
+              "</title>")))
+      }
     }
   }
   for (l in xml.lines) {
@@ -1176,23 +1189,38 @@ hack.tree.labels <- function(tree.obj, file, stroke.scale = 0.7, ...) {
           ))
       xml_set_attr(l2, "x2",
         as.character(
-          terminus + 100
+          terminus + 300
           ))
+      extra.info <-  ""
+      if (!is.null(pheno)) {
+        if (is.null(pheno.name)) pheno.name <- "phenotype"
+        if (label %in% names(pheno)) {
+          phi <- format(pheno[label], digits = 3)
+        } else {
+          phi <- "NA" 
+        }
+        extra.info <- paste0("(", pheno.name, " = ", phi, units,  ")")
+      }
       xml_add_child(new.group, read_xml(paste0(
             "<text x=\"",
             l.x2 + 5,
             "\" y = \"",
             l.y2 + 3, 
-            "\" opacity=\"0\" pointer-events=\"all\" style=\"font-family: Arial; font-size: 4px;",
+            "\" opacity=\"0\" pointer-events=\"all\" style=\"font-family: Arial; font-size: 10px;",
             " fill: ",
             xml_attr(l, "stroke"),
             ";",
             "\" class=\"specieslabel\"> ",
             label, 
+            " ",
+            extra.info,
+            " ",
             "</text>")))
-      xml_add_child(new.group, read_xml(paste0("<title>",
-            label,
-            "</title>")))
+      if (native.tooltip) {
+        xml_add_child(new.group, read_xml(paste0("<title>",
+              label,
+              "</title>")))
+      }
       xml_replace(l, new.group)
     }
   }

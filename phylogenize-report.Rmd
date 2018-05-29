@@ -18,7 +18,7 @@ params:
   prior_file: ""
   minimum: 3
   treemin: 5
-	assume_below_LOD: TRUE
+  assume_below_LOD: TRUE
   burst_dir: "/home/pbradz/bin/"
 ---
 
@@ -44,6 +44,16 @@ source("fisher-enrich.R")
 library(svglite)
 
 knit_hooks$set(custom.plot = hook_plot_custom)
+# This next part courtesy of Yihui Xie
+local({
+  hook_plot = knit_hooks$get('plot')
+  knit_hooks$set(plot = function(x, options) {
+    x = paste(x, collapse = '.')
+    if (!grepl('\\.svg', x)) return(hook_plot(x, options))
+    # read the content of the svg image and write it out without <?xml ... ?>
+    paste(readLines(x)[-1], collapse = '\n')
+  })
+})
 
 # Read in the correct gene presence/absence matrix and corresponding tree files
 if (params$type == "midas") {
@@ -53,7 +63,7 @@ if (params$type == "midas") {
 		trees <- readRDS(file.path(DDir, "MIDAS_1.0-trees.rds"))
 		phyla <- intersect(names(trees), names(gene.presence))
 		taxonomy <- data.frame(fread(file.path(DDir,
-					"full-taxonomy.csv")),
+					"MIDAS_1.0-taxonomy.csv")),
 			stringsAsFactors = FALSE)[,-1]
 	} else if (params$db_version == "midas_v1.2") {
 		gene.presence <- readRDS(file.path(DDir, "MIDAS-gene-presence-1.2.rds"))
@@ -63,7 +73,7 @@ if (params$type == "midas") {
 			header = F)
 		colnames(gene.to.fxn) <- c("gene", "function")
 		taxonomy <- data.frame(fread(file.path(DDir,
-					"full-taxonomy.csv")),
+					"MIDAS_1.2-taxonomy.csv")),
 			stringsAsFactors = FALSE)[,-1]
 	} else {
 		stop(paste0("unknown database version ", params$db_version))
@@ -157,6 +167,7 @@ if ((length(not.observed.taxa) > 0) && (params$assume_below_LOD)) {
 	abd.mtx <- rbind(abd.mtx, taxa.zero)
 }
 taxa <- lapply(trees, function(x) x$tip.label)
+nphyla <- length(trees)
 
 ```
 
@@ -171,6 +182,7 @@ prevalence). For specificity, the tree is colored red for taxa that are
 specific for an environment, blue for taxa that are specific for other
 environments (i.e., found less often in the environment chosen), and gray for
 taxa that are neither.
+
 
 
 ```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE}
@@ -220,9 +232,35 @@ plotted.pheno.trees <- lapply(1:length(trees), function(tn) {
                phenotype,
                cLimits = phenoLimitsPhylum[[tn]],
                colors = phenoColors,
-               cName = paste0(names(trees)[tn], ": ", params$which_phenotype))
+               cName = paste0(names(trees)[tn], ": ", params$which_phenotype),
+							 plot = FALSE)
 })
 names(plotted.pheno.trees) <- names(trees)
+kept.species <- Reduce(c, lapply(trees, function(x) x$tip.label))
+pheno.characteristics <- data.frame(pheno = phenotype, phylum = taxonomy[match(names(phenotype), taxonomy$cluster), "phylum"], cluster = names(phenotype))
+ggplot(subset(pheno.characteristics, cluster %in% kept.species),
+	aes(pheno, color = phylum, fill = phylum)) +
+		geom_density() + 
+		facet_grid(phylum ~ .) + 
+		xlab(params$which_phenotype) +
+		ggtitle(paste0("Distributions of phenotype (", params$which_phenotype, ")"))
+
+
+
+```
+
+```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla}
+
+for (pn in 1:length(plotted.pheno.trees)) {
+  p <- plotted.pheno.trees[[pn]]$tree
+  xlim <- plot(plotted.pheno.trees[[pn]]$rphy, plot = FALSE)$x.lim
+	hack.tree.labels(p + geom_tiplab() + ggplot2::xlim(xlim[1], xlim[2]),
+    fig_path('svg', number = pn),
+    stroke.scale = 0.3, 
+    pheno = 100*logistic(phenotype),
+    units="%",
+    pheno.name = "prevalence")
+}
 
 write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
 
