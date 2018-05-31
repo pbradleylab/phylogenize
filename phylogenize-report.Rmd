@@ -42,6 +42,7 @@ dir.create(ODir)
 source("plm-functions.R")
 source("fisher-enrich.R")
 library(svglite)
+library(dplyr)
 
 knit_hooks$set(custom.plot = hook_plot_custom)
 # This next part courtesy of Yihui Xie
@@ -259,7 +260,7 @@ for (pn in 1:length(plotted.pheno.trees)) {
     stroke.scale = 0.3, 
     pheno = 100*logistic(phenotype),
     units="%",
-    pheno.name = "prevalence")
+    pheno.name = params$which_phenotype)
 }
 
 write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
@@ -268,7 +269,7 @@ write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
 
 Here are the same trees, but with only the mapped/observed taxa plotted:
 
-```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE}
+```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla}
 mapped.observed <- names(which(rowSums(abd.mtx) == 0))
 plotted.pheno.subtrees <- lapply(1:length(trees), function(tn) {
   gg.cont.tree(keep.tips(trees[[tn]], mapped.observed),
@@ -278,18 +279,26 @@ plotted.pheno.subtrees <- lapply(1:length(trees), function(tn) {
                cName = paste0(names(trees)[tn], ": ", params$which_phenotype),
                plot = FALSE)
 })
-for (ps in plotted.pheno.subtrees) {
+for (pn in 1:length(plotted.pheno.subtrees)) {
+	ps <- plotted.pheno.subtrees[[pn]]
   rp <- ps$rphy
   tr <- ps$tree
-  depth <- max(nodeHeights(rp))
-  tIDs <- tax.annot(rp$tip.label, taxonomy)
-  newtr <- (tr %<+% data.frame(
-    label = rp$tip.label,
-    label2 = tIDs
-  )) +
-    geom_tiplab(aes(label = label2), size = 0.8) +
-    ggplot2::xlim(0, (depth * 1.5))
-  print(newtr)
+  xlim <- plot(plotted.pheno.subtrees[[pn]]$rphy, plot = FALSE)$x.lim
+	#tIDs <- tax.annot(rp$tip.label, taxonomy)
+  #newtr <- (tr %<+% data.frame(
+  #  label = rp$tip.label,
+  #  label2 = tIDs
+  #)) +
+	newtr <- (tr + 
+    geom_tiplab() +
+    ggplot2::xlim(xlim[1], xlim[2])
+	)
+	hack.tree.labels(newtr,
+    fig_path('svg', number = pn),
+    stroke.scale = 0.3, 
+    pheno = 100*logistic(phenotype),
+    units="%",
+    pheno.name = params$which_phenotype)
 }
 names(plotted.pheno.subtrees) <- names(trees)
 ```
@@ -409,15 +418,18 @@ enrichments <- perform.enrichments(signif,
     results,
     mapping = g.mappings,
     verbose = FALSE)
-enr.table <- make.plm.enr.tables(enrichments)
-colnames(enr.table) <- c("Gene_significance", "Subsystem_level",
+# enr.table <- make.plm.enr.tables(enrichments) 
+enr.table <- generic.make.tables(enrichments) 
+colnames(enr.table) <- c("Number", "Gene_significance", "Subsystem_level",
   "Phylum", "Subsystem", "q_value")
 write.csv(file=file.path(ODir, "enr-table.csv"), enr.table)
 ```
 
 ```{r enrichment_display, warning=FALSE,message=FALSE,echo=FALSE}
 options(knitr.table.format = "html") 
-enr.table <- data.frame(enr.table)
+enr.table <- data.frame(enr.table[, -1])
+enr.table <- data.frame(apply(enr.table, 2, as.character),
+	stringsAsFactors = FALSE)
 rownames(enr.table) <- NULL
 enr.table %>%
   mutate(

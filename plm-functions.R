@@ -122,6 +122,10 @@ tax.annot.slow <- function(tns) {
 }
 
 tax.annot <- function(tns, taxonomy) {
+  taxonomy$species[match(tns, taxonomy$cluster)]
+}
+
+tax.annot.old <- function(tns, taxonomy) {
   dtt <- data.table(tns)
   merge(dtt, taxonomy, by.x = colnames(dtt)[1], by.y = "cluster", all = T)[tns]$"species" %>% as.character %withnames% tns
 }
@@ -227,17 +231,32 @@ make.enr.tables.all4 <- function(X) {
     )
 }
 
-
+generic.make.tables <- function(enr, depth = 3) {
+  annotate.nested(enr,
+    stop.at = list.depth(enr) - depth,
+    summarize = function(x) {
+      if (is.null(nrow(x$table))) {
+        names(x$table) <- c("enriched", "V2")
+        data.frame(t(x$table))
+    } else if (nrow(x$table) > 0) { 
+      x$table 
+    } else {
+      rbind(x$table, c(enriched = NA, V2 = NA))
+    }}
+  )
+}
 
 make.plm.enr.tables <- function(enr) {
-  Reduce(rbind, zipSapply(enr, function(qcut) {
-    cbind(qcut$name, Reduce(rbind, zipSapply(qcut$data, function(level) {
-      cbind(level$name, Reduce(rbind, zipSapply(level$data, function(clade) {
+  rb <- function(...) rbind(..., stringsAsFactors = FALSE)
+  cb <- function(...) cbind(..., stringsAsFactors = FALSE)
+  Reduce(rb, zipSapply(enr, function(qcut) {
+    cb(qcut$name, Reduce(rb, zipSapply(qcut$data, function(level) {
+      cb(level$name, Reduce(rb, zipSapply(level$data, function(clade) {
         #    print(clade$data$table)
         tb <- data.matrix(clade$data$table)
         if (dim(tb)[1] == 0) { return(matrix(c(clade$name, Enriched = "--", pval = "--"), nr = 1)) }
-        if (dim(tb)[2] == 1) { return(cbind(clade$name, t(tb))) }
-        cbind(clade$name, tb)
+        if (dim(tb)[2] == 1) { return(cb(clade$name, t(tb))) }
+        cb(clade$name, tb)
     })
     ))})
   ))})
@@ -724,16 +743,23 @@ iter.across <- function(list.of.lists, f, table = FALSE, reduce = TRUE) {
 	})	
 	input.grid <- do.call(expand.grid, to.expand)
 	output <- apply(input.grid, 1, function(x) {
-    i <- mapply(x, list.of.lists, SIMPLIFY = FALSE, FUN=function(y,z) {z[[y]]})
+    i <- mapply(x,
+      list.of.lists,
+      SIMPLIFY = FALSE,
+      FUN = function(y,z) { z[[y]] }
+    )
     names(i) <- names(formals(f))
     res <- do.call(f, i)
-    #print(res)
     if (!table) { return(res) }
     if (!reduce) { return(res) }
     if (!is.null(nrow(res))) {
       cbind(sapply(x, function(y) rep(y, nrow(res))), res)
     } else {
-    if (length(res) == 0) { c(x, "--")} else { c(x, res) }
+      if (length(res) == 0) {
+        c(x, "--")
+      } else {
+        c(x, res)
+      }
     }
   })
   if (!table) {	
@@ -890,16 +916,32 @@ first.element.at.depth <- function(l, n) {
 	if (n == 1) { l[[1]] } else { (first.element.at.depth(l[[1]], n - 1)) }
 }
 
-annotate.nested <- function(nested, summarize = NULL, n = NULL, n.names = NULL) {
+annotate.nested <- function(nested,
+  summarize = NULL,
+  n = NULL,
+  n.names = NULL,
+  stop.at = 0, 
+  summarize.values = 1) {
+
 	nestedness <- list.depth(nested)
-	if (nestedness == 0) {
+	if (nestedness == stop.at) {
 		if (is.null(summarize)) {
 			values <- data.frame(value = nested)
 			rownames(values) <- names(nested)	
 		} else {
-			values <- data.frame(value = summarize(nested))
+      val.raw <- summarize(nested)
+      if ((!is.null(nrow(val.raw))) || (nrow(val.raw) > 0)) {
+        rownames(val.raw) <- NULL
+      }
+  		values <- data.frame(value = val.raw)
 		}
-		n.mtx <- matrix(rep(n, length(values)), nc = length(n), byrow = TRUE)
+    if (is.null(nrow(values))) {
+		  n.mtx <- matrix(rep(n, (length(values) / summarize.values)),
+        nc = length(n),
+        byrow = TRUE)
+    } else {
+		  n.mtx <- matrix(rep(n, nrow(values)), nc = length(n), byrow = TRUE)
+    }
 		if (!is.null(n.names)) { colnames(n.mtx) <- n.names }
 		final.df <- cbind(names = rownames(values), n.mtx, value = values)
 		rownames(final.df) <- NULL
@@ -907,8 +949,13 @@ annotate.nested <- function(nested, summarize = NULL, n = NULL, n.names = NULL) 
 	} else {
     if (is.null(names(nested))) { names(nested) <- 1:length(nested) }
 		Reduce(rbind, lapply.across.names(names(nested),
-			function(x) annotate.nested(nested[[x]], summarize = summarize, n = c(n, x), n.names = n.names)))
+			function(x) annotate.nested(nested[[x]],
+        summarize = summarize,
+        n = c(n, x),
+        n.names = n.names,
+        stop.at = stop.at)))
 	}
+
 }
 
 zipData <- function(iterover) {
@@ -1086,8 +1133,12 @@ kable.recolor <- function(x, direction = 1, option = "D",
   na_color = "#BBBBBB", scale_from = NULL, colors = c("#000000","#FFFFFF"),
   limits = c(-Inf, Inf))
 {
-  if (x < limits[1]) { x[x < limits[1]] <- limits[1] }
-  if (x > limits[2]) { x[x < limits[2]] <- limits[2] }
+  if (any(na.omit(x) < limits[1])) {
+    x[x < limits[1]] <- limits[1]
+  }
+  if (any(na.omit(x) > limits[2])) {
+    x[x < limits[2]] <- limits[2] 
+  }
   if (is.null(scale_from)) {
     x <- round(rescale(x, c(1, 256)))
   }
