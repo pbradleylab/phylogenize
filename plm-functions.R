@@ -1159,7 +1159,8 @@ capwords <- function(s, strict = FALSE) {
 }
 ###
 
-# Terrible XML Hack!
+# Super gross XML hack follows to make SVGs of trees interactive
+
 hack.tree.labels <- function(tree.obj,
   file,
   stroke.scale = 0.7,
