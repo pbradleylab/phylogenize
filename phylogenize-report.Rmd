@@ -190,6 +190,7 @@ taxa that are neither.
 
 # Calculate the phenotype of interest
 
+mapped.observed <- names(which(rowSums(abd.mtx) > 0))
 if (params$which_phenotype == "prevalence") {
   phenotype <- prev.addw(abd.mtx,
                          params$which_envir,
@@ -215,6 +216,22 @@ if (params$which_phenotype == "prevalence") {
   phenoP <- logit(c(ess$priors[ess$priors$env == params$which_envir, "prior"]))
   phenoLimitsOverall <- c(phenoP - 1 * sd(phenotype),
                           phenoP + 1 * sd(phenotype))
+	# Specifically for specificity, always remove taxa that weren't observed at all
+	trees <- lapply(trees, function(tr) {
+		keep.tips(tr, intersect(tr$tip.label, mapped.observed))
+	})
+	n.not.prior <- sapply(trees, function(tr) {
+		sum(phenotype[tr$tip.label] != phenoP)
+	})
+	if (all(n.not.prior == 0)) {
+		stop(paste0("ERROR: The phenotype for all taxa was shrunk to the prior. ",
+			"This probably means that there are no major taxonomic differences ",
+			"between groups. Without identifying some such taxonomic changes, ",
+			"phylogenize cannot continue."))
+	}
+	trees <- trees[which(n.not.prior > 0)]
+	taxa <- lapply(trees, function(x) x$tip.label)
+	nphyla <- length(trees)
   phenoLimitsPhylum <- lapply(trees, function(tr) {
     phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>% na.omit %>%
       unique
@@ -224,7 +241,7 @@ if (params$which_phenotype == "prevalence") {
                    mid.col = "gray50",
                    high.col = "tomato")
 } else if (params$which_phenotype == "provided") {
-
+		stop("providing your own phenotype not implemented yet")
   } else stop(paste0("don't know how to calculate the phenotype ",
                    params$which_phenotype))
 
@@ -270,7 +287,6 @@ write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
 Here are the same trees, but with only the mapped/observed taxa plotted:
 
 ```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla}
-mapped.observed <- names(which(rowSums(abd.mtx) > 0))
 plotted.pheno.subtrees <- lapply(1:length(trees), function(tn) {
   gg.cont.tree(keep.tips(trees[[tn]], mapped.observed),
                phenotype,
@@ -283,23 +299,28 @@ for (pn in 1:length(plotted.pheno.subtrees)) {
 	ps <- plotted.pheno.subtrees[[pn]]
   rp <- ps$rphy
   tr <- ps$tree
-  xlim <- plot(plotted.pheno.subtrees[[pn]]$rphy, plot = FALSE)$x.lim
+	rp2 <- rp
+	# pad tip labels so the additional stuff doesn't get cut off when
+	# calculating x limits
+	rp2$tip.label <- paste0(rp2$tip.label, " (phenotype: ......%)")
+	xlim <- plot(rp2, plot = FALSE)$x.lim
 	#tIDs <- tax.annot(rp$tip.label, taxonomy)
-  #newtr <- (tr %<+% data.frame(
-  #  label = rp$tip.label,
-  #  label2 = tIDs
-  #)) +
+	#newtr <- (tr %<+% data.frame(
+	#  label = rp$tip.label,
+	#  label2 = tIDs
+	#)) +
 	newtr <- (tr + 
-    geom_tiplab() +
-    ggplot2::xlim(xlim[1], xlim[2])
-	)
-	hack.tree.labels(newtr,
-    fig_path('svg', number = pn),
-    stroke.scale = 0.3, 
-    pheno = 100*logistic(phenotype),
-    units="%",
-    pheno.name = params$which_phenotype)
-
+		geom_tiplab() +
+			ggplot2::xlim(xlim[1], xlim[2])
+		)
+	tryCatch(
+		hack.tree.labels(newtr,
+			fig_path('svg', number = pn),
+			stroke.scale = 0.3, 
+			pheno = 100*logistic(phenotype),
+			units="%",
+			pheno.name = params$which_phenotype),
+		error = function(e) print(newtr))
 }
 names(plotted.pheno.subtrees) <- names(trees)
 ```
@@ -330,21 +351,26 @@ results.matrix <- Reduce(rbind, lapply(names(results), function(rn) {
 
 kable(sapply(pos.sig, length), col.names = "significant genes")
 
-pos.sig.descs <- Reduce(rbind, lapply(names(pos.sig), function(n) {
+phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
+pos.sig.descs <- Reduce(rbind, lapply(phy.with.sigs, function(n) {
   cbind(phylum = n,
         gene = pos.sig[[n]],
         description = gene.annot(pos.sig[[n]]))
 }))
 
-pos.sig.thresh <- mapply(trees, pos.sig, gene.presence[names(trees)],
-                         FUN = function(tr, x, y) {
+pos.sig.thresh <- mapply(trees[phy.with.sigs],
+	pos.sig[phy.with.sigs],
+	gene.presence[phy.with.sigs],
+  FUN = function(tr, x, y) {
   y2 <- y[x, intersect(tr$tip.label, colnames(y))]
   r1 <- rowSums(y2)
   r2 <- rowSums(1 - y2)
   names(which((r2 >= params$minimum) & (r1 >= params$minimum)))
 })
+# recalculate, since some of these may go away
+phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
 
-pos.sig.thresh.descs <- Reduce(rbind, lapply(names(pos.sig.thresh),
+pos.sig.thresh.descs <- Reduce(rbind, lapply(phy.with.sigs,
                                              function(n) {
   cbind(phylum = n,
         gene = pos.sig.thresh[[n]],
@@ -369,13 +395,15 @@ will form vertical stripes. Horizontal stripes may be visible for taxa that
 have particularly extreme phenotypes.
 
 ```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide"}
-cluster.plots <- mapply(gene.presence[names(trees)], pos.sig.thresh, trees,
-                        plotted.pheno.trees, names(trees),
-                        FUN=function(x, y, z, w, nt) {
+
+do.clust.plot <- function(x, y, z, w, nt) {
+
   sig.bin <- x[intersect(rownames(x), y), ]
+	if (is.null(dim(sig.bin))) {
+		sig.bin <- as.matrix(sig.bin) %>% t
+		rownames(sig.bin) <- y
+	}
   names(dimnames(sig.bin)) <- c("gene", "id")
-  clust <- hclust(dist(sig.bin, method = "binary"))
-  sig.ord <- melt(t(sig.bin[clust$order, ]))
   col.df <- data.frame(id = names(w$disp), disp = w$disp)
   p <- ggtree(z, ladderize = TRUE) %<+% col.df +
     geom_tippoint(aes(color = disp, shape = '.'))
@@ -388,16 +416,31 @@ cluster.plots <- mapply(gene.presence[names(trees)], pos.sig.thresh, trees,
                                   high = w$cols["high.col"],
                                   midpoint = mean(w$lims))   
   }
-  tmp <- facet_plot(p,
-                    paste0('heatmap: ', nt),
-                    sig.ord,
-                    geom_tile,
-                    aes(x = as.numeric(as.factor(gene)),
-                        fill = as.numeric(as.factor(value)))) +
-    scale_fill_gradient(low = "#000000", high = "slateblue2")
-  print(tmp)
-  return(tmp)
-}, SIMPLIFY = FALSE)
+	if (length(y) > 1) {
+	  clust <- hclust(dist(sig.bin, method = "binary"))
+		sig.ord <- melt(t(sig.bin[clust$order, ]))
+	} else {
+		sig.ord <- melt(t(sig.bin))
+		sig.ord <- sig.ord[order(sig.ord[, 3]), ]
+	}
+	tmp <- facet_plot(p,
+										paste0('heatmap: ', nt),
+										sig.ord,
+										geom_tile,
+										aes(x = as.numeric(as.factor(gene)),
+												fill = as.numeric(as.factor(value)))) +
+		scale_fill_gradient(low = "#000000", high = "slateblue2")
+	print(tmp)
+	return(tmp)
+}
+
+cluster.plots <- mapply(gene.presence[phy.with.sigs],
+	pos.sig.thresh[phy.with.sigs],
+	trees[phy.with.sigs],
+  plotted.pheno.trees[phy.with.sigs],
+	phy.with.sigs,
+  FUN=do.clust.plot, SIMPLIFY = FALSE)
+
 ```
 
 ## Enrichment analysis

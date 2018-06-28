@@ -1042,14 +1042,16 @@ calc.ess <- function(mtx, envir, meta, ptype, pdata = NULL, b.optim = NULL) {
   ids <- sapply(colnames(mtx), function (sn) meta[(meta$sample == sn), 
                                                   "env"])
   names(ids) <- colnames(mtx)
+  this.prior <- priors$prior[which(priors$env == envir)]
+  tolerance <- this.prior * 0.01
   if (is.null(b.optim)) {
     b.optim <- optimize.b.wrapper(effect.size = 2,
                                   real.mtx = mtx,
                                   real.ids = ids,
                                   which.real.env = envir,
                                   which.shape = envir,
-                                  prior = priors$prior[
-                                    which(priors$env == envir)],
+                                  prior = this.prior,
+                                  tol = tolerance,
                                   a = 0.05,
                                   optim.fxn = s.opt.fxn.3,
                                   verbose = FALSE)$maximum
@@ -1057,11 +1059,16 @@ calc.ess <- function(mtx, envir, meta, ptype, pdata = NULL, b.optim = NULL) {
     warning("skipping optimization of Laplace parameter (not recommended)")
   }
   regularized <- apply(mtx, 1, function(x) {
-    regularize.pET(x, ids, which.env = envir, b = b.optim)
+    regularize.pET(x, ids, which.env = envir, b = b.optim, prior = this.prior)
   })
+  logist.pheno <- regularized[2, ]
+  # "hard-shrink" anything shrunk almost to the prior to prevent these tiny
+  # differences from affecting the result in the absence of a strong change
+  logist.pheno[which(logist.pheno %btwn%
+    c(this.prior - tolerance, this.prior + tolerance))] <- this.prior
   return(list(
     b.optim = b.optim,
-    ess = logit(regularized[2, ]),
+    ess = logit(logist.pheno),
     regularized = regularized, 
     priors = priors))
 }
