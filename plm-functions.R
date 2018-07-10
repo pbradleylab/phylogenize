@@ -1041,6 +1041,9 @@ calc.ess <- function(mtx, envir, meta, ptype, pdata = NULL, b.optim = NULL) {
   }
   ids <- sapply(colnames(mtx), function (sn) meta[(meta$sample == sn), 
                                                   "env"])
+  if (length(unique(ids)) < 2) {
+    stop("error: only one environment found")
+  }
   names(ids) <- colnames(mtx)
   this.prior <- priors$prior[which(priors$env == envir)]
   tolerance <- this.prior * 0.01

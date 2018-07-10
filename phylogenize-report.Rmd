@@ -2,13 +2,13 @@
 title: "Phylogenetic linear modeling results"
 output: html_notebook
 params:
-  ncl: 1
+  ncl: 8
   type: "midas"
   out_dir: "output"
   in_dir: "."
   data_dir: "./data"
-  abundance_file: "bodysite-averaged.tab"
-  metadata_file: "bodysite-metadata.tab"
+  abundance_file: "abundance.tab"
+  metadata_file: "metadata.tab"
   phenotype_file: ""
   dada2_file: ""
   db_version: "midas_v1.0"
@@ -19,6 +19,7 @@ params:
   minimum: 3
   treemin: 5
   assume_below_LOD: TRUE
+  skip_graphs: FALSE
   burst_dir: "/home/pbradz/bin/"
 ---
 
@@ -41,20 +42,22 @@ dir.create(ODir)
 
 source("plm-functions.R")
 source("fisher-enrich.R")
-library(svglite)
 library(dplyr)
 
-knit_hooks$set(custom.plot = hook_plot_custom)
-# This next part courtesy of Yihui Xie
-local({
-  hook_plot = knit_hooks$get('plot')
-  knit_hooks$set(plot = function(x, options) {
-    x = paste(x, collapse = '.')
-    if (!grepl('\\.svg', x)) return(hook_plot(x, options))
-    # read the content of the svg image and write it out without <?xml ... ?>
-    paste(readLines(x)[-1], collapse = '\n')
-  })
-})
+if (!params$skip_graphs) { 
+	library(svglite)
+	knit_hooks$set(custom.plot = hook_plot_custom)
+	# This next part courtesy of Yihui Xie
+	local({
+		hook_plot = knit_hooks$get('plot')
+		knit_hooks$set(plot = function(x, options) {
+			x = paste(x, collapse = '.')
+			if (!grepl('\\.svg', x)) return(hook_plot(x, options))
+			# read the content of the svg image and write it out without <?xml ... ?>
+			paste(readLines(x)[-1], collapse = '\n')
+		})
+	})
+}
 
 # Read in the correct gene presence/absence matrix and corresponding tree files
 if (params$type == "midas") {
@@ -270,17 +273,18 @@ ggplot(subset(pheno.characteristics, cluster %in% kept.species),
 
 ```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla}
 
-for (pn in 1:length(plotted.pheno.trees)) {
-  p <- plotted.pheno.trees[[pn]]$tree
-  xlim <- plot(plotted.pheno.trees[[pn]]$rphy, plot = FALSE)$x.lim
-	hack.tree.labels(p + geom_tiplab() + ggplot2::xlim(xlim[1], xlim[2]),
-    fig_path('svg', number = pn),
-    stroke.scale = 0.3, 
-    pheno = 100*logistic(phenotype),
-    units="%",
-    pheno.name = params$which_phenotype)
+if (!params$skip_graphs) { 
+	for (pn in 1:length(plotted.pheno.trees)) {
+		p <- plotted.pheno.trees[[pn]]$tree
+		xlim <- plot(plotted.pheno.trees[[pn]]$rphy, plot = FALSE)$x.lim
+		hack.tree.labels(p + geom_tiplab() + ggplot2::xlim(xlim[1], xlim[2]),
+			fig_path('svg', number = pn),
+			stroke.scale = 0.3, 
+			pheno = 100*logistic(phenotype),
+			units="%",
+			pheno.name = params$which_phenotype)
+	}
 }
-
 write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
 
 ```
@@ -296,6 +300,23 @@ plotted.pheno.subtrees <- lapply(1:length(trees), function(tn) {
                cName = paste0(names(trees)[tn], ": ", params$which_phenotype),
                plot = FALSE)
 })
+<<<<<<< HEAD
+if (!params$skip_graphs) { 
+	for (pn in 1:length(plotted.pheno.subtrees)) {
+		ps <- plotted.pheno.subtrees[[pn]]
+		rp <- ps$rphy
+		tr <- ps$tree
+		xlim <- plot(plotted.pheno.subtrees[[pn]]$rphy, plot = FALSE)$x.lim
+		#tIDs <- tax.annot(rp$tip.label, taxonomy)
+		#newtr <- (tr %<+% data.frame(
+		#  label = rp$tip.label,
+		#  label2 = tIDs
+		#)) +
+		newtr <- (tr + 
+			geom_tiplab() +
+			ggplot2::xlim(xlim[1], xlim[2])
+		)
+=======
 for (pn in 1:length(plotted.pheno.subtrees)) {
 	ps <- plotted.pheno.subtrees[[pn]]
   rp <- ps$rphy
