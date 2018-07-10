@@ -108,7 +108,8 @@ g.mappings <- lapply.across.names(colnames(fig.hierarchy), function(x) {
 })
 
 # Read abundance, metadata files
-abd.mtx <- fastread(file.path(IDir, params$abundance_file))
+abd.mtx <- fastread(file.path(IDir, params$abundance_file), 
+	cn = FALSE)
 metadata <- read.table(file.path(IDir, params$metadata_file),
                        header = TRUE)
 if (SixteenS) {

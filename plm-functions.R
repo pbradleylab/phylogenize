@@ -45,9 +45,9 @@ count.each <- function(x, na.rm = FALSE) {
   simplify2array(lapply.across.names(u, function(y) sum(x == y, na.rm = na.rm)))
 }
 
-fastread <- function(location) {
+fastread <- function(location, cn = TRUE) {
   # rownames are useful
-  master <- data.frame(fread(location, header = T))
+  master <- data.frame(fread(location, header = T), check.names = cn)
   rn <- master[,1]
   rest <- master[,-1]
   rownames(rest) <- rn
