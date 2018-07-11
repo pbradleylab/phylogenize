@@ -15,6 +15,7 @@ library("seqinr")
 library("kableExtra")
 library("scales")
 library("xml2")
+library("ggplot2")
 
 # helper functions
 
