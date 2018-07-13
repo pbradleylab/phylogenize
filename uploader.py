@@ -7,10 +7,21 @@ import uuid
 from pystalkd.Beanstalkd import Connection
 import bleach
 import tempfile
+import csv
 
-def saferead(fn):
-  # this doesn't work yet
-  [bleach.clean(line) for line in fn]
+def sanitize_tsv(fhandle, outfile):
+  reader = csv.reader(fhandle, delimiter = '\t')
+  outfh = csv.writer(open(outfile, 'wb+'))
+  writer = csv.writer(outfh, delimiter = '\t')
+  header = reader.next()
+  if (len(header) < 2):
+    raise RuntimeError("Invalid tab-delimited file")
+  header = [bleach.clean(x) for x in header]
+  writer.writerow(header)
+  for row in reader:
+    rclean = [bleach.clean(x) for x in row]
+    writer.writerow(rclean)
+  outfh.close()
 
 beanstalk = Connection(host='localhost', port=14711)
 beanstalk.use("phylogenize")
@@ -29,11 +40,11 @@ sys.stdout.flush()
 
 form = cgi.FieldStorage()
 abd_f = form['abundance_file']
-abd = abd_f.file
+#abd = abd_f.file
 #abd = saferead(abd_f)
 metad_f = form['metadata_file']
 #mdf = saferead(metad_f)
-mdf = metad_f.file
+#mdf = metad_f.file
 dtype = bleach.clean(form['dtype'].value)
 db = form['database'].value
 phenotype = bleach.clean(form['phenotype'].value)
@@ -58,12 +69,16 @@ os.mkdir(direc)
 os.mkdir(IDir)
 os.mkdir(ODir)
 
-with open(os.path.join(IDir, "abundance.tab"), 'wb') as fh:
-  for l in abd:
-    fh.write(l)
-with open(os.path.join(IDir, "metadata.tab"), 'wb') as fh:
-  for l in mdf:
-    fh.write(l)
+tsv_sanitize(abd_f.file, os.path.join(IDir, "abundance.tab"))
+tsv_sanitize(metad_f.file, os.path.join(IDir, "abundance.tab"))
+
+
+#with open(os.path.join(IDir, "abundance.tab"), 'wb') as fh:
+#  for l in abd:
+#    fh.write(l)
+#with open(os.path.join(IDir, "metadata.tab"), 'wb') as fh:
+#  for l in mdf:
+#    fh.write(l)
 
 if phenotype == "provided":
   with open(os.path.join(IDir, "phenotype.tab"), 'wb') as fh:
