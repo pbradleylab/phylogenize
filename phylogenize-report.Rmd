@@ -1,6 +1,13 @@
 ---
 title: "Phylogenetic linear modeling results"
-output: html_notebook
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    pandoc_args: [
+      "+RTS", "-K2048m",
+      "-RTS"
+    ]
 params:
   ncl: 8
   type: "midas"
@@ -23,13 +30,14 @@ params:
   burst_dir: "/home/pbradz/bin/"
 ---
 
+# Settings
+
 This report was generated automatically by [phylogenize](http://pbradley-dell/~pbradz/phylogenize/) (citation info here), with the following parameters:
 
   - Type of input data: "`r params$type`"
   - Phenotype calculated: "`r params$which_phenotype`"
   - Environment of interest: "`r params$which_envir`"
   - Prior probabilities for environments: "`r params$prior_type`"
-
 
 ```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE}
 
@@ -113,8 +121,11 @@ g.mappings <- lapply.across.names(colnames(fig.hierarchy), function(x) {
 # Read abundance, metadata files
 abd.mtx <- fastread(file.path(IDir, params$abundance_file), 
 	cn = FALSE)
-metadata <- read.table(file.path(IDir, params$metadata_file),
-                       header = TRUE)
+metadata <- fread(file.path(IDir, params$metadata_file))
+metadata$env <- as.factor(metadata$env)
+# necessary now that we're using fread
+#metadata <- read.table(file.path(IDir, params$metadata_file),
+#                       header = TRUE)
 if (SixteenS) {
   # write out input sequences
   write.fasta(as.list(rownames(abd.mtx)),
@@ -176,7 +187,7 @@ nphyla <- length(trees)
 
 ```
 
-## Phenotype calculation
+# Phenotype calculation
 
 Below, trees for all phyla with at least `r params$treemin` representatives in the
 input data are presented. Trees are colored according to the phenotype chosen 
@@ -270,17 +281,23 @@ ggplot(subset(pheno.characteristics, cluster %in% kept.species),
 
 
 ```
+# Phenotype mapped across trees
+## All taxa {.tabset}
 
-```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla}
+```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla, cache.lazy = FALSE}
 
 # Put me in a tryCatch since very small trees seem to be failing rn
 if (!params$skip_graphs) { 
 	for (pn in 1:length(plotted.pheno.trees)) {
 		p <- plotted.pheno.trees[[pn]]$tree
 		xlim <- plot(plotted.pheno.trees[[pn]]$rphy, plot = FALSE)$x.lim
+		new.tr <- p +
+			geom_tiplab() +
+			ggplot2::xlim(xlim[1], xlim[2])
+		fn <- fig_path('svg', number = pn)
 		tryCatch(
-			hack.tree.labels(p + geom_tiplab() + ggplot2::xlim(xlim[1], xlim[2]),
-				fig_path('svg', number = pn),
+			hack.tree.labels(new.tr,
+				fn,
 				stroke.scale = 0.3, 
 				pheno = 100*logistic(phenotype),
 				units="%",
@@ -288,11 +305,7 @@ if (!params$skip_graphs) {
 			error = function(e) {
 				warning(e)
 				# Fall back to non-interactive
-				non.int <- xmlSVG(print(p + 
-					geom_tiplab() +
-						ggplot2::xlim(xlim[1], xlim[2])),
-					standalone = TRUE)
-				write_xml(non.int, fig_path('svg', number = pn))
+				non.interactive.plot(new.tr, fn)
 		})
 	}
 }
@@ -301,9 +314,11 @@ write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
 
 ```
 
-Here are the same trees, but with only the mapped/observed taxa plotted:
+## Only mapped/observed taxa {.tabset}
 
-```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla}
+(This section contains the same trees, but with only the mapped/observed taxa plotted. For the "specificity" phenotype this should be the same.)
+
+```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla, cache.lazy = FALSE}
 plotted.pheno.subtrees <- lapply(1:length(trees), function(tn) {
   gg.cont.tree(keep.tips(trees[[tn]], mapped.observed),
                phenotype,
@@ -330,19 +345,24 @@ for (pn in 1:length(plotted.pheno.subtrees)) {
 		geom_tiplab() +
 			ggplot2::xlim(xlim[1], xlim[2])
 		)
+	fn <- fig_path('svg', number = pn)
 	tryCatch(
 		hack.tree.labels(newtr,
-			fig_path('svg', number = pn),
+			fn,
 			stroke.scale = 0.3, 
 			pheno = 100*logistic(phenotype),
 			units="%",
 			pheno.name = params$which_phenotype),
-		error = function(e) print(newtr))
+		error = function(e) {
+			warning(e)
+			# Fall back to non-interactive
+			non.interactive.plot(new.tr, fn)
+		})
 }
 names(plotted.pheno.subtrees) <- names(trees)
 ```
 
-## Associations between genes and taxa
+# Associations between genes and taxa
 
 This table gives an overview of how many genes were significantly associated at
 an FDR of 5%. 
@@ -401,7 +421,7 @@ write.csv(file = file.path(ODir, "all-results.csv"),
           results.matrix)
 ```
 
-## Gene association heat maps
+# Gene association heat maps {.tabset}
 
 The left shows the phenotype painted on tips of the tree as above. The right
 adds a heatmap where blue points represent presence of a gene (aligned with the
@@ -411,7 +431,7 @@ right by Jaccard dissimilarity, so genes with similar patterns of inheritance
 will form vertical stripes. Horizontal stripes may be visible for taxa that
 have particularly extreme phenotypes.
 
-```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide"}
+```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png"}
 
 do.clust.plot <- function(x, y, z, w, nt) {
 
@@ -460,14 +480,13 @@ cluster.plots <- mapply(gene.presence[phy.with.sigs],
 
 ```
 
-## Enrichment analysis
+# Enrichment analysis
 
-This process takes the set of genes that are
-significant and asks whether there are more than expected by chance in a given
-SEED subsystem. Subsystems come in three levels of granularity (referred to
-here as l1, l2, and l3); "l1" subsystems are the most general and
-"l3" are the most specific. </p>
-
+This process takes the set of genes that are significant and positively
+associated with the phenotype, then asks whether there are more than expected
+by chance in a given SEED subsystem. Subsystems come in three levels of
+granularity (referred to here as l1, l2, and l3); "l1" subsystems are the most
+general and "l3" are the most specific. </p>
 
 All SEED categories returned are significant at an FDR of 25%. "Strong", "Med",
 and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
@@ -511,6 +530,19 @@ enr.table %>%
   kable_styling(c("striped", "condensed"))
     
 #kable(enr.table, row.names = FALSE, format.args = list(digits = 2))
+
+### Make CSV of enrichments
+
+enr.overlap.lists <- lapply(enrichments$strong, function(lev) {
+	Filter(function(x) length(x) > 0, 
+    mapply(lev, results, FUN = signif.overlaps)
+  )
+})
+enr.overlap <- annotate.nested(enr.overlap.lists, n.names = c("level", "phylum", "process"))
+write.csv(file=file.path(ODir, "enr-overlaps.csv"), enr.overlap)
+write.csv(file=file.path(ODir, "enr-overlaps-sorted.csv"),
+  enr.overlap[order(enr.overlap$phylum, enr.overlap$process, enr.overlap$value.value.estimate), ])
+
 ```
 
 ```

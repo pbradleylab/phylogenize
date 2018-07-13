@@ -1046,24 +1046,31 @@ calc.ess <- function(mtx, envir, meta, ptype, pdata = NULL, b.optim = NULL) {
     stop("error: only one environment found")
   }
   names(ids) <- colnames(mtx)
+  ids <- simplify2array(ids)
   this.prior <- priors$prior[which(priors$env == envir)]
   tolerance <- this.prior * 0.01
   if (is.null(b.optim)) {
     b.optim <- optimize.b.wrapper(effect.size = 2,
                                   real.mtx = mtx,
-                                  real.ids = ids,
+                                  real.ids = ids %>% simplify2array,
                                   which.real.env = envir,
                                   which.shape = envir,
                                   prior = this.prior,
                                   tol = tolerance,
                                   a = 0.05,
                                   optim.fxn = s.opt.fxn.3,
-                                  verbose = FALSE)$maximum
+                                  verbose = FALSE,
+                                  add.pc = TRUE)$maximum
   } else {
     warning("skipping optimization of Laplace parameter (not recommended)")
   }
   regularized <- apply(mtx, 1, function(x) {
-    regularize.pET(x, ids, which.env = envir, b = b.optim, prior = this.prior)
+    regularize.pET(x,
+      ids,
+      which.env = envir,
+      b = b.optim,
+      prior = this.prior,
+      add.pc = TRUE)
   })
   logist.pheno <- regularized[2, ]
   # "hard-shrink" anything shrunk almost to the prior to prevent these tiny
@@ -1325,3 +1332,26 @@ style.parse <- function(str) {
   }
   return(c.output)
 }
+non.interactive.plot <- function(tree.obj, file) {
+  warning(paste0("replotting to: ", file))
+  non.int <- xmlSVG(print(tree.obj), standalone = TRUE)
+  write_xml(x = non.int, file)
+}
+
+signif.overlaps <- function(enr, result) {
+  overlap.list <- enr$full$overlaps[enr$table %>% rownames]
+  x <- lapply(names(overlap.list), function(n) {
+    g <- overlap.list[[n]]
+    if (length(g) > 0) {
+      cbind(genes = overlap.list[[n]], 
+        descs = gene.annot(overlap.list[[n]]),
+        estimate = result[1, g],
+        qval = qvals(result[2, ])[g])
+    } else {
+      cbind(NA, NA, NA, NA)
+    }
+  })
+  names(x) <- names(overlap.list)
+  x
+}
+
