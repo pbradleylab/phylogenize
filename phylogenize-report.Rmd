@@ -123,6 +123,33 @@ abd.mtx <- fastread(file.path(IDir, params$abundance_file),
 	cn = FALSE)
 metadata <- fread(file.path(IDir, params$metadata_file))
 metadata$env <- as.factor(metadata$env)
+
+# Keep only samples that are both in the metadata and in the abundance matrix
+samples.present <- intersect(metadata$sample, colnames(abd.mtx))
+abd.no.meta <- length(setdiff(colnames(abd.mtx), samples.present))
+meta.no.abd <- length(setdiff(metadata$sample, samples.present))
+print(paste0(length(samples.present), " samples found in both metadata and abundance matrix"))
+abd.mtx <- abd.mtx[, samples.present]
+metadata <- metadata[metadata$sample %in% samples.present, ]
+
+# Drop singleton environments/datasets
+all.envs <- unique(metadata$env)
+all.dsets <- unique(metadata$dataset)
+env.number <- sapply(all.envs, function(e) sum(metadata$env == e))
+dset.number <- sapply(all.dsets, function(d) sum(metadata$dataset == d))
+names(env.number) <- all.envs
+names(dset.number) <- all.dsets
+nonsingleton.envs <- names(which(env.number > 1))
+nonsingleton.dsets <- names(which(dset.number > 1))
+print(paste0(length(nonsingleton.envs), " non-singleton environment(s) found"))
+print(paste0(length(nonsingleton.dsets), " non-singleton dataset(s) found"))
+metadata <- metadata[(metadata$env %in% nonsingleton.envs) &
+  (metadata$dataset %in% nonsingleton.dsets), ]
+abd.mtx <- abd.mtx[, intersect(colnames(abd.mtx), metadata$sample)]
+
+
+
+
 # necessary now that we're using fread
 #metadata <- read.table(file.path(IDir, params$metadata_file),
 #                       header = TRUE)
@@ -281,8 +308,10 @@ ggplot(subset(pheno.characteristics, cluster %in% kept.species),
 
 
 ```
-# Phenotype mapped across trees
-## All taxa {.tabset}
+
+# Phenotype mapped across trees {.tabset}
+
+## All taxa
 
 ```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla, cache.lazy = FALSE}
 
@@ -367,7 +396,7 @@ names(plotted.pheno.subtrees) <- names(trees)
 This table gives an overview of how many genes were significantly associated at
 an FDR of 5%. 
 
-```{r get_associations, warning = FALSE, message = FALSE, results="hide",echo=FALSE}
+```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE}
 results <- result.wrapper.plm(phyla = names(taxa),
                               pheno = phenotype,
                               tree = trees,
@@ -421,7 +450,7 @@ write.csv(file = file.path(ODir, "all-results.csv"),
           results.matrix)
 ```
 
-# Gene association heat maps {.tabset}
+# Gene association heat maps
 
 The left shows the phenotype painted on tips of the tree as above. The right
 adds a heatmap where blue points represent presence of a gene (aligned with the
@@ -431,7 +460,7 @@ right by Jaccard dissimilarity, so genes with similar patterns of inheritance
 will form vertical stripes. Horizontal stripes may be visible for taxa that
 have particularly extreme phenotypes.
 
-```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png"}
+```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300}
 
 do.clust.plot <- function(x, y, z, w, nt) {
 
@@ -510,6 +539,7 @@ options(knitr.table.format = "html")
 enr.table <- data.frame(enr.table[, -1])
 enr.table <- data.frame(apply(enr.table, 2, as.character),
 	stringsAsFactors = FALSE)
+enr.table <- enr.table[!is.na(enr.table$q_value), ]
 rownames(enr.table) <- NULL
 enr.table %>%
   mutate(
