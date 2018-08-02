@@ -800,10 +800,12 @@ reduce.ia <- function(ia.results, f) {
   output.grid
 }
 
-fit.beta.list <-  function(mtx, ids) {
+fit.beta.list <-  function(mtx, ids, fallback = c(NA, NA)) {
   lapply(unique(ids), function(i) {
-    fitdistr(densfun = "beta", start = list(shape1 = 1, shape2 = 1), 
-      apply(mtx[, which(ids == i)], 1, function(x) mean(c(x, 0, 1) > 0)))$estimate
+    tryCatch(
+      fitdistr(densfun = "beta", start = list(shape1 = 1, shape2 = 1), 
+        apply(mtx[, which(ids == i)], 1, function(x) mean(c(x, 0, 1) > 0)))$estimate,
+      error = function(e) fallback)
   })
 }
 
@@ -858,7 +860,12 @@ optimize.b.wrapper.single <- function(real.mtx, real.ids, which.env = 2, which.s
 
 optimize.b.wrapper <- function(real.mtx, real.ids, which.real.env = 2, which.shape = 1, prior = 0.002, effect.size = 2, bounds = c(0.01, 5), add.pc = FALSE, tol = prior * 0.005, a = 0.05, verbose = FALSE, optim.fxn = s.opt.fxn.3, pos.prop = 0.5, ...) {
   shape.n <- which((real.ids %>% unique %>% sort) == which.shape)
-  shapes <- suppressWarnings(fit.beta.list(real.mtx, real.ids))
+  # Fall back to the overall beta if not enough information to fit a
+  # distribution (or too wacky)
+  overall.shape <- fitdistr(densfun = "beta", start = list(shape1 = 1, shape2 = 1), 
+      apply(real.mtx, 1, function(x) mean(c(x, 0, 1) > 0)))$estimate
+  shapes <- suppressWarnings(fit.beta.list(real.mtx, real.ids, fallback = overall.shape))
+  #shapes[sapply(shapes, function(x) any(is.na(x)))] <- overall.shape
   N <- count.each(real.ids)
   which.env <- which(names(N) == which.real.env)
   get.optim <- function(b) {
@@ -1024,7 +1031,7 @@ calc.ess <- function(mtx, envir, meta, ptype, pdata = NULL, b.optim = NULL) {
   env.rows <- (meta$env == envir)
   dsets <- unique(meta[env.rows, "dataset"])
   if (length(dsets) > 1) {
-    stop("can't currently calculate specificity across more than one dataset")
+    warning("datasets are ignored when calculating specificity")
   }
   meta.present <- meta[(meta$sample %>% as.character %in% colnames(mtx)), ]
   envirs <- unique(meta.present$env)
@@ -1046,24 +1053,31 @@ calc.ess <- function(mtx, envir, meta, ptype, pdata = NULL, b.optim = NULL) {
     stop("error: only one environment found")
   }
   names(ids) <- colnames(mtx)
+  ids <- simplify2array(ids)
   this.prior <- priors$prior[which(priors$env == envir)]
   tolerance <- this.prior * 0.01
   if (is.null(b.optim)) {
     b.optim <- optimize.b.wrapper(effect.size = 2,
                                   real.mtx = mtx,
-                                  real.ids = ids,
+                                  real.ids = ids %>% simplify2array,
                                   which.real.env = envir,
                                   which.shape = envir,
                                   prior = this.prior,
                                   tol = tolerance,
                                   a = 0.05,
                                   optim.fxn = s.opt.fxn.3,
-                                  verbose = FALSE)$maximum
+                                  verbose = FALSE,
+                                  add.pc = TRUE)$maximum
   } else {
     warning("skipping optimization of Laplace parameter (not recommended)")
   }
   regularized <- apply(mtx, 1, function(x) {
-    regularize.pET(x, ids, which.env = envir, b = b.optim, prior = this.prior)
+    regularize.pET(x,
+      ids,
+      which.env = envir,
+      b = b.optim,
+      prior = this.prior,
+      add.pc = TRUE)
   })
   logist.pheno <- regularized[2, ]
   # "hard-shrink" anything shrunk almost to the prior to prevent these tiny
@@ -1325,3 +1339,32 @@ style.parse <- function(str) {
   }
   return(c.output)
 }
+non.interactive.plot <- function(tree.obj, file) {
+  warning(paste0("replotting to: ", file))
+  non.int <- xmlSVG(print(tree.obj), standalone = TRUE)
+  write_xml(x = non.int, file)
+}
+
+signif.overlaps <- function(enr, result) {
+  if (!is.null(enr$table %>% dim)) {
+    overlap.list <- enr$full$overlaps[enr$table %>% rownames]
+  } else if ("enriched" %in% names(enr$table)) {
+    overlap.list <- enr$full$overlaps[enr$table["enriched"]]
+  } else {
+    overlap.list <- list()
+  }
+  x <- lapply(names(overlap.list), function(n) {
+    g <- overlap.list[[n]]
+    if (length(g) > 0) {
+      cbind(genes = overlap.list[[n]], 
+        descs = gene.annot(overlap.list[[n]]),
+        estimate = result[1, g],
+        qval = qvals(result[2, ])[g])
+    } else {
+      cbind(NA, NA, NA, NA)
+    }
+  })
+  names(x) <- names(overlap.list)
+  x
+}
+
