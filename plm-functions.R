@@ -364,7 +364,7 @@ result.wrapper <- function(phyla, pheno, tree,
 
 result.wrapper.plm <- function(phyla, pheno, tree,
   proteins = phylum.ff.bin.restricted, clusters = phy.clusters, randomize = FALSE, subsample.pheno = FALSE,
-  method = matrix.plm, n.cores = 16, restrict.figfams = NULL, drop.zero.var = FALSE, only.return.names = FALSE, ...) {
+  method = matrix.plm, n.cores = 16, restrict.figfams = NULL, drop.zero.var = TRUE, only.return.names = FALSE, ...) {
   lapply.across.names(phyla, function(p) {
     message(p)
     # avoid passing 0.5Gb object to matrix.plr
@@ -390,6 +390,14 @@ result.wrapper.plm <- function(phyla, pheno, tree,
       rownames(sub.fig)
     }
   })
+}
+
+phylolm.subset <- function(Y, X, phy) {
+  keep <- intersect(names(Y), intersect(names(X), phy$tip.label))
+  Ys <- Y[keep]
+  Xs <- X[keep]
+  phys <- keep.tips(phy, keep)
+  phylolm(Y ~ X, phy = phys)
 }
 
 matrix.plm <- function(tree, mtx, pheno, restrict, cores = 8) {
