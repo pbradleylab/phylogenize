@@ -143,6 +143,9 @@ samples.present <- intersect(metadata$sample, colnames(abd.mtx))
 abd.no.meta <- length(setdiff(colnames(abd.mtx), samples.present))
 meta.no.abd <- length(setdiff(metadata$sample, samples.present))
 print(paste0(length(samples.present), " samples found in both metadata and abundance matrix"))
+if (length(samples.present) == 0) {
+  stop("error: no samples found in both metadata and abundance matrix")
+}
 abd.mtx <- abd.mtx[, samples.present]
 metadata <- metadata[metadata$sample %in% samples.present, ]
 
@@ -206,7 +209,7 @@ if (SixteenS) {
   abd.mtx <- apply(summed.uniq[, which(csu > 0)], 2, function(x) x / sum(x))
 }
 
-### Figure out how many trees to remain
+### Figure out how many trees to retain
 
 taxa.observed <- rownames(abd.mtx)
 taxa.per.tree <- lapply(trees, function(tr) {

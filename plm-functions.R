@@ -405,11 +405,7 @@ matrix.plm <- function(tree, mtx, pheno, restrict, cores = 8) {
   restrict <- as.character(restrict)
   valid.cols <- Reduce(intersect, list(colnames(mtx), restrict, names(pheno)))
   restricted.tree <- keep.tips(tree, valid.cols)
-  cl <- makeCluster(cores)
-  clusterCall(cl, source, file="plm-functions.R")
-  clusterExport(cl, c("restricted.tree", "mtx", "pheno", "valid.cols"), 
-    envir = environment())
-  r <- parApply(cl, mtx, 1, function(m) {
+  process.plm <- function(m) {
     m1 <- m[valid.cols]
     p1 <- pheno[valid.cols]
     names(m1) <- valid.cols
@@ -418,12 +414,22 @@ matrix.plm <- function(tree, mtx, pheno, restrict, cores = 8) {
       phylolm(p1 ~ m1, phy = restricted.tree),
       error = function(e) { warning(paste(e)); c(Estimate = NA, p.value = NA) })
     if (!is.na(x[1])) {
-      summary(x)$coefficients["m1", c("Estimate", "p.value")]
+      summary(x)$coefficients["m1TRUE", c("Estimate", "p.value")]
     } else { x }
-  })
-  stopCluster(cl)
+  }
+  if (cores > 1) {
+    cl <- makeCluster(cores)
+    clusterCall(cl, source, file="plm-functions.R")
+    clusterExport(cl, c("restricted.tree", "mtx", "pheno", "valid.cols"), 
+      envir = environment())
+    r <- parApply(cl, mtx, 1, process.plm)
+    stopCluster(cl)
+  } else {
+    r <- apply(mtx, 1, process.plm)
+  }
   r
 }
+
 parLapplyLB <- function(cl, x, fun, ...) {
   message("... ...initializing... ...")
   clusterCall(cl, LB.init, fun, ...)

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% macro infotitle(text) %}
+  <span id="infotitle">{{ text }}</span>
+{% endmacro %}
+
+{% block content %}
+<h1><span>phylogenize</span></h1>
+<h2>v0.1 alpha</h2>
+<h3>Results</h3>
+
+  {% if completed %}
+  <ul>
+      {{ infotitle("Job completed!") }}
+    <li><a href="{{ result_id }}/phylogenize_report.html">Report file
+    <li><a href="{{ result_id }}/results.tgz">Results (.tgz)
+  </ul>
+
+  {% else %}
+      {{ infotitle("Progress") }}
+      <div class="outfile">
+        {{ include_file(outfile) }}
+      </div>
+  {% endif %}
+
+  <p>
+  {{ infotitle("Warnings/errors") }}
+  <div class="outfile">
+    {{ include_file(errfile) }}
+  </div>
+
+<h3>Patrick H. Bradley, Pollard lab</h3>
+
+{% endblock %}
+
