@@ -167,9 +167,6 @@ abd.mtx <- abd.mtx[, intersect(colnames(abd.mtx), metadata$sample)]
 
 
 
-# necessary now that we're using fread
-#metadata <- read.table(file.path(IDir, params$metadata_file),
-#                       header = TRUE)
 if (SixteenS) {
   # write out input sequences
   write.fasta(as.list(rownames(abd.mtx)),
