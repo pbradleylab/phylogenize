@@ -23,6 +23,8 @@ from flask_wtf.file import (
     DataRequired,
     FileAllowed
 )
+from flask_wtf.recaptcha import RecaptchaField
+
 from wtforms import (
     FileField,
     RadioField,
@@ -32,6 +34,9 @@ from wtforms.validators import Optional, InputRequired
 from pystalkd.Beanstalkd import Connection
 from flask_uploads import configure_uploads, UploadSet
 
+
+RECAPTCHA_PUBLIC_KEY = '6LdqGmkUAAAAAIKT3ZLbEWPZaPkiLonF8W8zmLlK'
+RECAPTCHA_PRIVATE_KEY = '6LdqGmkUAAAAAHxf242OHD4_2_K0Y_TfJ3wqdohC'
 UPLOAD_FOLDER = './instance/results/'
 REPORT_TEMPLATE_PATH = './phylogenize-report.Rmd'
 ALLOWED_EXTENSIONS = set([
@@ -87,11 +92,13 @@ class JobForm(FlaskForm):
     ]
   )
   which_envir = StringField("Environment", validators = [InputRequired()])
+  recaptcha = RecaptchaField()
 
   def validate(self):
     if not super(JobForm, self).validate():
       return False
-    if not (self.abundances.data and self.metadata.data) or self.biomfile.data:
+    if not ((self.abundances.data and self.metadata.data) or \
+        self.biomfile.data):
       msg = "Either two tab-delimited files (a species abundance table and a" +\
         "sample annotation file) or a single BIOM file (including species" +\
         "abundances and sample annotations) must be uploaded"
@@ -118,13 +125,17 @@ def create_app(test_config=None):
   app.config['WTF_CSRF_SECRET_KEY'] = os.environ.get('WTF_CSRF_SECRET_KEY') or\
     'tankboozysurrealgrinning'
   app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER') or UPLOAD_FOLDER
+  app.config['MAX_CONTENT_LENGTH'] = 35 * 1024 * 1024
+  app.config['RECAPTCHA_PUBLIC_KEY'] = '6LdqGmkUAAAAAIKT3ZLbEWPZaPkiLonF8W8zmLlK'
+  app.config['RECAPTCHA_PRIVATE_KEY'] = '6LdqGmkUAAAAAHxf242OHD4_2_K0Y_TfJ3wqdohC'
 
   @app.route('/', methods=['GET', 'POST'])
   def home():
     form = JobForm()
     if request.method == 'POST':
       if form.validate_on_submit():
-        new_result_id = process_form(form, request)
+        new_result_id = process_form(form, request,
+            app.config['UPLOAD_FOLDER'])
         return(redirect(url_for('display_results', result_id=new_result_id)))
       else:
         pass
@@ -159,7 +170,7 @@ def create_app(test_config=None):
       err = errtext))
 
   @app.route('/results/<result_id>/<subfile>')
-  def display_html(result_id):
+  def display_result_file(result_id, subfile):
     result_id = secure_filename(result_id)
     subfile = secure_filename(subfile)
     direc = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], result_id))
@@ -170,7 +181,7 @@ def create_app(test_config=None):
       if os.path.isfile(reportfile):
         return(send_from_directory(direc, "phylogenize_report.html"))
       else:
-        return(redirect(url_for('display_results'), result_id = result_id))
+        return(redirect(url_for('display_results', result_id = result_id)))
     elif subfile == "results.tgz":
       tgzfile = os.path.join(direc,
           "output",
@@ -178,20 +189,20 @@ def create_app(test_config=None):
       if os.path.isfile(reportfile):
         return(send_from_directory(direc, "results.tgz"))
       else:
-        return(redirect(url_for('display_results'), result_id = result_id))
+        return(redirect(url_for('display_results', result_id = result_id)))
     else:
-      return(redirect(url_for('display_results'), result_id = result_id))
+      return(redirect(url_for('display_results', result_id = result_id)))
 
   return(app)
 
-def process_form(form = None, request = None):
+def process_form(form = None, request = None, upload_folder = UPLOAD_FOLDER):
   uploaded_biom = False
   if form.biomfile.data:
     uploaded_biom = True
   # Generate a unique UUID
   while True:
     new_result_id = str(uuid.uuid4())
-    direc = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], new_result_id))
+    direc = os.path.abspath(os.path.join(upload_folder, new_result_id))
     if not os.path.exists(direc):
       break
   # Set up directory structure
