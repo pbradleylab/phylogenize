@@ -16,6 +16,8 @@ params:
   data_dir: "./data"
   abundance_file: "abundance.tab"
   metadata_file: "metadata.tab"
+  biom_file: ""
+  input_format: "tabular"
   phenotype_file: ""
   dada2_file: ""
   db_version: "midas_v1.0"
@@ -51,7 +53,24 @@ dir.create(ODir)
 source("plm-functions.R")
 source("fisher-enrich.R")
 library(dplyr)
+library(biomformat)
 library(Matrix)
+
+# Read abundance, metadata files
+if (params$input_format == "tabular") {
+  abd.mtx <- fastread(file.path(IDir, params$abundance_file), 
+  	cn = FALSE)
+  metadata <- fread(file.path(IDir, params$metadata_file))
+  metadata$env <- as.factor(metadata$env)
+} else if (params$input_format == "biom") {
+  biomf <- read_biom(file.path(IDir, params$biom_file))
+  abd.mtx <- biom_data(biomf)
+  metadata <- sample_metadata(biomf)
+  metadata$env <- as.factor(metadata$env)
+  # work around different naming convention
+  colnames(metadata)[which(colnames(metadata) == "SampleID")] <- "sample"
+  rm(biomf); gc()
+}
 
 if (!params$skip_graphs) { 
 	library(svglite)
@@ -118,12 +137,6 @@ g.mappings <- lapply.across.names(colnames(fig.hierarchy), function(x) {
 		fig.hierarchy[, c(x, "function")],
 		by.x = "function.", by.y = "function")[, -1]
 })
-
-# Read abundance, metadata files
-abd.mtx <- fastread(file.path(IDir, params$abundance_file), 
-	cn = FALSE)
-metadata <- fread(file.path(IDir, params$metadata_file))
-metadata$env <- as.factor(metadata$env)
 
 # Keep only samples that are both in the metadata and in the abundance matrix
 samples.present <- intersect(metadata$sample, colnames(abd.mtx))
@@ -287,6 +300,9 @@ if (params$which_phenotype == "prevalence") {
 		stop("providing your own phenotype not implemented yet")
   } else stop(paste0("don't know how to calculate the phenotype ",
                    params$which_phenotype))
+
+# be a little parsimonious with memory here
+rm(abd.mtx); gc()
 
 plotted.pheno.trees <- lapply(1:length(trees), function(tn) {
   gg.cont.tree(trees[[tn]],
@@ -490,12 +506,12 @@ do.clust.plot <- function(x, y, z, w, nt) {
 		sig.ord <- melt(t(sig.bin))
 		sig.ord <- sig.ord[order(sig.ord[, 3]), ]
 	}
-	tmp <- facet_plot(p,
-										paste0('heatmap: ', nt),
-										sig.ord,
-										geom_tile,
-										aes(x = as.numeric(as.factor(gene)),
-												fill = as.numeric(as.factor(value)))) +
+  tmp <- facet_plot(p,
+                    paste0('heatmap: ', nt),
+                    sig.ord,
+                    geom_tile,
+                    aes(x = as.numeric(as.factor(gene)),
+                        fill = as.numeric(as.factor(value)))) +
 		scale_fill_gradient(low = "#000000", high = "slateblue2")
 	print(tmp)
 	return(tmp)

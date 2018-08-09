@@ -396,7 +396,7 @@ phylolm.subset <- function(Y, X, phy) {
   keep <- intersect(names(Y), intersect(names(X), phy$tip.label))
   Ys <- Y[keep]
   Xs <- X[keep]
-  phys <- keep.tips(phy, keep)
+  phys <- keep.tip(phy, keep)
   phylolm(Y ~ X, phy = phys)
 }
 
