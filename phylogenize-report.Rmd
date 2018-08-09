@@ -68,7 +68,7 @@ if (params$input_format == "tabular") {
   metadata <- sample_metadata(biomf)
   metadata$env <- as.factor(metadata$env)
   # work around different naming convention
-  colnames(metadata)[which(colnames(metadata) == "SampleID")] <- "sample"
+  metadata$sample <- rownames(metadata)
   rm(biomf); gc()
 }
 
