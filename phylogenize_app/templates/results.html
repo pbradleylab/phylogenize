@@ -18,15 +18,21 @@
 
   {% else %}
       {{ infotitle("Progress") }}
-      <div class="outfile">
-        {{ include_file(outfile) }}
+      <div>
+        <pre class="outfile"><samp>
+        {{ out }}
+</samp>
+        </pre>
       </div>
   {% endif %}
 
   <p>
   {{ infotitle("Warnings/errors") }}
-  <div class="outfile">
-    {{ include_file(errfile) }}
+  <div>
+        <pre class="errfile"><samp>
+    {{ err }}
+    </samp>
+        </pre>
   </div>
 
 <h3>Patrick H. Bradley, Pollard lab</h3>

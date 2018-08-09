@@ -58,6 +58,28 @@ font-size: 80%;
 	padding: 25px;
 	border: 1px dashed #888888;
 }
+pre.outfile {
+	font-size: 8pt;
+	line-height: 1;
+	width: 75%;
+	padding: 25px;
+	border: 1px #888888;
+  background-color: #FFFFEE;
+  color: #000000;
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+pre.errfile {
+	font-size: 8pt;
+	line-height: 1;
+	width: 75%;
+	padding: 25px;
+	border: 1px #888888;
+  color: #000000;
+  background-color: #FFDDDD;
+  font-family: monospace;
+      white-space: pre-wrap;
+}
 
 #infotitle {
 	font-weight: bold;
@@ -170,6 +192,9 @@ ul {
 
 #formlabel:hover{
 	background: #FFAA88;
+}
+pre {
+      white-space: pre-wrap;
 }
 
 /* Tooltip code modified from:
