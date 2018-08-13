@@ -5,8 +5,10 @@ import uuid
 import tempfile
 import csv
 
+from functools import wraps, update_wrapper
 from werkzeug.utils import secure_filename
-from flask import Flask
+from datetime import datetime
+from flask import Flask, make_response
 from flask import (
         Blueprint,
         flash,
@@ -35,8 +37,10 @@ from pystalkd.Beanstalkd import Connection
 from flask_uploads import configure_uploads, UploadSet
 
 
-RECAPTCHA_PUBLIC_KEY = '6LdqGmkUAAAAAIKT3ZLbEWPZaPkiLonF8W8zmLlK'
-RECAPTCHA_PRIVATE_KEY = '6LdqGmkUAAAAAHxf242OHD4_2_K0Y_TfJ3wqdohC'
+#RECAPTCHA_PUBLIC_KEY = '6LecpGkUAAAAAIy-lVILcUA-f6IsElHD-nn9OGuY'
+RECAPTCHA_PUBLIC_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+#RECAPTCHA_PRIVATE_KEY = '6LecpGkUAAAAAFuTGxJ6Um3wztmZxXASZBKKOwHi'
+RECAPTCHA_PRIVATE_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
 UPLOAD_FOLDER = './instance/results/'
 REPORT_TEMPLATE_PATH = './phylogenize-report.Rmd'
 ALLOWED_EXTENSIONS = set([
@@ -54,19 +58,19 @@ class JobForm(FlaskForm):
   abundances = FileField(validators = [
     Optional(),
     FileRequired(),
-    FileAllowed(ALLOWED_EXTENSIONS, 'Only tab-delimited files or BIOM files accepted')
+    FileAllowed(ALLOWED_EXTENSIONS, message='Only tab-delimited files or BIOM files accepted')
   ])
   metadata = FileField(validators = [
     Optional(),
     FileRequired(),
-    FileAllowed(ALLOWED_EXTENSIONS, 'Only tab-delimited files or BIOM files accepted')
+    FileAllowed(ALLOWED_EXTENSIONS, message='Only tab-delimited files or BIOM files accepted')
   ])
   biomfile = FileField(
     label="BIOM file",
     validators = [
       Optional(),
       FileRequired(),
-      FileAllowed(ALLOWED_EXTENSIONS, 'Only tab-delimited files or BIOM files accepted')
+      FileAllowed(ALLOWED_EXTENSIONS, message='Only tab-delimited files or BIOM files accepted')
     ]
   )
   datatype = RadioField(
@@ -89,10 +93,13 @@ class JobForm(FlaskForm):
     choices = [
       ("prevalence", "prevalence"),
       ("specificity", "environmental specificity score")
-    ]
+    ], 
+    default = "prevalence"
   )
-  which_envir = StringField("Environment", validators = [InputRequired()])
-  recaptcha = RecaptchaField()
+  which_envir = StringField("Environment",
+      validators = [InputRequired(message = 'Must provide an environment')],
+      default = "Stool")
+  # recaptcha = RecaptchaField()
 
   def validate(self):
     if not super(JobForm, self).validate():
@@ -100,26 +107,37 @@ class JobForm(FlaskForm):
     if not ((self.abundances.data and self.metadata.data) or \
         self.biomfile.data):
       msg = "Either two tab-delimited files (a species abundance table and a" +\
-        "sample annotation file) or a single BIOM file (including species" +\
-        "abundances and sample annotations) must be uploaded"
+        " sample annotation file) or a single BIOM file (including species" +\
+        " abundances and sample annotations) must be uploaded"
       self.abundances.errors.append(msg)
       self.metadata.errors.append(msg)
       self.biomfile.errors.append(msg)
       return False
     if self.abundances.data and self.metadata.data and self.biomfile.data:
       msg = "Please only submit either two tab-delimited files (a species" +\
-        "abundance table and a sample annotation file) or a single BIOM file" +\
-        "(including species abundances and sample annotations), not both"
+        " abundance table and a sample annotation file) or a single BIOM file" +\
+        " (including species abundances and sample annotations), not both"
       self.abundances.errors.append(msg)
       self.metadata.errors.append(msg)
       self.biomfile.errors.append(msg)
       return False
     return True
 
+def nocache(view):
+  @wraps(view)
+  def no_cache(*args, **kwargs):
+    response = make_response(view(*args, **kwargs))
+    response.headers['Last-Modified'] = datetime.now()
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+  return update_wrapper(no_cache, view)
+
 def create_app(test_config=None):
   app = Flask(__name__, instance_relative_config=True)
-  app.config['UPLOADED_ALLOWED_FILES_DEST'] = './results/'
-  app.config['UPLOADED_FILES_DEST'] = './results/'
+  app.config['UPLOADED_ALLOWED_FILES_DEST'] = './instance/results/'
+  app.config['UPLOADED_FILES_DEST'] = './instance/results/'
   configure_uploads(app, allowed_files)
   app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'tankboozysurrealgrinning'
   app.config['WTF_CSRF_SECRET_KEY'] = os.environ.get('WTF_CSRF_SECRET_KEY') or\
@@ -130,16 +148,21 @@ def create_app(test_config=None):
   app.config['RECAPTCHA_PRIVATE_KEY'] = '6LdqGmkUAAAAAHxf242OHD4_2_K0Y_TfJ3wqdohC'
 
   @app.route('/', methods=['GET', 'POST'])
+  @nocache
   def home():
     form = JobForm()
     if request.method == 'POST':
-      if form.validate_on_submit():
+      if form.validate():
         new_result_id = process_form(form, request,
             app.config['UPLOAD_FOLDER'])
         return(redirect(url_for('display_results', result_id=new_result_id)))
-      else:
-        pass
+      flash("Error with form submission")
+      return(render_template('index.html', form = form))
     return(render_template('index.html', form = form))
+
+  @app.route('/results')
+  def reroute():
+    return(redirect(url_for('home')))
 
   @app.route('/results/<result_id>')
   def display_results(result_id):

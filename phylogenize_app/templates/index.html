@@ -7,6 +7,13 @@
     {{ thing.label }}
     </span>
     {{ thing }}
+    {% if thing.errors %}
+    <div class=errors>
+      {% for error in thing.errors %}
+      {{ error }}<br>
+      {% endfor %}
+    </div>
+    {% endif %}
 {% endmacro %}
 
 {% macro infotitle(text) %}
@@ -15,7 +22,17 @@
 
 {% block content %}
 <h1><span>phylogenize</span></h1>
-<h2>v0.1 alpha</h2>
+<h2>v0.2 alpha</h2>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="errors">
+      {% for message in messages %}
+      {{ message }} <br>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
 
 		<div id="infobox"><p>
 
