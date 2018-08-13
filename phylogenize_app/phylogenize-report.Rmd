@@ -1,0 +1,595 @@
+---
+title: "Phylogenetic linear modeling results"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    pandoc_args: [
+      "+RTS", "-K2048m",
+      "-RTS"
+    ]
+params:
+  ncl: 8
+  type: "midas"
+  out_dir: "output"
+  in_dir: "."
+  data_dir: "./data"
+  abundance_file: "abundance.tab"
+  metadata_file: "metadata.tab"
+  biom_file: ""
+  input_format: "tabular"
+  phenotype_file: ""
+  dada2_file: ""
+  db_version: "midas_v1.0"
+  which_phenotype: "prevalence"
+  which_envir: "Stool"
+  prior_type: "uninformative"
+  prior_file: ""
+  minimum: 3
+  treemin: 5
+  assume_below_LOD: TRUE
+  skip_graphs: FALSE
+  burst_dir: "/home/pbradz/bin/"
+---
+
+# Settings
+
+This report was generated automatically by [phylogenize](http://pbradley-dell/~pbradz/phylogenize/) (citation info here), with the following parameters:
+
+  - Type of input data: "`r params$type`"
+  - Phenotype calculated: "`r params$which_phenotype`"
+  - Environment of interest: "`r params$which_envir`"
+  - Prior probabilities for environments: "`r params$prior_type`"
+
+```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE}
+
+DDir = params$data_dir
+IDir = params$in_dir
+ODir = params$out_dir
+BurstDir = params$burst_dir
+
+dir.create(ODir)
+
+source("plm-functions.R")
+source("fisher-enrich.R")
+library(dplyr)
+library(biomformat)
+library(Matrix)
+
+# Read abundance, metadata files
+if (params$input_format == "tabular") {
+  abd.mtx <- fastread(file.path(IDir, params$abundance_file), 
+  	cn = FALSE)
+  metadata <- fread(file.path(IDir, params$metadata_file))
+  metadata$env <- as.factor(metadata$env)
+} else if (params$input_format == "biom") {
+  biomf <- read_biom(file.path(IDir, params$biom_file))
+  abd.mtx <- biom_data(biomf)
+  metadata <- sample_metadata(biomf)
+  metadata$env <- as.factor(metadata$env)
+  # work around different naming convention
+  metadata$sample <- rownames(metadata)
+  rm(biomf); gc()
+}
+
+if (!params$skip_graphs) { 
+	library(svglite)
+	knit_hooks$set(custom.plot = hook_plot_custom)
+	# This next part courtesy of Yihui Xie
+	local({
+		hook_plot = knit_hooks$get('plot')
+		knit_hooks$set(plot = function(x, options) {
+			x = paste(x, collapse = '.')
+			if (!grepl('\\.svg', x)) return(hook_plot(x, options))
+			# read the content of the svg image and write it out without <?xml ... ?>
+			paste(readLines(x)[-1], collapse = '\n')
+		})
+	})
+}
+
+# Read in the correct gene presence/absence matrix and corresponding tree files
+if (params$type == "midas") {
+		SixteenS = FALSE
+	if (params$db_version == "midas_v1.0") {
+		gene.presence <- readRDS(file.path(DDir, "MIDAS-gene-presence-binary-1.0.rds"))
+		trees <- readRDS(file.path(DDir, "MIDAS_1.0-trees.rds"))
+		phyla <- intersect(names(trees), names(gene.presence))
+		taxonomy <- data.frame(fread(file.path(DDir,
+					"MIDAS_1.0-taxonomy.csv")),
+			stringsAsFactors = FALSE)[,-1]
+	} else if (params$db_version == "midas_v1.2") {
+		gene.presence <- readRDS(file.path(DDir, "MIDAS-gene-presence-binary-1.2.rds"))
+		trees <- readRDS(file.path(DDir, "MIDAS_1.2-trees.rds"))
+		phyla <- intersect(names(trees), names(gene.presence))
+		gene.to.fxn <- fread(file.path(DDir, "family.functions"),
+			header = F)
+		colnames(gene.to.fxn) <- c("gene", "function")
+		taxonomy <- data.frame(fread(file.path(DDir,
+					"MIDAS_1.2-taxonomy.csv")),
+			stringsAsFactors = FALSE)[,-1]
+	} else {
+		stop(paste0("unknown database version ", params$db_version))
+	}
+} else if (params$type == "16S") {
+	SixteenS = TRUE
+	gene.presence <- readRDS(file.path(DDir, "MIDAS-gene-presence-binary-1.2.rds"))
+	trees <- readRDS(file.path(DDir, "MIDAS_1.2-trees.rds"))
+	phyla <- intersect(names(trees), names(gene.presence))
+	gene.to.fxn <- fread(file.path(DDir, "family.functions"),
+		header = F)
+	colnames(gene.to.fxn) <- c("gene", "function")
+	taxonomy <- data.frame(fread(file.path(DDir,
+				"MIDAS_1.2-taxonomy.csv")),
+		stringsAsFactors = FALSE)[,-1]
+}
+
+gene.to.fxn <- fread(file.path(DDir, "family.functions"),
+	header = F)
+colnames(gene.to.fxn) <- c("gene", "function")
+
+fig.hierarchy <- data.frame(fread(file.path(DDir, "subsys.txt"),
+		header = F,
+	))[,1:4]
+colnames(fig.hierarchy) <-  c("level1", "level2", "level3", "function")
+
+g.mappings <- lapply.across.names(colnames(fig.hierarchy), function(x) {
+	gene.to.subsys <- merge(data.frame(gene.to.fxn),
+		fig.hierarchy[, c(x, "function")],
+		by.x = "function.", by.y = "function")[, -1]
+})
+
+# Keep only samples that are both in the metadata and in the abundance matrix
+samples.present <- intersect(metadata$sample, colnames(abd.mtx))
+abd.no.meta <- length(setdiff(colnames(abd.mtx), samples.present))
+meta.no.abd <- length(setdiff(metadata$sample, samples.present))
+print(paste0(length(samples.present), " samples found in both metadata and abundance matrix"))
+if (length(samples.present) == 0) {
+  stop("error: no samples found in both metadata and abundance matrix")
+}
+abd.mtx <- abd.mtx[, samples.present]
+metadata <- metadata[metadata$sample %in% samples.present, ]
+
+# Drop singleton environments/datasets
+all.envs <- unique(metadata$env)
+all.dsets <- unique(metadata$dataset)
+env.number <- sapply(all.envs, function(e) sum(metadata$env == e))
+dset.number <- sapply(all.dsets, function(d) sum(metadata$dataset == d))
+names(env.number) <- all.envs
+names(dset.number) <- all.dsets
+nonsingleton.envs <- names(which(env.number > 1))
+nonsingleton.dsets <- names(which(dset.number > 1))
+print(paste0(length(nonsingleton.envs), " non-singleton environment(s) found"))
+print(paste0(length(nonsingleton.dsets), " non-singleton dataset(s) found"))
+metadata <- metadata[(metadata$env %in% nonsingleton.envs) &
+  (metadata$dataset %in% nonsingleton.dsets), ]
+abd.mtx <- abd.mtx[, intersect(colnames(abd.mtx), metadata$sample)]
+
+
+
+
+if (SixteenS) {
+  # write out input sequences
+  write.fasta(as.list(rownames(abd.mtx)),
+    paste0("Row", (1:nrow(abd.mtx))),
+    file.out = file.path(IDir, "input_seqs.fa"),
+    nbchar = 99999,
+    as.string = TRUE)
+	# map to MIDAS IDs using Burst
+  system2(file.path(BurstDir, "burst12"), args = c("-r",
+      file.path(DDir, "16s_renamed.frn"),
+      "-fr",
+      "-q",
+      file.path(IDir, "input_seqs.fa"),
+      "-i",
+      "0.985",
+      "-o",
+      file.path(IDir, "output_assignments.txt")))
+  assignments <- data.frame(fread(file.path(IDir, "output_assignments.txt")))
+  row.hits <- as.numeric(gsub("Row", "", assignments[,1]))
+  row.targets <- sapply(assignments[,2], function(x) strsplit(x, " ")[[1]][3])
+  uniq.hits <- which(count.each(row.hits) < 2)
+  rh <- row.hits[uniq.hits]
+  rt <- row.targets[uniq.hits]
+  subset.abd <- abd.mtx[rh, ]
+  urt <- unique(rt)
+  summed.uniq <- sapply(urt, function(r) {
+    w <- which(rt == r)
+    if (length(w) > 1) {
+      apply(subset.abd[w, ], 2, sum)
+    } else {
+      subset.abd[w, ]
+    }
+  }) %>% t
+  rownames(summed.uniq) <- urt
+  old.abd.mtx <- abd.mtx
+  csu <- colSums(summed.uniq)
+  abd.mtx <- apply(summed.uniq[, which(csu > 0)], 2, function(x) x / sum(x))
+}
+
+### Figure out how many trees to retain
+
+taxa.observed <- rownames(abd.mtx)
+taxa.per.tree <- lapply(trees, function(tr) {
+  intersect(tr$tip.label, taxa.observed)
+})
+saved.phyla <- nw(sapply(taxa.per.tree, length) >= params$treemin)
+trees <- trees[saved.phyla]
+all.possible.taxa <- Reduce(union, lapply(gene.presence, colnames))
+not.observed.taxa <- setdiff(all.possible.taxa, taxa.observed)
+if ((length(not.observed.taxa) > 0) && (params$assume_below_LOD)) {
+	taxa.zero <- matrix(rep(0, length(not.observed.taxa) * ncol(abd.mtx)), 
+		nr = length(not.observed.taxa),
+		byrow = TRUE,
+		dimnames = list(not.observed.taxa, colnames(abd.mtx)))
+	abd.mtx <- rbind(abd.mtx, taxa.zero)
+}
+taxa <- lapply(trees, function(x) x$tip.label)
+nphyla <- length(trees)
+
+```
+
+# Phenotype calculation
+
+Below, trees for all phyla with at least `r params$treemin` representatives in the
+input data are presented. Trees are colored according to the phenotype chosen 
+(here, `r params$which_phenotype` in the environment `r params$which_envir`).
+
+For prevalence, the tree is colored black (low prevalence) to orange (high
+prevalence). For specificity, the tree is colored red for taxa that are
+specific for an environment, blue for taxa that are specific for other
+environments (i.e., found less often in the environment chosen), and gray for
+taxa that are neither.
+
+
+
+```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE}
+
+# Calculate the phenotype of interest
+
+mapped.observed <- names(which(rowSums(abd.mtx) > 0))
+if (params$which_phenotype == "prevalence") {
+  phenotype <- prev.addw(abd.mtx,
+                         params$which_envir,
+                         metadata)
+  phenoLimits <- quantile(unique(phenotype), c(0.2, 0.8))
+  phenoLimitsPhylum <- lapply(trees, function(tr) {
+    phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>% na.omit
+    quantile(unique(phi), c(0.2, 0.8))
+  })
+  phenoColors <- c(low.col = "black", high.col = "orange2")
+} else if (params$which_phenotype == "specificity") {
+  if (params$prior_type == "file") {
+    prior.file <- read.table(file.path(IDir, params$prior_file))
+  } else {
+    prior.file <- NULL
+  }
+  ess <- calc.ess(abd.mtx,
+                  params$which_envir,
+                  metadata,
+                  params$prior_type,
+                  prior.file)
+  phenotype <- ess$ess
+  phenoP <- logit(c(ess$priors[ess$priors$env == params$which_envir, "prior"]))
+  phenoLimitsOverall <- c(phenoP - 1 * sd(phenotype),
+                          phenoP + 1 * sd(phenotype))
+	# Specifically for specificity, always remove taxa that weren't observed at all
+	trees <- lapply(trees, function(tr) {
+		keep.tips(tr, intersect(tr$tip.label, mapped.observed))
+	})
+	n.not.prior <- sapply(trees, function(tr) {
+		sum(phenotype[tr$tip.label] != phenoP)
+	})
+	if (all(n.not.prior == 0)) {
+		stop(paste0("ERROR: The phenotype for all taxa was shrunk to the prior. ",
+			"This probably means that there are no major taxonomic differences ",
+			"between groups. Without identifying some such taxonomic changes, ",
+			"phylogenize cannot continue."))
+	}
+	trees <- trees[which(n.not.prior > 0)]
+	taxa <- lapply(trees, function(x) x$tip.label)
+	nphyla <- length(trees)
+  phenoLimitsPhylum <- lapply(trees, function(tr) {
+    phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>% na.omit %>%
+      unique
+    c(phenoP - (1 * sd(phi)), phenoP + (1 * sd(phi)))
+  })
+  phenoColors <- c(low.col = "slateblue",
+                   mid.col = "gray50",
+                   high.col = "tomato")
+} else if (params$which_phenotype == "provided") {
+		stop("providing your own phenotype not implemented yet")
+  } else stop(paste0("don't know how to calculate the phenotype ",
+                   params$which_phenotype))
+
+# be a little parsimonious with memory here
+rm(abd.mtx); gc()
+
+plotted.pheno.trees <- lapply(1:length(trees), function(tn) {
+  gg.cont.tree(trees[[tn]],
+               phenotype,
+               cLimits = phenoLimitsPhylum[[tn]],
+               colors = phenoColors,
+               cName = paste0(names(trees)[tn], ": ", params$which_phenotype),
+							 plot = FALSE)
+})
+names(plotted.pheno.trees) <- names(trees)
+kept.species <- Reduce(c, lapply(trees, function(x) x$tip.label))
+pheno.characteristics <- data.frame(pheno = phenotype, phylum = taxonomy[match(names(phenotype), taxonomy$cluster), "phylum"], cluster = names(phenotype))
+ggplot(subset(pheno.characteristics, cluster %in% kept.species),
+	aes(pheno, color = phylum, fill = phylum)) +
+		geom_density() + 
+		facet_grid(phylum ~ .) + 
+		xlab(params$which_phenotype) +
+		ggtitle(paste0("Distributions of phenotype (", params$which_phenotype, ")"))
+
+
+
+```
+
+# Phenotype mapped across trees {.tabset}
+
+## All taxa
+
+```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla, cache.lazy = FALSE}
+
+# Put me in a tryCatch since very small trees seem to be failing rn
+if (!params$skip_graphs) { 
+	for (pn in 1:length(plotted.pheno.trees)) {
+		p <- plotted.pheno.trees[[pn]]$tree
+		xlim <- plot(plotted.pheno.trees[[pn]]$rphy, plot = FALSE)$x.lim
+		new.tr <- p +
+			geom_tiplab() +
+			ggplot2::xlim(xlim[1], xlim[2])
+		fn <- fig_path('svg', number = pn)
+		tryCatch(
+			hack.tree.labels(new.tr,
+				fn,
+				stroke.scale = 0.3, 
+				pheno = 100*logistic(phenotype),
+				units="%",
+				pheno.name = params$which_phenotype),
+			error = function(e) {
+				warning(e)
+				# Fall back to non-interactive
+				non.interactive.plot(new.tr, fn)
+		})
+	}
+}
+
+write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
+
+```
+
+## Only mapped/observed taxa {.tabset}
+
+(This section contains the same trees, but with only the mapped/observed taxa plotted. For the "specificity" phenotype this should be the same.)
+
+```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla, cache.lazy = FALSE}
+plotted.pheno.subtrees <- lapply(1:length(trees), function(tn) {
+  gg.cont.tree(keep.tips(trees[[tn]], mapped.observed),
+               phenotype,
+               cLimits = phenoLimitsPhylum[[tn]],
+               colors = phenoColors,
+               cName = paste0(names(trees)[tn], ": ", params$which_phenotype),
+               plot = FALSE)
+})
+for (pn in 1:length(plotted.pheno.subtrees)) {
+	ps <- plotted.pheno.subtrees[[pn]]
+  rp <- ps$rphy
+  tr <- ps$tree
+	rp2 <- rp
+	# pad tip labels so the additional stuff doesn't get cut off when
+	# calculating x limits
+	rp2$tip.label <- paste0(rp2$tip.label, " (phenotype: ......%)")
+	xlim <- plot(rp2, plot = FALSE)$x.lim
+	#tIDs <- tax.annot(rp$tip.label, taxonomy)
+	#newtr <- (tr %<+% data.frame(
+	#  label = rp$tip.label,
+	#  label2 = tIDs
+	#)) +
+	newtr <- (tr + 
+		geom_tiplab() +
+			ggplot2::xlim(xlim[1], xlim[2])
+		)
+	fn <- fig_path('svg', number = pn)
+	tryCatch(
+		hack.tree.labels(newtr,
+			fn,
+			stroke.scale = 0.3, 
+			pheno = 100*logistic(phenotype),
+			units="%",
+			pheno.name = params$which_phenotype),
+		error = function(e) {
+			warning(e)
+			# Fall back to non-interactive
+			non.interactive.plot(new.tr, fn)
+		})
+}
+names(plotted.pheno.subtrees) <- names(trees)
+```
+
+# Associations between genes and taxa
+
+This table gives an overview of how many genes were significantly associated at
+an FDR of 5%. 
+
+```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE}
+results <- result.wrapper.plm(phyla = names(taxa),
+                              pheno = phenotype,
+                              tree = trees,
+                              clusters = taxa,
+                              proteins = gene.presence, 
+                              n.cores = params$ncl)
+signif <- make.sigs(results)
+signs <- make.signs(results)
+pos.sig <- make.pos.sig(sigs = signif, signs = signs)
+
+results.matrix <- Reduce(rbind, lapply(names(results), function(rn) {
+  data.frame(phylum = rn, 
+             gene = results[[rn]] %>% colnames,
+             effect.size = results[[rn]][1,],
+             p.value = results[[rn]][2,]
+             )
+}))
+
+kable(sapply(pos.sig, length), col.names = "significant genes")
+
+phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
+pos.sig.descs <- Reduce(rbind, lapply(phy.with.sigs, function(n) {
+  cbind(phylum = n,
+        gene = pos.sig[[n]],
+        description = gene.annot(pos.sig[[n]]))
+}))
+
+pos.sig.thresh <- mapply(trees[phy.with.sigs],
+	pos.sig[phy.with.sigs],
+	gene.presence[phy.with.sigs],
+  FUN = function(tr, x, y) {
+  y2 <- y[x, intersect(tr$tip.label, colnames(y))]
+  r1 <- rowSums(y2)
+  r2 <- rowSums(1 - y2)
+  names(which((r2 >= params$minimum) & (r1 >= params$minimum)))
+})
+# recalculate, since some of these may go away
+phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
+
+pos.sig.thresh.descs <- Reduce(rbind, lapply(phy.with.sigs,
+                                             function(n) {
+  cbind(phylum = n,
+        gene = pos.sig.thresh[[n]],
+        description = gene.annot(pos.sig.thresh[[n]]))
+}))
+
+write.csv(file = file.path(ODir, "pos-sig-thresholded.csv"),
+          pos.sig.thresh.descs)
+
+write.csv(file = file.path(ODir, "all-results.csv"),
+          results.matrix)
+```
+
+# Gene association heat maps
+
+The left shows the phenotype painted on tips of the tree as above. The right
+adds a heatmap where blue points represent presence of a gene (aligned with the
+tips of the tree) and black points represent absence. Only
+significantly-associated genes are displayed. Genes are clustered from left to
+right by Jaccard dissimilarity, so genes with similar patterns of inheritance
+will form vertical stripes. Horizontal stripes may be visible for taxa that
+have particularly extreme phenotypes.
+
+```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300}
+
+do.clust.plot <- function(x, y, z, w, nt) {
+
+  sig.bin <- x[intersect(rownames(x), y), ]
+	if (is.null(dim(sig.bin))) {
+		sig.bin <- as.matrix(sig.bin) %>% t
+		rownames(sig.bin) <- y
+	}
+  names(dimnames(sig.bin)) <- c("gene", "id")
+  col.df <- data.frame(id = names(w$disp), disp = w$disp)
+  p <- ggtree(z, ladderize = TRUE) %<+% col.df +
+    geom_tippoint(aes(color = disp, shape = '.'))
+  if (params$which_phenotype == "prevalence") {
+    p <- p + scale_color_gradient(low = w$cols["low.col"],
+                                  high = w$cols["high.col"])
+  } else if (params$which_phenotype == "specificity") {
+     p <- p + scale_color_gradient2(low = w$cols["low.col"],
+                                    mid = w$cols["mid.col"],
+                                  high = w$cols["high.col"],
+                                  midpoint = mean(w$lims))   
+  }
+	if (length(y) > 1) {
+	  clust <- hclust(dist(sig.bin, method = "binary"))
+		sig.ord <- melt(t(sig.bin[clust$order, ]))
+	} else {
+		sig.ord <- melt(t(sig.bin))
+		sig.ord <- sig.ord[order(sig.ord[, 3]), ]
+	}
+  tmp <- facet_plot(p,
+                    paste0('heatmap: ', nt),
+                    sig.ord,
+                    geom_tile,
+                    aes(x = as.numeric(as.factor(gene)),
+                        fill = as.numeric(as.factor(value)))) +
+		scale_fill_gradient(low = "#000000", high = "slateblue2")
+	print(tmp)
+	return(tmp)
+}
+
+cluster.plots <- mapply(gene.presence[phy.with.sigs],
+	pos.sig.thresh[phy.with.sigs],
+	trees[phy.with.sigs],
+  plotted.pheno.trees[phy.with.sigs],
+	phy.with.sigs,
+  FUN=do.clust.plot, SIMPLIFY = FALSE)
+
+```
+
+# Enrichment analysis
+
+This process takes the set of genes that are significant and positively
+associated with the phenotype, then asks whether there are more than expected
+by chance in a given SEED subsystem. Subsystems come in three levels of
+granularity (referred to here as l1, l2, and l3); "l1" subsystems are the most
+general and "l3" are the most specific. </p>
+
+All SEED categories returned are significant at an FDR of 25%. "Strong", "Med",
+and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
+respectively.
+
+```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide"}
+enrichments <- perform.enrichments(signif,
+    signs,
+    results,
+    mapping = g.mappings,
+    verbose = FALSE)
+# enr.table <- make.plm.enr.tables(enrichments) 
+enr.table <- generic.make.tables(enrichments) 
+colnames(enr.table) <- c("Number", "Gene_significance", "Subsystem_level",
+  "Phylum", "Subsystem", "q_value")
+write.csv(file=file.path(ODir, "enr-table.csv"), enr.table)
+```
+
+```{r enrichment_display, warning=FALSE,message=FALSE,echo=FALSE}
+options(knitr.table.format = "html") 
+enr.table <- data.frame(enr.table[, -1])
+enr.table <- data.frame(apply(enr.table, 2, as.character),
+	stringsAsFactors = FALSE)
+enr.table <- enr.table[!is.na(enr.table$q_value), ]
+rownames(enr.table) <- NULL
+enr.table %>%
+  mutate(
+    q_value = as.numeric(q_value),
+    Gene_significance = capwords(Gene_significance),
+    Subsystem_level = toupper(Subsystem_level),
+    Phylum = capwords(Phylum),
+    Subsystem = gsub("_", " ", enr.table$Subsystem)
+  ) %>%
+  mutate(
+    q_value = cell_spec(prettyNum(q_value, digits = 2),
+      "html",
+      background = kable.recolor(-log10(q_value),
+        colors = c("#FFFFFF", "#FF8888"),
+        limits = c(-10, -log10(0.25)))
+      )) %>%
+  kable("html", escape = FALSE, align = "l") %>%
+  kable_styling(c("striped", "condensed"))
+    
+#kable(enr.table, row.names = FALSE, format.args = list(digits = 2))
+
+### Make CSV of enrichments
+
+enr.overlap.lists <- lapply(enrichments$strong, function(lev) {
+	Filter(function(x) length(x) > 0, 
+    mapply(lev, results, FUN = signif.overlaps)
+  )
+})
+enr.overlap <- annotate.nested(enr.overlap.lists, n.names = c("level", "phylum", "process"))
+write.csv(file=file.path(ODir, "enr-overlaps.csv"), enr.overlap)
+write.csv(file=file.path(ODir, "enr-overlaps-sorted.csv"),
+  enr.overlap[order(enr.overlap$phylum, enr.overlap$process, enr.overlap$value.value.estimate), ])
+
+```
+
+```
