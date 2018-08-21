@@ -1,12 +1,48 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <link rel="stylesheet" href={{ url_for('static', filename='phylo.css') }} >  
-		<link href="https://fonts.googleapis.com/css?family=Barlow" rel="stylesheet">
-    <title>phylogenize</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link href="https://fonts.googleapis.com/css?family=Barlow" rel="stylesheet" />
+    <link rel="stylesheet" href={{ url_for('static', filename='css/bootstrap.css') }} />  
+    <link rel="stylesheet" href={{ url_for('static', filename='phylo.css') }} />  
+<title>
+	{% if request.path == "/" %} phylogenize - analyze
+  {% elif request.path == "/results" %} phylogenize - results
+  {% elif request.path == "/about" %} phylogenize - about
+  {% elif request.path == "/tutorial" %} phylogenize - tutorial
+  {% else %} phylogenize - results
+  {% endif %}
+</title>
   </head>
-  <body>
+  <body class="Site">
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	 <script src={{ url_for('static', filename='js/bootstrap.js') }}></script>
+
+	 <nav class="navbar navbar-expand-sm navbar-custom shadow-sm">
+		 <a class="navbar-brand" href="/">phylogenize (v0.4 alpha)</a>
+		 <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false" aria-controls="bs-example-navbar-collapse-1" aria-label="Toggle navigation">
+			 <b><i>ϕ</i></b>
+		 </button>
+		 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			 <div class="navbar-nav">
+				 <a class="nav-item nav-link" href="{{ url_for('home') }}">Analyze</a></>
+				 <a class="nav-item nav-link" href="{{ url_for('tutorial') }}">Tutorial</a></>
+				 <a class="nav-item nav-link" href="{{ url_for('about') }}">About/Contact</a></>
+				 </ul>
+			 </div>
+	 </nav>
+
+	<main class="Site-content">
 		{% block content %}{% endblock %}
+	</main>
+
+			<footer class="footer">
+				<div class="container-fluid">
+					Patrick H. Bradley, Pollard lab
+				</div>
+			</footer>
+
   </body>
 </html>

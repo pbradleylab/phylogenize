@@ -1,19 +1,31 @@
 {% extends "base.html" %}
 
 {% macro infotitle(text) %}
-  <span id="infotitle">{{ text }}</span>
+  <span class="infotitle">{{ text }}</span>
 {% endmacro %}
 
 {% block content %}
-<h1><span>phylogenize</span></h1>
-<h2>v0.1 alpha</h2>
 
-<h3>Notes</h3>
+<div class="jumbotron jumbotron-fluid jumbotron-fancy">
+  <div class="container">
+{% if completed %}
+    <h1 class="display-4">Results (in progress)</h1>
+    <p class="lead">Reload this page to monitor this analysis job.</p>
+{% else %}
+    <h1 class="display-4">Results</h1>
+    <p class="lead">This page allows you to view and download your data.</p>
+{% endif %}
+  </div>
+</div>
+
+<div class="container">
+{{ infotitle("Notes") }}
 <ul><li>Your results will be accessible to anyone with this URL
   <li>Results will be automatically deleted 7 days after finishing
 </ul>
+</div>
 
-<h3>Results</h3>
+<div class="container">
 
   {% if completed %}
   <ul>
@@ -40,8 +52,8 @@
     </samp>
         </pre>
   </div>
+</div>
 
-<h3>Patrick H. Bradley, Pollard lab</h3>
 
 {% endblock %}
 

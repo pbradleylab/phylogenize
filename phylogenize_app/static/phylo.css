@@ -1,13 +1,35 @@
 body {
 font-family: Barlow, Franklin Gothic, sans-serif;
-font-size: 150%;
-max-width: 80%;
-line-height: 150%;
 font-weight: medium;
+font-size: 16px;
+}
+p {
+	font-size: 20 px;
 }
 h1,h2,h3,h4,h5,h6 {
 font-family: Barlow, Franklin Gothic, sans-serif;
-font-weight: medium;
+}
+.navbar-custom {
+	background-color: #FFFFA0;
+	font-weight: bold;
+	border: 1;
+	border-color: black;
+}
+.navbar a {
+	color: black;
+}
+.navbar-custom {
+	background-color: #FFFFA0;
+	color: black;
+	font-weight: bold;
+	font-size: 16px;
+	border: 0;
+	border-color: black;
+}
+.navbar-custom .nav-item.active .nav-link,
+.navbar-custom .nav-item:hover .nav-link {
+		background: #5578AA;
+		color: white;
 }
 h1 {
 	background-color: #FFFFD0;
@@ -35,15 +57,17 @@ display:block;
 font-family: Inconsolata, Consolas, Courier, monospace;
 font-size: 80%;
 }
-#formlabel {
+.formlabel {
 	font-weight: normal;
 	background-color: #5577AA;
 	color: #FFFFFF;
 	font-family: Barlow, Franklin Gothic, sans-serif;
 	font-size: 120%;
 	font-style: italic;
+  padding-left: 3px;
+  padding-right: 5px;
 }
-#bigformlabel {
+.bigformlabel {
 	font-weight: normal;
 	color: #000000;
 	font-style: normal;
@@ -51,10 +75,8 @@ font-size: 80%;
 	font-size: 120%;
 	margin: 0px;
 }
-#infobox {
-	font-size: 75%;
+.infobox {
 	line-height: 1;
-	width: 75%;
 	padding: 25px;
 	border: 1px dashed #888888;
 }
@@ -88,7 +110,7 @@ pre.errfile {
       white-space: pre-wrap;
 }
 
-#infotitle {
+.infotitle {
 	font-weight: bold;
 	background-color: #FFFF44;
 	color: #000000;
@@ -96,7 +118,6 @@ pre.errfile {
 }
 ul {
 	    list-style-type: none;
-			    margin: 0.1in;
 					    padding: 0;
 						}
 
@@ -157,7 +178,7 @@ ul {
 	color: #fff;
 	padding:4px 2px;
 	font-size: 65%;
-	min-width: 80px;
+	min-width: 200px;
 	border-radius: 5px;
 	pointer-events: none;
 	padding: 4px 4px;
@@ -197,7 +218,7 @@ ul {
 	margin-left:135px
 }
 
-#formlabel:hover{
+.formlabel:hover{
 	background: #FFAA88;
 }
 pre {
@@ -208,3 +229,45 @@ pre {
     https://medium.freecodecamp.org/a-step-by-step-guide-to-making-pure-css-tooltips-3d5a3e237346
    Thanks!
 */
+
+.footer {
+	background-color: #AAFFCC;
+  font-weight: bold;
+/*
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 30px; /* Set the fixed height of the footer here */
+/*  line-height: 30px; /* Vertically center the text there */
+}
+
+html,body{
+    height: 100%;
+}
+.hidden {
+  display: none !important;
+}
+
+.Site {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.Site-content {
+  flex: 1;
+}
+
+.jumbotron-fancy {
+   padding: 30px;
+   margin-bottom: 30px;
+   color: inherit;
+   background-color: white;
+	 background-image: url("/static/bg.png");
+	 background-repeat: repeat;
+}
+::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: #AAAAAA !important;
+  	font-style: italic;
+    opacity: 1; /* Firefox */
+}

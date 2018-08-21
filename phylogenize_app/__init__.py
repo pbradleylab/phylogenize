@@ -41,8 +41,8 @@ from flask_uploads import configure_uploads, UploadSet
 RECAPTCHA_PUBLIC_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
 #RECAPTCHA_PRIVATE_KEY = '6LecpGkUAAAAAFuTGxJ6Um3wztmZxXASZBKKOwHi'
 RECAPTCHA_PRIVATE_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
-UPLOAD_FOLDER = './instance/results/'
-REPORT_TEMPLATE_PATH = './phylogenize-report.Rmd'
+UPLOAD_FOLDER = os.path.abspath('./instance/results/')
+REPORT_TEMPLATE_PATH = os.path.abspath('./phylogenize-report.Rmd')
 ALLOWED_EXTENSIONS = set([
   'txt',
   'tsv',
@@ -92,13 +92,13 @@ class JobForm(FlaskForm):
   phenotype = RadioField(
     choices = [
       ("prevalence", "prevalence"),
-      ("specificity", "environmental specificity score")
+      ("specificity", "specificity")
     ], 
     default = "prevalence"
   )
   which_envir = StringField("Environment",
       validators = [InputRequired(message = 'Must provide an environment')],
-      default = "Stool")
+      render_kw = {"placeholder": "Stool"})
   # recaptcha = RecaptchaField()
 
   def validate(self):
@@ -160,9 +160,24 @@ def create_app(test_config=None):
       return(render_template('index.html', form = form))
     return(render_template('index.html', form = form))
 
+  @app.route('/tutorial', methods=['GET', 'POST'])
+  @nocache
+  def tutorial():
+    return(render_template('tutorial.html'))
+
+  @app.route('/about', methods=['GET', 'POST'])
+  @nocache
+  def about():
+    return(render_template('about.html'))
+
   @app.route('/results')
   def reroute():
     return(redirect(url_for('home')))
+
+  #@app.route('/test')
+  #def test_queue():
+  #  beanstalk.put("TEST-JOB")
+  #  return(redirect(url_for('home')))
 
   @app.route('/results/<result_id>')
   def display_results(result_id):
@@ -255,9 +270,8 @@ def process_form(form = None, request = None, upload_folder = UPLOAD_FOLDER):
   # Set some last options and submit to beanstalk queue
   minimum = 3
   prior_type = "uninformative"
-  rmark_render_cmd = "rmarkdown::render(\"" +\
-      REPORT_TEMPLATE_PATH +\
-      "\", " +\
+  rmark_render_cmd = \
+    ("rmarkdown::render(\"%s\", " % (REPORT_TEMPLATE_PATH)) +\
       "output_format = \"html_document\", " + \
       ("output_dir = \"%s\", " % (ODir)) + \
       ("params = list(type = \"%s\", " % (datatype)) + \

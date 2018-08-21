@@ -28,6 +28,10 @@ while True:
   if not job is None:
     print(("received job #%d out of %d: %s" % (MaxJobs - (len(JobSlots)) + 1, MaxJobs, job.body)))
     job_file_match = re.search("output_dir = \"([^\"]*)\"", job.body)
+    if job_file_match is None:
+      print("invalid job: %s" % job.body)
+      job.delete()
+      continue
     job_file = job_file_match.group(1)
     job_title = os.path.basename(os.path.dirname(job_file))
     if len(JobSlots) == 0:
