@@ -81,11 +81,12 @@ font-size: 80%;
 	border: 1px dashed #888888;
 }
 div.errors {
-  font-size: 60%;
+  font-size: 80%;
   line-height: 1;
   width: 60%;
   background-color: #FF0000;
   color: #FFFFFF;
+  font-weight: bold;
 }
 pre.outfile {
 	font-size: 8pt;

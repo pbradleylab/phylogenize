@@ -8,35 +8,78 @@
 
 <div class="jumbotron jumbotron-fluid jumbotron-fancy">
   <div class="container">
-{% if completed %}
+    {% if errormsg %}
+    <h1 class="display-4">Results (error)</h1>
+    <p class="lead">Something went wrong. There may be more information below.</p>
+    {% else %}
+{% if not completed %}
     <h1 class="display-4">Results (in progress)</h1>
     <p class="lead">Reload this page to monitor this analysis job.</p>
 {% else %}
     <h1 class="display-4">Results</h1>
     <p class="lead">This page allows you to view and download your data.</p>
 {% endif %}
+{% endif %}
   </div>
 </div>
 
-<div class="container">
-{{ infotitle("Notes") }}
-<ul><li>Your results will be accessible to anyone with this URL
-  <li>Results will be automatically deleted 7 days after finishing
-</ul>
-</div>
+{% if not completed %}
 
+{% if errormsg %}
+{% set barcolor = "#FF0000" %}
+{% set bartextcolor = "#FFFFFF" %}
+{% else %}
+{% set barcolor = "#FFFF00" %}
+{% set bartextcolor = "#000000" %}
+{% endif %}
+
+<script>
+$('head').append('<meta http-equiv="refresh" content="300"/>');
+</script>
 <div class="container">
+  <div class="container infobox">
+    <center>
+{% if errormsg %}
+Error
+{% else %}
+Working...
+{% endif %}
+    </center><p>
+  <div class="progressbar"
+    style="background-color:#EEEEEE;width:80%;margin:auto;height:50px">
+    <div class="progressamount"
+         style="background-color:{{ barcolor }};color:{{ bartextcolor }};height:100%;width:{{ pct }}%;line-height:50px">
+      <center><b>{{ pct|round|int }}%</b></center>
+    </div>
+  </div>
+  </div><p><p>
+{% endif %}
+
+  {{ infotitle("Notes") }}<p>
+<ul><li>Your results will be accessible to anyone with this URL, so only share
+    it with people whom you want to see the output.
+  <li>Jobs will be automatically deleted approximately 7 days after
+    finishing. Please download before then.
+</ul>
+
+
 
   {% if completed %}
-  <ul>
       {{ infotitle("Job completed!") }}
+  <ul>
     <li><a href="{{ result_id }}/phylogenize_report.html">Report file
-    <li><a href="{{ result_id }}/results.tgz">Results (.tgz)
+    <li><a href="{{ result_id }}/{{ result_id }}-output.tgz">Results (.tgz)
   </ul>
 
   {% else %}
-      {{ infotitle("Progress") }}
-      <div>
+  {{ infotitle("Additional info for troubleshooting") }}<p><p>
+  <a class="btn btn-outline-primary" data-toggle="collapse" href="#latestoutput"
+                                                    role="button"
+                                                    aria-expanded="false"
+                                                    aria-controls="latestoutput">
+    Monitor output
+  </a>
+      <div id="latestoutput" class="collapse">
         <pre class="outfile"><samp>
         {{ out }}
 </samp>
@@ -45,8 +88,13 @@
   {% endif %}
 
   <p>
-  {{ infotitle("Warnings/errors") }}
-  <div>
+  <a class="btn btn-outline-warning" data-toggle="collapse" href="#warningserrors"
+                                                    role="button"
+                                                    aria-expanded="false"
+                                                    aria-controls="warningserrors">
+    Monitor warnings/errors
+  </a>
+  <div id="warningserrors" class="collapse">
         <pre class="errfile"><samp>
     {{ err }}
     </samp>

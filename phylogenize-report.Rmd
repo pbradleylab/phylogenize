@@ -18,6 +18,8 @@ params:
   metadata_file: "metadata.tab"
   biom_file: ""
   input_format: "tabular"
+  env_column: "env"
+  dset_column: "dataset"
   phenotype_file: ""
   dada2_file: ""
   db_version: "midas_v1.0"
@@ -29,7 +31,7 @@ params:
   treemin: 5
   assume_below_LOD: TRUE
   skip_graphs: FALSE
-  burst_dir: "/home/pbradz/bin/"
+  burst_dir: "/home/pbradz/projects/phylogenize/"
 ---
 
 # Settings
@@ -46,6 +48,8 @@ This report was generated automatically by [phylogenize](http://pbradley-dell/~p
 DDir = params$data_dir
 IDir = params$in_dir
 ODir = params$out_dir
+Env = params$env_column
+Dset = params$dset_column
 BurstDir = params$burst_dir
 
 dir.create(ODir)
@@ -57,16 +61,33 @@ library(biomformat)
 library(Matrix)
 
 # Read abundance, metadata files
+if ((Env == "sample") || (Dset == "sample")) {
+	stop("Environment and dataset columns cannot be titled \"sample\"")
+}
 if (params$input_format == "tabular") {
   abd.mtx <- fastread(file.path(IDir, params$abundance_file), 
   	cn = FALSE)
   metadata <- fread(file.path(IDir, params$metadata_file))
-  metadata$env <- as.factor(metadata$env)
+  if (!(Env %in% colnames(metadata))) {
+		stop(paste("Environment column not found:", Env))
+	}
+  if (!(Dset %in% colnames(metadata))) {
+		stop(paste("Dataset column not found:", Dset))
+	}
+  metadata[[Env]] <- as.factor(metadata[[Env]])
+  metadata[[Dset]] <- as.factor(metadata[[Dset]])
 } else if (params$input_format == "biom") {
   biomf <- read_biom(file.path(IDir, params$biom_file))
   abd.mtx <- biom_data(biomf)
   metadata <- sample_metadata(biomf)
-  metadata$env <- as.factor(metadata$env)
+  if (!(Env %in% colnames(metadata))) {
+		stop(paste("Environment column not found:", Env))
+	}
+  if (!(Dset %in% colnames(metadata))) {
+		stop(paste("Dataset column not found:", Dset))
+	}
+  metadata[[Env]] <- as.factor(metadata[[Env]])
+  metadata[[Dset]] <- as.factor(metadata[[Dset]])
   # work around different naming convention
   metadata$sample <- rownames(metadata)
   rm(biomf); gc()
@@ -150,18 +171,18 @@ abd.mtx <- abd.mtx[, samples.present]
 metadata <- metadata[metadata$sample %in% samples.present, ]
 
 # Drop singleton environments/datasets
-all.envs <- unique(metadata$env)
-all.dsets <- unique(metadata$dataset)
-env.number <- sapply(all.envs, function(e) sum(metadata$env == e))
-dset.number <- sapply(all.dsets, function(d) sum(metadata$dataset == d))
+all.envs <- unique(metadata[[Env]])
+all.dsets <- unique(metadata[[Dset]])
+env.number <- sapply(all.envs, function(e) sum(metadata[[Env]] == e))
+dset.number <- sapply(all.dsets, function(d) sum(metadata[[Dset]] == d))
 names(env.number) <- all.envs
 names(dset.number) <- all.dsets
 nonsingleton.envs <- names(which(env.number > 1))
 nonsingleton.dsets <- names(which(dset.number > 1))
 print(paste0(length(nonsingleton.envs), " non-singleton environment(s) found"))
 print(paste0(length(nonsingleton.dsets), " non-singleton dataset(s) found"))
-metadata <- metadata[(metadata$env %in% nonsingleton.envs) &
-  (metadata$dataset %in% nonsingleton.dsets), ]
+metadata <- metadata[(metadata[[Env]] %in% nonsingleton.envs) &
+  (metadata[[Dset]] %in% nonsingleton.dsets), ]
 abd.mtx <- abd.mtx[, intersect(colnames(abd.mtx), metadata$sample)]
 
 
@@ -250,7 +271,9 @@ mapped.observed <- names(which(rowSums(abd.mtx) > 0))
 if (params$which_phenotype == "prevalence") {
   phenotype <- prev.addw(abd.mtx,
                          params$which_envir,
-                         metadata)
+                         metadata,
+												 E = Env,
+												 D = Dset)
   phenoLimits <- quantile(unique(phenotype), c(0.2, 0.8))
   phenoLimitsPhylum <- lapply(trees, function(tr) {
     phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>% na.omit
@@ -267,7 +290,9 @@ if (params$which_phenotype == "prevalence") {
                   params$which_envir,
                   metadata,
                   params$prior_type,
-                  prior.file)
+                  prior.file,
+									E = Env,
+									D = Dset)
   phenotype <- ess$ess
   phenoP <- logit(c(ess$priors[ess$priors$env == params$which_envir, "prior"]))
   phenoLimitsOverall <- c(phenoP - 1 * sd(phenotype),
@@ -481,7 +506,7 @@ have particularly extreme phenotypes.
 
 do.clust.plot <- function(x, y, z, w, nt) {
 
-  sig.bin <- x[intersect(rownames(x), y), ]
+  sig.bin <- as.matrix(x[intersect(rownames(x), y), ])
 	if (is.null(dim(sig.bin))) {
 		sig.bin <- as.matrix(sig.bin) %>% t
 		rownames(sig.bin) <- y

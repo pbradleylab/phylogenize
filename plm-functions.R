@@ -1010,16 +1010,16 @@ tree.to.dist <- function(tree) {
 
 ### calculate prevalence
 
-prev.addw <- function(mtx, envir, meta) {
-  if (!(envir %in% levels(meta$env))) {
+prev.addw <- function(mtx, envir, meta, E = "env", D = "dataset") {
+  if (!(envir %in% levels(meta[[E]]))) {
     stop(paste0("environment ", envir, " not found in metadata"))
   }
-  env.rows <- (meta$env == envir)
-  dsets <- unique(meta[env.rows, "dataset"])
+  env.rows <- (meta[[E]] == envir)
+  dsets <- unique(meta[env.rows, D])
   if (length(dsets) > 1) {
     means.by.study <- lapply(dsets, function(d) {
       s <- intersect(colnames(mtx), 
-                     meta$sample[(env.rows & (meta$dataset == d))] %>%
+                     meta$sample[(env.rows & (meta[[D]] == d))] %>%
                        as.character)
       rm <- rowMeans(1 * (mtx[, s] > 0))
       list(rm = rm, s = s)
@@ -1038,17 +1038,25 @@ prev.addw <- function(mtx, envir, meta) {
   return(logit(addw))
 }
 
-calc.ess <- function(mtx, envir, meta, ptype, pdata = NULL, b.optim = NULL) {
-  if (!(envir %in% levels(meta$env))) {
+calc.ess <- function(mtx,
+  envir,
+  meta,
+  ptype,
+  pdata = NULL,
+  b.optim = NULL,
+  E = "env",
+  D = "dataset") {
+
+  if (!(envir %in% levels(meta[[E]]))) {
     stop(paste0("environment ", envir, " not found in metadata"))
   }
-  env.rows <- (meta$env == envir)
-  dsets <- unique(meta[env.rows, "dataset"])
+  env.rows <- (meta[[E]] == envir)
+  dsets <- unique(meta[env.rows, D])
   if (length(dsets) > 1) {
     warning("datasets are ignored when calculating specificity")
   }
   meta.present <- meta[(meta$sample %>% as.character %in% colnames(mtx)), ]
-  envirs <- unique(meta.present$env)
+  envirs <- unique(meta.present[[E]])
   if (ptype == "uninformative") {
     priors <- data.frame(
       env = envirs,
@@ -1062,7 +1070,7 @@ calc.ess <- function(mtx, envir, meta, ptype, pdata = NULL, b.optim = NULL) {
     stop(paste0("don't know how to compute priors of type ", ptype))
   }
   ids <- sapply(colnames(mtx), function (sn) meta[(meta$sample == sn), 
-                                                  "env"])
+                                                  E])
   if (length(unique(ids)) < 2) {
     stop("error: only one environment found")
   }

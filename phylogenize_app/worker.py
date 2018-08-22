@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import os, sys
+import os, sys, shutil
 import cgi
 import uuid
 import subprocess
@@ -19,6 +19,12 @@ JobOutput = [None] * MaxJobs
 JobErr = [None] * MaxJobs
 JobTitle = [None] * MaxJobs
 JobSlots = range(MaxJobs)
+
+# From George V. Reilly:
+# https://stackoverflow.com/questions/2032403/
+def make_tarfile(output_filename, source_dir):
+   with tarfile.open(output_filename, "w:gz") as tar:
+     tar.add(source_dir, arcname=os.path.basename(source_dir))
 
 while True:
   # poll for 5 seconds at a time, but don't bother polling if no open slots
@@ -75,6 +81,11 @@ while True:
         # job finished!
         print("Job %s finished running in slot %d - cleaning up" % \
             (JobTitle[N], N + 1))
+        if os.path.isfile(os.path.join(job_file, "phylogenize-report.html")):
+          shutil.copy(os.path.join(job_file, "phylogenize-report.html"),
+              os.path.join(job_file, "output"))
+          make_tarfile(os.path.join(job_file, "%s-output.tgz" % result_id),
+              os.path.join(job_file, "output"))
         JobErr[N].close()
         JobOutput[N].close()
         JobTitle[N] = None

@@ -38,6 +38,18 @@
 {% endmacro %}
 
 {% block content %}
+<div class="jumbotron jumbotron-fluid jumbotron-fancy">
+  <div class="container">
+    <h1 class="display-4">Analyze your data with phylogenize</h1>
+    <p class="lead">Find genes associated with microbial prevalence or specificity in an environment.</p>
+  </div>
+</div>
+
+
+
+
+<section class="analyze-form">
+	<div class="container h-100 align-items-center">
 {% with messages = get_flashed_messages() %}
   {% if messages %}
     <div class="errors">
@@ -48,18 +60,6 @@
   {% endif %}
 {% endwith %}
 
-
-<div class="jumbotron jumbotron-fluid jumbotron-fancy">
-  <div class="container">
-    <h1 class="display-4">Analyze your data with phylogenize</h1>
-    <p class="lead">Find genes associated with microbial prevalence or specificity in an environment.</p>
-  </div>
-</div>
-
-
-
-<section class="analyze-form">
-	<div class="container h-100 align-items-center">
 		<form name="UserUpload"
 				action=""
 		method="POST"

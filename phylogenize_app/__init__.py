@@ -4,6 +4,8 @@ import bleach
 import uuid
 import tempfile
 import csv
+import re
+import tarfile
 
 from functools import wraps, update_wrapper
 from werkzeug.utils import secure_filename
@@ -35,7 +37,6 @@ from wtforms import (
 from wtforms.validators import Optional, InputRequired
 from pystalkd.Beanstalkd import Connection
 from flask_uploads import configure_uploads, UploadSet
-
 
 #RECAPTCHA_PUBLIC_KEY = '6LecpGkUAAAAAIy-lVILcUA-f6IsElHD-nn9OGuY'
 RECAPTCHA_PUBLIC_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
@@ -191,21 +192,41 @@ def create_app(test_config=None):
     else: completed = False
     outfile = os.path.join(direc, "output", "progress.txt")
     errfile = os.path.join(direc, "output", "stderr.txt")
-    if os.path.isfile(outfile):
-      with open(outfile, 'r') as fh:
-        outtext = str(fh.read())
-    else:
-      outtext = ''
     if os.path.isfile(errfile):
       with open(errfile, 'r') as fh:
-        errtext = str(fh.read())
+        errlines = [l for l in fh.readlines()]
+        if re.search(r'Execution halted', errlines[-1]):
+          errormsg = True
+        else:
+          errormsg = False
+        if (len(errlines) >= 20) and not errormsg:
+          errtext = str("".join(errlines[-20:]))
+        else:
+          errtext = str("".join(errlines))
     else:
       errtext = ''
+      errormsg = False
+    if os.path.isfile(outfile):
+      with open(outfile, 'r') as fh:
+        outlines = [l for l in fh.readlines()]
+        if (len(outlines) >= 20) and not errormsg:
+          outtext = str("".join(outlines[-20:]))
+        else:
+          outtext = str("".join(outlines))
+        pctlines = list(filter(lambda x: re.search(r'\\|.*\\| *\%', x),
+          outlines))
+        pctline = pctlines[-1]
+        pct = float(re.sub('.*\\| (.*)%', '\\1', pctline))
+    else:
+      outtext = ''
+      pct = float(0)
     return(render_template('results.html',
       completed = completed,
+      errormsg = errormsg,
       result_id = result_id,
       out = outtext,
-      err = errtext))
+      err = errtext,
+      pct = pct))
 
   @app.route('/results/<result_id>/<subfile>')
   def display_result_file(result_id, subfile):
