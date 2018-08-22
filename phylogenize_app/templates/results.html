@@ -23,6 +23,8 @@
   </div>
 </div>
 
+
+<div class="container">
 {% if not completed %}
 
 {% if errormsg %}
@@ -36,30 +38,32 @@
 <script>
 $('head').append('<meta http-equiv="refresh" content="300"/>');
 </script>
-<div class="container">
   <div class="container infobox">
     <center>
-{% if errormsg %}
-Error
-{% else %}
-Working...
-{% endif %}
+      {% if errormsg %}
+      Error
+      {% else %}
+      Working...
+      {% endif %}
     </center><p>
-  <div class="progressbar"
-    style="background-color:#EEEEEE;width:80%;margin:auto;height:50px">
-    <div class="progressamount"
-         style="background-color:{{ barcolor }};color:{{ bartextcolor }};height:100%;width:{{ pct }}%;line-height:50px">
-      <center><b>{{ pct|round|int }}%</b></center>
+    <div class="progressbar"
+         style="background-color:#EEEEEE;width:80%;margin:auto;height:50px">
+      <div class="progressamount"
+           style="background-color:{{ barcolor }};color:{{ bartextcolor }};height:100%;width:{{ pct }}%;line-height:50px">
+        <center><b>{{ pct|round|int }}%</b></center>
+      </div>
     </div>
-  </div>
   </div><p><p>
-{% endif %}
+  {% endif %}
 
   {{ infotitle("Notes") }}<p>
 <ul><li>Your results will be accessible to anyone with this URL, so only share
     it with people whom you want to see the output.
+    <li>You need this URL to access your results. An easy way to keep this URL
+      is to bookmark it. (If you misplace the URL, you may be able to find it in
+      your browser history.)
   <li>Jobs will be automatically deleted approximately 7 days after
-    finishing. Please download before then.
+    finishing. Please download your results before then.
 </ul>
 
 
@@ -67,8 +71,8 @@ Working...
   {% if completed %}
       {{ infotitle("Job completed!") }}
   <ul>
-    <li><a href="{{ result_id }}/phylogenize_report.html">Report file
-    <li><a href="{{ result_id }}/{{ result_id }}-output.tgz">Results (.tgz)
+    <li><a href="{{ result_id }}/phylogenize-report.html">Report file
+    <li><a href="{{ result_id }}/output.tgz">Results (.tgz)
   </ul>
 
   {% else %}

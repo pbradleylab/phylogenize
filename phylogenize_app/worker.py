@@ -18,13 +18,17 @@ JobList = [None] * MaxJobs
 JobOutput = [None] * MaxJobs
 JobErr = [None] * MaxJobs
 JobTitle = [None] * MaxJobs
+JobFile = [None] * MaxJobs
 JobSlots = range(MaxJobs)
 
-# From George V. Reilly:
+# Adapted from George V. Reilly:
 # https://stackoverflow.com/questions/2032403/
 def make_tarfile(output_filename, source_dir):
-   with tarfile.open(output_filename, "w:gz") as tar:
-     tar.add(source_dir, arcname=os.path.basename(source_dir))
+  files = os.listdir(source_dir)
+  with tarfile.open(output_filename, "w:gz") as tar:
+    for f in files:
+      tar.add(os.path.join(source_dir, f),
+          arcname=os.path.basename(source_dir))
 
 while True:
   # poll for 5 seconds at a time, but don't bother polling if no open slots
@@ -62,6 +66,7 @@ while True:
       beanstalk.put(job.body, delay = jdelay)
     elif len(JobSlots) > 0:
       JobN = JobSlots[0]
+      JobFile[JobN] = job_file
       JobOutput[JobN] = open(os.path.join(job_file, "progress.txt"), 'w')
       JobErr[JobN] = open(os.path.join(job_file, "stderr.txt"), 'w')
       JobList[JobN] = subprocess.Popen(["/usr/bin/Rscript", "-e", job.body],\
@@ -82,14 +87,13 @@ while True:
         print("Job %s finished running in slot %d - cleaning up" % \
             (JobTitle[N], N + 1))
         if os.path.isfile(os.path.join(job_file, "phylogenize-report.html")):
-          shutil.copy(os.path.join(job_file, "phylogenize-report.html"),
-              os.path.join(job_file, "output"))
-          make_tarfile(os.path.join(job_file, "%s-output.tgz" % result_id),
-              os.path.join(job_file, "output"))
+          make_tarfile(os.path.join(job_file, "output.tgz" % JobTitle[N]),
+             os.path.join(job_file, "output"))
         JobErr[N].close()
         JobOutput[N].close()
         JobTitle[N] = None
         JobList[N] = None
+        JobFile[N] = None
         print("...done!")
   # continue forever
 

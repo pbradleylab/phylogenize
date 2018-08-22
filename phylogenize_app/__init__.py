@@ -10,7 +10,7 @@ import tarfile
 from functools import wraps, update_wrapper
 from werkzeug.utils import secure_filename
 from datetime import datetime
-from flask import Flask, make_response
+from flask import Flask, make_response, send_from_directory
 from flask import (
         Blueprint,
         flash,
@@ -186,10 +186,11 @@ def create_app(test_config=None):
     direc = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], result_id))
     reportfile = os.path.join(direc,
         "output",
-        "phylogenize_report.html")
+        "phylogenize-report.html")
     if os.path.isfile(reportfile):
       completed = True
-    else: completed = False
+    else:
+      completed = False
     outfile = os.path.join(direc, "output", "progress.txt")
     errfile = os.path.join(direc, "output", "stderr.txt")
     if os.path.isfile(errfile):
@@ -226,27 +227,28 @@ def create_app(test_config=None):
       result_id = result_id,
       out = outtext,
       err = errtext,
-      pct = pct))
+      pct = pct,
+      reportfile = reportfile))
 
   @app.route('/results/<result_id>/<subfile>')
   def display_result_file(result_id, subfile):
     result_id = secure_filename(result_id)
     subfile = secure_filename(subfile)
     direc = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], result_id))
-    if subfile == "phylogenize_report.html":
+    if subfile == "phylogenize-report.html":
       reportfile = os.path.join(direc,
           "output",
-          "phylogenize_report.html")
+          "phylogenize-report.html")
       if os.path.isfile(reportfile):
-        return(send_from_directory(direc, "phylogenize_report.html"))
+        return(send_from_directory(os.path.join(direc, "output"), "phylogenize-report.html"))
       else:
         return(redirect(url_for('display_results', result_id = result_id)))
-    elif subfile == "results.tgz":
+    elif subfile == "output.tgz":
       tgzfile = os.path.join(direc,
           "output",
-          "results.tgz")
-      if os.path.isfile(reportfile):
-        return(send_from_directory(direc, "results.tgz"))
+          "output.tgz")
+      if os.path.isfile(tgzfile):
+        return(send_from_directory(os.path.join(direc, "output"), "output.tgz"))
       else:
         return(redirect(url_for('display_results', result_id = result_id)))
     else:
