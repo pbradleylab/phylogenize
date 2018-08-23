@@ -148,7 +148,8 @@ def create_app(config=None):
     if request.method == 'POST':
       if form.validate():
         new_result_id = process_form(form, request,
-            app.config['UPLOAD_FOLDER'])
+            os.path.join(app.config['APPLICATION_ROOT'],
+              app.config['UPLOAD_FOLDER']))
         return(redirect(url_for('display_results', result_id=new_result_id)))
       flash("Error with form submission")
       return(render_template('index.html', form=form))
@@ -171,7 +172,7 @@ def create_app(config=None):
   @app.route('/results/<result_id>')
   def display_results(result_id):
     result_id = secure_filename(result_id)
-    direc = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], result_id))
+    direc = os.path.abspath(os.path.join(app.config['APPLICATION_ROOT'], app.config['UPLOAD_FOLDER'], result_id))
     reportfile = os.path.join(direc,
         "output",
         "phylogenize-report.html")
@@ -222,7 +223,7 @@ def create_app(config=None):
   def display_result_file(result_id, subfile):
     result_id = secure_filename(result_id)
     subfile = secure_filename(subfile)
-    direc = os.path.abspath(os.path.join(app.config['UPLOAD_FOLDER'], result_id))
+    direc = os.path.abspath(os.path.join(app.config['APPLICATION_ROOT'], app.config['UPLOAD_FOLDER'], result_id))
     if subfile == "phylogenize-report.html":
       reportfile = os.path.join(direc,
           "output",
@@ -244,7 +245,7 @@ def create_app(config=None):
 
   return(app)
 
-def process_form(form=None, request=None, upload_folder="instance/results"):
+def process_form(form=None, request=None, upload_folder="../instance/results"):
 
   uploaded_biom = False
   if form.biomfile.data:
