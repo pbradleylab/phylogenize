@@ -137,7 +137,6 @@ def create_app(config=None):
   app = Flask(__name__)
   app.config.from_pyfile('../phylogenize_default.cfg')
   app.config.from_pyfile('../instance/phylogenize.cfg', silent=True)
-  sys.stderr.write("%s\n" % os.path.abspath(app.config['UPLOAD_FOLDER']))
 
   allowed_files = UploadSet('files', app.config['ALLOWED_EXTENSIONS'])
   configure_uploads(app, allowed_files)
