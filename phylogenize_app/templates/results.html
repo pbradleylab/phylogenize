@@ -41,10 +41,10 @@ $('head').append('<meta http-equiv="refresh" content="300"/>');
   <div class="container infobox">
     <center>
       {% if errormsg %}
-        {% if not phylo_errortext == '' %}
+        {% if not phylo_err == '' %}
           Error
         {% else %}
-          Error: {{ phylo_errortext }}
+          Error: {{ phylo_err }}
         {% endif %}
       {% else %}
       Working...
