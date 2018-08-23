@@ -1015,7 +1015,7 @@ prev.addw <- function(mtx, envir, meta, E = "env", D = "dataset") {
     stop(paste0("environment ", envir, " not found in metadata"))
   }
   env.rows <- (meta[[E]] == envir)
-  dsets <- unique(meta[env.rows, D, with = FALSE])
+  dsets <- unique(meta[env.rows, D])
   if (length(dsets) > 1) {
     means.by.study <- lapply(dsets, function(d) {
       s <- intersect(colnames(mtx), 
@@ -1051,7 +1051,7 @@ calc.ess <- function(mtx,
     stop(paste0("environment ", envir, " not found in metadata"))
   }
   env.rows <- (meta[[E]] == envir)
-  dsets <- unique(meta[env.rows, D, with = FALSE])
+  dsets <- unique(meta[env.rows, D])
   if (length(dsets) > 1) {
     warning("datasets are ignored when calculating specificity")
   }
@@ -1070,7 +1070,7 @@ calc.ess <- function(mtx,
     stop(paste0("don't know how to compute priors of type ", ptype))
   }
   ids <- sapply(colnames(mtx), function (sn) meta[(meta$sample == sn), 
-                                                  E, with = FALSE])
+                                                  E])
   if (length(unique(ids)) < 2) {
     stop("error: only one environment found")
   }

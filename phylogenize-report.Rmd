@@ -67,7 +67,7 @@ if ((Env == "sample") || (Dset == "sample")) {
 if (params$input_format == "tabular") {
   abd.mtx <- fastread(file.path(IDir, params$abundance_file), 
     cn = FALSE)
-  metadata <- fread(file.path(IDir, params$metadata_file))
+  metadata <- data.frame(fread(file.path(IDir, params$metadata_file)))
   if (!(Env %in% colnames(metadata))) {
     stop(paste("Environment column not found:", Env))
   }
