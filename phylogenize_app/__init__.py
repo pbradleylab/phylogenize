@@ -189,17 +189,21 @@ def create_app(config=None):
     if os.path.isfile(errfile):
       with open(errfile, 'r') as fh:
         errlines = [l for l in fh.readlines()]
-        if re.search(r'Execution halted', errlines[-1]):
-          errormsg = True
-          if os.path.isfile(errmsgfile):
-            with open(errmsgfile, 'r') as fh:
-              phylo_errortext = str("".join([l for l in fh.readlines()]))
-        else:
+        try:
+          if re.search(r'Execution halted', errlines[-1]):
+            errormsg = True
+            if os.path.isfile(errmsgfile):
+              with open(errmsgfile, 'r') as fh:
+                phylo_errortext = str("".join([l for l in fh.readlines()]))
+          else:
+            errormsg = False
+          if (len(errlines) >= 20) and not errormsg:
+            errtext = str("".join(errlines[-20:]))
+          else:
+            errtext = str("".join(errlines))
+        except ValueError, IndexError:
+          errtext = ''
           errormsg = False
-        if (len(errlines) >= 20) and not errormsg:
-          errtext = str("".join(errlines[-20:]))
-        else:
-          errtext = str("".join(errlines))
     else:
       errtext = ''
       errormsg = False
@@ -210,10 +214,14 @@ def create_app(config=None):
           outtext = str("".join(outlines[-20:]))
         else:
           outtext = str("".join(outlines))
-        pctlines = list(filter(lambda x: re.search(r'\\|.*\\| *\%', x),
-          outlines))
-        pctline = pctlines[-1]
-        pct = float(re.sub('.*\\| (.*)%', '\\1', pctline))
+        try:
+          pctlines = list(filter(lambda x: re.search(r'\\|.*\\| *\%', x),
+            outlines))
+          pctline = pctlines[-1]
+          pct = float(re.sub('.*\\| (.*)%', '\\1', pctline))
+        except ValueError, IndexError:
+          pctline = "0"
+          pct = float(0)
     else:
       outtext = ''
       pct = float(0)
