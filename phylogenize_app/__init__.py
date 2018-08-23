@@ -147,7 +147,9 @@ def create_app(config=None):
     form = JobForm()
     if request.method == 'POST':
       if form.validate():
-        new_result_id = process_form(form, request,
+        new_result_id = process_form(allowed_files,
+            form,
+            request,
             os.path.join(app.config['APPLICATION_ROOT'],
               app.config['UPLOAD_FOLDER']))
         return(redirect(url_for('display_results', result_id=new_result_id)))
@@ -245,7 +247,7 @@ def create_app(config=None):
 
   return(app)
 
-def process_form(form=None, request=None, upload_folder="../instance/results"):
+def process_form(allowed_files, form=None, request=None, upload_folder="../instance/results"):
 
   uploaded_biom = False
   if form.biomfile.data:
