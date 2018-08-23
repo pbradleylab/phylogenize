@@ -752,12 +752,12 @@ bootstrap.pET.se <- function(vec, env.ids, which.env = 1, prior = 0.05, B = 250,
 }
 
 iter.across <- function(list.of.lists, f, table = FALSE, reduce = TRUE) {
-	rows <- Reduce(prod, sapply(list.of.lists, length))
-	to.expand <- lapply(list.of.lists, function(x) {
-		if (is.null(names(x))) seq_along(x) else names(x)
-	})	
-	input.grid <- do.call(expand.grid, to.expand)
-	output <- apply(input.grid, 1, function(x) {
+  rows <- Reduce(prod, sapply(list.of.lists, length))
+  to.expand <- lapply(list.of.lists, function(x) {
+    if (is.null(names(x))) seq_along(x) else names(x)
+  })  
+  input.grid <- do.call(expand.grid, to.expand)
+  output <- apply(input.grid, 1, function(x) {
     i <- mapply(x,
       list.of.lists,
       SIMPLIFY = FALSE,
@@ -777,7 +777,7 @@ iter.across <- function(list.of.lists, f, table = FALSE, reduce = TRUE) {
       }
     }
   })
-  if (!table) {	
+  if (!table) {  
     output.grid <- data.frame(cbind(input.grid, t(output)))
   } else {
     if (reduce) {
@@ -935,7 +935,7 @@ make.class.ids <- function(mtx, sample.vecs, elim.zeros = TRUE) {
 # from flodel @ stackoverflow
 list.depth <- function(this) ifelse(is.list(this), 1L + max(sapply(this, list.depth)), 0L)
 first.element.at.depth <- function(l, n) {
-	if (n == 1) { l[[1]] } else { (first.element.at.depth(l[[1]], n - 1)) }
+  if (n == 1) { l[[1]] } else { (first.element.at.depth(l[[1]], n - 1)) }
 }
 
 annotate.nested <- function(nested,
@@ -945,38 +945,38 @@ annotate.nested <- function(nested,
   stop.at = 0, 
   summarize.values = 1) {
 
-	nestedness <- list.depth(nested)
-	if (nestedness == stop.at) {
-		if (is.null(summarize)) {
-			values <- data.frame(value = nested)
-			rownames(values) <- names(nested)	
-		} else {
+  nestedness <- list.depth(nested)
+  if (nestedness == stop.at) {
+    if (is.null(summarize)) {
+      values <- data.frame(value = nested)
+      rownames(values) <- names(nested)  
+    } else {
       val.raw <- summarize(nested)
       if ((!is.null(nrow(val.raw))) || (nrow(val.raw) > 0)) {
         rownames(val.raw) <- NULL
       }
-  		values <- data.frame(value = val.raw)
-		}
+      values <- data.frame(value = val.raw)
+    }
     if (is.null(nrow(values))) {
-		  n.mtx <- matrix(rep(n, (length(values) / summarize.values)),
+      n.mtx <- matrix(rep(n, (length(values) / summarize.values)),
         nc = length(n),
         byrow = TRUE)
     } else {
-		  n.mtx <- matrix(rep(n, nrow(values)), nc = length(n), byrow = TRUE)
+      n.mtx <- matrix(rep(n, nrow(values)), nc = length(n), byrow = TRUE)
     }
-		if (!is.null(n.names)) { colnames(n.mtx) <- n.names }
-		final.df <- cbind(names = rownames(values), n.mtx, value = values)
-		rownames(final.df) <- NULL
-		return(final.df)
-	} else {
+    if (!is.null(n.names)) { colnames(n.mtx) <- n.names }
+    final.df <- cbind(names = rownames(values), n.mtx, value = values)
+    rownames(final.df) <- NULL
+    return(final.df)
+  } else {
     if (is.null(names(nested))) { names(nested) <- 1:length(nested) }
-		Reduce(rbind, lapply.across.names(names(nested),
-			function(x) annotate.nested(nested[[x]],
+    Reduce(rbind, lapply.across.names(names(nested),
+      function(x) annotate.nested(nested[[x]],
         summarize = summarize,
         n = c(n, x),
         n.names = n.names,
         stop.at = stop.at)))
-	}
+  }
 
 }
 
@@ -1015,7 +1015,7 @@ prev.addw <- function(mtx, envir, meta, E = "env", D = "dataset") {
     stop(paste0("environment ", envir, " not found in metadata"))
   }
   env.rows <- (meta[[E]] == envir)
-  dsets <- unique(meta[env.rows, D])
+  dsets <- unique(meta[env.rows, D, with = FALSE])
   if (length(dsets) > 1) {
     means.by.study <- lapply(dsets, function(d) {
       s <- intersect(colnames(mtx), 
@@ -1051,7 +1051,7 @@ calc.ess <- function(mtx,
     stop(paste0("environment ", envir, " not found in metadata"))
   }
   env.rows <- (meta[[E]] == envir)
-  dsets <- unique(meta[env.rows, D])
+  dsets <- unique(meta[env.rows, D, with = FALSE])
   if (length(dsets) > 1) {
     warning("datasets are ignored when calculating specificity")
   }
@@ -1070,7 +1070,7 @@ calc.ess <- function(mtx,
     stop(paste0("don't know how to compute priors of type ", ptype))
   }
   ids <- sapply(colnames(mtx), function (sn) meta[(meta$sample == sn), 
-                                                  E])
+                                                  E, with = FALSE])
   if (length(unique(ids)) < 2) {
     stop("error: only one environment found")
   }

@@ -7,6 +7,8 @@
 		<link href="https://fonts.googleapis.com/css?family=Barlow" rel="stylesheet" />
     <link rel="stylesheet" href={{ url_for('static', filename='css/bootstrap.css') }} />  
     <link rel="stylesheet" href={{ url_for('static', filename='phylo.css') }} />  
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" sizes="16x16 32x32 48x48 64x64" type="image/vnd.microsoft.icon" />
+
 <title>
 	{% if request.path == "/" %} phylogenize - analyze
   {% elif request.path == "/results" %} phylogenize - results

@@ -42,8 +42,8 @@ from flask_uploads import configure_uploads, UploadSet
 RECAPTCHA_PUBLIC_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
 #RECAPTCHA_PRIVATE_KEY = '6LecpGkUAAAAAFuTGxJ6Um3wztmZxXASZBKKOwHi'
 RECAPTCHA_PRIVATE_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
-UPLOAD_FOLDER = os.path.abspath('./instance/results/')
-REPORT_TEMPLATE_PATH = os.path.abspath('./phylogenize-report.Rmd')
+UPLOAD_FOLDER = os.path.abspath('/var/www/phylogenize/instance/results/')
+REPORT_TEMPLATE_PATH = os.path.abspath('/var/www/phylogenize/phylogenize-report.Rmd')
 ALLOWED_EXTENSIONS = set([
   'txt',
   'tsv',
@@ -87,7 +87,7 @@ class JobForm(FlaskForm):
       ("midas_v1.0", "MIDAS 1.0"),
       ("midas_v1.2", "MIDAS 1.2")
     ],
-    default = "midas_v1.0",
+    default = "midas_v1.2",
     label = "Database version"
   )
   phenotype = RadioField(
@@ -137,8 +137,8 @@ def nocache(view):
 
 def create_app(test_config=None):
   app = Flask(__name__, instance_relative_config=True)
-  app.config['UPLOADED_ALLOWED_FILES_DEST'] = './instance/results/'
-  app.config['UPLOADED_FILES_DEST'] = './instance/results/'
+  app.config['UPLOADED_ALLOWED_FILES_DEST'] = '/var/www/phylogenize/instance/results/'
+  app.config['UPLOADED_FILES_DEST'] = '/var/www/phylogenize/instance/results/'
   configure_uploads(app, allowed_files)
   app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'tankboozysurrealgrinning'
   app.config['WTF_CSRF_SECRET_KEY'] = os.environ.get('WTF_CSRF_SECRET_KEY') or\
