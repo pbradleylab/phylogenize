@@ -244,7 +244,7 @@ def create_app(config=None):
 
   return(app)
 
-def process_form(form = None, request = None, upload_folder):
+def process_form(form=None, request=None, upload_folder="instance/results"):
 
   uploaded_biom = False
   if form.biomfile.data:
