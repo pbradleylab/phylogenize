@@ -51,7 +51,6 @@ ALLOWED_EXTENSIONS = set([
   'csv',
   'biom'
 ])
-allowed_files = UploadSet('files', ALLOWED_EXTENSIONS)
 beanstalk = Connection(host='localhost', port=14711)
 beanstalk.use("phylogenize")
 
@@ -59,19 +58,22 @@ class JobForm(FlaskForm):
   abundances = FileField(validators = [
     Optional(),
     FileRequired(),
-    FileAllowed(ALLOWED_EXTENSIONS, message='Only tab-delimited files or BIOM files accepted')
+    FileAllowed(ALLOWED_EXTENSIONS,
+      message='Only tab-delimited files or BIOM files accepted')
   ])
   metadata = FileField(validators = [
     Optional(),
     FileRequired(),
-    FileAllowed(ALLOWED_EXTENSIONS, message='Only tab-delimited files or BIOM files accepted')
+    FileAllowed(ALLOWED_EXTENSIONS,
+      message='Only tab-delimited files or BIOM files accepted')
   ])
   biomfile = FileField(
     label="BIOM file",
     validators = [
       Optional(),
       FileRequired(),
-      FileAllowed(ALLOWED_EXTENSIONS, message='Only tab-delimited files or BIOM files accepted')
+      FileAllowed(ALLOWED_EXTENSIONS,
+        message='Only tab-delimited files or BIOM files accepted')
     ]
   )
   datatype = RadioField(
@@ -99,8 +101,7 @@ class JobForm(FlaskForm):
   )
   which_envir = StringField("Environment",
       validators = [InputRequired(message = 'Must provide an environment')],
-      render_kw = {"placeholder": "Stool"})
-  # recaptcha = RecaptchaField()
+      render_kw = {"placeholder": "e.g., stool"})
 
   def validate(self):
     if not super(JobForm, self).validate():
@@ -111,16 +112,12 @@ class JobForm(FlaskForm):
         " sample annotation file) or a single BIOM file (including species" +\
         " abundances and sample annotations) must be uploaded"
       self.abundances.errors.append(msg)
-      self.metadata.errors.append(msg)
-      self.biomfile.errors.append(msg)
       return False
     if self.abundances.data and self.metadata.data and self.biomfile.data:
       msg = "Please only submit either two tab-delimited files (a species" +\
         " abundance table and a sample annotation file) or a single BIOM file" +\
         " (including species abundances and sample annotations), not both"
       self.abundances.errors.append(msg)
-      self.metadata.errors.append(msg)
-      self.biomfile.errors.append(msg)
       return False
     return True
 
@@ -135,18 +132,14 @@ def nocache(view):
     return response
   return update_wrapper(no_cache, view)
 
-def create_app(test_config=None):
-  app = Flask(__name__, instance_relative_config=True)
-  app.config['UPLOADED_ALLOWED_FILES_DEST'] = '/var/www/phylogenize/instance/results/'
-  app.config['UPLOADED_FILES_DEST'] = '/var/www/phylogenize/instance/results/'
+def create_app(config=None):
+
+  app = Flask(__name__)
+  app.config.from_pyfile('phylogenize_default.cfg', silent=True)
+  app.config.from_pyfile('instance/phylogenize.cfg', silent=True)
+
+  allowed_files = UploadSet('files', ALLOWED_EXTENSIONS)
   configure_uploads(app, allowed_files)
-  app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY') or 'tankboozysurrealgrinning'
-  app.config['WTF_CSRF_SECRET_KEY'] = os.environ.get('WTF_CSRF_SECRET_KEY') or\
-    'tankboozysurrealgrinning'
-  app.config['UPLOAD_FOLDER'] = os.environ.get('UPLOAD_FOLDER') or UPLOAD_FOLDER
-  app.config['MAX_CONTENT_LENGTH'] = 35 * 1024 * 1024
-  app.config['RECAPTCHA_PUBLIC_KEY'] = '6LdqGmkUAAAAAIKT3ZLbEWPZaPkiLonF8W8zmLlK'
-  app.config['RECAPTCHA_PRIVATE_KEY'] = '6LdqGmkUAAAAAHxf242OHD4_2_K0Y_TfJ3wqdohC'
 
   @app.route('/', methods=['GET', 'POST'])
   @nocache
@@ -158,8 +151,8 @@ def create_app(test_config=None):
             app.config['UPLOAD_FOLDER'])
         return(redirect(url_for('display_results', result_id=new_result_id)))
       flash("Error with form submission")
-      return(render_template('index.html', form = form))
-    return(render_template('index.html', form = form))
+      return(render_template('index.html', form=form))
+    return(render_template('index.html', form=form))
 
   @app.route('/tutorial', methods=['GET', 'POST'])
   @nocache
@@ -174,11 +167,6 @@ def create_app(test_config=None):
   @app.route('/results')
   def reroute():
     return(redirect(url_for('home')))
-
-  #@app.route('/test')
-  #def test_queue():
-  #  beanstalk.put("TEST-JOB")
-  #  return(redirect(url_for('home')))
 
   @app.route('/results/<result_id>')
   def display_results(result_id):
@@ -242,7 +230,7 @@ def create_app(test_config=None):
       if os.path.isfile(reportfile):
         return(send_from_directory(os.path.join(direc, "output"), "phylogenize-report.html"))
       else:
-        return(redirect(url_for('display_results', result_id = result_id)))
+        return(redirect(url_for('display_results', result_id=result_id)))
     elif subfile == "output.tgz":
       tgzfile = os.path.join(direc,
           "output",
@@ -250,34 +238,39 @@ def create_app(test_config=None):
       if os.path.isfile(tgzfile):
         return(send_from_directory(os.path.join(direc, "output"), "output.tgz"))
       else:
-        return(redirect(url_for('display_results', result_id = result_id)))
+        return(redirect(url_for('display_results', result_id=result_id)))
     else:
-      return(redirect(url_for('display_results', result_id = result_id)))
+      return(redirect(url_for('display_results', result_id=result_id)))
 
   return(app)
 
-def process_form(form = None, request = None, upload_folder = UPLOAD_FOLDER):
+def process_form(form = None, request = None, upload_folder):
+
   uploaded_biom = False
   if form.biomfile.data:
     uploaded_biom = True
+
   # Generate a unique UUID
   while True:
     new_result_id = str(uuid.uuid4())
     direc = os.path.abspath(os.path.join(upload_folder, new_result_id))
     if not os.path.exists(direc):
       break
+
   # Set up directory structure
   IDir = os.path.join(direc, "input")
   ODir = os.path.join(direc, "output")
   os.mkdir(direc)
   os.mkdir(IDir)
   os.mkdir(ODir)
+
   # Bleach form components
   database = str(bleach.clean(form.database.data))
   datatype = str(bleach.clean(form.datatype.data))
   phenotype = str(bleach.clean(form.phenotype.data))
   which_envir = str(bleach.clean(form.which_envir.data))
   input_format = ("biom" if uploaded_biom else "tabular")
+
   # Upload the BIOM or tabular files
   if uploaded_biom:
     allowed_files.save(request.files['biomfile'],
@@ -290,6 +283,7 @@ def process_form(form = None, request = None, upload_folder = UPLOAD_FOLDER):
     allowed_files.save(request.files['abundances'],
       folder = IDir,
       name = "abundance.tab")
+
   # Set some last options and submit to beanstalk queue
   minimum = 3
   prior_type = "uninformative"

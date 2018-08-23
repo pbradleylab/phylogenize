@@ -13,7 +13,7 @@ beanstalk = Connection(host='localhost', port=14711)
 beanstalk.watch("phylogenize")
 beanstalk.use("phylogenize")
 
-MaxJobs = 2
+MaxJobs = 1
 JobList = [None] * MaxJobs
 JobOutput = [None] * MaxJobs
 JobErr = [None] * MaxJobs
@@ -86,9 +86,16 @@ while True:
         # job finished!
         print("Job %s finished running in slot %d - cleaning up" % \
             (JobTitle[N], N + 1))
+        job_input_dir = os.path.abspath(os.path.join(job_file, "../input"))
+        # clean up input files, which could be large and are no longer needed
+        if os.path.ispath(job_input_dir):
+          for filename in os.listdir(job_input_dir):
+            rf = os.path.join(job_input_dir, filename)
+            print("Removing file %s..." % rf)
+            os.remove(rf)
         if os.path.isfile(os.path.join(job_file, "phylogenize-report.html")):
           make_tarfile(os.path.join(job_file, "output.tgz" % JobTitle[N]),
-             os.path.join(job_file, "output"))
+             os.path.join(job_file))
         JobErr[N].close()
         JobOutput[N].close()
         JobTitle[N] = None
