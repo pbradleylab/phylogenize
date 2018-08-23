@@ -1390,3 +1390,8 @@ signif.overlaps <- function(enr, result) {
   x
 }
 
+phylogenize.error <- function(errtext, direc = ".") {
+  cat(errtext, 
+    file = file.path(direc, "errmsg.txt"))
+  stop(errtext)
+}

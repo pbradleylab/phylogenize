@@ -60,19 +60,23 @@ library(dplyr)
 library(biomformat)
 library(Matrix)
 
+phylo.error <- function(err) {
+  phylogenize.error(err, direc = params$out_dir)
+}
+
 # Read abundance, metadata files
 if ((Env == "sample") || (Dset == "sample")) {
-  stop("Environment and dataset columns cannot be titled \"sample\"")
+  phylo.error("Environment and dataset columns cannot be titled \"sample\"")
 }
 if (params$input_format == "tabular") {
   abd.mtx <- fastread(file.path(IDir, params$abundance_file), 
     cn = FALSE)
   metadata <- data.frame(fread(file.path(IDir, params$metadata_file)))
   if (!(Env %in% colnames(metadata))) {
-    stop(paste("Environment column not found:", Env))
+    phylo.error(paste("When looking for environment, no column found labeled", Env))
   }
   if (!(Dset %in% colnames(metadata))) {
-    stop(paste("Dataset column not found:", Dset))
+    phylo.error(paste("When looking for dataset, no column found labeled ", Dset))
   }
   metadata[[Env]] <- as.factor(metadata[[Env]])
   metadata[[Dset]] <- as.factor(metadata[[Dset]])
@@ -81,10 +85,10 @@ if (params$input_format == "tabular") {
   abd.mtx <- biom_data(biomf)
   metadata <- sample_metadata(biomf)
   if (!(Env %in% colnames(metadata))) {
-    stop(paste("Environment column not found:", Env))
+    phylo.error(paste("Environment column not found:", Env))
   }
   if (!(Dset %in% colnames(metadata))) {
-    stop(paste("Dataset column not found:", Dset))
+    phylo.error(paste("Dataset column not found:", Dset))
   }
   metadata[[Env]] <- as.factor(metadata[[Env]])
   metadata[[Dset]] <- as.factor(metadata[[Dset]])
@@ -129,7 +133,7 @@ if (params$type == "midas") {
           "MIDAS_1.2-taxonomy.csv")),
       stringsAsFactors = FALSE)[,-1]
   } else {
-    stop(paste0("unknown database version ", params$db_version))
+    phylo.error(paste0("unknown database version ", params$db_version))
   }
 } else if (params$type == "16S") {
   SixteenS = TRUE
@@ -165,7 +169,7 @@ abd.no.meta <- length(setdiff(colnames(abd.mtx), samples.present))
 meta.no.abd <- length(setdiff(metadata$sample, samples.present))
 print(paste0(length(samples.present), " samples found in both metadata and abundance matrix"))
 if (length(samples.present) == 0) {
-  stop("error: no samples found in both metadata and abundance matrix")
+  phylo.error("error: no samples found in both metadata and abundance matrix")
 }
 abd.mtx <- abd.mtx[, samples.present]
 metadata <- metadata[metadata$sample %in% samples.present, ]
@@ -305,7 +309,7 @@ if (params$which_phenotype == "prevalence") {
     sum(phenotype[tr$tip.label] != phenoP)
   })
   if (all(n.not.prior == 0)) {
-    stop(paste0("ERROR: The phenotype for all taxa was shrunk to the prior. ",
+    phylo.error(paste0("The phenotype for all taxa was shrunk to the prior. ",
       "This probably means that there are no major taxonomic differences ",
       "between groups. Without identifying some such taxonomic changes, ",
       "phylogenize cannot continue."))
@@ -322,8 +326,8 @@ if (params$which_phenotype == "prevalence") {
                    mid.col = "gray50",
                    high.col = "tomato")
 } else if (params$which_phenotype == "provided") {
-    stop("providing your own phenotype not implemented yet")
-  } else stop(paste0("don't know how to calculate the phenotype ",
+    phylo.error("providing your own phenotype not implemented yet")
+  } else phylo.error(paste0("don't know how to calculate the phenotype ",
                    params$which_phenotype))
 
 # be a little parsimonious with memory here
