@@ -137,7 +137,8 @@ def create_app(config=None):
     if request.method == 'POST':
       if form.validate():
         new_result_id = process_form(allowed_files,
-            app.config['REPORT_TEMPLATE_PATH'],
+            os.path.abspath(os.path.join(app.config['APPLICATION_ROOT'],
+              app.config['REPORT_TEMPLATE_PATH'])),
             form,
             request,
             os.path.join(app.config['APPLICATION_ROOT'],
