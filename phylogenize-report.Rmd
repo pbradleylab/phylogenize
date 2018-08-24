@@ -105,7 +105,12 @@ if (!params$skip_graphs) {
       x = paste(x, collapse = '.')
       if (!grepl('\\.svg', x)) return(hook_plot(x, options))
       # read the content of the svg image and write it out without <?xml ... ?>
-      paste(readLines(x)[-1], collapse = '\n')
+      svg_text <- paste(readLines(x)[-1], collapse = '\n')
+      cat(svg_text, file=x)
+      # instead I want to link
+      return(paste0('<object type="image/svg+xml" data="',
+          fig_path(basename(x)),
+          '">(SVG object)</object>'))
     })
   })
 }
