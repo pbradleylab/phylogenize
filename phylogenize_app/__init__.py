@@ -41,77 +41,6 @@ from flask_uploads import configure_uploads, UploadSet
 beanstalk = Connection(host='localhost', port=14711)
 beanstalk.use("phylogenize")
 
-class JobForm(FlaskForm):
-  abundances = FileField(validators = [
-    Optional(),
-    FileRequired(),
-    FileAllowed(ext,
-      message='Only tab-delimited files or BIOM files accepted')
-  ])
-  metadata = FileField(validators = [
-    Optional(),
-    FileRequired(),
-    FileAllowed(ext,
-      message='Only tab-delimited files or BIOM files accepted')
-  ])
-  biomfile = FileField(
-    label="BIOM file",
-    validators = [
-      Optional(),
-      FileRequired(),
-      FileAllowed(ext,
-        message='Only tab-delimited files or BIOM files accepted')
-    ]
-  )
-  datatype = RadioField(
-    choices = [
-      ("16S", "16S"),
-      ("midas", "Shotgun (MIDAS)")
-    ],
-    default = "16S", 
-    label = "Data type"
-  )
-  database = RadioField(
-    choices = [
-      ("midas_v1.0", "MIDAS 1.0"),
-      ("midas_v1.2", "MIDAS 1.2")
-    ],
-    default = "midas_v1.2",
-    label = "Database version"
-  )
-  phenotype = RadioField(
-    choices = [
-      ("prevalence", "prevalence"),
-      ("specificity", "specificity")
-    ], 
-    default = "prevalence"
-  )
-  which_envir = StringField("Environment",
-      validators = [InputRequired(message = 'Must provide an environment')],
-      render_kw = {"placeholder": "e.g., stool"})
-  recaptcha = RecaptchaField()
-
-  def validate(self):
-    if not super(JobForm, self).validate():
-      return False
-    if not ((self.abundances.data and self.metadata.data) or \
-        self.biomfile.data):
-      msg = "Either two tab-delimited files (a species abundance table and a" +\
-        " sample annotation file) or a single BIOM file (including species" +\
-        " abundances and sample annotations) must be uploaded"
-      self.abundances.errors.append(msg)
-      return False
-    if self.abundances.data and self.metadata.data and self.biomfile.data:
-      msg = "Please only submit either two tab-delimited files (a species" +\
-        " abundance table and a sample annotation file) or a single BIOM file" +\
-        " (including species abundances and sample annotations), not both"
-      self.abundances.errors.append(msg)
-      return False
-    return True
-
-  def __init__(self, ext):
-    self.ext = ext
-
 def nocache(view):
   @wraps(view)
   def no_cache(*args, **kwargs):
@@ -131,6 +60,75 @@ def create_app(config=None):
 
   allowed_files = UploadSet('files', app.config['ALLOWED_EXTENSIONS'])
   configure_uploads(app, allowed_files)
+
+  class JobForm(FlaskForm):
+    abundances = FileField(validators = [
+      Optional(),
+      FileRequired(),
+      FileAllowed(app.config['ALLOWED_EXTENSIONS'],
+        message='Only tab-delimited files or BIOM files accepted')
+    ])
+    metadata = FileField(validators = [
+      Optional(),
+      FileRequired(),
+      FileAllowed(app.config['ALLOWED_EXTENSIONS'],
+        message='Only tab-delimited files or BIOM files accepted')
+    ])
+    biomfile = FileField(
+      label="BIOM file",
+      validators = [
+        Optional(),
+        FileRequired(),
+        FileAllowed(app.config['ALLOWED_EXTENSIONS'],
+          message='Only tab-delimited files or BIOM files accepted')
+      ]
+    )
+    datatype = RadioField(
+      choices = [
+        ("16S", "16S"),
+        ("midas", "Shotgun (MIDAS)")
+      ],
+      default = "16S", 
+      label = "Data type"
+    )
+    database = RadioField(
+      choices = [
+        ("midas_v1.0", "MIDAS 1.0"),
+        ("midas_v1.2", "MIDAS 1.2")
+      ],
+      default = "midas_v1.2",
+      label = "Database version"
+    )
+    phenotype = RadioField(
+      choices = [
+        ("prevalence", "prevalence"),
+        ("specificity", "specificity")
+      ], 
+      default = "prevalence"
+    )
+    which_envir = StringField("Environment",
+        validators = [InputRequired(message = 'Must provide an environment')],
+        render_kw = {"placeholder": "e.g., stool"})
+    recaptcha = RecaptchaField()
+
+    def validate(self):
+      if not super(JobForm, self).validate():
+        return False
+      if not ((self.abundances.data and self.metadata.data) or \
+          self.biomfile.data):
+        msg = "Either two tab-delimited files (a species abundance table and a" +\
+          " sample annotation file) or a single BIOM file (including species" +\
+          " abundances and sample annotations) must be uploaded"
+        self.abundances.errors.append(msg)
+        return False
+      if self.abundances.data and self.metadata.data and self.biomfile.data:
+        msg = "Please only submit either two tab-delimited files (a species" +\
+          " abundance table and a sample annotation file) or a single BIOM file" +\
+          " (including species abundances and sample annotations), not both"
+        self.abundances.errors.append(msg)
+        return False
+      return True
+
 
   @app.route('/', methods=['GET', 'POST'])
   @nocache
