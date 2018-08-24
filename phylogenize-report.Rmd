@@ -4,10 +4,6 @@ output:
   html_document:
     toc: true
     toc_float: true
-    pandoc_args: [
-      "+RTS", "-K2048m",
-      "-RTS"
-    ]
 params:
   ncl: 1
   type: "midas"
@@ -71,6 +67,7 @@ if ((Env == "sample") || (Dset == "sample")) {
 if (params$input_format == "tabular") {
   abd.mtx <- fastread(file.path(IDir, params$abundance_file), 
     cn = FALSE)
+  gc()
   metadata <- data.frame(fread(file.path(IDir, params$metadata_file)))
   if (!(Env %in% colnames(metadata))) {
     phylo.error(paste("When looking for environment, no column found labeled", Env))
@@ -250,6 +247,10 @@ if ((length(not.observed.taxa) > 0) && (params$assume_below_LOD)) {
 }
 taxa <- lapply(trees, function(x) x$tip.label)
 nphyla <- length(trees)
+
+# Make back into a binary sparse matrix to save memory
+abd.mtx <- Matrix(abd.mtx > 0)
+gc()
 
 ```
 
@@ -619,6 +620,17 @@ write.csv(file=file.path(ODir, "enr-overlaps.csv"), enr.overlap)
 write.csv(file=file.path(ODir, "enr-overlaps-sorted.csv"),
   enr.overlap[order(enr.overlap$phylum, enr.overlap$process, enr.overlap$value.value.estimate), ])
 
+```
+
+```{r cleanup, warning=FALSE, message=FALSE, echo=FALSE}
+# Clean up memory before rendering
+rm(gene.presence)
+rm(results)
+rm(trees)
+rm(plotted.pheno.subtrees)
+rm(plotted.pheno.trees)
+rm(taxonomy)
+gc()
 ```
 
 ```

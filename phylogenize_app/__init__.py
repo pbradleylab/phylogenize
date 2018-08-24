@@ -195,6 +195,9 @@ def create_app(config=None):
             if os.path.isfile(errmsgfile):
               with open(errmsgfile, 'r') as fh:
                 phylo_errortext = str("".join([l for l in fh.readlines()]))
+          elif re.search(r'system call failed: Cannot allocate memory', errlines[-1]):
+            errormsg = True
+            phylo_errortext = "Out of memory"
           else:
             errormsg = False
           if (len(errlines) >= 20) and not errormsg:
