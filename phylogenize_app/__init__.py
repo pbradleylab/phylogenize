@@ -137,6 +137,7 @@ def create_app(config=None):
     if request.method == 'POST':
       if form.validate():
         new_result_id = process_form(allowed_files,
+            app.config['REPORT_TEMPLATE_PATH'],
             form,
             request,
             os.path.join(app.config['APPLICATION_ROOT'],
@@ -253,7 +254,7 @@ def create_app(config=None):
 
   return(app)
 
-def process_form(allowed_files, form=None, request=None, upload_folder="../instance/results"):
+def process_form(allowed_files, app_report, form=None, request=None, upload_folder="../instance/results"):
 
   uploaded_biom = False
   if form.biomfile.data:
@@ -297,7 +298,7 @@ def process_form(allowed_files, form=None, request=None, upload_folder="../insta
   minimum = 3
   prior_type = "uninformative"
   rmark_render_cmd = \
-    ("rmarkdown::render(\"%s\", " % (REPORT_TEMPLATE_PATH)) +\
+    ("rmarkdown::render(\"%s\", " % (app_report)) +\
       "output_format = \"html_document\", " + \
       ("output_dir = \"%s\", " % (ODir)) + \
       ("params = list(type = \"%s\", " % (datatype)) + \
