@@ -50,7 +50,22 @@ h3 {
 	background-color: #E0E0E0;
 	font-weight: normal;
 }
-code {
+img.inline {
+	width: auto;
+	max-width: 100%;
+	margin: 0 auto;
+	display: block;
+}
+div.figure {
+	margin: auto;
+	width: 100%;
+}
+p.caption {
+	font-style: italic;
+	text-align: center;
+}
+
+code.block {
 background-color: #FFFFD0;
 width: 100%;
 display:block;
@@ -117,7 +132,11 @@ pre.errfile {
 	color: #000000;
 	font-style: italic;
 }
-ul {
+ul.form-control {
+	    list-style-type: none;
+						}
+
+.silentform {
 	    list-style-type: none;
 					    padding: 0;
 						}

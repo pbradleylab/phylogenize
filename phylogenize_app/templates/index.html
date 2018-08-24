@@ -69,8 +69,8 @@
     novalidate>
 
 			{{ form.hidden_tag() }}
-			<div class="form-row">
-				<div class="col-md-4">
+			<div class="form-row silentform">
+				<div class="col-md-4 silentform">
 					{{ form_entry(form.abundances, "Tab-separated values. Rows should be
 					MIDAS species IDs or PATRIC genome IDs.", True) }}
 					{{ form_entry(form.metadata, "Tab-separated values. Rows should be
@@ -79,13 +79,13 @@
 					sample annotation table). Make sure your sample annotation table has
 					\"env\" and \"dataset\" annotations.", True) }}
 				</div>
-				<div class="col-md-4">
+				<div class="col-md-4 silentform">
 					{{ form_entry(form.datatype, "Select whether data were calculated from
 					applying MIDAS to metagenomic data, or DADA2 to 16S data.") }}
 					{{ form_entry(form.database, "Select the version of the database that you
 					used to get relative abundances.") }}
 				</div>
-				<div class="col-md-4">
+				<div class="col-md-4 silentform">
 					{{ form_entry(form.phenotype,	"Select whether you want to associate gene families with prevalence or
 					with environmental specificity scores.") }}
 					{{ form_entry(form.which_envir, "Enter the name of the environment in
