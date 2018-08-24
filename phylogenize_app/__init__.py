@@ -204,7 +204,7 @@ def create_app(config=None):
             errtext = str("".join(errlines[-20:]))
           else:
             errtext = str("".join(errlines))
-        except ValueError, IndexError:
+        except (ValueError, IndexError) as e:
           errtext = ''
           errormsg = False
     else:
@@ -222,7 +222,7 @@ def create_app(config=None):
             outlines))
           pctline = pctlines[-1]
           pct = float(re.sub('.*\\| (.*)%', '\\1', pctline))
-        except ValueError, IndexError:
+        except (ValueError, IndexError) as e:
           pctline = "0"
           pct = float(0)
     else:
