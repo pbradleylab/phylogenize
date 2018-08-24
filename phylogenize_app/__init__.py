@@ -45,13 +45,13 @@ class JobForm(FlaskForm):
   abundances = FileField(validators = [
     Optional(),
     FileRequired(),
-    FileAllowed(ALLOWED_EXTENSIONS,
+    FileAllowed(ext,
       message='Only tab-delimited files or BIOM files accepted')
   ])
   metadata = FileField(validators = [
     Optional(),
     FileRequired(),
-    FileAllowed(ALLOWED_EXTENSIONS,
+    FileAllowed(ext,
       message='Only tab-delimited files or BIOM files accepted')
   ])
   biomfile = FileField(
@@ -59,7 +59,7 @@ class JobForm(FlaskForm):
     validators = [
       Optional(),
       FileRequired(),
-      FileAllowed(ALLOWED_EXTENSIONS,
+      FileAllowed(ext,
         message='Only tab-delimited files or BIOM files accepted')
     ]
   )
@@ -109,6 +109,9 @@ class JobForm(FlaskForm):
       return False
     return True
 
+  def __init__(self, ext):
+    self.ext = ext
+
 def nocache(view):
   @wraps(view)
   def no_cache(*args, **kwargs):
@@ -132,7 +135,7 @@ def create_app(config=None):
   @app.route('/', methods=['GET', 'POST'])
   @nocache
   def home():
-    form = JobForm()
+    form = JobForm(ext = app.config['ALLOWED_EXTENSIONS'])
     if request.method == 'POST':
       if form.validate():
         new_result_id = process_form(allowed_files,
