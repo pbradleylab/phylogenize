@@ -38,19 +38,6 @@ from wtforms.validators import Optional, InputRequired
 from pystalkd.Beanstalkd import Connection
 from flask_uploads import configure_uploads, UploadSet
 
-#RECAPTCHA_PUBLIC_KEY = '6LecpGkUAAAAAIy-lVILcUA-f6IsElHD-nn9OGuY'
-RECAPTCHA_PUBLIC_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
-#RECAPTCHA_PRIVATE_KEY = '6LecpGkUAAAAAFuTGxJ6Um3wztmZxXASZBKKOwHi'
-RECAPTCHA_PRIVATE_KEY = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
-UPLOAD_FOLDER = os.path.abspath('/var/www/phylogenize/instance/results/')
-REPORT_TEMPLATE_PATH = os.path.abspath('/var/www/phylogenize/phylogenize-report.Rmd')
-ALLOWED_EXTENSIONS = set([
-  'txt',
-  'tsv',
-  'tab',
-  'csv',
-  'biom'
-])
 beanstalk = Connection(host='localhost', port=14711)
 beanstalk.use("phylogenize")
 
@@ -102,6 +89,7 @@ class JobForm(FlaskForm):
   which_envir = StringField("Environment",
       validators = [InputRequired(message = 'Must provide an environment')],
       render_kw = {"placeholder": "e.g., stool"})
+  recaptcha = RecaptchaField()
 
   def validate(self):
     if not super(JobForm, self).validate():

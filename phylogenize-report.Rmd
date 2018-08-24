@@ -4,6 +4,8 @@ output:
   html_document:
     toc: true
     toc_float: true
+    keep_md: true
+    self_contained: false
 params:
   ncl: 1
   type: "midas"
@@ -391,7 +393,7 @@ write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
 
 ## Only mapped/observed taxa {.tabset}
 
-(This section contains the same trees, but with only the mapped/observed taxa plotted. For the "specificity" phenotype this should be the same.)
+Displays phenotype on trees, with only the mapped/observed taxa plotted.
 
 ```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla, cache.lazy = FALSE}
 plotted.pheno.subtrees <- lapply(1:length(trees), function(tn) {
