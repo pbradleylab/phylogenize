@@ -1,12 +1,10 @@
 #!/usr/bin/python3
 
 import os, sys, shutil
-import cgi
 import uuid
 import subprocess
 from pystalkd.Beanstalkd import Connection
 import re
-import rpy2
 import time
 import json
 
@@ -56,7 +54,7 @@ while True:
         jdelay = 150
       else:
         jdelay = 30
-      with open(os.path.join(jobdict["ODir"], "progress.txt"), "w") as fh:
+      with open(os.path.join(jobdict["output_dir"], "progress.txt"), "w") as fh:
         this_message = ("Waiting for the queue to be ready.\n\n" +
             "There are %d other jobs waiting." % (place_in_line))
         fh.write(this_message)
@@ -65,34 +63,36 @@ while True:
       print("Delaying %d seconds" % (jdelay))
       beanstalk.put(job.body, delay = jdelay)
     elif len(JobSlots) > 0:
-      shutil.copy(os.path.join(jobdict["report_dir"], jobdict["report_file"]),
-          jobdict["ODir"])
+      shutil.copy(os.path.join(jobdict["report_dir"], jobdict["report_name"]),
+          jobdict["output_dir"])
       JobN = JobSlots[0]
       JobDict[JobN] = jobdict
-      JobOutput[JobN] = open(os.path.join(jobdict["ODir"], "progress.txt"), 'w')
-      JobErr[JobN] = open(os.path.join(jobdict["ODir"], "stderr.txt"), 'w')
-      os.chdir(jobdict["ODir"])
+      JobOutput[JobN] = open(os.path.join(jobdict["output_dir"], "progress.txt"), 'w')
+      JobErr[JobN] = open(os.path.join(jobdict["output_dir"], "stderr.txt"), 'w')
+      os.chdir(jobdict["output_dir"])
       # Don't use output_dir directly because then paths get screwed up on
       # render
       job_rscript = \
-        ("rmarkdown::render(\"%s\", " % (jobdict["report_file"]) +\
+        ("rmarkdown::render(\"%s\", " % (jobdict["report_name"]) + \
           "output_format = \"html_document\", " + \
-          ("params = list(type = \"%s\", " % (jobdict["datatype"])) + \
-          ("out_dir = \"%s\", " % (jobdict["ODir"])) + \
-          ("in_dir = \"%s\", " % (jobdict["IDir"])) + \
+          ("params = list(type = \"%s\", " % (jobdict["type"])) + \
+          ("out_dir = \"%s\", " % (jobdict["output_dir"])) + \
+          ("in_dir = \"%s\", " % (jobdict["input_dir"])) + \
+          ("source_dir = \"%s\", " % (jobdict["report_dir"])) + \
           ("abundance_file = \"%s\", " % (jobdict["abundance_file"])) + \
           ("metadata_file = \"%s\", " % (jobdict["metadata_file"])) + \
           ("biom_file = \"%s\", " % (jobdict["biom_file"])) + \
           ("input_format = \"%s\", " % jobdict["input_format"]) + \
           ("phenotype_file = \"%s\", " % jobdict["phenotype_file"]) + \
-          ("db_version = \"%s\", " % jobdict["database"]) + \
-          ("which_phenotype = \"%s\", " % jobdict["phenotype"]) + \
+          ("db_version = \"%s\", " % jobdict["db_version"]) + \
+          ("which_phenotype = \"%s\", " % jobdict["which_phenotype"]) + \
           ("which_envir = \"%s\", " % jobdict["which_envir"]) + \
           ("prior_type = \"%s\", " % jobdict["prior_type"]) + \
           ("prior_file = \"%s\", " % jobdict["prior_file"]) + \
           ("minimum = %d" % int(jobdict["minimum"])) + \
           "))"
-      JobList[JobN] = subprocess.Popen(["/usr/bin/Rscript", "-e", job_rscript],\
+        )
+      JobList[JobN] = subprocess.Popen(["/usr/bin/Rscript", "-e", job_rscript], \
           stdout=JobOutput[JobN], \
           stderr=JobErr[JobN])
       JobOutput[JobN].flush()
@@ -109,14 +109,14 @@ while True:
         print("Job %s finished running in slot %d - cleaning up" % \
             (JobDict[N]["result_id"], N + 1))
         # clean up input files, which could be large and are no longer needed
-        if os.path.exists(JobDict[N]["IDir"]):
-          for filename in os.listdir(JobDict[N]["IDir"]):
-            rf = os.path.join(JobDict[N]["IDir"], filename)
+        if os.path.exists(JobDict[N]["input_dir"]):
+          for filename in os.listdir(JobDict[N]["input_dir"]):
+            rf = os.path.join(JobDict[N]["input_dir"], filename)
             print("Removing file %s..." % rf)
             os.remove(rf)
-        if os.path.isfile(os.path.join(JobDict[N]["ODir"], "phylogenize-report.html")):
-          make_tarfile(os.path.join(JobDict[N]["ODir"], "output.tgz"),
-             JobDict[N]["ODir"])
+        if os.path.isfile(os.path.join(JobDict[N]["output_dir"], "phylogenize-report.html")):
+          make_tarfile(os.path.join(JobDict[N]["output_dir"], "output.tgz"),
+             JobDict[N]["output_dir"])
         JobErr[N].close()
         JobOutput[N].close()
         JobList[N] = None

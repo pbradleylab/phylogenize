@@ -9,6 +9,7 @@ output:
 params:
   ncl: 1
   type: "midas"
+  source_dir: "."
   out_dir: "output"
   in_dir: "."
   data_dir: "./data"
@@ -42,6 +43,7 @@ This report was generated automatically by [phylogenize](http://pbradley-dell/~p
 
 ```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE}
 
+SDir = params$source_dir
 DDir = params$data_dir
 IDir = params$in_dir
 ODir = params$out_dir
@@ -49,10 +51,12 @@ Env = params$env_column
 Dset = params$dset_column
 BurstDir = params$burst_dir
 
+warning(SDir)
+
 dir.create(ODir)
 
-source("plm-functions.R")
-source("fisher-enrich.R")
+source(file.path(SDir, "plm-functions.R"))
+source(file.path(SDir, "fisher-enrich.R"))
 library(dplyr)
 library(biomformat)
 library(Matrix)

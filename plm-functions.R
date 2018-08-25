@@ -400,7 +400,7 @@ phylolm.subset <- function(Y, X, phy) {
   phylolm(Y ~ X, phy = phys)
 }
 
-matrix.plm <- function(tree, mtx, pheno, restrict, cores = 8) {
+matrix.plm <- function(tree, mtx, pheno, restrict, cores = 8, sdir = SDir) {
   message("phylogenetic linear model")
   restrict <- as.character(restrict)
   valid.cols <- Reduce(intersect, list(colnames(mtx), restrict, names(pheno)))
@@ -419,7 +419,7 @@ matrix.plm <- function(tree, mtx, pheno, restrict, cores = 8) {
   }
   if (cores > 1) {
     cl <- makeCluster(cores)
-    clusterCall(cl, source, file="plm-functions.R")
+    clusterCall(cl, source, file=file.path(sdir, "plm-functions.R"))
     clusterExport(cl, c("restricted.tree", "mtx", "pheno", "valid.cols"), 
       envir = environment())
     r <- parApply(cl, mtx, 1, process.plm)
@@ -449,7 +449,7 @@ LB.worker <- function(x) {
 
 
 
-matrix.wpgls <- function(tree, mtx, pheno, restrict, cores = 8, w, verbose = FALSE) {
+matrix.wpgls <- function(tree, mtx, pheno, restrict, cores = 8, w, verbose = FALSE, sdir = SDir) {
   force(w)
   force(pheno)
   force(tree)
@@ -467,7 +467,7 @@ matrix.wpgls <- function(tree, mtx, pheno, restrict, cores = 8, w, verbose = FAL
     } else {
       cl <- makeCluster(cores)
     }
-    clusterCall(cl, source, file="plm-functions.R")
+    clusterCall(cl, source, file=file.path(sdir, "plm-functions.R"))
     clusterExport(cl, c("restricted.tree", "pheno", "valid.cols", "tree.cor", "w"), 
       envir = environment())
   }
@@ -506,14 +506,14 @@ matrix.wpgls <- function(tree, mtx, pheno, restrict, cores = 8, w, verbose = FAL
 }
 
 
-matrix.censored.plm <- function(tree, mtx, pheno, restrict, cores = 8, subsample = 0.75, nsubsamples = 500) {
+matrix.censored.plm <- function(tree, mtx, pheno, restrict, cores = 8, subsample = 0.75, nsubsamples = 500, file.path = SDir) {
   message("censored phylogenetic linear model")
   restrict <- as.character(restrict)
   valid.cols <- Reduce(intersect, list(colnames(mtx), restrict, names(pheno)))
   restricted.tree <- keep.tips(tree, valid.cols)
   cl <- makeCluster(cores)
-  clusterCall(cl, source, file="plm-functions.R")
-  clusterCall(cl, source, file="test-induced-corr.R")
+  clusterCall(cl, source, file.path(sdir, file="plm-functions.R"))
+  clusterCall(cl, source, file.path(sdir, file="test-induced-corr.R"))
   clusterExport(cl, c("restricted.tree", "mtx", "pheno", "valid.cols"), 
     envir = environment())
   r <- parApply(cl, mtx, 1, function(m) {
@@ -531,13 +531,13 @@ matrix.censored.plm <- function(tree, mtx, pheno, restrict, cores = 8, subsample
   r
 }
 
-matrix.interaction.plm <- function(tree, mtx, pheno, restrict, cores = 8) {
+matrix.interaction.plm <- function(tree, mtx, pheno, restrict, cores = 8, sdir = SDir) {
   message("phylogenetic linear model with interactions")
   restrict <- as.character(restrict)
   valid.cols <- Reduce(intersect, list(colnames(mtx), restrict, names(pheno)))
   restricted.tree <- keep.tips(tree, valid.cols)
   cl <- makeCluster(cores)
-  clusterCall(cl, source, file="plm-functions.R")
+  clusterCall(cl, source, file=file.path(sdir, "plm-functions.R"))
   clusterExport(cl, c("restricted.tree", "mtx", "pheno", "valid.cols"), 
     envir = environment())
   r <- lapply(1:((nrow(mtx) - 1)), function(a) {
@@ -569,14 +569,14 @@ matrix.interaction.plm <- function(tree, mtx, pheno, restrict, cores = 8) {
   r
 }
 
-matrix.notree.lm <- function(tree, mtx, pheno, restrict, cores = 8) {
+matrix.notree.lm <- function(tree, mtx, pheno, restrict, cores = 8, sdir = SDir) {
   message("sham phylogenetic linear model (regular linear model)")
   restrict <- as.character(restrict)
   valid.cols <- Reduce(intersect, list(colnames(mtx), restrict, names(pheno)))
   restricted.tree <- keep.tips(tree, valid.cols)
   print(restricted.tree$tip.label[1:5])
   cl <- makeCluster(cores)
-  clusterCall(cl, source, file="plm-functions.R")
+  clusterCall(cl, source, file=file.path(sdir, "plm-functions.R"))
   clusterExport(cl, c("restricted.tree", "mtx", "pheno", "valid.cols"), 
     envir = environment())
   r <- parApply(cl, mtx, 1, function(m) {

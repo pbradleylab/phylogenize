@@ -252,18 +252,15 @@ def create_app(config=None):
 
   def process_form(form=None, request=None):
 
-    allowed_files = app.config['ALLOWED_FILES']
     upload_folder = os.path.join(app.config['APPLICATION_ROOT'],
         app.config['UPLOAD_FOLDER'])
     report_name = os.path.basename(app.config['REPORT_TEMPLATE_PATH'])
-    report_dir = os.path.basename(
-        os.path.dirname(
+    report_dir = os.path.abspath(os.path.dirname(
           os.path.join(
             app.config['APPLICATION_ROOT'],
             app.config['REPORT_TEMPLATE_PATH']
-        )
       )
-    )
+    ))
     
     uploaded_biom = False
     if form.biomfile.data:
@@ -322,10 +319,11 @@ def create_app(config=None):
         'db_version': database,
         'which_envir': which_envir,
         'prior_type': prior_type,
-        'prior_file': prior_file,
+        'which_phenotype': phenotype,
+        'prior_file': "prior.tab",
         'minimum': minimum,
         'report_name': report_name,
-        'report_source_dir': report_dir
+        'report_dir': report_dir
     }
     beanstalk.put(json.dumps(rmark_dict))
     return(new_result_id)
