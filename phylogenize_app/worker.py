@@ -72,10 +72,11 @@ while True:
       JobOutput[JobN] = open(os.path.join(jobdict["ODir"], "progress.txt"), 'w')
       JobErr[JobN] = open(os.path.join(jobdict["ODir"], "stderr.txt"), 'w')
       os.chdir(jobdict["ODir"])
+      # Don't use output_dir directly because then paths get screwed up on
+      # render
       job_rscript = \
         ("rmarkdown::render(\"%s\", " % (jobdict["report_file"]) +\
           "output_format = \"html_document\", " + \
-          ("output_dir = \"%s\", " % (jobdict["ODir"])) + \
           ("params = list(type = \"%s\", " % (jobdict["datatype"])) + \
           ("out_dir = \"%s\", " % (jobdict["ODir"])) + \
           ("in_dir = \"%s\", " % (jobdict["IDir"])) + \
