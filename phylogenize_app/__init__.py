@@ -6,6 +6,7 @@ import tempfile
 import csv
 import re
 import tarfile
+import json
 
 from functools import wraps, update_wrapper
 from werkzeug.utils import secure_filename
@@ -135,13 +136,10 @@ def create_app(config=None):
     form = JobForm()
     if request.method == 'POST':
       if form.validate():
-        new_result_id = process_form(allowed_files,
-            os.path.abspath(os.path.join(app.config['APPLICATION_ROOT'],
-              app.config['REPORT_TEMPLATE_PATH'])),
+        new_result_id = process_form(
             form,
-            request,
-            os.path.join(app.config['APPLICATION_ROOT'],
-              app.config['UPLOAD_FOLDER']))
+            request
+        )
         return(redirect(url_for('display_results', result_id=new_result_id)))
       flash("Error with form submission")
       return(render_template('index.html', form=form))
@@ -252,8 +250,21 @@ def create_app(config=None):
     else:
       return(redirect(url_for('display_results', result_id=result_id)))
 
-  def process_form(allowed_files, app_report, form=None, request=None, upload_folder="../instance/results"):
+  def process_form(form=None, request=None):
 
+    allowed_files = app.config['ALLOWED_FILES']
+    upload_folder = os.path.join(app.config['APPLICATION_ROOT'],
+        app.config['UPLOAD_FOLDER'])
+    report_name = os.path.basename(app.config['REPORT_TEMPLATE_PATH'])
+    report_dir = os.path.basename(
+        os.path.dirname(
+          os.path.join(
+            app.config['APPLICATION_ROOT'],
+            app.config['REPORT_TEMPLATE_PATH']
+        )
+      )
+    )
+    
     uploaded_biom = False
     if form.biomfile.data:
       uploaded_biom = True
@@ -292,29 +303,31 @@ def create_app(config=None):
         folder = IDir,
         name = "abundance.tab")
 
-    # Set some last options and submit to beanstalk queue
+    # Set some last options and submit to beanstalk queue as serialized JSON
     minimum = 3
     prior_type = "uninformative"
-    rmark_render_cmd = \
-      ("rmarkdown::render(\"%s\", " % (app_report)) +\
-        "output_format = \"html_document\", " + \
-        ("output_dir = \"%s\", " % (ODir)) + \
-        ("params = list(type = \"%s\", " % (datatype)) + \
-        ("out_dir = \"%s\", " % (ODir)) + \
-        ("in_dir = \"%s\", " % (IDir)) + \
-        ("abundance_file = \"abundance.tab\", ") + \
-        ("metadata_file = \"metadata.tab\", ") + \
-        ("biom_file = \"data.biom\", ") + \
-        ("input_format = \"%s\", " % input_format) + \
-        ("phenotype_file = \"phenotype.tab\", ") + \
-        ("db_version = \"%s\", " % database) + \
-        ("which_phenotype = \"%s\", " % phenotype) + \
-        ("which_envir = \"%s\", " % which_envir) + \
-        ("prior_type = \"%s\", " % prior_type) + \
-        ("prior_file = \"prior.tab\", ") + \
-        ("minimum = %d " % minimum) + \
-        "))"
-    beanstalk.put(rmark_render_cmd)
+
+    rmark_dict = {
+        'output_dir': ODir,
+        'input_dir': IDir,
+        'direc': direc,
+        'result_id': new_result_id,
+        'upload_folder': upload_folder,
+        'abundance_file': 'abundance.tab',
+        'metadata_file': 'metadata.tab',
+        'biom_file': 'data.biom',
+        'type': datatype,
+        'input_format': input_format,
+        'phenotype_file': 'phenotype.tab',
+        'db_version': database,
+        'which_envir': which_envir,
+        'prior_type': prior_type,
+        'prior_file': prior_file,
+        'minimum': minimum,
+        'report_name': report_name,
+        'report_source_dir': report_dir
+    }
+    beanstalk.put(json.dumps(rmark_dict))
     return(new_result_id)
 
   return(app)
