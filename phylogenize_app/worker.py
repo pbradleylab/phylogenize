@@ -40,7 +40,7 @@ while True:
     # load json job
     try:
       jobdict = json.loads(job.body)
-    except Exception e:
+    except Exception as e:
       print("Exception %s: invalid job, %s" % (e, job.body))
       job.delete()
       continue
