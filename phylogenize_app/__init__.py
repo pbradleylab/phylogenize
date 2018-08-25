@@ -109,7 +109,7 @@ def create_app(config=None):
     which_envir = StringField("Environment",
         validators = [InputRequired(message = 'Must provide an environment')],
         render_kw = {"placeholder": "e.g., stool"})
-    recaptcha = RecaptchaField()
+    #recaptcha = RecaptchaField()
 
     def validate(self):
       if not super(JobForm, self).validate():
@@ -133,7 +133,7 @@ def create_app(config=None):
   @app.route('/', methods=['GET', 'POST'])
   @nocache
   def home():
-    form = JobForm(ext = app.config['ALLOWED_EXTENSIONS'])
+    form = JobForm()
     if request.method == 'POST':
       if form.validate():
         new_result_id = process_form(allowed_files,
