@@ -253,69 +253,69 @@ def create_app(config=None):
     else:
       return(redirect(url_for('display_results', result_id=result_id)))
 
+  def process_form(allowed_files, app_report, form=None, request=None, upload_folder="../instance/results"):
+
+    uploaded_biom = False
+    if form.biomfile.data:
+      uploaded_biom = True
+
+    # Generate a unique UUID
+    while True:
+      new_result_id = str(uuid.uuid4())
+      direc = os.path.abspath(os.path.join(upload_folder, new_result_id))
+      if not os.path.exists(direc):
+        break
+
+    # Set up directory structure
+    IDir = os.path.join(direc, "input")
+    ODir = os.path.join(direc, "output")
+    os.mkdir(direc)
+    os.mkdir(IDir)
+    os.mkdir(ODir)
+
+    # Bleach form components
+    database = str(bleach.clean(form.database.data))
+    datatype = str(bleach.clean(form.datatype.data))
+    phenotype = str(bleach.clean(form.phenotype.data))
+    which_envir = str(bleach.clean(form.which_envir.data))
+    input_format = ("biom" if uploaded_biom else "tabular")
+
+    # Upload the BIOM or tabular files
+    if uploaded_biom:
+      allowed_files.save(request.files['biomfile'],
+        folder = IDir,
+        name = "data.biom")
+    else:
+      allowed_files.save(request.files['metadata'],
+        folder = IDir,
+        name = "metadata.tab")
+      allowed_files.save(request.files['abundances'],
+        folder = IDir,
+        name = "abundance.tab")
+
+    # Set some last options and submit to beanstalk queue
+    minimum = 3
+    prior_type = "uninformative"
+    rmark_render_cmd = \
+      ("rmarkdown::render(\"%s\", " % (app_report)) +\
+        "output_format = \"html_document\", " + \
+        ("output_dir = \"%s\", " % (ODir)) + \
+        ("params = list(type = \"%s\", " % (datatype)) + \
+        ("out_dir = \"%s\", " % (ODir)) + \
+        ("in_dir = \"%s\", " % (IDir)) + \
+        ("abundance_file = \"abundance.tab\", ") + \
+        ("metadata_file = \"metadata.tab\", ") + \
+        ("biom_file = \"data.biom\", ") + \
+        ("input_format = \"%s\", " % input_format) + \
+        ("phenotype_file = \"phenotype.tab\", ") + \
+        ("db_version = \"%s\", " % database) + \
+        ("which_phenotype = \"%s\", " % phenotype) + \
+        ("which_envir = \"%s\", " % which_envir) + \
+        ("prior_type = \"%s\", " % prior_type) + \
+        ("prior_file = \"prior.tab\", ") + \
+        ("minimum = %d " % minimum) + \
+        "))"
+    beanstalk.put(rmark_render_cmd)
+    return(new_result_id)
+
   return(app)
-
-def process_form(allowed_files, app_report, form=None, request=None, upload_folder="../instance/results"):
-
-  uploaded_biom = False
-  if form.biomfile.data:
-    uploaded_biom = True
-
-  # Generate a unique UUID
-  while True:
-    new_result_id = str(uuid.uuid4())
-    direc = os.path.abspath(os.path.join(upload_folder, new_result_id))
-    if not os.path.exists(direc):
-      break
-
-  # Set up directory structure
-  IDir = os.path.join(direc, "input")
-  ODir = os.path.join(direc, "output")
-  os.mkdir(direc)
-  os.mkdir(IDir)
-  os.mkdir(ODir)
-
-  # Bleach form components
-  database = str(bleach.clean(form.database.data))
-  datatype = str(bleach.clean(form.datatype.data))
-  phenotype = str(bleach.clean(form.phenotype.data))
-  which_envir = str(bleach.clean(form.which_envir.data))
-  input_format = ("biom" if uploaded_biom else "tabular")
-
-  # Upload the BIOM or tabular files
-  if uploaded_biom:
-    allowed_files.save(request.files['biomfile'],
-      folder = IDir,
-      name = "data.biom")
-  else:
-    allowed_files.save(request.files['metadata'],
-      folder = IDir,
-      name = "metadata.tab")
-    allowed_files.save(request.files['abundances'],
-      folder = IDir,
-      name = "abundance.tab")
-
-  # Set some last options and submit to beanstalk queue
-  minimum = 3
-  prior_type = "uninformative"
-  rmark_render_cmd = \
-    ("rmarkdown::render(\"%s\", " % (app_report)) +\
-      "output_format = \"html_document\", " + \
-      ("output_dir = \"%s\", " % (ODir)) + \
-      ("params = list(type = \"%s\", " % (datatype)) + \
-      ("out_dir = \"%s\", " % (ODir)) + \
-      ("in_dir = \"%s\", " % (IDir)) + \
-      ("abundance_file = \"abundance.tab\", ") + \
-      ("metadata_file = \"metadata.tab\", ") + \
-      ("biom_file = \"data.biom\", ") + \
-      ("input_format = \"%s\", " % input_format) + \
-      ("phenotype_file = \"phenotype.tab\", ") + \
-      ("db_version = \"%s\", " % database) + \
-      ("which_phenotype = \"%s\", " % phenotype) + \
-      ("which_envir = \"%s\", " % which_envir) + \
-      ("prior_type = \"%s\", " % prior_type) + \
-      ("prior_file = \"prior.tab\", ") + \
-      ("minimum = %d " % minimum) + \
-      "))"
-  beanstalk.put(rmark_render_cmd)
-  return(new_result_id)
