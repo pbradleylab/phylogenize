@@ -79,6 +79,8 @@ while True:
           ("out_dir = \"%s\", " % (jobdict["output_dir"])) + \
           ("in_dir = \"%s\", " % (jobdict["input_dir"])) + \
           ("source_dir = \"%s\", " % (jobdict["report_dir"])) + \
+          ("data_dir = \"%s\", " % (os.path.join(jobdict["report_dir"],
+            "data"))) + \
           ("abundance_file = \"%s\", " % (jobdict["abundance_file"])) + \
           ("metadata_file = \"%s\", " % (jobdict["metadata_file"])) + \
           ("biom_file = \"%s\", " % (jobdict["biom_file"])) + \
@@ -89,7 +91,7 @@ while True:
           ("which_envir = \"%s\", " % jobdict["which_envir"]) + \
           ("prior_type = \"%s\", " % jobdict["prior_type"]) + \
           ("prior_file = \"%s\", " % jobdict["prior_file"]) + \
-          ("minimum = %d" % int(jobdict["minimum"])) + \
+          ("minimum = %d" % (int(jobdict["minimum"]))) + \
           "))"
         )
       JobList[JobN] = subprocess.Popen(["/usr/bin/Rscript", "-e", job_rscript], \
