@@ -88,7 +88,7 @@ while True:
             (JobTitle[N], N + 1))
         job_input_dir = os.path.abspath(os.path.join(job_file, "../input"))
         # clean up input files, which could be large and are no longer needed
-        if os.path.ispath(job_input_dir):
+        if os.path.exists(job_input_dir):
           for filename in os.listdir(job_input_dir):
             rf = os.path.join(job_input_dir, filename)
             print("Removing file %s..." % rf)

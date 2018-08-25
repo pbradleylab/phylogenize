@@ -109,7 +109,6 @@ def create_app(config=None):
     which_envir = StringField("Environment",
         validators = [InputRequired(message = 'Must provide an environment')],
         render_kw = {"placeholder": "e.g., stool"})
-    #recaptcha = RecaptchaField()
 
     def validate(self):
       if not super(JobForm, self).validate():
