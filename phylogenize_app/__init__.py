@@ -110,6 +110,7 @@ def create_app(config=None):
     which_envir = StringField("Environment",
         validators = [InputRequired(message = 'Must provide an environment')],
         render_kw = {"placeholder": "e.g., stool"})
+    recaptcha = RecaptchaField()
 
     def validate(self):
       if not super(JobForm, self).validate():
@@ -133,7 +134,7 @@ def create_app(config=None):
   @app.route('/', methods=['GET', 'POST'])
   @nocache
   def home():
-    form = JobForm()
+    form = JobForm(csrf_enabled=False)
     if request.method == 'POST':
       if form.validate():
         new_result_id = process_form(
@@ -142,6 +143,12 @@ def create_app(config=None):
         )
         return(redirect(url_for('display_results', result_id=new_result_id)))
       flash("Error with form submission")
+      for field, errors in form.errors.items():
+        for error in errors:
+          flash(u"Error in the %s field - %s" % (
+            getattr(form, field).label.text,
+            error
+            ))
       return(render_template('index.html', form=form))
     return(render_template('index.html', form=form))
 
@@ -249,6 +256,14 @@ def create_app(config=None):
         return(redirect(url_for('display_results', result_id=result_id)))
     else:
       return(redirect(url_for('display_results', result_id=result_id)))
+
+  @app.route('/results/<result_id>/phylogenize-report_files/<subfile>')
+  def display_report_file(result_id, subfile):
+    result_id = secure_filename(result_id)
+    subfile = secure_filename(subfile)
+    direc = os.path.abspath(os.path.join(app.config['APPLICATION_ROOT'], app.config['UPLOAD_FOLDER'], result_id))
+    prf = os.path.join(os.path.join(direc, "output"), "phylogenize-report_files")
+    return(send_from_directory(prf, subfile)) 
 
   def process_form(form=None, request=None):
 

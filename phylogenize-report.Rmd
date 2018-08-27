@@ -113,7 +113,7 @@ if (!params$skip_graphs) {
       cat(svg_text, file=x)
       # instead I want to link
       return(paste0('<object type="image/svg+xml" data="',
-          fig_path(basename(x)),
+          x,
           '">(SVG object)</object>'))
     })
   })

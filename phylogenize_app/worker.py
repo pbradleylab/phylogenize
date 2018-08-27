@@ -7,6 +7,7 @@ from pystalkd.Beanstalkd import Connection
 import re
 import time
 import json
+import tarfile
 
 beanstalk = Connection(host='localhost', port=14711)
 beanstalk.watch("phylogenize")
