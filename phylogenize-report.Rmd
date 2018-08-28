@@ -30,6 +30,7 @@ params:
   assume_below_LOD: TRUE
   skip_graphs: FALSE
   burst_dir: "./bin"
+  linearize: FALSE
 ---
 
 # Settings
@@ -50,8 +51,6 @@ ODir = params$out_dir
 Env = params$env_column
 Dset = params$dset_column
 BurstDir = params$burst_dir
-
-warning(SDir)
 
 dir.create(ODir)
 
@@ -454,12 +453,20 @@ This table gives an overview of how many genes were significantly associated at
 an FDR of 5%. 
 
 ```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE}
+
+if (!(params$linearize)) {
+  p.method <- matrix.plm
+} else {
+  p.method <- matrix.notree.lm 
+}
 results <- result.wrapper.plm(phyla = names(taxa),
                               pheno = phenotype,
                               tree = trees,
                               clusters = taxa,
                               proteins = gene.presence, 
-                              n.cores = params$ncl)
+                              n.cores = params$ncl,
+                              method = p.method)
+
 signif <- make.sigs(results)
 signs <- make.signs(results)
 pos.sig <- make.pos.sig(sigs = signif, signs = signs)
@@ -540,7 +547,7 @@ do.clust.plot <- function(x, y, z, w, nt) {
                                   midpoint = mean(w$lims))   
   }
   if (length(y) > 1) {
-    clust <- hclust(dist(sig.bin, method = "binary"))
+    clust <- hclust(dist(sig.bin, method = "binary")))
     sig.ord <- melt(t(sig.bin[clust$order, ]))
   } else {
     sig.ord <- melt(t(sig.bin))
@@ -554,7 +561,7 @@ do.clust.plot <- function(x, y, z, w, nt) {
                         fill = as.numeric(as.factor(value)))) +
     scale_fill_gradient(low = "#000000", high = "slateblue2")
   print(tmp)
-  return(tmp)
+  return(NULL) # Avoid wasting memory since we never touch these
 }
 
 cluster.plots <- mapply(gene.presence[phy.with.sigs],
@@ -563,6 +570,9 @@ cluster.plots <- mapply(gene.presence[phy.with.sigs],
   plotted.pheno.trees[phy.with.sigs],
   phy.with.sigs,
   FUN=do.clust.plot, SIMPLIFY = FALSE)
+
+rm(cluster.plots)
+rm(plotted.pheno.trees)
 
 ```
 
