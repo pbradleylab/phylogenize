@@ -1,7 +1,54 @@
 
+perform.enrichments <- function(sigs, signs, results, mapping, dirxn = 1, exclude = NULL, ...) {
+  lapply.across.names(c("strong", "med", "weak"), function(x) {
+    dirxn.enrich(sigs, signs, results, siglevel = x,
+      exclude = exclude, fdr.method = fdr.bh, dirxn = dirxn,
+      mapping = mapping, ...)
+  })
+}
+
+enr.wrapper <- function(sig, tested, bg = NULL, mapping, descs = NULL, ms = 3, cutoff = 0.25, fdr.method = qvals, ...) {
+  if (is.null(bg)) { bg = tested }
+  bg.present <- intersect(tested, bg)
+  enriched.and.depleted.list <- enrich(sig, mapping, bg.present, minsize = ms, alt = "two.sided", ...)
+  enr.dep.qvals <- enriched.and.depleted.list$enrichments %>% pv1 %>% fdr.method
+  enriched.and.depleted <- nw(enr.dep.qvals <= cutoff)
+  enriched <- intersect(enriched.and.depleted, nw(enriched.and.depleted.list$odds.ratios > 1))
+  if (!is.null(descs)) {
+    table <- cbind(enriched, enr.dep.qvals[enriched], descs[enriched,])
+  } else {
+    table <- cbind(enriched, enr.dep.qvals[enriched])
+  }
+  t.order <- order(enr.dep.qvals[enriched])
+  return(list(full = enriched.and.depleted.list, qv = enr.dep.qvals, dep.enr <- enriched.and.depleted, 
+      enr = enriched, table = table[t.order,]))
+}
+dirxn.enrich <- function(sigs, signs, results, siglevel = "strong", exclude = NULL, dirxn = 1, mapping, ...) {
+  lapply(
+  c(l1 = "level1", l2 = "level2", l3 = "level3"), function(l) {
+    # dirxn = 1 is POSITIVE
+    message(l)
+    enrichments <- lapply.across.names(names(sigs), function(x) {
+      #print(x)
+      #print(nw(signs[[x]] > 0))
+      #print(intersect(sigs[[x]][[siglevel]], nw(signs[[x]] < 0)))
+      enr.wrapper(intersect(sigs[[x]][[siglevel]], nw((dirxn * signs[[x]]) > 0)),
+          tested = setdiff(names(na.omit(results[[x]][1,])), exclude[[x]]),
+        mapping = mapping[[l]], ...)
+    })
+  return(enrichments)
+  })
+}
+
+
 # Functions for performing enrichment analysis
 
-qvals <- function(x) { qvalue(x, pfdr = T,  lambda = seq(0.001, 0.95, 0.005))$qvalues }
+qvals <- function(x) {
+  qvalue(x,
+         fdr = T,
+         lambda = seq(0.001, 0.95, 0.005)
+  )$qvalues
+}
 fdr.by <- function(x) { p.adjust(x, 'BY') }
 fdr.bh <- function(x) { p.adjust(x, 'BH') }
 
@@ -57,24 +104,32 @@ enrich <- function(hits, mapping, background, minsize = 1, alt = "greater", verb
   return(list(enrichments=enrichments, odds.ratios = odds.ratios, overlaps = overlaps, sets = sets))
 }
 
-enr.wrapper <- function(sig, tested, bg = NULL, mapping, descs = NULL, ms = 3, cutoff = 0.25, fdr.method = qvals, ...) {
-  if (is.null(bg)) { bg = tested }
-  bg.present <- intersect(tested, bg)
-  enriched.and.depleted.list <- enrich(sig, mapping, bg.present, minsize = ms, alt = "two.sided", ...)
-  enr.dep.qvals <- enriched.and.depleted.list$enrichments %>% pv1 %>% fdr.method
-  enriched.and.depleted <- nw(enr.dep.qvals <= cutoff)
-  enriched <- intersect(enriched.and.depleted, nw(enriched.and.depleted.list$odds.ratios > 1))
-  if (!is.null(descs)) {
-    table <- cbind(enriched, enr.dep.qvals[enriched], descs[enriched,])
-  } else {
-    table <- cbind(enriched, enr.dep.qvals[enriched])
-  }
-  t.order <- order(enr.dep.qvals[enriched])
-  return(list(full = enriched.and.depleted.list, qv = enr.dep.qvals, dep.enr <- enriched.and.depleted, 
-      enr = enriched, table = table[t.order,]))
-}
+
 
 # Sometimes p-values from the Fisher test can be 1+epsilon for some reason;
 # this fixes that problem
 
 pv1 <- function(x) { x[which(x > 1)] <- 1; return(x) }
+
+signif.overlaps <- function(enr, result) {
+  if (!is.null(enr$table %>% dim)) {
+    overlap.list <- enr$full$overlaps[enr$table %>% rownames]
+  } else if ("enriched" %in% names(enr$table)) {
+    overlap.list <- enr$full$overlaps[enr$table["enriched"]]
+  } else {
+    overlap.list <- list()
+  }
+  x <- lapply(names(overlap.list), function(n) {
+    g <- overlap.list[[n]]
+    if (length(g) > 0) {
+      cbind(genes = overlap.list[[n]], 
+        descs = gene.annot(overlap.list[[n]]),
+        estimate = result[1, g],
+        qval = qvals(result[2, ])[g])
+    } else {
+      cbind(NA, NA, NA, NA)
+    }
+  })
+  names(x) <- names(overlap.list)
+  x
+}

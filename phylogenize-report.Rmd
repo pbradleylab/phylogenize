@@ -31,6 +31,7 @@ params:
   skip_graphs: FALSE
   burst_dir: "./bin"
   linearize: FALSE
+  pryr: TRUE
 ---
 
 # Settings
@@ -52,13 +53,18 @@ Env = params$env_column
 Dset = params$dset_column
 BurstDir = params$burst_dir
 
+if (params$pryr) { library(pryr) }
+if (params$pryr) message(pryr::mem_used() / 1e6)
+
 dir.create(ODir)
 
-source(file.path(SDir, "plm-functions.R"))
-source(file.path(SDir, "fisher-enrich.R"))
-library(dplyr)
-library(biomformat)
-library(Matrix)
+for (sf in c("plm-functions.R",
+             "significance.R",
+             "utilities.R",
+             "trees.R",
+             "fisher-enrich.R")) {
+  source(file.path(SDir, sf))
+}
 
 phylo.error <- function(err) {
   phylogenize.error(err, direc = params$out_dir)
@@ -260,6 +266,7 @@ nphyla <- length(trees)
 # Make back into a binary sparse matrix to save memory
 abd.mtx <- Matrix(abd.mtx > 0)
 gc()
+if (params$pryr) message(pryr::mem_used() / 1e6)
 
 ```
 
@@ -362,7 +369,7 @@ ggplot(subset(pheno.characteristics, cluster %in% kept.species),
     ggtitle(paste0("Distributions of phenotype (", params$which_phenotype, ")"))
 
 
-
+if (params$pryr) message(pryr::mem_used() / 1e6)
 ```
 
 # Phenotype mapped across trees {.tabset}
@@ -396,6 +403,8 @@ if (!params$skip_graphs) {
 }
 
 write.table(file=file.path(ODir, "phenotype.tab"), phenotype, sep = '\t')
+
+if (params$pryr) message(pryr::mem_used() / 1e6)
 
 ```
 
@@ -445,6 +454,7 @@ for (pn in 1:length(plotted.pheno.subtrees)) {
     })
 }
 names(plotted.pheno.subtrees) <- names(trees)
+if (params$pryr) message(pryr::mem_used() / 1e6)
 ```
 
 # Associations between genes and taxa
@@ -454,10 +464,10 @@ an FDR of 5%.
 
 ```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE}
 
-if (!(params$linearize)) {
-  p.method <- matrix.plm
+if (params$linearize) {
+  p.method <- lm.fx.pv
 } else {
-  p.method <- matrix.notree.lm 
+  p.method <- phylolm.fx.pv
 }
 results <- result.wrapper.plm(phyla = names(taxa),
                               pheno = phenotype,
@@ -478,6 +488,7 @@ results.matrix <- Reduce(rbind, lapply(names(results), function(rn) {
              p.value = results[[rn]][2,]
              )
 }))
+
 
 kable(sapply(pos.sig, length), col.names = "significant genes")
 
@@ -509,9 +520,13 @@ pos.sig.thresh.descs <- Reduce(rbind, lapply(phy.with.sigs,
 
 write.csv(file = file.path(ODir, "pos-sig-thresholded.csv"),
           pos.sig.thresh.descs)
+rm(pos.sig.thresh.descs)
 
 write.csv(file = file.path(ODir, "all-results.csv"),
           results.matrix)
+rm(results.matrix)
+                  
+if (params$pryr) message(pryr::mem_used() / 1e6)
 ```
 
 # Gene association heat maps
@@ -526,43 +541,70 @@ have particularly extreme phenotypes.
 
 ```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300}
 
-do.clust.plot <- function(x, y, z, w, nt) {
-
-  sig.bin <- as.matrix(x[intersect(rownames(x), y), ])
-  if (is.null(dim(sig.bin))) {
-    sig.bin <- as.matrix(sig.bin) %>% t
-    rownames(sig.bin) <- y
-  }
-  names(dimnames(sig.bin)) <- c("gene", "id")
-  col.df <- data.frame(id = names(w$disp), disp = w$disp)
-  p <- ggtree(z, ladderize = TRUE) %<+% col.df +
-    geom_tippoint(aes(color = disp, shape = '.'))
-  if (params$which_phenotype == "prevalence") {
-    p <- p + scale_color_gradient(low = w$cols["low.col"],
-                                  high = w$cols["high.col"])
-  } else if (params$which_phenotype == "specificity") {
-     p <- p + scale_color_gradient2(low = w$cols["low.col"],
-                                    mid = w$cols["mid.col"],
-                                  high = w$cols["high.col"],
-                                  midpoint = mean(w$lims))   
-  }
-  if (length(y) > 1) {
-    clust <- hclust(dist(sig.bin, method = "binary")))
-    sig.ord <- melt(t(sig.bin[clust$order, ]))
-  } else {
-    sig.ord <- melt(t(sig.bin))
-    sig.ord <- sig.ord[order(sig.ord[, 3]), ]
-  }
-  tmp <- facet_plot(p,
-                    paste0('heatmap: ', nt),
-                    sig.ord,
-                    geom_tile,
-                    aes(x = as.numeric(as.factor(gene)),
-                        fill = as.numeric(as.factor(value)))) +
-    scale_fill_gradient(low = "#000000", high = "slateblue2")
-  print(tmp)
+do.clust.plot <- function(x, y, z, w, nt, verbose = FALSE) {
+	# Run these on a separate process to avoid memory leak
+	cl <- makeCluster(1)
+	if (verbose) message("exporting data...")
+	clusterExport(cl, c("x","y","z","w","nt","params"), envir=environment())
+	if (verbose) message("importing source...")
+	for (f in c("plm-functions.R", "utilities.R", "trees.R")) {
+		clusterCall(cl,
+								source,
+								file=file.path(SDir, f))
+	}
+	if (verbose) message("performing call...")
+	tmpL <- clusterCall(cl, function(.) {
+		sig.bin <- x[intersect(rownames(x), y), ]
+		if (is.null(dim(sig.bin))) {
+			sig.bin <- as.matrix(sig.bin) %>% t
+			rownames(sig.bin) <- y
+		}
+		names(dimnames(sig.bin)) <- c("gene", "id")
+		col.df <- data.frame(id = names(w$disp), disp = w$disp)
+		p <- ggtree(z, ladderize = TRUE) %<+% col.df +
+			geom_tippoint(aes(color = disp, shape = '.'))
+		if (params$which_phenotype == "prevalence") {
+			p <- p + scale_color_gradient(low = w$cols["low.col"],
+																		high = w$cols["high.col"])
+		} else if (params$which_phenotype == "specificity") {
+			 p <- p + scale_color_gradient2(low = w$cols["low.col"],
+																			mid = w$cols["mid.col"],
+																		high = w$cols["high.col"],
+																		midpoint = mean(w$lims))   
+		}
+		if (length(y) > 1) {
+			clust <- hclust(dist(sig.bin, method = "binary"))
+			sig.ord <- sparseMelt(t(sig.bin)[, clust$order])
+		} else {
+			sig.ord <- melt(t(sig.bin))
+			sig.ord <- sig.ord[order(sig.ord[, 3]), ]
+		}
+		tmp <- facet_plot(p,
+											paste0('heatmap: ', nt),
+											sig.ord,
+											geom_tile,
+											aes(x = as.numeric(as.factor(gene)),
+													fill = as.numeric(as.factor(value)))) +
+			scale_fill_gradient(low = "#000000", high = "slateblue2", na.value = "#000000")
+		tmp
+	})
+	print(tmpL[[1]])
+	rm(tmpL)
+	gc()
+	stopCluster(cl)
+	if (params$pryr) message(pryr::mem_used() / 1e6)
   return(NULL) # Avoid wasting memory since we never touch these
 }
+
+if (params$pryr) message(pryr::mem_used() / 1e6)
+cluster.plots <- mapply(do.clust.plot,
+	gene.presence[phy.with.sigs],
+	pos.sig.thresh[phy.with.sigs],
+	trees[phy.with.sigs],
+	plotted.pheno.trees[phy.with.sigs],
+	phy.with.sigs,
+	SIMPLIFY=FALSE)
+if (params$pryr) message(pryr::mem_used() / 1e6)
 
 cluster.plots <- mapply(gene.presence[phy.with.sigs],
   pos.sig.thresh[phy.with.sigs],
@@ -573,6 +615,7 @@ cluster.plots <- mapply(gene.presence[phy.with.sigs],
 
 rm(cluster.plots)
 rm(plotted.pheno.trees)
+if (params$pryr) message(pryr::mem_used() / 1e6)
 
 ```
 
@@ -589,16 +632,20 @@ and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
 
 ```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide"}
+if (params$pryr) message(pryr::mem_used() / 1e6)
 enrichments <- perform.enrichments(signif,
     signs,
     results,
     mapping = g.mappings,
     verbose = FALSE)
 # enr.table <- make.plm.enr.tables(enrichments) 
+if (params$pryr) message(pryr::mem_used() / 1e6)
 enr.table <- generic.make.tables(enrichments) 
+if (params$pryr) message(pryr::mem_used() / 1e6)
 colnames(enr.table) <- c("Number", "Gene_significance", "Subsystem_level",
   "Phylum", "Subsystem", "q_value")
 write.csv(file=file.path(ODir, "enr-table.csv"), enr.table)
+if (params$pryr) message(pryr::mem_used() / 1e6)
 ```
 
 ```{r enrichment_display, warning=FALSE,message=FALSE,echo=FALSE}
@@ -608,6 +655,7 @@ enr.table <- data.frame(apply(enr.table, 2, as.character),
   stringsAsFactors = FALSE)
 enr.table <- enr.table[!is.na(enr.table$q_value), ]
 rownames(enr.table) <- NULL
+if (params$pryr) message(pryr::mem_used() / 1e6)
 enr.table %>%
   mutate(
     q_value = as.numeric(q_value),
@@ -625,6 +673,7 @@ enr.table %>%
       )) %>%
   kable("html", escape = FALSE, align = "l") %>%
   kable_styling(c("striped", "condensed"))
+if (params$pryr) message(pryr::mem_used() / 1e6)
     
 #kable(enr.table, row.names = FALSE, format.args = list(digits = 2))
 
@@ -635,11 +684,21 @@ enr.overlap.lists <- lapply(enrichments$strong, function(lev) {
     mapply(lev, results, FUN = signif.overlaps)
   )
 })
-enr.overlap <- annotate.nested(enr.overlap.lists, n.names = c("level", "phylum", "process"))
-write.csv(file=file.path(ODir, "enr-overlaps.csv"), enr.overlap)
-write.csv(file=file.path(ODir, "enr-overlaps-sorted.csv"),
-  enr.overlap[order(enr.overlap$phylum, enr.overlap$process, enr.overlap$value.value.estimate), ])
+if (params$pryr) message(pryr::mem_used() / 1e6)
+tryCatch({
+	enr.overlap <- annotate.nested(enr.overlap.lists, n.names = c("level", "phylum", "process"))
+	write.csv(file=file.path(ODir, "enr-overlaps.csv"), enr.overlap)
+	write.csv(file=file.path(ODir, "enr-overlaps-sorted.csv"),
+		enr.overlap[order(enr.overlap$phylum, enr.overlap$process, enr.overlap$value.value.estimate), ])
+}, error = function(e) {
+	message(paste0("Error computing enrichment overlaps: ", e))
+})
 
+if (params$pryr) message(pryr::mem_used() / 1e6)
+
+rm(enr.overlap)
+rm(enrichments)
+rm(enr.overlap.lists)
 ```
 
 ```{r cleanup, warning=FALSE, message=FALSE, echo=FALSE}
