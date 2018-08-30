@@ -36,7 +36,7 @@ params:
 
 # Settings
 
-This report was generated automatically by [phylogenize](http://pbradley-dell/~pbradz/phylogenize/) (citation info here), with the following parameters:
+This report was generated automatically by [phylogenize](https://phylogenize.org/) (Bradley and Pollard, submitted: https://phylogenize.org), with the following parameters:
 
   - Type of input data: "`r params$type`"
   - Phenotype calculated: "`r params$which_phenotype`"
