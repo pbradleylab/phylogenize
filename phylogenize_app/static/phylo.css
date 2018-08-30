@@ -26,7 +26,7 @@ font-family: Barlow, Franklin Gothic, sans-serif;
   border-color: black;
   padding: 10px;
 }
-.navbar-collapse.collapse.show, .navbar-collapse.navbar.collapsing {
+.navbar-collapse.collapse.show, .navbar-collapse.collapsing {
   background-color: #FFFFA0;
   padding: 10px;
   border: 2px solid black;
