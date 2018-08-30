@@ -181,6 +181,8 @@ def create_app(config=None):
     errfile = os.path.join(direc, "output", "stderr.txt")
     errmsgfile = os.path.join(direc, "output", "errmsg.txt")
     phylo_errortext = ''
+    queueing = False
+    queueno = 0
     if os.path.isfile(errfile):
       with open(errfile, 'r') as fh:
         errlines = [l for l in fh.readlines()]
@@ -220,6 +222,17 @@ def create_app(config=None):
         except (ValueError, IndexError) as e:
           pctline = "0"
           pct = float(0)
+        try:
+          jobswaiting = list(filter(lambda x:
+            re.search(r'There are .* other jobs waiting.', x),
+            outlines))
+          queueno = int(re.sub('There are (.*) other jobs waiting.',
+            '\\1',
+            jobswaiting))
+          queueing = True
+        except (ValueError, IndexError) as e:
+          queueno = 0
+          queueing = False
     else:
       outtext = ''
       pct = float(0)
@@ -231,7 +244,9 @@ def create_app(config=None):
       err = errtext,
       phylo_err = phylo_errortext,
       pct = pct,
-      reportfile = reportfile))
+      reportfile = reportfile,
+      queueing = queueing,
+      queueno = queueno))
 
   @app.route('/results/<result_id>/<subfile>')
   def display_result_file(result_id, subfile):

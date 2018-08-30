@@ -8,18 +8,20 @@
 
 <div class="jumbotron jumbotron-fluid jumbotron-fancy">
   <div class="container">
-    {% if errormsg %}
-    <h1 class="display-4">Results (error)</h1>
-    <p class="lead">Something went wrong. There may be more information below.</p>
+    {% if queueing %}
+      <h1 class="display-4">Queueing ({{ queueno }} other jobs)</h1>
+      <p class="lead">Waiting for other jobs to complete. There are currently {{ queueno }}
+      other jobs in the queue.</p>
+    {% elif errormsg %}
+      <h1 class="display-4">Results (error)</h1>
+      <p class="lead">Something went wrong. There may be more information below.</p>
+    {% elif not completed %}
+      <h1 class="display-4">Results (in progress)</h1>
+      <p class="lead">Reload this page to monitor this analysis job.</p>
     {% else %}
-{% if not completed %}
-    <h1 class="display-4">Results (in progress)</h1>
-    <p class="lead">Reload this page to monitor this analysis job.</p>
-{% else %}
-    <h1 class="display-4">Results</h1>
-    <p class="lead">This page allows you to view and download your data.</p>
-{% endif %}
-{% endif %}
+      <h1 class="display-4">Results</h1>
+      <p class="lead">This page allows you to view and download your data.</p>
+    {% endif %}
   </div>
 </div>
 
