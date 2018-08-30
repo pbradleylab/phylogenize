@@ -115,7 +115,8 @@ nonparallel.results.generator <- function(
     initial = 1,
     char = '=',
     style = 1,
-    width = 50)
+    width = 50,
+    file = stderr())
   # replaces an apply to avoid copying
   for (fn in 1:length(restrict.ff)) {
     setTxtProgressBar(progress, fn)
