@@ -227,8 +227,7 @@ def create_app(config=None):
             re.search(r'There are .* other jobs waiting.', x),
             outlines))
           queueno = int(re.sub('There are (.*) other jobs waiting.',
-            '\\1',
-            jobswaiting))
+            '\\1', jobswaiting[-1]))
           queueing = True
         except (ValueError, IndexError) as e:
           queueno = 0
