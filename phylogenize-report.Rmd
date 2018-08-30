@@ -5,7 +5,7 @@ output:
     toc: true
     toc_float: true
     keep_md: true
-    self_contained: false
+    self_contained: true
 params:
   ncl: 1
   type: "midas"
@@ -114,12 +114,14 @@ if (!params$skip_graphs) {
       x = paste(x, collapse = '.')
       if (!grepl('\\.svg', x)) return(hook_plot(x, options))
       # read the content of the svg image and write it out without <?xml ... ?>
-      svg_text <- paste(readLines(x)[-1], collapse = '\n')
-      cat(svg_text, file=x)
+      #svg_text <- paste(readLines(x)[-1], collapse = '\n')
+      #cat(svg_text, file=x)
+			# directly insert xml
+			paste(readLines(x)[-1], collapse = '\n')
       # instead I want to link
-      return(paste0('<object type="image/svg+xml" data="',
-          x,
-          '">(SVG object)</object>'))
+      #return(paste0('<object type="image/svg+xml" data="',
+      #    x,
+      #    '">(SVG object)</object>'))
     })
   })
 }
@@ -542,7 +544,7 @@ if (params$pryr) message(pryr::mem_used() / 1e6)
 
 The left shows the phenotype painted on tips of the tree as above. The right
 adds a heatmap where blue points represent presence of a gene (aligned with the
-tips of the tree) and black points represent absence. Only
+tips of the tree) and white points represent absence. Only
 significantly-associated genes are displayed. Genes are clustered from left to
 right by Jaccard dissimilarity, so genes with similar patterns of inheritance
 will form vertical stripes. Horizontal stripes may be visible for taxa that
