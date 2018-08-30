@@ -44,7 +44,7 @@ while True:
       job.delete()
       continue
     if len(JobSlots) == 0:
-      print("received job %s, but no open slots" % job_title)
+      print("received job %s, but no open slots" % jobdict["result_id"])
       # no slots free, put it back on the stack and wait
       place_in_line = beanstalk.stats()["current-jobs-delayed"]
       if place_in_line > 10:

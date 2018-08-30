@@ -118,6 +118,10 @@
 	<img class="inline" src="{{ url_for('static', filename="metadata-corner.png") }}" alt="Top corner of metadata" />
 <p class="caption">Top corner of metadata</p>
 </div>
+<p>Note that the metadata table needs to have columns labeled <em>sample</em>
+(matching the columns of your data table), <em>env</em> (giving the environment
+of each sample), and <em>dataset</em> (giving the batch or experiment of each
+sample).</p>
 <h3 id="biom-format-data">BIOM format data</h3>
 <p><a href="http://biom-format.org/">BIOM format</a> data is more compact for tabular data and is more suitable for larger datasets. This is because 1. BIOM represents matrices that are mostly zeroes (i.e., &quot;sparse&quot;) more efficiently, and most taxonomic matrices are sparse, and 2. BIOM files can use a binary representation (HDF5) that takes up less space than plain text.</p>
 <p>A BIOM file can contain multiple tables, so you will only need to upload one file. This one file needs to have the following tables:</p>
@@ -131,7 +135,13 @@
 </ul>
 <p>To convert your tabular data into a BIOM file, <a href="http://biom-format.org/index.html">install the <code>biom</code> utility</a>. Then run the conversion as follows (adapted from the biom-format.org documentation):</p>
 <pre><code>biom convert -i your_data.tab -o your_data_and_metadata.biom --to-hdf5 --table-type=&quot;OTU table&quot; --sample-metadata-fp metadata.tab</code></pre>
-<p>Replace <code>your_data.tab</code> and <code>metadata.tab</code> with the names of your tab-delimited data files and, optionally, <code>your_data_and_metadata</code> with the name of your dataset.</p>
+<p>Replace <code>your_data.tab</code> and <code>metadata.tab</code> with the
+names of your tab-delimited data files and, optionally,
+<code>your_data_and_metadata</code> with the name of your dataset. Important
+note: before doing this step, edit your metadata file and rename the &quot;sample&quot; column
+&quot;#SampleID&quot;, otherwise the metadata won't actually be added (!) and
+<i>phylogenize</i>
+will throw a &quot;metadata not found&quot; error.</p>
 <p>For more help using the <code>biom</code> utility, try looking at the pages entitled <a href="http://biom-format.org/documentation/biom_conversion.html">&quot;Converting between file formats&quot;</a> and <a href="http://biom-format.org/documentation/adding_metadata.html">&quot;Adding sample and observation metadata to biom files&quot;</a>. These documents also cover how to rename columns to match what <em>phylogenize</em> accepts, if you already have a BIOM file, for example, because you've run QIIME.</p>
 <h2 id="information-about-your-data">Information about your data</h2>
 <p>&quot;Data type&quot; is relatively self-explanatory: is your data 16S amplicon sequencing data, or shotgun metagenomics data processed with MIDAS?</p>
@@ -164,6 +174,35 @@
 </ul></li>
 </ul>
 <p>To make <em>phylogenize</em> available for other users, results will be deleted approximately 7 days after completion, so it is a good idea to save the report and results to disk before then.</p>
+<h2 id="getting-started-example-data">Getting started: example data</h2>
+<p>If you would like to take <i>phylogenize</i> for a test drive, we have
+provided a <a href="{{ url_for('static', filename="hmp-16s.biom"}}">BIOM dataset</a> containing 16S data and metadata from the Human
+Microbiome Project, re-analyzed with DADA2. (The data are read counts, merged
+by individual. The various regions sequenced of the 16S gene are provided in a
+single file. Reads corresponding to different samples from the same individual
+have been summed.)</p>
+<p>You will have to provide an environment to calculate either specificity or
+prevalence. The
+various environments represented in this dataset are:
+<ul><li>Anterior nares</li>
+<li>Attached/Keratinized gingiva</li>
+<li>Buccal mucosa</li>
+<li>Hard palate</li>
+<li>L_Antecubital fossa</li>
+<li>Mid vagina</li>
+<li>Palatine Tonsils</li>
+<li>Posterior fornix</li>
+<li>R_Antecubital fossa</li>
+<li>Retroauricular crease</li>
+<li>Saliva</li>
+<li>Stool</li>
+<li>Subgingival plaque</li>
+<li>Supragingival plaque</li>
+<li>Throat</li>
+<li>Tongue dorsum</li>
+<li>Vaginal introitus</li>
+</ul>
+</p>
 <h1 id="troubleshooting">Troubleshooting</h1>
 <ul>
 <li><em>phylogenize</em> appears to be stuck a little over halfway through.
