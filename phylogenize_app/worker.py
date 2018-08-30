@@ -64,6 +64,7 @@ while True:
       print(this_message)
       print("Delaying %d seconds" % (jdelay))
       beanstalk.put(job.body, delay = jdelay)
+      job.delete()
     elif len(JobSlots) > 0:
       shutil.copy(os.path.join(jobdict["report_dir"], jobdict["report_name"]),
           jobdict["output_dir"])
