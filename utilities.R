@@ -271,11 +271,11 @@ hack.tree.labels <- function(tree.obj,
       xml_set_attr(l2, "class", "faketip")
       xml_set_attr(l2, "x1",
         as.character(
-          l.x1 - 100
+          l.x1 - 500
           ))
       xml_set_attr(l2, "x2",
         as.character(
-          terminus + 300
+          terminus + 500
           ))
       extra.info <-  ""
       if (!is.null(pheno)) {
