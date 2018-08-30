@@ -9,14 +9,30 @@ p {
 h1,h2,h3,h4,h5,h6 {
 font-family: Barlow, Franklin Gothic, sans-serif;
 }
-.navbar-custom {
-	background-color: #FFFFA0;
-	font-weight: bold;
-	border: 1;
-	border-color: black;
-}
 .navbar a {
 	color: black;
+}
+.navbar {
+  min-height: 80px;
+  /*padding: 0.5rem 0.5rem;*/
+
+}
+.navbar-brand {
+  background-color: #FFFFA0;
+}
+.navbar-toggler {
+  background-color: #FFFFA0;
+  border: 1px dashed black;
+  border-color: black;
+  padding: 10px;
+}
+.collapse.show, .collapsing {
+  background-color: #FFFFA0;
+  padding: 10px;
+  border: 2px solid black;
+}
+.navbar-collapse {
+  background-color: #FFFFA0;
 }
 .navbar-custom {
 	background-color: #FFFFA0;
