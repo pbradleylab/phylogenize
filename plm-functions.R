@@ -76,19 +76,61 @@ result.wrapper.plm <- function(
 }
 
 # a perhaps-more-memory-efficient version for single core
-nonparallel.results.generator <- function(gene.matrix, tree, taxa, pheno) {
+nonparallel.results.generator <- function(
+  gene.matrix,
+  tree,
+  taxa,
+  phylum.name,
+  pheno,
+  method=phylolm.fx.pv,
+  restrict.ff=NULL,
+  remove.low.variance=TRUE
+) {
+  message(phylum.name)
+  #message(address(gene.matrix))
   restrict.taxa <- Reduce(intersect, list(colnames(gene.matrix),
       tree$tip.label,
       names(pheno),
       taxa))
-  restrict.ff <- names(which(apply(gene.matrix[, restrict.taxa],
-        1,
-        var) > 0))
+  if (is.null(restrict.ff)) restrict.ff <- rownames(gene.matrix)
+  if (remove.low.variance) {
+    restrict.lv <- names(which(
+        apply(gene.matrix[restrict.ff, restrict.taxa],
+          1,
+          var) > 0))
+    restrict.both <- intersect(restrict.ff, restrict.lv)
+    message(sprintf("removing zero-variance genes (%d): %0.2f%% removed",
+        length(restrict.ff) - length(restrict.lv),
+        100 * (1 - (length(restrict.both) / length(restrict.ff)))
+    ))
+    restrict.ff <- restrict.both
+  }
   restrict.tree <- keep.tips(tree, restrict.taxa)
-  apply(gene.matrix[restrict.ff, restrict.taxa], 1, function(m) {
-    phylolm.fx.pv(m, pheno[restrict.taxa], restrict.tree)
-  })
+  ans <- matrix(nr = 2, nc = length(restrict.ff), NA)
+  dimnames(ans) <- list(c("Estimate", "p.value"),
+    restrict.ff)
+  message(paste0(c('|',rep('-', 48), "|"), collapse=''))
+  progress <- txtProgressBar(min = 1,
+    max = length(restrict.ff),
+    initial = 1,
+    char = '=',
+    style = 1,
+    width = 50)
+  # replaces an apply to avoid copying
+  for (fn in 1:length(restrict.ff)) {
+    setTxtProgressBar(progress, fn)
+    ans[, fn] <- method(gene.matrix[restrict.ff[fn], restrict.taxa],
+      pheno[restrict.taxa],
+      restrict.tree)
+  }
+  close(progress)
+  ans
+  #apply(gene.matrix[restrict.ff, restrict.taxa], 1, function(m) {
+  #  method(m, pheno[restrict.taxa], restrict.tree)
+  #})
 }
+
+
 
 phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
   # This seems redundant, but we can avoid touching the giant protein matrix this way and therefore causing an expensive copy

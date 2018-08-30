@@ -482,6 +482,7 @@ if (params$ncl > 1) {
 		gene.presence[names(taxa)],
 		trees[names(taxa)],
 		taxa,
+		as.list(names(taxa)),
 		MoreArgs=list(pheno=phenotype))
 }
 
