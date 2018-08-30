@@ -16,6 +16,7 @@ library("biomformat")
 library("Matrix")
 library("MASS")
 library("seqinr")
+library("pbapply")
 
 result.wrapper.plm <- function(
   phyla,
@@ -84,7 +85,8 @@ nonparallel.results.generator <- function(
   pheno,
   method=phylolm.fx.pv,
   restrict.ff=NULL,
-  remove.low.variance=TRUE
+  remove.low.variance=TRUE,
+  use.for.loop=TRUE
 ) {
   message(phylum.name)
   #message(address(gene.matrix))
@@ -106,29 +108,33 @@ nonparallel.results.generator <- function(
     restrict.ff <- restrict.both
   }
   restrict.tree <- keep.tips(tree, restrict.taxa)
-  ans <- matrix(nr = 2, nc = length(restrict.ff), NA)
-  dimnames(ans) <- list(c("Estimate", "p.value"),
-    restrict.ff)
-  message(paste0(c('|',rep('-', 48), "|"), collapse=''))
-  progress <- txtProgressBar(min = 1,
-    max = length(restrict.ff),
-    initial = 1,
-    char = '=',
-    style = 1,
-    width = 50,
-    file = stderr())
-  # replaces an apply to avoid copying
-  for (fn in 1:length(restrict.ff)) {
-    setTxtProgressBar(progress, fn)
-    ans[, fn] <- method(gene.matrix[restrict.ff[fn], restrict.taxa],
-      pheno[restrict.taxa],
-      restrict.tree)
+  if (use.for.loop) {
+    ans <- matrix(nr = 2, nc = length(restrict.ff), NA)
+    dimnames(ans) <- list(c("Estimate", "p.value"),
+      restrict.ff)
+    message(paste0(c('|',rep('-', 48), "|"), collapse=''))
+    progress <- txtProgressBar(min = 1,
+      max = length(restrict.ff),
+      initial = 1,
+      char = '=',
+      style = 3,
+      width = 50,
+      file = stderr())
+    pheno.restrict <- pheno[restrict.taxa]
+    # replaces an apply to avoid copying
+    for (fn in 1:length(restrict.ff)) {
+      setTxtProgressBar(progress, fn)
+      ans[, fn] <- method(gene.matrix[restrict.ff[fn], restrict.taxa],
+        pheno.restrict,
+        restrict.tree)
+    }
+    close(progress)
+    ans
+  } else {
+    pbapply(gene.matrix[restrict.ff, restrict.taxa], 1, function(m) {
+      method(m, pheno[restrict.taxa], restrict.tree)
+    })
   }
-  close(progress)
-  ans
-  #apply(gene.matrix[restrict.ff, restrict.taxa], 1, function(m) {
-  #  method(m, pheno[restrict.taxa], restrict.tree)
-  #})
 }
 
 

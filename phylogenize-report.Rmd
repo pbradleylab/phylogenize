@@ -480,12 +480,14 @@ if (params$ncl > 1) {
 																n.cores = params$ncl,
 																method = p.method)
 } else {
+	#restrict <- lapply(gene.presence, function(x) sample(rownames(x), 500))
 	results <- mapply(nonparallel.results.generator,
 		gene.presence[names(taxa)],
 		trees[names(taxa)],
 		taxa,
 		as.list(names(taxa)),
-		MoreArgs=list(pheno=phenotype))
+		#restrict.ff=restrict[names(taxa)],
+		MoreArgs=list(pheno=phenotype, use.for.loop=FALSE))
 }
 
 signif <- make.sigs(results)
