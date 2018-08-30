@@ -27,7 +27,7 @@ def make_tarfile(output_filename, source_dir):
   with tarfile.open(output_filename, "w:gz") as tar:
     for f in files:
       tar.add(os.path.join(source_dir, f),
-          arcname=os.path.basename(source_dir))
+          arcname=os.path.join('output/', f))
 
 while True:
   # poll for 5 seconds at a time, but don't bother polling if no open slots

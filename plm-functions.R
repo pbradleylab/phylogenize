@@ -75,6 +75,21 @@ result.wrapper.plm <- function(
   })
 }
 
+# a perhaps-more-memory-efficient version for single core
+nonparallel.results.generator <- function(gene.matrix, tree, taxa, pheno) {
+  restrict.taxa <- Reduce(intersect, list(colnames(gene.matrix),
+      tree$tip.label,
+      names(pheno),
+      taxa))
+  restrict.ff <- names(which(apply(gene.matrix[, restrict.taxa],
+        1,
+        var) > 0))
+  restrict.tree <- keep.tips(tree, restrict.taxa)
+  apply(gene.matrix[restrict.ff, restrict.taxa], 1, function(m) {
+    phylolm.fx.pv(m, pheno[restrict.taxa], restrict.tree)
+  })
+}
+
 phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
   # This seems redundant, but we can avoid touching the giant protein matrix this way and therefore causing an expensive copy
   if (!is.null(restrict)) {

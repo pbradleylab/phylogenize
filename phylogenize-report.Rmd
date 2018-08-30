@@ -469,13 +469,21 @@ if (params$linearize) {
 } else {
   p.method <- phylolm.fx.pv
 }
-results <- result.wrapper.plm(phyla = names(taxa),
-                              pheno = phenotype,
-                              tree = trees,
-                              clusters = taxa,
-                              proteins = gene.presence, 
-                              n.cores = params$ncl,
-                              method = p.method)
+if (params$ncl > 1) {
+	results <- result.wrapper.plm(phyla = names(taxa),
+																pheno = phenotype,
+																tree = trees,
+																clusters = taxa,
+																proteins = gene.presence, 
+																n.cores = params$ncl,
+																method = p.method)
+} else {
+	results <- mapply(nonparallel.results.generator,
+		gene.presence[names(taxa)],
+		trees[names(taxa)],
+		taxa,
+		MoreArgs=list(pheno=phenotype))
+}
 
 signif <- make.sigs(results)
 signs <- make.signs(results)
