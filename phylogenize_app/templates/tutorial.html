@@ -137,8 +137,8 @@ sample).</p>
 <pre><code>biom convert -i your_data.tab -o your_data_and_metadata.biom --to-hdf5 --table-type=&quot;OTU table&quot; --sample-metadata-fp metadata.tab</code></pre>
 <p>Replace <code>your_data.tab</code> and <code>metadata.tab</code> with the
 names of your tab-delimited data files and, optionally,
-<code>your_data_and_metadata</code> with the name of your dataset. Important
-note: before doing this step, edit your metadata file and rename the &quot;sample&quot; column
+<code>your_data_and_metadata</code> with the name of your dataset. <i>Important
+	note</i>: before doing this step, edit your metadata file and rename the &quot;sample&quot; column
 &quot;#SampleID&quot;, otherwise the metadata won't actually be added (!) and
 <i>phylogenize</i>
 will throw a &quot;metadata not found&quot; error.</p>
@@ -204,14 +204,14 @@ various environments represented in this dataset are:
 <li>Vaginal introitus</li>
 </ul>
 <p>
-If you would just like to look at a sample report, you can view that
-<a href="{{ url_for('display_result_file', result_id='6e7dc74d-98f8-47b0-9e48-cba06abc4961', subfile='phylogenize-report.html') }}">here</a>.</p>
+If you would just like to look at a sample report, you can view one 
+<a href="{{ url_for('static', result_id='phylogenize-report-demo.html') }}">here</a>.</p>
 
 <h1 id="troubleshooting">Troubleshooting</h1>
 <ul>
 <li><em>phylogenize</em> appears to be stuck a little over halfway through.
 <ul>
-<li>This is probably totally normal; the progress bar is approximate and this is likely to be the step where associations are actually calculated. If you check back in several minutes, you should see more subtle signs of progress under &quot;monitor warnings/errors.&quot;</li>
+<li>This is probably totally normal; the progress bar is approximate and this is likely to be the step where associations are actually calculated. If you check back, you should eventually see more subtle signs of progress under &quot;monitor warnings/errors.&quot;</li>
 </ul>
 <li><em>phylogenize</em> doesn't appear to be running my job: the bar is stuck at 0%.
 <ul>
@@ -219,14 +219,14 @@ If you would just like to look at a sample report, you can view that
 </ul></li>
 <li><em>phylogenize</em> gave me an error that I don't understand.</li>
 <ul>
-<li>Check that your data tables satisfy the above requirements (in particular, are your metadata columns named correctly and do your sample IDs match up?).
+<li>Check that your data tables satisfy the above requirements (in particular, are your metadata columns named correctly, and do your sample IDs match up?).
 <li>If your job ran out of memory, try converting it to BIOM format (see above).</li>
-<li>If there's still a problem, e-mail the webmaster (see About/Contact in the navigation bar) and attach the output that appears when you click &quot;monitor warnings/errors&quot;.</li>
+<li>If there's still a problem, e-mail the webmaster (see About/Contact in the navigation bar). Add your result ID (the string of characters after &quot;results&quot; in the URL) and attach your input files and the output that appears when you click &quot;monitor warnings/errors&quot;.</li>
 </ul></li>
 </ul></li>
 </ul>
 <h1 id="how-do-i-run-phylogenize-locally">How do I run <em>phylogenize</em> locally?</h1>
-<p>If you are getting an &quot;out of memory&quot; error, you have a lot of jobs, or you have a more specific use case that is not covered by the server, we recommend that you download <em>phylogenize</em> from our code repository at <a href="https://www.bitbucket.com/pbradz/phylogenize">https://bitbucket.com/pbradz/phylogenize</a>. The core of <em>phylogenize</em> is an RMarkdown notebook, <code>phylogenize-report.Rmd</code>, which can be run either with or without the web app (written in Python). The web app provides a user interface and a scheduling system.</p>
+<p>If you are getting an &quot;out of memory&quot; error, you have a lot of jobs, or you have a more specific use case that is not covered by the server, we recommend that you download <em>phylogenize</em> from our code repository at <a href="https://www.bitbucket.com/pbradz/phylogenize">https://bitbucket.com/pbradz/phylogenize</a>. The core of <em>phylogenize</em> is an RMarkdown notebook, <code>phylogenize-report.Rmd</code>, which can be run either with or without the web app (written in Python using Flask). The web app provides a user interface and a scheduling system (using Beanstalk).</p>
 <h1 id="how-should-i-cite-phylogenize">How should I cite <em>phylogenize</em>?</h1>
 <p>
 Bradley PH and Pollard KS, "phylogenize: a web tool to identify microbial genes underlying environment associations." In review.<p>
