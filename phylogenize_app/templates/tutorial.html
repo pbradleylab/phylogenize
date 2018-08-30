@@ -176,7 +176,7 @@ will throw a &quot;metadata not found&quot; error.</p>
 <p>To make <em>phylogenize</em> available for other users, results will be deleted approximately 7 days after completion, so it is a good idea to save the report and results to disk before then.</p>
 <h2 id="getting-started-example-data">Getting started: example data</h2>
 <p>If you would like to take <i>phylogenize</i> for a test drive, we have
-provided a <a href="{{ url_for('static', filename="hmp-16s.biom"}}">BIOM dataset</a> containing 16S data and metadata from the Human
+provided a <a href="{{ url_for('static', filename="hmp-16s.biom") }}">BIOM dataset</a> containing 16S data and metadata from the Human
 Microbiome Project, re-analyzed with DADA2. (The data are read counts, merged
 by individual. The various regions sequenced of the 16S gene are provided in a
 single file. Reads corresponding to different samples from the same individual
@@ -204,13 +204,9 @@ various environments represented in this dataset are:
 <li>Vaginal introitus</li>
 </ul>
 <p>
-If you would just like to look at a sample report, you can view that <a
-                                         href="{{
-                                         url_for('display_result_file',
-                                         result_id='6e7dc74d-98f8-47b0-9e48-cba06abc4961',
-                                         subfile='phylogenize-report.html')
-                                         }}">here</a>.</p>
-</p>
+If you would just like to look at a sample report, you can view that
+<a href="{{ url_for('display_result_file', result_id='6e7dc74d-98f8-47b0-9e48-cba06abc4961', subfile='phylogenize-report.html') }}">here</a>.</p>
+
 <h1 id="troubleshooting">Troubleshooting</h1>
 <ul>
 <li><em>phylogenize</em> appears to be stuck a little over halfway through.
