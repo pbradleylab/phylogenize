@@ -1,4 +1,4 @@
-# phylogenize
+# phylogenize (v0.8 beta)
 
 
 ## Running locally without the web server
