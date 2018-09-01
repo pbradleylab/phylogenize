@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 
+{% macro group_title(title) %}
+<span class="bigformlabel">
+			{{ title }}
+		</span>
+		<hr />
+{% endmacro %}
+
 {% macro form_entry(thing, tooltip, upload) %}
 		<label class="control-label">
     <span class="formlabel"
@@ -73,22 +80,31 @@
 			{{ form.hidden_tag() }}
 
 			<div class="form-row silentform">
-				<div class="col-md-4 silentform">
+				<div class="col-md-4 silentform form-group-2">
+					{{ group_title("Your data and metadata") }}
+					<div class="form-group form-row">
+						<div class="col-md-6">
 					{{ form_entry(form.abundances, "Tab-separated values. Rows should be
 					MIDAS species IDs or PATRIC genome IDs.", True) }}
+						</div> <div class="col-md-6">
 					{{ form_entry(form.metadata, "Tab-separated values. Rows should be
 					samples, and columns should be as in example file above.", True) }}
+					</div>
+					</div>
+					<div><center>or</center></div>
 					{{ form_entry(form.biomfile, "BIOM file (combined abundance table and
 					sample annotation table). Make sure your sample annotation table has
 					\"env\" and \"dataset\" annotations.", True) }}
 				</div>
 				<div class="col-md-4 silentform">
+					{{ group_title("Information about your data") }}
 					{{ form_entry(form.datatype, "Select whether data were calculated from
 					applying MIDAS to metagenomic data, or DADA2 to 16S data.") }}
 					{{ form_entry(form.database, "Select the version of the database that you
 					used to get relative abundances.") }}
 				</div>
 				<div class="col-md-4 silentform">
+					{{ group_title("Phenotype to calculate") }}
 					{{ form_entry(form.phenotype,	"Select whether you want to associate gene families with prevalence or
 					with environmental specificity scores.") }}
 					{{ form_entry(form.which_envir, "Enter the name of the environment in
@@ -97,7 +113,7 @@
 			</div>
 			<div class="form-row">
 				<div class="col-md-12">
-  					{{ form.recaptcha }}
+					{{ form.recaptcha }}<br>
 					<input type="submit" value="Submit" class="btn btn-primary" formmethod="post" />
 				</div>
 			</div>
