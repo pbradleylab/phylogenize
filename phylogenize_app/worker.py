@@ -82,6 +82,8 @@ while True:
           ("out_dir = \"%s\", " % (jobdict["output_dir"])) + \
           ("in_dir = \"%s\", " % (jobdict["input_dir"])) + \
           ("source_dir = \"%s\", " % (jobdict["report_dir"])) + \
+          ("burst_dir = \"%s\", " % (os.path.join(
+            jobdict["report_dir"], "bin/")) + \
           ("data_dir = \"%s\", " % (os.path.join(jobdict["report_dir"],
             "data"))) + \
           ("abundance_file = \"%s\", " % (jobdict["abundance_file"])) + \
