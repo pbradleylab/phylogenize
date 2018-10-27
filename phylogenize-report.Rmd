@@ -520,10 +520,9 @@ pos.sig.thresh <- mapply(trees[phy.with.sigs],
   r1 <- rowSums(y2)
   r2 <- rowSums(1 - y2)
   names(which((r2 >= params$minimum) & (r1 >= params$minimum)))
-})
+}, SIMPLIFY=FALSE)
 # recalculate, since some of these may go away
 phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
-
 pos.sig.thresh.descs <- Reduce(rbind, lapply(phy.with.sigs,
                                              function(n) {
   cbind(phylum = n,
