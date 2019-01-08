@@ -101,10 +101,13 @@ font-size: 80%;
 .bigformlabel {
 	font-weight: normal;
 	color: #000000;
+	background-color: #FFFFA0;
 	font-style: normal;
 	font-family: Barlow, Franklin Gothic, sans-serif;
-	font-size: 120%;
+	font-size: 135%;
 	margin: 0px;
+  padding-left: 3px;
+  padding-right: 5px;
 }
 .infobox {
 	line-height: 1;
@@ -307,3 +310,5 @@ html,body{
   	font-style: italic;
     opacity: 1; /* Firefox */
 }
+
+
