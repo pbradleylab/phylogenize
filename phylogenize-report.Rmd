@@ -71,19 +71,23 @@ phylo.error <- function(err) {
 }
 
 # Read abundance, metadata files
+
 if ((Env == "sample") || (Dset == "sample")) {
   phylo.error("Environment and dataset columns cannot be titled \"sample\"")
 }
 if (params$input_format == "tabular") {
-  abd.mtx <- fastread(file.path(IDir, params$abundance_file), 
-    cn = FALSE)
+  abd.mtx <- fastread(file.path(IDir, params$abundance_file), cn = FALSE)
   gc()
   metadata <- data.frame(fread(file.path(IDir, params$metadata_file)))
   if (!(Env %in% colnames(metadata))) {
-    phylo.error(paste("When looking for environment, no column found labeled", Env))
+      phylo.error(
+          paste("When looking for environment, no column found labeled", Env)
+      )
   }
   if (!(Dset %in% colnames(metadata))) {
-    phylo.error(paste("When looking for dataset, no column found labeled ", Dset))
+      phylo.error(
+          paste("When looking for dataset, no column found labeled ", Dset)
+      )
   }
   metadata[[Env]] <- as.factor(metadata[[Env]])
   metadata[[Dset]] <- as.factor(metadata[[Dset]])
@@ -467,27 +471,25 @@ an FDR of 5%.
 ```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE}
 
 if (params$linearize) {
-  p.method <- lm.fx.pv
+    p.method <- lm.fx.pv
 } else {
-  p.method <- phylolm.fx.pv
+    p.method <- phylolm.fx.pv
 }
 if (params$ncl > 1) {
-	results <- result.wrapper.plm(phyla = names(taxa),
-																pheno = phenotype,
-																tree = trees,
-																clusters = taxa,
-																proteins = gene.presence, 
-																n.cores = params$ncl,
-																method = p.method)
+    results <- result.wrapper.plm(phyla = names(taxa),
+                                  pheno = phenotype,
+                                  tree = trees,
+                                  clusters = taxa,
+                                  proteins = gene.presence, 
+                                  n.cores = params$ncl,
+                                  method = p.method)
 } else {
-	#restrict <- lapply(gene.presence, function(x) sample(rownames(x), 500))
-	results <- mapply(nonparallel.results.generator,
-		gene.presence[names(taxa)],
-		trees[names(taxa)],
-		taxa,
-		as.list(names(taxa)),
-		#restrict.ff=restrict[names(taxa)],
-		MoreArgs=list(pheno=phenotype, use.for.loop=FALSE))
+    results <- mapply(nonparallel.results.generator,
+                      gene.presence[names(taxa)],
+                      trees[names(taxa)],
+                      taxa,
+                      as.list(names(taxa)),
+                      MoreArgs=list(pheno=phenotype, use.for.loop=FALSE))
 }
 
 signif <- make.sigs(results)
@@ -495,11 +497,11 @@ signs <- make.signs(results)
 pos.sig <- make.pos.sig(sigs = signif, signs = signs)
 
 results.matrix <- Reduce(rbind, lapply(names(results), function(rn) {
-  data.frame(phylum = rn, 
-             gene = results[[rn]] %>% colnames,
-             effect.size = results[[rn]][1,],
-             p.value = results[[rn]][2,]
-             )
+    data.frame(phylum = rn, 
+               gene = results[[rn]] %>% colnames,
+               effect.size = results[[rn]][1,],
+               p.value = results[[rn]][2,]
+               )
 }))
 
 
@@ -507,29 +509,29 @@ kable(sapply(pos.sig, length), col.names = "significant genes")
 
 phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
 pos.sig.descs <- Reduce(rbind, lapply(phy.with.sigs, function(n) {
-  cbind(phylum = n,
-        gene = pos.sig[[n]],
-        description = gene.annot(pos.sig[[n]]))
+    cbind(phylum = n,
+          gene = pos.sig[[n]],
+          description = gene.annot(pos.sig[[n]]))
 }))
 
 pos.sig.thresh <- mapply(trees[phy.with.sigs],
-  pos.sig[phy.with.sigs],
-  gene.presence[phy.with.sigs],
-  FUN = function(tr, x, y) {
-  y2 <- y[x, intersect(tr$tip.label, colnames(y))]
-  r1 <- rowSums(y2)
-  r2 <- rowSums(1 - y2)
-  names(which((r2 >= params$minimum) & (r1 >= params$minimum)))
-})
+                         pos.sig[phy.with.sigs],
+                         gene.presence[phy.with.sigs],
+                         FUN = function(tr, x, y) {
+                             y2 <- y[x, intersect(tr$tip.label, colnames(y))]
+                             r1 <- rowSums(y2)
+                             r2 <- rowSums(1 - y2)
+                             names(which((r2 >= params$minimum) & (r1 >= params$minimum)))
+                         })
 # recalculate, since some of these may go away
 phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
 
-pos.sig.thresh.descs <- Reduce(rbind, lapply(phy.with.sigs,
-                                             function(n) {
-  cbind(phylum = n,
-        gene = pos.sig.thresh[[n]],
-        description = gene.annot(pos.sig.thresh[[n]]))
-}))
+pos.sig.thresh.descs <- Reduce(rbind,
+                               lapply(phy.with.sigs, function(n) {
+                                   cbind(phylum = n,
+                                         gene = pos.sig.thresh[[n]],
+                                         description = gene.annot(pos.sig.thresh[[n]]))
+                               }))
 
 write.csv(file = file.path(ODir, "pos-sig-thresholded.csv"),
           pos.sig.thresh.descs)
@@ -538,7 +540,7 @@ rm(pos.sig.thresh.descs)
 write.csv(file = file.path(ODir, "all-results.csv"),
           results.matrix)
 rm(results.matrix)
-                  
+
 if (params$pryr) message(pryr::mem_used() / 1e6)
 ```
 
