@@ -1,12 +1,36 @@
 Package: phylogenize
-Title: What the Package Does (One Line, Title Case)
+Title: Associate Microbial Prevalence and Specificity with Gene Presence
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Patrick",
+           family = "Bradley",
            role = c("aut", "cre"),
-           email = "first.last@example.com")
-Description: What the package does (one paragraph).
-License: What license it uses
+           email = "patrick@microbe.zone")
+Description: phylogenize contains functions to estimate microbial prevalence and specificity scores from data, to associate these quantitative phenotypes with gene presence/absence (using the implementation of phylogenetic regression from the package phylolm), and to visualize the results. Both shotgun metagenomics and 16S amplicon data can be used with this pipeline.
+License: MIT
 Encoding: UTF-8
 LazyData: true
+Depends:
+    phylolm,
+    settings
+Imports:
+    data.table,
+    parallel,
+    qvalue,
+    tidyverse,
+    ggtree,
+    ape,
+    phytools,
+    knitr,
+    kableExtra,
+    scales,
+    xml2,
+    ggplot2,
+    biomformat,
+    Matrix,
+    MASS,
+    seqinr,
+    pbapply,
+    gtools
+Suggests: 
+    testthat
