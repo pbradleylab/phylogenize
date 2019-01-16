@@ -1,0 +1,616 @@
+
+#--- I/O and initial processing ---#
+
+read.abd.metadata <- function(...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    if ((opts('env_column') == "sample") ||
+        (opts('dset_column') == "sample")) {
+        pz.error("Environment and dataset columns cannot be titled \"sample\"")
+    }
+    if (opts('input_format') == "tabular") {
+        abd.meta <- read.abd.metadata.tabular(...)
+    } else if (opts('input_format') == "biom") {
+        abd.meta <- read.abd.metadata.biom(...)
+    }
+    sanity.check.abundance(abd.meta$mtx, ...)
+    sanity.check.metadata(abd.meta$metadata, ...)
+    if (opts('type') == '16S') abd.meta <- process.16s(abd.meta, ...)
+    abd.meta <- harmonize.abd.meta(abd.meta, ...)
+    # binarize to save memory usage since we care about pres/abs
+    abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+    gc()
+    return(abd.meta)
+}
+
+check.process.metadata <- function(metadata, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    if (!(opts('env_column') %in% colnames(metadata))) {
+        pz.error(paste0("environment column not found: ", opts('env_column')))
+    }
+    if (!(opts('dset_column') %in% colnames(metadata))) {
+        pz.error(paste0("dataset column not found: ", opts('dset_column')))
+    }
+    metadata[[opts('env_column')]] <- as.factor(metadata[[opts('env_column')]])
+    metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
+    return(metadata)
+}
+
+read.abd.metadata.biom <- function(...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    biomf <- biomformat::read_biom(file.path(opts('in_dir'), opts('biom_file')))
+    abd.mtx <- biomformat::biom_data(biomf)
+    metadata <- biomformat::sample_metadata(biomf)
+    metadata <- check.process.metadata(metadata, ...)
+    # work around different naming convention
+    if (is.null(rownames(metadata))) {
+        pz.error(paste0("metadata had no sample names; should not be possible,",
+                        " check that your biom file is not corrupt"))
+    }
+    metadata$sample <- rownames(metadata)
+    rm(biomf); gc()
+    return(list(mtx=abd.mtx, metadata=metadata))
+}
+
+read.abd.metadata.tabular <- function(...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    abd.mtx <- fastread(file.path(opts('in_dir'),
+                                  opts('abundance_file')), cn=FALSE)
+    gc()
+    metadata <- data.frame(
+        data.table::fread(file.path(opts('in_dir'),
+                                    opts('metadata_file'))))
+    metadata <- check.process.metadata(metadata, ...)
+    return(list(mtx=abd.mtx, metadata=metadata))
+}
+
+sanity.check.abundance <- function(abd.mtx, ...) {
+    if (is.null(dim(abd.mtx))) {
+        pz.error(paste0(
+            "Abundance matrix must be a 2D array and instead was a ",
+            typeof(abd.mtx)
+        ))
+    }
+    if (ncol(abd.mtx) < 2) {
+        pz.error("Abundance matrix had fewer than 2 columns")
+    }
+    if (nrow(abd.mtx) < 2) {
+        pz.error("Abundance matrix had fewer than 2 rows")
+    }
+    return(TRUE)
+}
+
+remove.allzero.abundances <- function(abd.mtx, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    nz.cols <- which(Matrix::colSums(abd.mtx) > 0)
+    if (length(nz.cols) < 2) {
+        pz.error("Too few columns with at least one non-zero entry")
+    }
+    nz.rows <- which(Matrix::colSums(abd.mtx[, nz.cols]) > 0)
+    if (length(nz.cols) < 2) {
+        pz.error("Too few rows with at least one non-zero entry")
+    }
+    # pass
+    return(abd.mtx)
+}
+
+# Check that dataset, environment, and sample columns all present
+sanity.check.metadata <- function(metadata, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    if (!(opts('env_column') %in% colnames(metadata))) {
+        pz.error(
+            paste("When looking for environment, no column found labeled",
+                  opts('env_column'))
+        )
+    }
+    if (!(opts('dset_column') %in% colnames(metadata))) {
+        pz.error(
+            paste("When looking for dataset, no column found labeled ",
+                  opts('dset_column'))
+        )
+    }
+    if (!("sample" %in% colnames(metadata))) {
+        pz.error(
+            "When looking for dataset, no column found labeled \"sample\""
+        )
+    }
+    if (nrow(metadata) < 2) {
+        pz.error("Fewer than two rows found in metadata")
+    }
+    return(TRUE)
+}
+
+
+harmonize.abd.meta <- function(abd.meta, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    samples.present <- intersect(abd.meta$metadata$sample,
+                                 colnames(abd.meta$mtx))
+    if (length(samples.present) == 0) {
+        pz.error(paste0("No samples found in both metadata and ",
+                        "abundance matrix"))
+    }
+    abd.meta$mtx <- abd.meta$mtx[, samples.present]
+    abd.meta$metadata <- abd.meta$metadata[
+                                      abd.meta$metadata$sample %in%
+                                      samples.present, ]
+    all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
+    all.dsets <- unique(abd.meta$metadata[[opts('dset_column')]])
+    env.number <- sapply(all.envs, function(e) {
+        sum(abd.meta$metadata[[opts('env_column')]] == e)
+    })
+    dset.number <- sapply(all.dsets, function(d) {
+        sum(abd.meta$metadata[[opts('dset_column')]] == d)
+    })
+    names(env.number) <- all.envs
+    names(dset.number) <- all.dsets
+    nonsingleton.envs <- names(which(env.number > 1))
+    nonsingleton.dsets <- names(which(dset.number > 1))
+    pz.message(paste0(length(nonsingleton.envs),
+                      " non-singleton environment(s) found"))
+    pz.message(paste0(length(nonsingleton.dsets),
+                      " non-singleton dataset(s) found"))
+    wrows <- which(
+      (abd.meta$metadata[[opts('env_column')]] %in% nonsingleton.envs) &
+      (abd.meta$metadata[[opts('dset_column')]] %in% nonsingleton.dsets))
+    if (length(wrows) < 2) {
+        pz.error(paste0("Too few rows found in metadata matrix after ",
+                        "dropping singletons and matching with abundance ",
+                        "matrix (need at least 2)"))
+    }
+    abd.meta$metadata <- abd.meta$metadata[wrows, ]
+    wcols <- intersect(colnames(abd.meta$mtx), abd.meta$metadata$sample)
+    if (length(wcols) < 2) {
+        pz.error(paste0("Too few columns found in abundance matrix ",
+                        "after dropping singletons and matching with metadata ",
+                        "(need at least 2)"))
+    }
+    abd.meta$mtx <- abd.meta$mtx[, wcols]
+    abd.meta$mtx <- remove.allzero.abundances(abd.meta$mtx)
+    abd.meta
+}
+
+#--- Process 16S data---#
+
+process.16s <- function(abd.meta, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    if (!(all(is.dna(rownames(abd.meta$mtx))))) {
+        pz.error("expected rows to be DNA sequences but found illegal characters")
+    }
+    seqinr::write.fasta(as.list(rownames(abd.meta$mtx)),
+                        paste0("Row", (1:nrow(abd.meta$mtx))),
+                        file.out=file.path(opts('in_dir'),
+                                           opts('burst_infile')),
+                        nbchar=99999,
+                        as.string=TRUE)
+    # map to MIDAS IDs using Burst
+    system2(file.path(opts('burst_dir'), "burst12"),
+            args = c("-r",
+                     file.path(opts('data_dir'),
+                               opts('burst_16sfile')),
+                     "-fr",
+                     "-q",
+                     file.path(opts('in_dir'),
+                               opts('burst_infile')),
+                     "-i",
+                     "0.985",
+                     "-o",
+                     file.path(opts('in_dir'),
+                               opts('burst_outfile'))))
+    assignments <- data.frame(data.table::fread(
+        file.path(opts('in_dir'), opts('burst_outfile'))))
+    row.hits <- as.numeric(gsub("Row", "", assignments[,1]))
+    row.targets <- sapply(assignments[,2],
+                          function(x) strsplit(x, " ")[[1]][3])
+    uniq.hits <- which(count.each(row.hits) < 2)
+    rh <- row.hits[uniq.hits]
+    rt <- row.targets[uniq.hits]
+    subset.abd <- abd.meta$mtx[rh, ]
+    urt <- unique(rt)
+    summed.uniq <- sapply(urt, function(r) {
+        w <- which(rt == r)
+        if (length(w) > 1) {
+            apply(subset.abd[w, ], 2, sum)
+        } else {
+            subset.abd[w, ]
+        }
+    }) %>% t
+    rownames(summed.uniq) <- urt
+    csu <- colSums(summed.uniq)
+    abd.meta$mtx <- apply(summed.uniq[, which(csu > 0)],
+                          2,
+                          function(x) x / sum(x))
+    abd.meta
+}
+
+#--- Import data necessary for analyses ---#
+
+import.pz.db <- function(...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    # parse
+    if (opts('type') == "midas") {
+        if (opts('db_version') == "midas_v1.0") {
+            gp.file <- "MIDAS-gene-presence-binary-1.0.rds"
+            tr.file <- "MIDAS_1.0-trees.rds"
+            tax.file <- "MIDAS_1.0-taxonomy.csv"
+        } else if (opts('db_version') == "midas_v1.2") {
+            gp.file <- "MIDAS-gene-presence-binary-1.2.rds"
+            tr.file <- "MIDAS_1.2-trees.rds"
+            tax.file <- "MIDAS_1.2-taxonomy.csv"
+        } else if (opts('db_version') == "test") {
+            gp.file <- "test-gene-presence-binary.rds"
+            tr.file <- "test-trees.rds"
+            tax.file <- "test-taxonomy.csv"
+        } else {
+            pz.error(paste0("Unknown database version ", opts('db_version')))
+        }
+    } else if (opts('type') == "16S") {
+        gp.file <- "MIDAS-gene-presence-binary-1.2.rds"
+        tr.file <- "MIDAS_1.2-trees.rds"
+        tax.file <- "MIDAS_1.2-taxonomy.csv"
+    } else if (opts('type') == "16S-test") {
+        gp.file <- "test-gene-presence-binary.rds"
+        tr.file <- "test-trees.rds"
+        tax.file <- "text-taxonomy.csv"
+    } else {
+        pz.error(paste0("Unknown data type ", opts('type')))
+    }
+    # read
+    gene.presence <- readRDS(file.path(opts('data_dir'), gp.file))
+    trees <- readRDS(file.path(opts('data_dir'), tr.file))
+    taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),
+                                                       tax.file)),
+                           stringsAsFactors = FALSE)[,-1]
+    gene.to.fxn <- data.table::fread(file.path(opts('data_dir'),
+                                               "family.functions"),
+                         header = F)
+    # process
+    phyla <- intersect(names(trees), names(gene.presence))
+    colnames(gene.to.fxn) <- c("gene", "function")
+    fig.hierarchy <- data.frame(
+        data.table::fread(file.path(opts('data_dir'),
+                                    "subsys.txt"),
+                          header = F))[,1:4]
+    colnames(fig.hierarchy) <-  c("level1", "level2", "level3", "function")
+    g.mappings <- lapply.across.names(colnames(fig.hierarchy), function(x) {
+        gene.to.subsys <- merge(data.frame(gene.to.fxn),
+                                fig.hierarchy[, c(x, "function")],
+                                by.x = "function.", by.y = "function")[, -1]
+    })
+    # finished
+    return(list(gene.presence = gene.presence,
+                trees = trees,
+                phyla = phyla,
+                taxonomy = taxonomy,
+                g.mappings = g.mappings,
+                gene.to.fxn = gene.to.fxn))
+}
+
+adjust.db <- function(pz.db, abd.meta, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    taxa.observed <- rownames(abd.meta$mtx)
+    taxa.per.tree <- lapply(pz.db$trees, function(tr) {
+        intersect(tr$tip.label, taxa.observed)
+    })
+    saved.phyla <- nw(sapply(taxa.per.tree, length) >= opts('treemin'))
+    pz.db$trees <- pz.db$trees[saved.phyla]
+    pz.db$taxa <- lapply(pz.db$trees, function(x) x$tip.label)
+    pz.db$nphyla <- length(pz.db$trees)
+    pz.db
+}
+
+#--- Tools for processing data ---#
+
+add.below.LOD <- function(pz.db, abd.meta, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    taxa.observed <- rownames(abd.meta$mtx)
+    all.possible.taxa <- Reduce(union,
+                                lapply(pz.db$gene.presence, colnames))
+    not.observed.taxa <- setdiff(all.possible.taxa, taxa.observed)
+    if (length(not.observed.taxa) > 0) {
+        taxa.zero <- matrix(rep(0, length(not.observed.taxa) *
+                                   ncol(abd.meta$mtx)),
+                            nr = length(not.observed.taxa),
+                            byrow = TRUE,
+                            dimnames = list(not.observed.taxa,
+                                            colnames(abd.meta$mtx)))
+        abd.meta$mtx <- rbind(abd.meta$mtx, taxa.zero)
+    }
+    # Make sure still binary
+    abd.meta$mtx <- Matrix(abd.meta$mtx > 0)
+    abd.meta
+}
+
+retain.observed.taxa <- function(trees, phenoP, mapped.observed) {
+    trees <- lapply(trees, function(tr) {
+        keep.tips(tr, intersect(tr$tip.label, mapped.observed))
+    })
+    n.not.prior <- sapply(trees, function(tr) {
+        sum(phenotype[tr$tip.label] != phenoP)
+    })
+    if (all(n.not.prior == 0)) {
+        pz.error(
+            paste0("The phenotype for all taxa was shrunk to the prior. ",
+                   "This probably means that there are no major taxonomic ",
+                   "differences between groups. Without identifying some ",
+                   "such taxonomic changes, phylogenize cannot continue."))
+    }
+    trees <- trees[which(n.not.prior > 0)]
+    trees
+}
+
+#--- Plotting ---#
+
+get.pheno.plotting.scales <- function(phenotype, trees, phenoP=NULL, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    if (opts('which_phenotype') == 'prevalence') {
+        get.pheno.plotting.scales.prevalence(phenotype,
+                                             trees,
+                                             phenoP,
+                                             ...)
+    } else if (opts('which_phenotype') == 'specificity') {
+        get.pheno.plotting.scales.specificity(phenotype,
+                                              trees,
+                                              phenoP,
+                                              ...)
+    }
+}
+
+
+get.pheno.plotting.scales.prevalence <- function(phenotype,
+                                                 trees,
+                                                 phenoP=NULL,
+                                                 ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    phenoLimits <- quantile(unique(phenotype), c(0.2, 0.8))
+    phenoLimitsPhylum <- lapply(trees, function(tr) {
+        phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>%
+            na.omit
+        quantile(unique(phi), c(0.2, 0.8))
+    })
+    phenoColors <- c(low.col=opts('prev_color_low'),
+                     high.col=opts('prev_color_high'))
+    return(list(limits=phenoLimits,
+                phy.limits=phenoLimitsPhylum,
+                colors=phenoColors,
+                zero=0))
+}
+
+
+get.pheno.plotting.scales.specificity <- function(phenotype,
+                                                  trees,
+                                                  phenoP=NULL,
+                                                  ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    phenoLimits <- c(phenoP - 1 * sd(phenotype),
+                     phenoP + 1 * sd(phenotype))
+    phenoLimitsPhylum <- lapply(trees, function(tr) {
+        phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>%
+            na.omit %>%
+            unique
+        c(phenoP - (1 * sd(phi)), phenoP + (1 * sd(phi)))
+    })
+    phenoColors <- c(low.col=opts('spec_color_low'),
+                     mid.col=opts('spec_color_mid'),
+                     high.col=opts('spec_color_high'))
+    return(list(limits=phenoLimits,
+                phy.limits=phenoLimitsPhylum,
+                colors=phenoColors,
+                zero=phenoP))
+}
+
+plot.phenotype.trees <- function(phenotype,
+                                 trees,
+                                 scale,
+                                 ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    plotted.pheno.trees <- lapply(1:length(trees), function(tn) {
+        gg.cont.tree(trees[[tn]],
+                     phenotype,
+                     cLimits=scale$phy.limits[[tn]],
+                     colors=scale$colors,
+                     cName = paste0(names(trees)[tn],
+                                    ": ",
+                                    opts('which_phenotype')),
+                     plot = FALSE)
+    })
+    names(plotted.pheno.trees) <- names(trees)
+    plotted.pheno.trees
+}
+
+plot.phenotype.trees.wrapper <- function(phenotype,
+                                         pz.db,
+                                         scale,
+                                         ...) {
+    plotted.pheno.trees <- plot.phenotype.trees(phenotype,
+                                                pz.db$trees,
+                                                scale)
+    kept.species <- Reduce(c, lapply(pz.db$trees, function(x) x$tip.label))
+    pheno.phylum <- pz.db$taxonomy[match(names(phenotype),
+                                         pz.db$taxonomy$cluster), "phylum"]
+    pheno.characteristics <- data.frame(pheno=phenotype,
+                                        phylum=pheno.phylum,
+                                        cluster=names(phenotype))
+    ggplot(subset(pheno.characteristics, cluster %in% kept.species),
+           aes(pheno, color = phylum, fill = phylum)) +
+        geom_density() +
+        facet_grid(phylum ~ .) +
+        xlab(opts('which_phenotype')) +
+        ggtitle(paste0("Distributions of phenotype (",
+                       opts('which_phenotype'), ")"))
+    return(plotted.pheno.trees)
+}
+
+plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
+                                         phenotype,
+                                         stroke.scale=0.3,
+                                         units='%',
+                                         ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    for (pn in 1:length(plotted.pheno.trees)) {
+        p <- plotted.pheno.trees[[pn]]$tree
+        rp <- p$rphy
+        tr <- p$tree
+        rp2 <- p
+        # pad tip labels so the additional stuff doesn't get cut off when
+        # calculating x limits
+        rp2$tip.label <- paste0(rp2$tip.label, " (phenotype: ......%)")
+        xlim <- plot(rp2, plot=FALSE)$x.lim
+        new.tr <- p +
+            geom_tiplab() +
+            ggplot2::xlim(xlim[1], xlim[2])
+        fn <- fig_path('svg', number = pn)
+        tryCatch(
+            hack.tree.labels(new.tr,
+                             fn,
+                             stroke.scale=stroke.scale, 
+                             pheno=100*logistic(phenotype),
+                             units=units,
+                             pheno.name=opts('which_phenotype')),
+            error = function(e) {
+                pz.message(e)
+                # Fall back to non-interactive
+                non.interactive.plot(new.tr, fn)
+            })
+    }
+}
+
+do.clust.plot <- function(gene.presence,
+                          sig.genes,
+                          tree,
+                          plotted.tree,
+                          phylum,
+                          verbose=FALSE,
+                          ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    # Run these on a separate process to avoid memory leak
+    cl <- makeCluster(1)
+    if (verbose) message("exporting data...")
+    clusterExport(cl,
+                  c("gene.presence",
+                    "sig.genes",
+                    "tree",
+                    "plotted.tree",
+                    "phylum",
+                    "verbose",
+                    "PZ_OPTIONS"),
+                  envir=environment())
+    if (verbose) message("importing source...")
+    clusterCall(cl, library, phylogenize)
+    if (verbose) message("performing call...")
+    tmpL <- clusterCall(cl,
+                        single.cluster.plot,
+                        gene.presence,
+                        sig.genes,
+                        tree,
+                        plotted.tree,
+                        phylum,
+                        verbose,
+                        ...)
+    print(tmpL[[1]])
+    rm(tmpL)
+    stopCluster(cl)
+    gc()
+    return(NULL) # Avoid wasting memory since we never touch these
+}
+
+single.cluster.plot <- function(gene.presence,
+                                sig.genes,
+                                tree,
+                                plotted.tree,
+                                phylum,
+                                verbose=FALSE,
+                                ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    sig.bin <- gene.presence[intersect(rownames(gene.presence),
+                                       sig.genes), ]
+    if (is.null(dim(sig.bin))) {
+        sig.bin <- as.matrix(sig.bin) %>% t
+        rownames(sig.bin) <- sig.genes
+    }
+    names(dimnames(sig.bin)) <- c("gene", "id")
+    col.df <- data.frame(id=names(plotted.tree$disp),
+                         disp=plotted.tree$disp)
+    p <- ggtree(tree, ladderize = TRUE) %<+%
+        col.df +
+        geom_tippoint(aes(color=disp, shape = '.'))
+    if (opts('which_phenotype') == "prevalence") {
+        p <- p + scale_color_gradient(low=plotted.tree$cols["low.col"],
+                                      high=plotted.tree$cols["high.col"])
+    } else if (opts('which_phenotype') == "specificity") {
+        p <- p + scale_color_gradient2(low=plotted.tree$cols["low.col"],
+                                       mid=plotted.tree$cols["mid.col"],
+                                       high=plotted.tree$cols["high.col"],
+                                       midpoint=mean(plotted.tree$lims))
+    }
+    if (length(sig.genes) > 1) {
+        clust <- hclust(dist(sig.bin, method = "binary"))
+        sig.ord <- sparseMelt(t(sig.bin)[, clust$order])
+    } else {
+        sig.ord <- melt(t(sig.bin))
+        sig.ord <- sig.ord[order(sig.ord[, 3]), ]
+    }
+    tmp <- facet_plot(p,
+                      paste0('heatmap: ', phylum),
+                      sig.ord,
+                      geom_tile,
+                      aes(x = as.numeric(as.factor(gene)),
+                          fill = as.numeric(as.factor(value)))) +
+        scale_fill_gradient(low = opts('gene_color_absent'),
+                            high = opts('gene_color_present'),
+                            na.value = opts('gene_color_absent'))
+    tmp
+}
+
+#--- Report generation ---#
+
+render.report <- function(output_file='report_output.html',
+                          params=list(honor_params=FALSE)) {
+    rmarkdown::render(system.file("rmd",
+                                  "phylogenize-report.Rmd",
+                                  package="phylogenize"),
+                      output_file=output_file,
+                      params=params)
+}
+
+output.enr.table <- function(enr.table) {
+    enr.table <- data.frame(enr.table[, -1])
+    enr.table <- data.frame(apply(enr.table, 2, as.character),
+                            stringsAsFactors = FALSE)
+    enr.table <- enr.table[!is.na(enr.table$q_value), ]
+    rownames(enr.table) <- NULL
+    enr.table %>%
+        mutate(
+            q_value=as.numeric(q_value),
+            Gene_significance=capwords(Gene_significance),
+            Subsystem_level=toupper(Subsystem_level),
+            Phylum=capwords(Phylum),
+            Subsystem=gsub("_", " ", enr.table$Subsystem)
+        ) %>%
+        mutate(
+            q_value=cell_spec(prettyNum(q_value, digits=2),
+                              "html",
+                              background=kable.recolor(
+                                  -log10(q_value),
+                                  colors=c("#FFFFFF", "#FF8888"),
+                                  limits=c(-10, -log10(0.25)))
+                              )) %>%
+        kable("html", escape=FALSE, align="l") %>%
+        kable_styling(c("striped", "condensed"))
+}
+
+sort.overlaps <- function(enr.overlap) {
+    enr.overlap[order(enr.overlap$phylum,
+                      enr.overlap$process,
+                      enr.overlap$value.value.estimate), ]
+}
+
+calc.enr.overlaps <- function(enrichments, results) {
+    enr.overlap.lists <- lapply(enrichments$strong, function(lev) {
+        Filter(function(x) length(x) > 0,
+               mapply(lev, results, FUN = signif.overlaps)
+               )
+    })
+}
+
+is.dna <- function(seq) {
+    !(grepl("[^actguwsmkrybdhvn]", tolower(seq)))
+}
