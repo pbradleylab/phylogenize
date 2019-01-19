@@ -2,34 +2,82 @@
 
 # helper functions
 
+#' Test whether a value is between two other values (non-inclusive).
+#'
+#' @param x Value(s) to test (numeric vector).
+#' @param y Numeric vector of length 2, giving minimum and maximum values of \code{x}.
 `%btwn%` <- function(x, y) { (x > min(y)) & (x < max(y)) }
+
+#' Test whether a value is between two other values (inclusive).
+#'
+#' @param x Value(s) to test (numeric vector).
+#' @param y Numeric vector of length 2, giving minimum and maximum values of \code{x}.
 `%btwn.inc%` <- function(x, y) { (x >= min(y)) & (x <= max(y)) }
+
+#' Intersect two vectors.
+#'
+#' @param x First vector.
+#' @param y Second vector.
 `%intr%` <- function(x, y) intersect(x,y)
+
+#' Assign names to a vector.
+#'
+#' @param x Vector to have names assigned (any type).
+#' @param y Character vector giving new names for values in \code{x}.
 `%withnames%` <- function(x, y) { names(x) <- y; x }
 
+#' Abbreviation for \code{names(which(x))}.
+#'
+#' @param x Boolean vector.
 nw <- function(x) { names(which(x)) }
+
+#' Find the minimum value of a vector that is still greater than zero.
+#'
+#' @param x Numeric vector.
 min.nonzero <- function(x) min(x[x > 0])
 
+#' Count the number of instances of every unique value of a vector.
+#'
+#' @param x Vector to be counted.
 count.each <- function(x, na.rm = FALSE) {
     u <- unique(x)
     simplify2array(lapply.across.names(u, function(y)
         sum(x == y, na.rm = na.rm)))
 }
 
+#' Abbreviation for \code{grep} with \code{value=TRUE}.
+#'
+#' @param x Pattern to find.
+#' @param y Values to search for pattern \code{x}.
 grepv <- function(x, y, ...) grep(x, y, ..., value = TRUE)
 
+#' Apply a function to a vector of names, with the returned list having those names.
+#'
+#' @param X Vector of names.
+#' @param FUN A function to apply to the names in \code{X} (typically using them as list indices).
+#' @return A list of the results of applying \code{FUN} to \code{X}, with \code{X} as the list elements' names.
 lapply.across.names <- function(X, FUN, ...) {
     r <- lapply(X, FUN, ...)
     names(r) <- X
     r
 }
 
+#' Apply a function to a vector of names, with the returned list having those names (progress bar).
+#'
+#' @param X Vector of names.
+#' @param FUN A function to apply to the names in \code{X} (typically using them as list indices).
+#' @return A list of the results of applying \code{FUN} to \code{X}, with \code{X} as the list elements' names.
 pblapply.across.names <- function(X, FUN, ...) {
     r <- pblapply(X, FUN, ...)
     names(r) <- X
     r
 }
 
+#' Merge two vectors/matrices by (row) names, returning a matrix with row names.
+#'
+#' @param x First vector or matrix.
+#' @param y Second vector or matrix.
+#' @return A merged matrix with row names.
 small.merge <- function(x, y, ...) {
     z <- merge(x, y, by = 0)
     r <- z[, -1]
@@ -37,18 +85,38 @@ small.merge <- function(x, y, ...) {
     r
 }
 
+#' Calculate geometric mean of a vector of values.
+#'
+#' @param x Numeric vector of values.
 geommean <- function(x) exp(sum(log(x)) / length(x))
+
+#' Calculate logit of a value or vector of values.
+#'
+#' @param x Numeric value, or numeric vector of numeric values.
 logit <- function(x) (log(x / (1 - x)))
+
+#' Calculate inverse-logit of a value or vector of values.
+#'
+#' @param x Numeric value, or numeric vector of numeric values.
 logistic <- function(x) exp(x) / (1 + exp(x))
 
+#' Truncate a vector with a particular lower and upper limit.
+#'
+#' @param x Vector to truncate.
+#' @param lim Two-element numeric vector giving the lower and upper limits.
+#' @return A vector where elements below (or above) the lower (or upper) limit have been replaced with that limit.
 truncated <- function(x, lim = c(logit(0.001), logit(0.25))) {
-    # truncate a vector by values
     y <- x
     y[which(x < lim[1])] <- lim[1]
     y[which(x > lim[2])] <- lim[2]
     y
 }
 
+#' Wrapper around fastread that preserves row names.
+#'
+#' @param location Path to file to be read.
+#' @param cn Whether to check that the row names are valid, non-duplicated R row names.
+#' @return A data matrix with rownames equal to the first column of the input file and colnames equal to the first row.
 fastread <- function(location, cn = TRUE) {
     # rownames are useful
     master <- data.frame(data.table::fread(location, header = T),
@@ -61,6 +129,13 @@ fastread <- function(location, cn = TRUE) {
 
 # Parallelization
 
+#' Apply a function over a margin of a matrix in parallel.
+#'
+#' @param X A matrix.
+#' @param MARGIN A number specifying whether to apply over rows (1) or columns (2).
+#' @param FUN A function to be applied.
+#' @param mc.cores Number of cores to use.
+#' @param simplify Whether to simplify the results using \code{simplify2array}.
 mcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
     if (MARGIN == 1) {
         mlist <- lapply(seq_len(nrow(X)), function(i) X[i, ])
@@ -75,6 +150,13 @@ mcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
     if (simplify) simplify2array(r) else r
 }
 
+#' Apply a function over a margin of a matrix in parallel (with progress bar).
+#'
+#' @param X A matrix.
+#' @param MARGIN A number specifying whether to apply over rows (1) or columns (2).
+#' @param FUN A function to be applied.
+#' @param mc.cores Number of cores to use.
+#' @param simplify Whether to simplify the results using \code{simplify2array}.
 pbmcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
     if (MARGIN == 1) {
         mlist <- lapply(seq_len(nrow(X)), function(i) X[i, ])
@@ -91,6 +173,7 @@ pbmcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
 
 # Annotation (FIGfams and taxa)
 
+#' Annotate genes using a gene-to-function table.
 gene.annot <- function(x, gene.to.fxn) {
     merge(data.table(x),
           gene.to.fxn,
@@ -100,23 +183,46 @@ gene.annot <- function(x, gene.to.fxn) {
 }
 
 
+#' Annotate taxa using a taxonomy table.
 tax.annot <- function(tns, taxonomy) {
     taxonomy$species[match(tns, taxonomy$cluster)]
 }
 
-# from flodel @ stackoverflow
+
+#' Calculate the maximum depth of a list of lists.
+#'
+#' \code{list.depth} calculates the maximum depth of a list of lists. Code is originally by user "flodel" on stackoverflow: see https://stackoverflow.com/questions/13432863/determine-level-of-nesting-in-r.
+#'
+#' @param this A list, possibly containing other lists.
 list.depth <- function(this) ifelse(is.list(this),
                                     1L + max(sapply(this, list.depth)), 0L)
+
+#' Find the first list element at a desired depth.
+#'
+#' \code{first.element.at.depth} returns the first list element if \code{n} is 1; otherwise, the function recursively dives into nested lists in the first list element until it reaches level \code{n}.
+#'
+#' @param l A list.
+#' @param n A number giving a particular depth of nesting.
+#' @return The first element of a list
 first.element.at.depth <- function(l, n) {
     if (n == 1) { l[[1]] } else { (first.element.at.depth(l[[1]], n - 1)) }
 }
 
+#' Transform nested lists into a data frame.
+#'
+#' \code{annotate.nested} takes a nested list (i.e., a list of lists, each of which lists may also be a list of lists), and transforms it into a tabular structure. This is useful for visualizing and processing the results of nested \code{lapply} statements, such as those that might be used when performing a grid search across multiple parameters.
+#'
+#' @param nested A nested list.
+#' @param summarize If NULL, indicates that no summarizing should be done on the most basic list elements; if a function or closure, this function or closure will be applied to the most basic list elements (for example, \code{mean} would take the mean of vectors at the "bottom" of the nested list), and the return value are incorporated into the final table instead of the originals.
+#' @param n An optional vector of values to bind to the result table.
+#' @param n.names An optional vector of names for the columns in the final table.
+#' @param stop.at Stop at this depth and summarize.
+#' @return A 2D data frame representation of the (summarized) values in the nested lists.
 annotate.nested <- function(nested,
                             summarize = NULL,
                             n = NULL,
                             n.names = NULL,
-                            stop.at = 0,
-                            summarize.values = 1) {
+                            stop.at = 0) {
 
     nestedness <- list.depth(nested)
     if (nestedness == stop.at) {
@@ -125,13 +231,15 @@ annotate.nested <- function(nested,
             rownames(values) <- names(nested)
         } else {
             val.raw <- summarize(nested)
-            if ((!is.null(nrow(val.raw))) || (nrow(val.raw) > 0)) {
-                rownames(val.raw) <- NULL
+            if (class(val.raw) != "numeric") {
+                if ((!is.null(nrow(val.raw))) || (nrow(val.raw) > 0)) {
+                    rownames(val.raw) <- NULL
+                }
             }
             values <- data.frame(value = val.raw)
         }
         if (is.null(nrow(values))) {
-            n.mtx <- matrix(rep(n, (length(values) / summarize.values)),
+            n.mtx <- matrix(rep(n, (length(values))),
                             nc = length(n),
                             byrow = TRUE)
         } else {

@@ -47,8 +47,11 @@ test_that("tabular import matches original table", {
                  test.abd.meta$metadata[[pz.options('dset_column')]])
 })
 
+# These BURST assignments should be unique because they have been clustered at
+# 90 percent similarity with any duplicate species removed
+
 test.abd.meta.16s <- generate.fake.abd.meta(n.samples=100,
-                                            n.taxa=1000,
+                                            n.taxa=750,
                                             n.envs=3,
                                             n.dsets=1,
                                             n.reads=1e6,
@@ -57,6 +60,25 @@ test.abd.meta.16s <- generate.fake.abd.meta(n.samples=100,
                                             env.frac.affected=0.3,
                                             dset.frac.affected=0.1,
                                             make.16s=TRUE,
-                                            data_dir='../../data')
+                                            data_dir='../../data',
+                                            burst_16sfile=
+                                                paste('16s_centroids',
+                                                      '90_filt500_nodups.fa',
+                                                      sep='_'),
+                                            tag.length=200)
 
-s
+test_that("burst mapping works appropriately", {
+    processed.test.16s <- process.16s(abd.meta=test.abd.meta.16s,
+                                      data_dir='../../data',
+                                      burst_dir='/home/pbradz/bin/',
+                                      burst_16sfile=
+                                          '16s_centroids_90_filt500_nodups.fa')
+    expect_equal(processed.test.16s$n,
+                 test.abd.meta.16s$n)
+    expect_equal(sort(processed.test.16s$mtx %>% rownames),
+                 sort(test.abd.meta.16s$n))
+    testmtx <- Matrix::Matrix(test.abd.meta.16s$mtx > 0)
+    rownames(testmtx) <- test.abd.meta.16s$n
+    expect_equal(testmtx[rownames(processed.test.16s$mtx), ],
+                Matrix::Matrix(processed.test.16s$mtx > 0))
+})

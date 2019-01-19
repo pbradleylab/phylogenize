@@ -196,6 +196,7 @@ generate.fake.abd.meta <- function(n.samples=100,
                                    dset.sd=0,
                                    prev.dist=c(-4,2),
                                    make.16s=FALSE,
+                                   tag.length=100,
                                    ...) {
     env.n.affected <- round(n.taxa * env.frac.affected)
     dset.n.affected <- round(n.taxa * dset.frac.affected)
@@ -219,7 +220,9 @@ generate.fake.abd.meta <- function(n.samples=100,
                      com=sim$com,
                      prev=sim$prev)
     if (make.16s) {
-        tagged <- make.simulated.denoised.data(abd.meta$mtx, ...)
+        tagged <- make.simulated.denoised.data(abd.meta$mtx,
+                                               tag.length=tag.length,
+                                               ...)
         abd.meta$mtx <- tagged$mtx
         abd.meta$map <- tagged$map
         abd.meta$n <- tagged$n
@@ -307,20 +310,22 @@ write.test.biom <- function(abd.meta,
 
 #--- Dummy 16S ---#
 
-random.species.from.file <- function(one.16s.per.species.file=
-                                         "16s_oneperspecies.frn",
-                                     n.taxa,
+random.species.from.file <- function(n.taxa,
                                      tag.length=100,
                                      ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     species.list <- seqinr::read.fasta(
                                 file.path(opts('data_dir'),
-                                          one.16s.per.species.file),
+                                          opts('burst_16sfile')),
                                 seqtype='DNA',
                                 as.string=TRUE)
     species.map <- sample(1:length(species.list), n.taxa, replace=FALSE)
     taxon.seqs <- sapply(species.map, function(x) {
-        substr(species.list[x], 1, 100)
+        if (is.null(tag.length)) {
+            species.list[x]
+        } else {
+            substr(species.list[x], 1, tag.length)
+        }
     })
     #taxon.real.names <- sapply(species.map, function(x) {
     #    attr(species.list[x], 'name')
@@ -333,9 +338,11 @@ random.species.from.file <- function(one.16s.per.species.file=
                 map=species.map))
 }
 
-make.simulated.denoised.data <- function(mtx, ...) {
+make.simulated.denoised.data <- function(mtx, tag.length=100, ...) {
     taxa <- rownames(mtx)
-    rs <- random.species.from.file(n.taxa=length(taxa), ...)
+    rs <- random.species.from.file(n.taxa=length(taxa),
+                                   tag.length=tag.length,
+                                   ...)
     rownames(mtx) <- rs$seqs
     names(rs$seqs) <- taxa
     return(list(mtx=mtx,

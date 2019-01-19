@@ -1,22 +1,64 @@
 # Tree functions
+# Namespace fixes
 
-fix.tree <- function(phy) {
-  phy <- multi2di(phy)
+#' Fudge trees with unresolved polytomies.
+#'
+#' \code{fix.tree} converts polytomies to dichotomies with very small branch lengths.
+#'
+#' @param len Zero-length branches will be replaced with this fraction of the maximum node height.
+fix.tree <- function(phy, len=1e-6) {
+  phy <- ape::multi2di(phy)
   # from Liam Reveil's blog June 23 2015
-  phy$edge.length[phy$edge.length==0] <- max(nodeHeights(phy)) * 1e-6
+  phy$edge.length[phy$edge.length==0] <- max(phyTools::nodeHeights(phy)) * len
   phy
 }
 
-keep.tips <- function(tree, keeplist) {
-  drop.tip(tree, setdiff(tree$tip.label, keeplist))
+#' Keep some tips on a tree.
+#'
+#' \code{keep.tips} keeps only the set of specified tips in a tree.
+#'
+#' @param tree A \code{phylo} object.
+#' @param keep A character vector of tip labels. Any tip not in this vector will be dropped.
+keep.tips <- function(tree, keep) {
+  ape::drop.tip(tree, setdiff(tree$tip.label, keep))
 }
 
-tipToRoot <- function(phy) phy %>% vcv.phylo %>% diag
+#' Get tip-to-root distance.
+#'
+#' \code{tipToRoot} returns all tip-to-root distances.
+#'
+#' @param phy A \code{phylo} object.
+#' @return A vector of root-to-tip distances.
+tipToRoot <- function(phy) phy %>% ape::vcv.phylo %>% diag
 
+#' Get tip-to-tip distances.
+#'
+#' \code{tree.to.dist} returns all tip-to-tip distances in distance matrix format.
+#'
+#' @param tree A \code{phylo} object.
+#' @return A \code{dist} object representing tip-to-tip distances.
 tree.to.dist <- function(tree) {
-  ((1 - (vcv(tree, TRUE))) / 2) %>% as.dist
+  ((1 - (ape::vcv(tree, TRUE))) / 2) %>% as.dist
 }
 
+#' Plot continuous trait on a tree.
+#'
+#' \code{gg.cont.tree} paints a continuous trait along a tree.
+#'
+#' @param phy A \code{phylo} object.
+#' @param ctrait A named numeric vector assigning trait values to tree tips.
+#' @param cAnc Calculated ancestry for continuous trait; if this is NULL, it is calculated.
+#' @param model Model for calculating ancestry (see phyTools::fastAnc).
+#' @param cLimits Scale bar limits for plotting continuous trait.
+#' @param n Character vector giving which nodes to display; if NULL, defaults to intersection of \code{phy$tip.label} and \code{names(ctrait)}.
+#' @param reduced.phy Dichotomous tree with only the nodes in \code{n} represented; if NULL, this is calculated.
+#' @param colors Named character vector with at least "low.col" and "high.col" and optionally "mid.col" defined, giving colors to use for plotting.
+#' @param plot Whether to plot the tree object or just return it.
+#' @param restrict Character vector giving which continuous trait values to plot; if NULL, all are used.
+#' @param cName String giving the title of the plot.
+#' @param reverse Mirror the resulting plotted tree.
+#' @param ladderize Ladderize the plotted tree.
+#' @return A ggtree plot of a continuous trait plotted along a tree.
 gg.cont.tree <- function(phy,
                          ctrait,
                          cAnc = NULL,
@@ -40,35 +82,34 @@ gg.cont.tree <- function(phy,
   if (is.null(n)) { n <- intersect(phy$tip.label, names(ctrait)) }
   if (is.null(reduced.phy)) { reduced.phy <- fix.tree(keep.tips(phy, n)) }
   message("getting continuous trait ancestry")
-  if (is.null(cAnc)) cAnc <- fastAnc(reduced.phy, ctrait[n])
+  if (is.null(cAnc)) cAnc <- phyTools::fastAnc(reduced.phy, ctrait[n])
   # concatenate tip values and node values
   cDisplay <- truncated(c(ctrait[n], cAnc), cLimits)
   # make color scales
   if ("mid.col" %in% names(colors)) {
-    message("found mid.col")
-    cColors <- scale_color_gradient2(low = colors["low.col"],
-                                     high = colors["high.col"],
-                                     mid = colors["mid.col"],
-                                     midpoint = mean(cLimits),
-                                     guide = "colorbar",
-                                     name = cName)
+      cColors <- ggplot2::scale_color_gradient2(low = colors["low.col"],
+                                                high = colors["high.col"],
+                                                mid = colors["mid.col"],
+                                                midpoint = mean(cLimits),
+                                                guide = "colorbar",
+                                                name = cName)
   } else {
-    cColors <- scale_color_gradient(low = colors["low.col"],
-                                    high = colors["high.col"],
-                                    guide = "colorbar",
-                                    name = cName)
+      cColors <- ggplot2::scale_color_gradient(low = colors["low.col"],
+                                               high = colors["high.col"],
+                                               guide = "colorbar",
+                                               name = cName)
   }
   # plot trees
   if (reverse) {
-    ctree <- ggtree(reduced.phy,
-                    ladderize = ladderize,
-                    aes_string(color = cDisplay), ...) +
-      cColors + scale_x_reverse() + theme(legend.position = "bottom")
+      ctree <- ggtree::ggtree(reduced.phy,
+                              ladderize = ladderize,
+                              aes_string(color = cDisplay), ...) +
+          cColors + ggplot2::scale_x_reverse() + ggplot2::theme(legend.position = "bottom")
   } else {
-    ctree <- ggtree(reduced.phy,
-                    ladderize = ladderize,
-                    aes_string(color = cDisplay), ...) +
-      cColors + theme(legend.position = "bottom")
+      ctree <- ggtree::ggtree(reduced.phy,
+                              ladderize = ladderize,
+                              aes_string(color = cDisplay), ...) +
+          cColors + ggplot2::theme(legend.position = "bottom")
   }
   if (plot) print(ctree)
   return(list(tree = ctree,

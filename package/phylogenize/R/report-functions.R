@@ -1,6 +1,23 @@
 
 #--- I/O and initial processing ---#
 
+#' Read in abundance and metadata file(s).
+#'
+#' Read in abundance and metadata, either as one BIOM-format file or as two
+#' tab-delimited files.
+#'
+#' This function uses package-wide options (see ?pz.options), which can be
+#' overridden using the '...' argument. Some particularly relevant options are:
+#' \itemize{
+#'   \item env_column Name of metadata column containing environment annotations.
+#'   \item dset_column Name of metadata column containing dataset annotations.
+#'   \item input_format Override type of data (must be "biom" or "tabular").
+#' }
+#'
+#' @return A list with components 'mtx' and 'metadata', corresponding to a
+#'     sparse binary presence/absence matrix (see Matrix package) and a metadata
+#'     data frame.
+#' @export
 read.abd.metadata <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if ((opts('env_column') == "sample") ||
@@ -11,6 +28,8 @@ read.abd.metadata <- function(...) {
         abd.meta <- read.abd.metadata.tabular(...)
     } else if (opts('input_format') == "biom") {
         abd.meta <- read.abd.metadata.biom(...)
+    } else {
+        pz.error(paste0("Invalid input format: ", opts('input_format')))
     }
     sanity.check.abundance(abd.meta$mtx, ...)
     sanity.check.metadata(abd.meta$metadata, ...)
@@ -75,6 +94,15 @@ sanity.check.abundance <- function(abd.mtx, ...) {
     }
     if (nrow(abd.mtx) < 2) {
         pz.error("Abundance matrix had fewer than 2 rows")
+    }
+    if (is.null(dimnames(abd.mtx))) {
+        pz.error("Abundance matrix is lacking row (taxon) and column (sample) names")
+    }
+    if (is.null(rownames(abd.mtx))) {
+        pz.error("Abundance matrix is lacking row (taxon) names")
+    }
+    if (is.null(colnames(abd.mtx))) {
+        pz.error("Abundance matrix is lacking column (sample) names")
     }
     return(TRUE)
 }
@@ -170,40 +198,54 @@ harmonize.abd.meta <- function(abd.meta, ...) {
 
 #--- Process 16S data---#
 
-process.16s <- function(abd.meta, ...) {
+prepare.burst.input <- function(mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    if (!(all(is.dna(rownames(abd.meta$mtx))))) {
-        pz.error("expected rows to be DNA sequences but found illegal characters")
-    }
-    seqinr::write.fasta(as.list(rownames(abd.meta$mtx)),
-                        paste0("Row", (1:nrow(abd.meta$mtx))),
+    seqinr::write.fasta(as.list(rownames(mtx)),
+                        paste0("Row", (1:nrow(mtx))),
                         file.out=file.path(opts('in_dir'),
                                            opts('burst_infile')),
                         nbchar=99999,
                         as.string=TRUE)
+}
+
+run.burst <- function(...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    r <- system2(file.path(opts('burst_dir'), "burst12"),
+                 args = c("-r",
+                          file.path(opts('data_dir'),
+                                    opts('burst_16sfile')),
+                          "-fr",
+                          "-q",
+                          file.path(opts('in_dir'),
+                                    opts('burst_infile')),
+                          "-i",
+                          "0.985",
+                          "-o",
+                          file.path(opts('in_dir'),
+                                    opts('burst_outfile'))))
+    if (r != 0) {
+        pz.error(paste0("BURST failed with error code ", r))
+    }
+    return(TRUE)
+}
+
+get.burst.results <- function(...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
     # map to MIDAS IDs using Burst
-    system2(file.path(opts('burst_dir'), "burst12"),
-            args = c("-r",
-                     file.path(opts('data_dir'),
-                               opts('burst_16sfile')),
-                     "-fr",
-                     "-q",
-                     file.path(opts('in_dir'),
-                               opts('burst_infile')),
-                     "-i",
-                     "0.985",
-                     "-o",
-                     file.path(opts('in_dir'),
-                               opts('burst_outfile'))))
-    assignments <- data.frame(data.table::fread(
-        file.path(opts('in_dir'), opts('burst_outfile'))))
+    assignments <- data.frame(
+        data.table::fread(file.path(opts('in_dir'), opts('burst_outfile'))))
     row.hits <- as.numeric(gsub("Row", "", assignments[,1]))
     row.targets <- sapply(assignments[,2],
                           function(x) strsplit(x, " ")[[1]][3])
-    uniq.hits <- which(count.each(row.hits) < 2)
-    rh <- row.hits[uniq.hits]
-    rt <- row.targets[uniq.hits]
-    subset.abd <- abd.meta$mtx[rh, ]
+    return(list(hits=row.hits, targets=row.targets, assn=assignments))
+}
+
+sum.nonunique.burst <- function(burst, mtx, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    uniq.hits <- which(count.each(burst$hits) < 2)
+    rh <- burst$hits[uniq.hits]
+    rt <- burst$targets[uniq.hits]
+    subset.abd <- mtx[rh, ]
     urt <- unique(rt)
     summed.uniq <- sapply(urt, function(r) {
         w <- which(rt == r)
@@ -214,6 +256,18 @@ process.16s <- function(abd.meta, ...) {
         }
     }) %>% t
     rownames(summed.uniq) <- urt
+    summed.uniq
+}
+
+process.16s <- function(abd.meta, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    if (!(all(is.dna(rownames(abd.meta$mtx))))) {
+        pz.error("expected rows to be DNA sequences but found illegal characters")
+    }
+    prepare.burst.input(abd.meta$mtx, ...)
+    run.burst(...)
+    burst <- get.burst.results(...)
+    summed.uniq <- sum.nonunique.burst(burst, abd.meta$mtx, ...)
     csu <- colSums(summed.uniq)
     abd.meta$mtx <- apply(summed.uniq[, which(csu > 0)],
                           2,
@@ -315,7 +369,7 @@ add.below.LOD <- function(pz.db, abd.meta, ...) {
         abd.meta$mtx <- rbind(abd.meta$mtx, taxa.zero)
     }
     # Make sure still binary
-    abd.meta$mtx <- Matrix(abd.meta$mtx > 0)
+    abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
     abd.meta
 }
 
