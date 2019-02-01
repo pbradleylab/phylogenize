@@ -41,6 +41,20 @@ read.abd.metadata <- function(...) {
     return(abd.meta)
 }
 
+
+#' Check and process metadata
+#'
+#' \code{check.process.metadata} is used to make sure that the metadata satisfies the requirements specified by the global options and to make sure that the metadata are of the correct type.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{env_column}{Name of metadata column containing environment annotations.}
+#'   \item{dset_column}{Name of metadata column containing dataset annotations.}
+#' }
+#'
+#' @param metadata A data frame of metadata with environment, dataset, and sample columns corresponding to those in the global options (see ?pz.options).
+#' @return A data frame of metadata, with environment and dataset columns converted to factors.
+#' @export
 check.process.metadata <- function(metadata, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (!(opts('env_column') %in% colnames(metadata))) {
@@ -49,11 +63,20 @@ check.process.metadata <- function(metadata, ...) {
     if (!(opts('dset_column') %in% colnames(metadata))) {
         pz.error(paste0("dataset column not found: ", opts('dset_column')))
     }
+    if (!("sample" %in% colnames(metadata))) {
+        pz.error(paste0("sample column not found: sample"))
+    }
     metadata[[opts('env_column')]] <- as.factor(metadata[[opts('env_column')]])
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
     return(metadata)
 }
 
+#' Read abundance matrix and metadata (BIOM)
+#'
+#' Read in taxon-by-sample matrix of abundances and metadata (sample annotations) from a single BIOM-formatted file.
+#'
+#' @return A list with components \code{mtx} (matrix of abundances) and \code{metadata} (data frame of metadata).
+#' @export
 read.abd.metadata.biom <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     biomf <- biomformat::read_biom(file.path(opts('in_dir'), opts('biom_file')))
@@ -70,6 +93,18 @@ read.abd.metadata.biom <- function(...) {
     return(list(mtx=abd.mtx, metadata=metadata))
 }
 
+#' Read abundance matrix and metadata (tabular)
+#'
+#' Read in taxon-by-sample matrix of abundances and metadata (sample annotations) from two tab-delimited files.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{in_dir}{Input data/metadata directory.}
+#'   \item{dset_column}{Name of metadata column containing dataset annotations.}
+#' }
+#'
+#' @return A list with components \code{mtx} (matrix of abundances) and \code{metadata} (data frame of metadata).
+#' @export
 read.abd.metadata.tabular <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     abd.mtx <- fastread(file.path(opts('in_dir'),
@@ -82,12 +117,34 @@ read.abd.metadata.tabular <- function(...) {
     return(list(mtx=abd.mtx, metadata=metadata))
 }
 
+#' Sanity-check abundance data
+#'
+#' \code{sanity.check.abundance} is used to make sure that the abundance matrix satisfies the requirements specified by the \emph{phylogenize} application.
+#'
+#' @param abd.mtx A matrix or Matrix of abundance or presence values (double or logical).
+#' @return Always returns TRUE, but will throw errors if the abundance data is the wrong type or class.
+#' @export
 sanity.check.abundance <- function(abd.mtx, ...) {
-    if (is.null(dim(abd.mtx))) {
+    if (!is(abd.mtx, "matrix")) {
         pz.error(paste0(
-            "Abundance matrix must be a 2D array and instead was a ",
-            typeof(abd.mtx)
-        ))
+            "Abundance matrix must be a matrix of logicals or doubles ",
+            "and instead was a ",
+            class(abd.mtx)))
+    }
+    if (is(abd.mtx, "Matrix")) {
+        if (!(typeof(abd.mtx@x[1]) %in% c("logical", "double"))) {
+            pz.error(paste0(
+                "Abundance matrix must be a matrix of logicals or doubles ",
+                "and instead contained ",
+                typeof(abd.mtx@x[1])))
+        }
+    } else if (is(abd.mtx, "matrix")) {
+        if (!(typeof(abd.mtx) %in% c("logical", "double"))) {
+            pz.error(paste0(
+                "Abundance matrix must be a matrix of logicals or doubles ",
+                "and instead contained ",
+                typeof(abd.mtx@x[1])))
+        }
     }
     if (ncol(abd.mtx) < 2) {
         pz.error("Abundance matrix had fewer than 2 columns")
@@ -107,6 +164,13 @@ sanity.check.abundance <- function(abd.mtx, ...) {
     return(TRUE)
 }
 
+#' Remove rows and columns of a matrix that are all zero.
+#'
+#' \code{remove.allzero.abundances} removes all rows and columns of a matrix where every observation is zero, starting with columns and then proceeding to rows.
+#'
+#' @param abd.mtx A matrix of abundance values (double or logical).
+#' @return A matrix of abundance values (double), with all-zero columns and rows removed.
+#' @export
 remove.allzero.abundances <- function(abd.mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     nz.cols <- which(Matrix::colSums(abd.mtx) > 0)
@@ -121,7 +185,19 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
     return(abd.mtx)
 }
 
-# Check that dataset, environment, and sample columns all present
+#' Check that dataset, environment, and sample columns all present
+#'
+#' \code{sanity.check.abundance} is used to make sure that the metadata data frame satisfies the requirements specified by the \emph{phylogenize} application.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{env_column}{Name of metadata column containing environment annotations.}
+#'   \item{dset_column}{Name of metadata column containing dataset annotations.}
+#' }
+#'
+#' @param metadata A data frame giving sample annotations.
+#' @return Always returns TRUE, but will throw errors if the metadata does not match specifications.
+#' @export
 sanity.check.metadata <- function(metadata, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (!(opts('env_column') %in% colnames(metadata))) {
@@ -148,6 +224,23 @@ sanity.check.metadata <- function(metadata, ...) {
 }
 
 
+#' Check metadata and abundance matrix against one another
+#'
+#' \code{harmonize.abd.meta} compares the abundance matrix to the metadata
+#' matrix to make sure that enough samples are in common between the two to
+#' perform an \emph{phylogenize} analysis, after dropping any singleton datasets
+#' or environments (effects for these cannot be estimated).
+#'
+#' Some particularly relevant global options are: \describe{
+#'   \item{env_column}{Name of metadata column containing environment annotations.}
+#'   \item{dset_column}{Name of metadata column containing dataset annotations.}
+#' }
+#'
+#' @param abd.meta A list with components \code{mtx} and \code{metadata},
+#'     corresponding to a sparse binary presence/absence matrix (see Matrix
+#'     package) and a metadata data frame.
+#' @return A list of the same form as \code{abd.meta}.
+#' @export
 harmonize.abd.meta <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     samples.present <- intersect(abd.meta$metadata$sample,
@@ -198,8 +291,28 @@ harmonize.abd.meta <- function(abd.meta, ...) {
 
 #--- Process 16S data---#
 
+#' Prepare input file for BURST analysis.
+#'
+#' \code{prepare.burst.input} outputs a FASTA file of the sequences in the input
+#' 16S data for analysis using BURST.
+#'
+#' Some particularly relevant global options are: \describe{
+#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files).}
+#'   \item{burst_infile}{String. File name of the sequences written to disk and then read into BURST.}
+#' }
+#'
+#' @param mtx A presence/absence or abundance matrix, with row names equal to amplicon sequence variant DNA sequences.
+#' @return none
+#' @export
 prepare.burst.input <- function(mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
+    check.dna <- is.dna(rownames(mtx))
+    if (!(all(check.dna))) {
+        pz.error(paste0(
+            "Rownames in 16S data must correspond to the actual sequences of denoised ",
+            "amplicon sequence variants, but some rownames contained invalid characters ",
+            "(e.g. ", rownames(mtx)[which(!check.dna)[1]], ")."))
+    }
     seqinr::write.fasta(as.list(rownames(mtx)),
                         paste0("Row", (1:nrow(mtx))),
                         file.out=file.path(opts('in_dir'),
@@ -208,9 +321,29 @@ prepare.burst.input <- function(mtx, ...) {
                         as.string=TRUE)
 }
 
+#' Run BURST analysis on a FASTA file of sequences.
+#'
+#' \code{run.burst} runs the optimal sequence aligner BURST
+#' (doi.org/10.5281/zenodo.806850) on a FASTA file, typically one generated by
+#' \code{prepare.burst.input}. (In theory, by changing the \code{burst_bin}
+#' option, any aligner could be used provided it accepts the same command-line
+#' options and returns the same formatted output as BURST.)
+#'
+#' Some particularly relevant global options are: \describe{
+#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files).}
+#'   \item{burst_infile}{String. File name of the sequences to be read into BURST.}
+#'   \item{burst_outfile}{String. File name where BURST writes output which is then read back into \emph{phylogenize}.}
+#'   \item{burst_dir}{String. Path where the binary of BURST is found.}
+#'   \item{burst_bin}{String. File name of the binary of BURST.}
+#'   \item{burst_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species.}
+#'   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. }
+#' }
+#'
+#' @return Returns TRUE unless an error is thrown.
+#' @export
 run.burst <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    r <- system2(file.path(opts('burst_dir'), "burst12"),
+    r <- system2(file.path(opts('burst_dir'), opts('burst_bin')),
                  args = c("-r",
                           file.path(opts('data_dir'),
                                     opts('burst_16sfile')),
@@ -229,6 +362,21 @@ run.burst <- function(...) {
     return(TRUE)
 }
 
+#' Read in results from BURST.
+#'
+#' \code{get.burst.results} reads and parses the output of BURST to get the
+#' best-hit MIDAS species identifier for any 16S hit. Note that the reference
+#' 16S FASTA database file must describe entries in the format: ">gene
+#' species_or_genus_ID MIDAS_ID". Only MIDAS_ID is used so the contents of
+#' "gene" and "species_or_genus_ID" can be arbitrary.
+#' 
+#' Some particularly relevant global options are: \describe{
+#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files).}
+#'   \item{burst_outfile}{String. File name where BURST writes output which is then read back into \emph{phylogenize}.}
+#' }
+#'
+#' @return List containing a vector of hits, a vector of MIDAS ID targets, and a data frame of the assignments as they came out of BURST.
+#' @export
 get.burst.results <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     # map to MIDAS IDs using Burst
@@ -240,6 +388,23 @@ get.burst.results <- function(...) {
     return(list(hits=row.hits, targets=row.targets, assn=assignments))
 }
 
+#' Sum non-unique rows after BURST mapping.
+#'
+#' \code{sum.nonunique.burst} takes BURST results and an abundance or
+#' presence/absence matrix, drops any rows that mapped to multiple MIDAS IDs
+#' (i.e. that couldn't confidently be assigned to a MIDAS species),
+#' then sums any rows that mapped to the same MIDAS ID.
+#'
+#' Some particularly relevant global options are: \describe{
+#'   \item{out_dir}{String. Path to output directory. Default: "output"}
+#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files). Default: "."}
+#'   \item{data_dir} String. Path to directory containing the data files required to perform a \emph{phylogenize}{analysis. Default: on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
+#' 
+#' }
+#' @param burst A list obtained by running \code{get.burst.results}.
+#' @param mtx A presence/absence or abundance matrix, with row names equal to amplicon sequence variant DNA sequences.
+#' @return A new matrix with MIDAS IDs as rows.
+#' @export
 sum.nonunique.burst <- function(burst, mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     uniq.hits <- which(count.each(burst$hits) < 2)
@@ -259,6 +424,21 @@ sum.nonunique.burst <- function(burst, mtx, ...) {
     summed.uniq
 }
 
+#' Map denoised 16S sequence variants to MIDAS IDs using BURST.
+#'
+#' \code{process.16s} is a wrapper for other functions that: output sequence
+#' variants to a file; map them using BURST against a reference database of 16S
+#' sequences; then return a list of abundance and metadata values where the rows
+#' of the abundance matrix are now MIDAS IDs.
+#'
+#' Some particularly relevant global options are: \describe{
+#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files).}
+#'   \item{burst_infile}{String. File name of the sequences written to disk and then read into BURST.}
+#' }
+#'
+#' @param mtx A presence/absence or abundance matrix, with row names equal to amplicon sequence variant DNA sequences.
+#' @return none
+#' @export
 process.16s <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (!(all(is.dna(rownames(abd.meta$mtx))))) {
