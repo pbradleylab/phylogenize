@@ -6,39 +6,46 @@
 #'
 #' @param x Value(s) to test (numeric vector).
 #' @param y Numeric vector of length 2, giving minimum and maximum values of \code{x}.
+#' @export
 `%btwn%` <- function(x, y) { (x > min(y)) & (x < max(y)) }
 
 #' Test whether a value is between two other values (inclusive).
 #'
 #' @param x Value(s) to test (numeric vector).
 #' @param y Numeric vector of length 2, giving minimum and maximum values of \code{x}.
+#' @export
 `%btwn.inc%` <- function(x, y) { (x >= min(y)) & (x <= max(y)) }
 
 #' Intersect two vectors.
 #'
 #' @param x First vector.
 #' @param y Second vector.
+#' @export
 `%intr%` <- function(x, y) intersect(x,y)
 
 #' Assign names to a vector.
 #'
 #' @param x Vector to have names assigned (any type).
 #' @param y Character vector giving new names for values in \code{x}.
+#' @export
 `%withnames%` <- function(x, y) { names(x) <- y; x }
 
 #' Abbreviation for \code{names(which(x))}.
 #'
 #' @param x Boolean vector.
+#' @export
 nw <- function(x) { names(which(x)) }
 
 #' Find the minimum value of a vector that is still greater than zero.
 #'
 #' @param x Numeric vector.
+#' @export
 min.nonzero <- function(x) min(x[x > 0])
 
 #' Count the number of instances of every unique value of a vector.
 #'
 #' @param x Vector to be counted.
+#' @export
 count.each <- function(x, na.rm = FALSE) {
     u <- unique(x)
     simplify2array(lapply.across.names(u, function(y)
@@ -49,6 +56,7 @@ count.each <- function(x, na.rm = FALSE) {
 #'
 #' @param x Pattern to find.
 #' @param y Values to search for pattern \code{x}.
+#' @export
 grepv <- function(x, y, ...) grep(x, y, ..., value = TRUE)
 
 #' Apply a function to a vector of names, with the returned list having those names.
@@ -56,6 +64,7 @@ grepv <- function(x, y, ...) grep(x, y, ..., value = TRUE)
 #' @param X Vector of names.
 #' @param FUN A function to apply to the names in \code{X} (typically using them as list indices).
 #' @return A list of the results of applying \code{FUN} to \code{X}, with \code{X} as the list elements' names.
+#' @export
 lapply.across.names <- function(X, FUN, ...) {
     r <- lapply(X, FUN, ...)
     names(r) <- X
@@ -67,6 +76,7 @@ lapply.across.names <- function(X, FUN, ...) {
 #' @param X Vector of names.
 #' @param FUN A function to apply to the names in \code{X} (typically using them as list indices).
 #' @return A list of the results of applying \code{FUN} to \code{X}, with \code{X} as the list elements' names.
+#' @export
 pblapply.across.names <- function(X, FUN, ...) {
     r <- pblapply(X, FUN, ...)
     names(r) <- X
@@ -78,6 +88,7 @@ pblapply.across.names <- function(X, FUN, ...) {
 #' @param x First vector or matrix.
 #' @param y Second vector or matrix.
 #' @return A merged matrix with row names.
+#' @export
 small.merge <- function(x, y, ...) {
     z <- merge(x, y, by = 0)
     r <- z[, -1]
@@ -88,16 +99,19 @@ small.merge <- function(x, y, ...) {
 #' Calculate geometric mean of a vector of values.
 #'
 #' @param x Numeric vector of values.
+#' @export
 geommean <- function(x) exp(sum(log(x)) / length(x))
 
 #' Calculate logit of a value or vector of values.
 #'
 #' @param x Numeric value, or numeric vector of numeric values.
+#' @export
 logit <- function(x) (log(x / (1 - x)))
 
 #' Calculate inverse-logit of a value or vector of values.
 #'
 #' @param x Numeric value, or numeric vector of numeric values.
+#' @export
 logistic <- function(x) exp(x) / (1 + exp(x))
 
 #' Truncate a vector with a particular lower and upper limit.
@@ -105,6 +119,7 @@ logistic <- function(x) exp(x) / (1 + exp(x))
 #' @param x Vector to truncate.
 #' @param lim Two-element numeric vector giving the lower and upper limits.
 #' @return A vector where elements below (or above) the lower (or upper) limit have been replaced with that limit.
+#' @export
 truncated <- function(x, lim = c(logit(0.001), logit(0.25))) {
     y <- x
     y[which(x < lim[1])] <- lim[1]
@@ -117,6 +132,7 @@ truncated <- function(x, lim = c(logit(0.001), logit(0.25))) {
 #' @param location Path to file to be read.
 #' @param cn Whether to check that the row names are valid, non-duplicated R row names.
 #' @return A data matrix with rownames equal to the first column of the input file and colnames equal to the first row.
+#' @export
 fastread <- function(location, cn = TRUE) {
     # rownames are useful
     master <- data.frame(data.table::fread(location, header = T),
@@ -136,6 +152,7 @@ fastread <- function(location, cn = TRUE) {
 #' @param FUN A function to be applied.
 #' @param mc.cores Number of cores to use.
 #' @param simplify Whether to simplify the results using \code{simplify2array}.
+#' @export
 mcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
     if (MARGIN == 1) {
         mlist <- lapply(seq_len(nrow(X)), function(i) X[i, ])
@@ -157,6 +174,7 @@ mcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
 #' @param FUN A function to be applied.
 #' @param mc.cores Number of cores to use.
 #' @param simplify Whether to simplify the results using \code{simplify2array}.
+#' @export
 pbmcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
     if (MARGIN == 1) {
         mlist <- lapply(seq_len(nrow(X)), function(i) X[i, ])
@@ -174,6 +192,11 @@ pbmcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
 # Annotation (FIGfams and taxa)
 
 #' Annotate genes using a gene-to-function table.
+#'
+#' @param x A gene (string) or vector of genes (strings).
+#' @param gene.to.fxn A data frame with at least "gene" and "function" as columns.
+#' @return A character vector of gene functions, with names equal to \code{x}.
+#' @export
 gene.annot <- function(x, gene.to.fxn) {
     merge(data.table(x),
           gene.to.fxn,
@@ -184,6 +207,11 @@ gene.annot <- function(x, gene.to.fxn) {
 
 
 #' Annotate taxa using a taxonomy table.
+#'
+#' @param tns A vector of taxon IDs.
+#' @param taxonomy A data frame with at least "cluster" and "species" columns; "cluster" is used to match the identifiers in \code{tns}.
+#' @return A character vector of species names.
+#' @export
 tax.annot <- function(tns, taxonomy) {
     taxonomy$species[match(tns, taxonomy$cluster)]
 }
@@ -194,6 +222,7 @@ tax.annot <- function(tns, taxonomy) {
 #' \code{list.depth} calculates the maximum depth of a list of lists. Code is originally by user "flodel" on stackoverflow: see https://stackoverflow.com/questions/13432863/determine-level-of-nesting-in-r.
 #'
 #' @param this A list, possibly containing other lists.
+#' @export
 list.depth <- function(this) ifelse(is.list(this),
                                     1L + max(sapply(this, list.depth)), 0L)
 
@@ -204,6 +233,7 @@ list.depth <- function(this) ifelse(is.list(this),
 #' @param l A list.
 #' @param n A number giving a particular depth of nesting.
 #' @return The first element of a list
+#' @export
 first.element.at.depth <- function(l, n) {
     if (n == 1) { l[[1]] } else { (first.element.at.depth(l[[1]], n - 1)) }
 }
@@ -218,6 +248,7 @@ first.element.at.depth <- function(l, n) {
 #' @param n.names An optional vector of names for the columns in the final table.
 #' @param stop.at Stop at this depth and summarize.
 #' @return A 2D data frame representation of the (summarized) values in the nested lists.
+#' @export
 annotate.nested <- function(nested,
                             summarize = NULL,
                             n = NULL,
@@ -262,6 +293,13 @@ annotate.nested <- function(nested,
 
 }
 
+#' ``Zip'' a list of data together with its names.
+#'
+#' This function takes a list and constructs a new structured list with fields "name" and "data". This is typically called by \code{zipLapply} or \code{zipSapply}. The purpose is to allow the user to iterate over a list using lapply- or sapply-like syntax while still having access to the names of the list elements.
+#'
+#' @param iterover List to iterate over.
+#' @return A list with the same number of elements as \code{iterover}. Each list element is itself a list with the slots "name" and "data". For the ith element of the returned list, "name" contains \code{names(iterover)[i]} and "data" contains \code{iterover[[i]]}.
+#' @export
 zipData <- function(iterover) {
     n <- names(iterover)
     names(n) <- n
@@ -270,14 +308,34 @@ zipData <- function(iterover) {
     }))
 }
 
-zipLapply <- function(iterover, fxn) {
-    lapply(zipData(iterover), fxn)
+#' A wrapper for lapply that allows access to list element names.
+#'
+#' @param iterover List to iterate over. This list will be transformed by \code{zipData}.
+#' @param fxn A function to apply to each element \code{x} of \code{zipData(iterover)}, where the name is accessible as \code{x$name} and the original list element is accessible as \code{x$data}.
+#' @export
+zipLapply <- function(iterover, fxn, ...) {
+    lapply(zipData(iterover), fxn, ...)
 }
 
-zipSapply <- function(iterover, fxn) {
-    simplify2array(zipLapply(iterover, fxn))
+#' A wrapper for lapply that allows access to list element names, with simplification at the end to an array.
+#'
+#' @param iterover List to iterate over. This list will be transformed by \code{zipData}.
+#' @param fxn A function to apply to each element \code{x} of \code{zipData(iterover)}, where the name is accessible as \code{x$name} and the original list element is accessible as \code{x$data}.
+#' @export
+zipSapply <- function(iterover, fxn, ...) {
+    simplify2array(zipLapply(iterover, fxn), ...)
 }
 
+#' Function to obtain HTML colors for a particular value.
+#'
+#' @param x A value or vector of values to colorize.
+#' @param direction If 1, use the color scale as given; if -1, reverse it.
+#' @param na_color Set NA elements to this color.
+#' @param scale_from Instead of the minimum and maximum of \code{x}, scale values from this minimum and maximum (see \code{?rescale}).
+#' @param colors A vector of two strings giving the low and high color, respectively.
+#' @param limits A vector of two numbers giving the minimum and maximum value outside which values will be represented by the bottom or top of the color scale, respectively.
+#' @return An HTML color.
+#' @export
 kable.recolor <- function(x,
                           direction = 1,
                           option = "D",
@@ -306,6 +364,11 @@ kable.recolor <- function(x,
     return(color_code)
 }
 
+#' Capitalize the first letter of a word/vector of words.
+#'
+#' @param s Word or vector of words.
+#' @param strict If TRUE, also force non-initial letters to be lowercase.
+#' @export
 capwords <- function(s, strict = FALSE) {
     cap <- function(s) paste(toupper(substring(s, 1, 1)),
     {s <- substring(s, 2); if(strict) tolower(s) else s},
@@ -316,6 +379,18 @@ capwords <- function(s, strict = FALSE) {
 
 # Super gross XML hack follows to make SVGs of trees interactive
 
+#' XML hack to make interactive tree diagrams.
+#'
+#' This hack is very ugly but works most of the time. However, it is a good idea to wrap it in a tryCatch so that you can fall back to a less flashy implementation, because it relies on editing a poorly-annotated SVG file as if it were an XML document.
+#'
+#' @param tree.obj A ggtree representation of a tree.
+#' @param file A filename where the final SVG output will be written.
+#' @param stroke.scale Multiplier of stroke width in dendrogram.
+#' @param pheno A vector with names corresponding to the tips of the tree and values corresponding to the phenotype value at that tip.
+#' @param pheno.name The name of the phenotype being calculated (e.g. "prevalence").
+#' @param native.tooltip Instead of using mouseover, use SVG tooltips (less powerful).
+#' @param units Postfix for the values in \code{pheno} (e.g. "%" for percentages).
+#' @export
 hack.tree.labels <- function(tree.obj,
                              file,
                              stroke.scale = 0.7,
@@ -437,6 +512,8 @@ hack.tree.labels <- function(tree.obj,
     write_xml(x = xml, file)
 }
 
+
+#' Helper function to parse SVG styles.
 style.parse <- function(str) {
     semi.split <- strsplit(str, ";") %>% sapply(., trimws)
     if (is.null(dim(semi.split))) {
@@ -451,12 +528,19 @@ style.parse <- function(str) {
     return(c.output)
 }
 
+#' A fall-back plotting option for when \code{hack.tree.labels} fails, designed to produce the same kind of output.
+#'
+#' @param tree.obj A ggtree object.
+#' @param file File to which an SVG representation of this tree object will be written.
+#' @export
 non.interactive.plot <- function(tree.obj, file) {
     warning(paste0("replotting to: ", file))
     non.int <- xmlSVG(print(tree.obj), standalone = TRUE)
     write_xml(x = non.int, file)
 }
 
+#' A wrapper around \code{annotate.nested} specifically for use with enrichment tables.
+#' @export
 generic.make.tables <- function(enr,
                                 depth=3,
                                 col.names=NULL) {
@@ -476,6 +560,13 @@ generic.make.tables <- function(enr,
     a
 }
 
+#' A wrapper around \code{apply} and \code{parApply} that allows them to be called with a single syntax.
+#'
+#' @param mtx Matrix to apply a function over.
+#' @param margin Margin of matrix to iterate over.
+#' @param fun Function to apply over matrix.
+#' @param cl If NULL, \code{apply} will be called; otherwise, should be the object returned by \code{makeCluster}.
+#' @export
 maybeParApply <- function(mtx, margin, fun, cl=NULL, ...) {
     if (!is.null(cl)) {
         parApply(cl, mtx, margin, fun, ...)
@@ -484,14 +575,3 @@ maybeParApply <- function(mtx, margin, fun, cl=NULL, ...) {
     }
 }
 
-
-sparseMelt <- function(mtx) {
-    mtxT <- as(mtx, "TsparseMatrix")
-    df <- data.frame(row=mtxT@Dimnames[[1]][mtxT@i + 1],
-                     col=mtxT@Dimnames[[2]][mtxT@j + 1],
-                     value=mtxT@x)
-    if (!is.null(names(dimnames(mtxT)))) {
-        colnames(df)[1:2] <- names(dimnames(mtxT))
-    }
-    df
-}

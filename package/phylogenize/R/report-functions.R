@@ -8,10 +8,10 @@
 #'
 #' This function uses package-wide options (see ?pz.options), which can be
 #' overridden using the '...' argument. Some particularly relevant options are:
-#' \itemize{
-#'   \item env_column Name of metadata column containing environment annotations.
-#'   \item dset_column Name of metadata column containing dataset annotations.
-#'   \item input_format Override type of data (must be "biom" or "tabular").
+#' \description{
+#'   \item{env_column}{Name of metadata column containing environment annotations.}
+#'   \item{dset_column{Name of metadata column containing dataset annotations.}
+#'   \item{input_format{Override type of data (must be "biom" or "tabular").}
 #' }
 #'
 #' @return A list with components 'mtx' and 'metadata', corresponding to a
