@@ -51,7 +51,7 @@ PZ_OPTIONS <- options_manager(
 #' \describe{
 #'   \item{out_dir}{String. Path to output directory. Default: "output"}
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files). Default: "."}
-#'   \item{data_dir} String. Path to directory containing the data files required to perform a \emph{phylogenize}{analysis. Default: on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
+#'   \item{data_dir} String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
 #'   \item{abundance_file}{String. Name of abundance tabular file. Default: "test-abundance.tab"}
 #'   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
