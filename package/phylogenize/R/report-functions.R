@@ -44,7 +44,9 @@ read.abd.metadata <- function(...) {
 
 #' Check and process metadata
 #'
-#' \code{check.process.metadata} is used to make sure that the metadata satisfies the requirements specified by the global options and to make sure that the metadata are of the correct type.
+#' \code{check.process.metadata} is used to make sure that the metadata
+#' satisfies the requirements specified by the global options and to make sure
+#' that the metadata are of the correct type.
 #'
 #' Some particularly relevant global options are:
 #' \description{
@@ -52,8 +54,11 @@ read.abd.metadata <- function(...) {
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #' }
 #'
-#' @param metadata A data frame of metadata with environment, dataset, and sample columns corresponding to those in the global options (see ?pz.options).
-#' @return A data frame of metadata, with environment and dataset columns converted to factors.
+#' @param metadata A data frame of metadata with environment, dataset, and
+#'     sample columns corresponding to those in the global options (see
+#'     ?pz.options).
+#' @return A data frame of metadata, with environment and
+#'     dataset columns converted to factors.
 #' @export
 check.process.metadata <- function(metadata, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -73,9 +78,11 @@ check.process.metadata <- function(metadata, ...) {
 
 #' Read abundance matrix and metadata (BIOM)
 #'
-#' Read in taxon-by-sample matrix of abundances and metadata (sample annotations) from a single BIOM-formatted file.
+#' Read in taxon-by-sample matrix of abundances and metadata (sample
+#' annotations) from a single BIOM-formatted file.
 #'
-#' @return A list with components \code{mtx} (matrix of abundances) and \code{metadata} (data frame of metadata).
+#' @return A list with components \code{mtx} (matrix of abundances) and
+#'     \code{metadata} (data frame of metadata).
 #' @export
 read.abd.metadata.biom <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -95,7 +102,8 @@ read.abd.metadata.biom <- function(...) {
 
 #' Read abundance matrix and metadata (tabular)
 #'
-#' Read in taxon-by-sample matrix of abundances and metadata (sample annotations) from two tab-delimited files.
+#' Read in taxon-by-sample matrix of abundances and metadata (sample
+#' annotations) from two tab-delimited files.
 #'
 #' Some particularly relevant global options are:
 #' \description{
@@ -103,7 +111,8 @@ read.abd.metadata.biom <- function(...) {
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #' }
 #'
-#' @return A list with components \code{mtx} (matrix of abundances) and \code{metadata} (data frame of metadata).
+#' @return A list with components \code{mtx} (matrix of abundances) and
+#'     \code{metadata} (data frame of metadata).
 #' @export
 read.abd.metadata.tabular <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -119,10 +128,13 @@ read.abd.metadata.tabular <- function(...) {
 
 #' Sanity-check abundance data
 #'
-#' \code{sanity.check.abundance} is used to make sure that the abundance matrix satisfies the requirements specified by the \emph{phylogenize} application.
+#' \code{sanity.check.abundance} is used to make sure that the abundance matrix
+#' satisfies the requirements specified by the \emph{phylogenize} application.
 #'
-#' @param abd.mtx A matrix or Matrix of abundance or presence values (double or logical).
-#' @return Always returns TRUE, but will throw errors if the abundance data is the wrong type or class.
+#' @param abd.mtx A matrix or Matrix of abundance or presence values (double or
+#'     logical).
+#' @return Always returns TRUE, but will throw errors if the
+#'     abundance data is the wrong type or class.
 #' @export
 sanity.check.abundance <- function(abd.mtx, ...) {
     if (!is(abd.mtx, "matrix")) {
@@ -166,10 +178,13 @@ sanity.check.abundance <- function(abd.mtx, ...) {
 
 #' Remove rows and columns of a matrix that are all zero.
 #'
-#' \code{remove.allzero.abundances} removes all rows and columns of a matrix where every observation is zero, starting with columns and then proceeding to rows.
+#' \code{remove.allzero.abundances} removes all rows and columns of a matrix
+#' where every observation is zero, starting with columns and then proceeding to
+#' rows.
 #'
 #' @param abd.mtx A matrix of abundance values (double or logical).
-#' @return A matrix of abundance values (double), with all-zero columns and rows removed.
+#' @return A matrix of abundance values (double), with all-zero columns and rows
+#'     removed.
 #' @export
 remove.allzero.abundances <- function(abd.mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -233,7 +248,8 @@ sanity.check.metadata <- function(metadata, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \description{
-#'   \item{env_column}{Name of metadata column containing environment annotations.}
+#'   \item{env_column}{Name of metadata column containing environment
+#'   annotations.}
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #' }
 #'
@@ -299,12 +315,14 @@ harmonize.abd.meta <- function(abd.meta, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \description{
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files).}
-#'   \item{burst_infile}{String. File name of the sequences written to disk and then read into BURST.}
+#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
+#'   input files).}
+#'   \item{burst_infile}{String. File name of the sequences written to disk and
+#'   then read into BURST.}
 #' }
 #'
-#' @param mtx A presence/absence or abundance matrix, with row names equal to amplicon sequence variant DNA sequences.
-#' @return none
+#' @param mtx A presence/absence or abundance matrix, with row names equal to
+#'     amplicon sequence variant DNA sequences.
 #' @export
 prepare.burst.input <- function(mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -321,6 +339,7 @@ prepare.burst.input <- function(mtx, ...) {
                                            opts('burst_infile')),
                         nbchar=99999,
                         as.string=TRUE)
+    return(TRUE)
 }
 
 #' Run BURST analysis on a FASTA file of sequences.
@@ -333,13 +352,18 @@ prepare.burst.input <- function(mtx, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \description{
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files).}
-#'   \item{burst_infile}{String. File name of the sequences to be read into BURST.}
-#'   \item{burst_outfile}{String. File name where BURST writes output which is then read back into \emph{phylogenize}.}
+#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
+#' input files).}
+#'   \item{burst_infile}{String. File name of the sequences to be read into
+#' BURST.}
+#'   \item{burst_outfile}{String. File name where BURST writes output which is
+#' then read back into \emph{phylogenize}.}
 #'   \item{burst_dir}{String. Path where the binary of BURST is found.}
 #'   \item{burst_bin}{String. File name of the binary of BURST.}
-#'   \item{burst_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species.}
-#'   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. }
+#'   \item{burst_16sfile}{String. Path to the 16S FASTA database that maps back
+#' to MIDAS species.}
+#'   \item{data_dir}{String. Path to directory containing the data files
+#' required to perform a \emph{phylogenize} analysis. }
 #' }
 #'
 #' @return Returns TRUE unless an error is thrown.
@@ -375,11 +399,14 @@ run.burst <- function(...) {
 #'
 #' Some particularly relevant global options are:
 #' \description{
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files).}
-#'   \item{burst_outfile}{String. File name where BURST writes output which is then read back into \emph{phylogenize}.}
+#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
+#'   input files).}
+#'   \item{burst_outfile}{String. File name where BURST writes output which is
+#'   then read back into \emph{phylogenize}.}
 #' }
 #'
-#' @return List containing a vector of hits, a vector of MIDAS ID targets, and a data frame of the assignments as they came out of BURST.
+#' @return List containing a vector of hits, a vector of MIDAS ID targets, and a
+#'     data frame of the assignments as they came out of BURST.
 #' @export
 get.burst.results <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -402,12 +429,16 @@ get.burst.results <- function(...) {
 #' Some particularly relevant global options are:
 #' \description{
 #'   \item{out_dir}{String. Path to output directory. Default: "output"}
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files). Default: "."}
-#'   \item{data_dir} String. Path to directory containing the data files required to perform a \emph{phylogenize}{analysis. Default: on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
-#' 
+#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
+#'   input files). Default: "."}
+#'   \item{data_dir} String. Path to directory containing the data files
+#'   required to perform a \emph{phylogenize}{analysis. Default: on package
+#'   load, this default is set to the result of \code{system.file("extdata",
+#'   package="phylogenize")}.}
 #' }
 #' @param burst A list obtained by running \code{get.burst.results}.
-#' @param mtx A presence/absence or abundance matrix, with row names equal to amplicon sequence variant DNA sequences.
+#' @param mtx A presence/absence or abundance matrix, with row names equal to
+#'     amplicon sequence variant DNA sequences.
 #' @return A new matrix with MIDAS IDs as rows.
 #' @export
 sum.nonunique.burst <- function(burst, mtx, ...) {
@@ -438,11 +469,14 @@ sum.nonunique.burst <- function(burst, mtx, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \description{
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files).}
-#'   \item{burst_infile}{String. File name of the sequences written to disk and then read into BURST.}
+#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
+#'   input files).}
+#'   \item{burst_infile}{String. File name of the sequences written to disk and
+#'   then read into BURST.}
 #' }
 #'
-#' @param mtx A presence/absence or abundance matrix, with row names equal to amplicon sequence variant DNA sequences.
+#' @param mtx A presence/absence or abundance matrix, with row names equal to
+#'     amplicon sequence variant DNA sequences.
 #' @return none
 #' @export
 process.16s <- function(abd.meta, ...) {
@@ -469,11 +503,16 @@ process.16s <- function(abd.meta, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \description{
-#'   \item{type}{String. Type of data to use, either "midas" (shotgun) or "16S" (amplicon).}
-#'   \item{db_version}{String. Which version of the MIDAS database to use ("midas_v1.2" or "midas_v1.0").}
-#'   \item{data_dir} String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis.}
+#'   \item{type}{String. Type of data to use, either "midas" (shotgun) or "16S"
+#'   (amplicon).}
+#'   \item{db_version}{String. Which version of the MIDAS database to use
+#'   ("midas_v1.2" or "midas_v1.0").}
+#'   \item{data_dir} String. Path to directory containing the data files
+#'   required to perform a \emph{phylogenize} analysis.}
 #' }
-#' @return A list of the data objects required to perform a *phylogenize* analysis, with components \code{gene.presence}, \code{trees}, \code{phyla}, \code{taxonomy}, \code{g.mappings}, and \code{gene.to.fxn}.
+#' @return A list of the data objects required to perform a *phylogenize*
+#'     analysis, with components \code{gene.presence}, \code{trees},
+#'     \code{phyla}, \code{taxonomy}, \code{g.mappings}, and \code{gene.to.fxn}.
 #' @export
 import.pz.db <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -538,12 +577,14 @@ import.pz.db <- function(...) {
 
 #' Clean up imported database.
 #'
-#' \code{adjust.db} removes any phyla with fewer than \code{opts('treemin')} representatives and
-#' removes tips from trees that were not observed in the data. It also adds a couple of variables
-#' into the database that give lists of taxa per tree and the total number of remaining phyla.
+#' \code{adjust.db} removes any phyla with fewer than \code{opts('treemin')}
+#' representatives and removes tips from trees that were not observed in the
+#' data. It also adds a couple of variables into the database that give lists of
+#' taxa per tree and the total number of remaining phyla.
 #'
 #' @param pz.db A database (typically obtained with \code{import.pz.db}).
-#' @param abd.meta A list consisting of a taxon abundance matrix and the metadata.
+#' @param abd.meta A list consisting of a taxon abundance matrix and the
+#'     metadata.
 #' @return An updated database.
 #' @export
 adjust.db <- function(pz.db, abd.meta, ...) {
@@ -561,10 +602,12 @@ adjust.db <- function(pz.db, abd.meta, ...) {
 
 #--- Tools for processing data ---#
 
-#' Add in taxa that were not observed, assuming this means they were zero-prevalence.
+#' Add in taxa that were not observed, assuming this means they were
+#' zero-prevalence.
 #'
 #' @param pz.db A database (typically obtained with \code{import.pz.db}).
-#' @param abd.meta A list consisting of a taxon abundance matrix and the metadata.
+#' @param abd.meta A list consisting of a taxon abundance matrix and the
+#'     metadata.
 #' @return An updated version of \code{abd.meta}.
 #' @export
 add.below.LOD <- function(pz.db, abd.meta, ...) {
@@ -619,18 +662,25 @@ retain.observed.taxa <- function(trees, phenotype, phenoP, mapped.observed) {
 #'
 #' Some particularly relevant global options are:
 #' \description{
-#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence" or "specificity").}
-#'   \item{prev_color_low}{String. When graphing prevalence on a tree, this color is the lowest value.}
-#'   \item{prev_color_high}{String. When graphing prevalence on a tree, this color is the highest value.}
-#'   \item{spec_color_high}{String. When graphing specificity on a tree, this color is the lowest value (most anti-specific).}
-#'   \item{spec_color_med}{String. When graphing specificity on a tree, this color denotes the prior (no association).}
-#'   \item{spec_color_high}{String. When graphing specificity on a tree, this color is the highest value (most specific).}
+#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
+#'   or "specificity").}
+#'   \item{prev_color_low}{String. When graphing prevalence on a tree, this
+#'   color is the lowest value.} \item{prev_color_high}{String. When graphing
+#'   prevalence on a tree, this color is the highest value.}
+#'   \item{spec_color_high}{String. When graphing specificity on a tree, this
+#'   color is the lowest value (most anti-specific).}
+#'   \item{spec_color_med}{String. When graphing specificity on a tree, this
+#'   color denotes the prior (no association).} \item{spec_color_high}{String.
+#'   When graphing specificity on a tree, this color is the highest value (most
+#'   specific).}
 #' }
 #' @param phenotype A named vector giving the phenotype for each taxon ID.
 #' @param trees A list of tree objects.
-#' @param phenoP An optional value giving the prior probability for the environment of interest.
-#' @return A list of overall limits (\code{limits}), phylum-specific limits (\code{phy.limits}),
-#' a color scale (\code{colors}), and the zero point (\code{zero}).
+#' @param phenoP An optional value giving the prior probability for the
+#'     environment of interest.
+#' @return A list of overall limits (\code{limits}), phylum-specific limits
+#'     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
+#'     (\code{zero}).
 #' @export
 get.pheno.plotting.scales <- function(phenotype, trees, phenoP=NULL, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -652,14 +702,18 @@ get.pheno.plotting.scales <- function(phenotype, trees, phenoP=NULL, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \description{
-#'   \item{prev_color_low}{String. When graphing prevalence on a tree, this color is the lowest value.}
-#'   \item{prev_color_high}{String. When graphing prevalence on a tree, this color is the highest value.}
+#'   \item{prev_color_low}{String. When graphing prevalence on a tree, this
+#'   color is the lowest value.}
+#'   \item{prev_color_high}{String. When graphing prevalence on a tree, this
+#'   color is the highest value.}
 #' }
 #' @param phenotype A named vector giving the phenotype for each taxon ID.
 #' @param trees A list of tree objects.
-#' @param phenoP An optional value giving the prior probability for the environment of interest.
-#' @return A list of overall limits (\code{limits}), phylum-specific limits (\code{phy.limits}),
-#' a color scale (\code{colors}), and the zero point (\code{zero}).
+#' @param phenoP An optional value giving the prior probability for the
+#'     environment of interest.
+#' @return A list of overall limits (\code{limits}), phylum-specific limits
+#'     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
+#'     (\code{zero}).
 #' @export
 get.pheno.plotting.scales.prevalence <- function(phenotype,
                                                  trees,
@@ -685,15 +739,20 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
 #'
 #' Some particularly relevant global options are:
 #' \description{
-#'   \item{spec_color_high}{String. When graphing specificity on a tree, this color is the lowest value (most anti-specific).}
-#'   \item{spec_color_med}{String. When graphing specificity on a tree, this color denotes the prior (no association).}
-#'   \item{spec_color_high}{String. When graphing specificity on a tree, this color is the highest value (most specific).}
+#'   \item{spec_color_high}{String. When graphing specificity on a tree, this
+#'   color is the lowest value (most anti-specific).}
+#'   \item{spec_color_med}{String. When graphing specificity on a tree, this
+#'   color denotes the prior (no association).} \item{spec_color_high}{String.
+#'   When graphing specificity on a tree, this color is the highest value (most
+#'   specific).}
 #' }
 #' @param phenotype A named vector giving the phenotype for each taxon ID.
 #' @param trees A list of tree objects.
-#' @param phenoP An optional value giving the prior probability for the environment of interest.
-#' @return A list of overall limits (\code{limits}), phylum-specific limits (\code{phy.limits}),
-#' a color scale (\code{colors}), and the zero point (\code{zero}).
+#' @param phenoP An optional value giving the prior probability for the
+#'     environment of interest.
+#' @return A list of overall limits (\code{limits}), phylum-specific limits
+#'     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
+#'     (\code{zero}).
 #' @export
 get.pheno.plotting.scales.specificity <- function(phenotype,
                                                   trees,
@@ -721,13 +780,15 @@ get.pheno.plotting.scales.specificity <- function(phenotype,
 #'
 #' Some particularly relevant global options are:
 #' \description{
-#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence" or "specificity").}
+#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
+#'   or "specificity").}
 #' }
-#' 
+#'
 #' @param phenotype A named vector with the phenotype values for each taxon.
 #' @param trees A list of trees.
 #' @param scale A list returned from \code{get.pheno.plotting.scales}.
-#' @return A list of ggtree objects in which the phenotype has been plotted across each tree in \code{trees}.
+#' @return A list of ggtree objects in which the phenotype has been plotted
+#'     across each tree in \code{trees}.
 #' @export
 plot.phenotype.trees <- function(phenotype,
                                  trees,
@@ -748,47 +809,52 @@ plot.phenotype.trees <- function(phenotype,
     plotted.pheno.trees
 }
 
-#' Plot a phenotype along a list of trees
+#' Plot distributions of a phenotype across phyla.
 #'
-#' Some particularly relevant global options are:
-#' \description{
-#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence" or "specificity").}
-#' }
-#' 
 #' @param phenotype A named vector with the phenotype values for each taxon.
-#' @param trees A list of trees.
-#' @param scale A list returned from \code{get.pheno.plotting.scales}.
-#' @return A list of ggtree objects in which the phenotype has been plotted across each tree in \code{trees}.
+#' @param pz.db A database containing a \code{taxonomy} and \code{trees}.
+#' @return A ggplot object with the phenotype distribution plotted per phylum.
 #' @export
-plot.phenotype.trees.wrapper <- function(phenotype,
-                                         pz.db,
-                                         scale,
-                                         ...) {
-    plotted.pheno.trees <- plot.phenotype.trees(phenotype,
-                                                pz.db$trees,
-                                                scale)
+plot.pheno.distributions <- function(phenotype,
+                                     pz.db) {
     kept.species <- Reduce(c, lapply(pz.db$trees, function(x) x$tip.label))
     pheno.phylum <- pz.db$taxonomy[match(names(phenotype),
                                          pz.db$taxonomy$cluster), "phylum"]
     pheno.characteristics <- data.frame(pheno=phenotype,
                                         phylum=pheno.phylum,
                                         cluster=names(phenotype))
-    ggplot(subset(pheno.characteristics, cluster %in% kept.species),
-           aes(pheno, color = phylum, fill = phylum)) +
+    distros <- ggplot(subset(pheno.characteristics, cluster %in% kept.species),
+                      aes(pheno, color = phylum, fill = phylum)) +
         geom_density() +
         facet_grid(phylum ~ .) +
         xlab(opts('which_phenotype')) +
         ggtitle(paste0("Distributions of phenotype (",
                        opts('which_phenotype'), ")"))
-    return(plotted.pheno.trees)
+    return(distros)
 }
 
+#' Edit a list of plotted trees to add fancy highlight labels.
+#'
+#' This function adds fancy SVG highlight labels to ggtree objects and then
+#' plots them. If there's an error, it will fall back to a regular plot.
+#'
+#' Some particularly relevant global options are:
+#' \description{
+#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
+#'   or "specificity").}
+#' }
+#'
+#' @param plotted.pheno.trees A named list of ggtree plots (per phylum).
+#' @param phenotype Phenotype to plot/label.
+#' @param label Label to give to the phenotype.
+#' @param stroke.scale How thick to make the highlight.
+#' @param units A string appended to each label, used to give units of phenotype.
+#' @export
 plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                                          phenotype,
+                                         label='prevalence',
                                          stroke.scale=0.3,
-                                         units='%',
-                                         ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                                         units='%') {
     for (pn in 1:length(plotted.pheno.trees)) {
         p <- plotted.pheno.trees[[pn]]$tree
         rp <- p$rphy
@@ -796,7 +862,7 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
         rp2 <- p
         # pad tip labels so the additional stuff doesn't get cut off when
         # calculating x limits
-        rp2$tip.label <- paste0(rp2$tip.label, " (phenotype: ......%)")
+        rp2$tip.label <- paste0(rp2$tip.label, " (phenotype: ......", units, ")")
         xlim <- plot(rp2, plot=FALSE)$x.lim
         new.tr <- p +
             geom_tiplab() +
@@ -805,10 +871,10 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
         tryCatch(
             hack.tree.labels(new.tr,
                              fn,
-                             stroke.scale=stroke.scale, 
-                             pheno=100*logistic(phenotype),
+                             stroke.scale=stroke.scale,
+                             pheno=phenotype,
                              units=units,
-                             pheno.name=opts('which_phenotype')),
+                             pheno.name=label)
             error = function(e) {
                 pz.message(e)
                 # Fall back to non-interactive
@@ -817,6 +883,20 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
     }
 }
 
+#' Make a hybrid tree-heatmap plot showing the taxon distribution of significant
+#' hits.
+#'
+#' This function wraps single.cluster.plot, running it in a separate process.
+#' This is because there can be problems with memory leaks. For relevant global
+#' options, see the doumentation for that function.
+#'
+#' @param gene.presence Gene presence/absence matrix.
+#' @param sig.genes Character vector of the significant genes.
+#' @param tree A tree object.
+#' @param plotted.tree A ggtree plot of \code{tree}.
+#' @param phylum Name of the phylum represented by \code{tree}
+#' @param verbose Whether to report debugging information (boolean).
+#' @export
 do.clust.plot <- function(gene.presence,
                           sig.genes,
                           tree,
@@ -856,6 +936,25 @@ do.clust.plot <- function(gene.presence,
     return(NULL) # Avoid wasting memory since we never touch these
 }
 
+#' Make a hybrid tree-heatmap plot showing the taxon distribution of significant
+#' hits.
+#'
+#' Some particularly relevant global options are:
+#' \description{
+#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
+#'   or "specificity").}
+#'   \item{gene_color_absent}{String. When graphing gene presence/absence, this color indicates absence.}
+#'   \item{gene_color_present}{String. When graphing gene presence/absence, this color indicates presence.}
+#' }
+#'
+#' @param gene.presence Gene presence/absence matrix.
+#' @param sig.genes Character vector of the significant genes.
+#' @param tree A tree object.
+#' @param plotted.tree A ggtree plot of \code{tree}.
+#' @param phylum Name of the phylum represented by \code{tree}
+#' @param verbose Whether to report debugging information (boolean).
+#' @return A faceted ggplot object.
+#' @export
 single.cluster.plot <- function(gene.presence,
                                 sig.genes,
                                 tree,
@@ -906,6 +1005,12 @@ single.cluster.plot <- function(gene.presence,
 
 #--- Report generation ---#
 
+#' Run *phylogenize* start to finish.
+#'
+#' @param output_file Path giving what to name the resulting HTML file.
+#' @param params List of parameters to override defaults.
+#' @return Output of rmarkdown::render.
+#' @export
 render.report <- function(output_file='report_output.html',
                           params=list(honor_params=FALSE)) {
     rmarkdown::render(system.file("rmd",
@@ -915,6 +1020,11 @@ render.report <- function(output_file='report_output.html',
                       params=params)
 }
 
+#' Make a pretty enrichment table.
+#'
+#' @param enr.table Input enrichment table.
+#' @return Mutated enrichment table with better-labeled columns and significance
+#'     coloring.
 output.enr.table <- function(enr.table) {
     enr.table <- data.frame(enr.table[, -1])
     enr.table <- data.frame(apply(enr.table, 2, as.character),
@@ -941,20 +1051,34 @@ output.enr.table <- function(enr.table) {
         kable_styling(c("striped", "condensed"))
 }
 
+#' Sort an enrichment table.
+#'
+#' @param enr.overlap The output of \code{calc.enr.overlaps}.
+#' @return A sorted enrichment table (by phylum, process, and then effect size)
+#' @export
 sort.overlaps <- function(enr.overlap) {
     enr.overlap[order(enr.overlap$phylum,
                       enr.overlap$process,
                       enr.overlap$value.value.estimate), ]
 }
 
+#' Calculate enrichment overlaps.
+#'
+#' @param enrichments Named list of enrichment results, one per phylum.
+#' @param results Named list giving p-value and effect size matrices, one per phylum.
+#' @return Named list of enrichment overlap tables (see signif.overlaps), one per phylum.
+#' @export
 calc.enr.overlaps <- function(enrichments, results) {
     enr.overlap.lists <- lapply(enrichments$strong, function(lev) {
         Filter(function(x) length(x) > 0,
-               mapply(lev, results, FUN = signif.overlaps)
-               )
+               mapply(lev, results, FUN = signif.overlaps))
     })
 }
 
+#' Check if a particular string is likely to be DNA.
+#'
+#' @param seq String to check for illegal characters.
+#' @return TRUE if it contains no illegal characters, FALSE otherwise.
 is.dna <- function(seq) {
     !(grepl("[^actguwsmkrybdhvn]", tolower(seq)))
 }

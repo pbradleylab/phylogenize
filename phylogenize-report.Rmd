@@ -150,9 +150,13 @@ if (pz.options('which_phenotype') == "prevalence") {
 }
 
 pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
-plotted.pheno.trees <- plot.phenotype.trees.wrapper(phenotype,
-                                                    pz.db,
-                                                    pheno.scale)
+plotted.pheno.trees <- plot.phenotype.trees(phenotype,
+                                            pz.db,
+                                            pheno.scale)
+pheno.distros <- plot.pheno.distributions(phenotype,
+                                          pz.db)
+print(pheno.distros)
+
 # be a little parsimonious with memory here
 rm(abd.meta); gc()
 check.pryr()
@@ -165,7 +169,9 @@ check.pryr()
 ```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=nphyla, cache.lazy = FALSE}
 
 if (!pz.options('skip_graphs')) {
-    plot.labeled.phenotype.trees(plotted.pheno.trees, phenotype)
+    plot.labeled.phenotype.trees(plotted.pheno.trees,
+                                 100*logistic(phenotype),
+                                 label=pz.options('which_phenotype'))
 }
 
 write.table(file=file.path(pz.options('output_dir'), "phenotype.tab"),

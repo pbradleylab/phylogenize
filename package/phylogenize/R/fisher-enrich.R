@@ -7,37 +7,62 @@ perform.enrichments <- function(sigs, signs, results, mapping, dirxn = 1, exclud
   })
 }
 
-enr.wrapper <- function(sig, tested, bg = NULL, mapping, descs = NULL, ms = 3, cutoff = 0.25, fdr.method = qvals, ...) {
+enr.wrapper <- function(sig,
+                        tested,
+                        bg = NULL,
+                        mapping,
+                        descs = NULL,
+                        ms = 3,
+                        cutoff = 0.25,
+                        fdr.method = qvals,
+                        ...) {
   if (is.null(bg)) { bg = tested }
   bg.present <- intersect(tested, bg)
-  enriched.and.depleted.list <- enrich(sig, mapping, bg.present, minsize = ms, alt = "two.sided", ...)
-  enr.dep.qvals <- enriched.and.depleted.list$enrichments %>% pv1 %>% fdr.method
+  enriched.and.depleted.list <- enrich(sig,
+                                       mapping,
+                                       bg.present,
+                                       minsize = ms,
+                                       alt = "two.sided",
+                                       ...)
+  enr.dep.qvals <- enriched.and.depleted.list$enrichments %>%
+      pv1 %>%
+      fdr.method
   enriched.and.depleted <- nw(enr.dep.qvals <= cutoff)
-  enriched <- intersect(enriched.and.depleted, nw(enriched.and.depleted.list$odds.ratios > 1))
+  enriched <- intersect(enriched.and.depleted,
+                        nw(enriched.and.depleted.list$odds.ratios > 1))
   if (!is.null(descs)) {
     table <- cbind(enriched, enr.dep.qvals[enriched], descs[enriched,])
   } else {
     table <- cbind(enriched, enr.dep.qvals[enriched])
   }
   t.order <- order(enr.dep.qvals[enriched])
-  return(list(full = enriched.and.depleted.list, qv = enr.dep.qvals, dep.enr <- enriched.and.depleted, 
-      enr = enriched, table = table[t.order,]))
+  return(list(full = enriched.and.depleted.list,
+              qv = enr.dep.qvals,
+              dep.enr = enriched.and.depleted,
+              enr = enriched,
+              table = table[t.order,]))
 }
-dirxn.enrich <- function(sigs, signs, results, siglevel = "strong", exclude = NULL, dirxn = 1, mapping, ...) {
-  lapply(
-  c(l1 = "level1", l2 = "level2", l3 = "level3"), function(l) {
-    # dirxn = 1 is POSITIVE
-    message(l)
-    enrichments <- lapply.across.names(names(sigs), function(x) {
-      #print(x)
-      #print(nw(signs[[x]] > 0))
-      #print(intersect(sigs[[x]][[siglevel]], nw(signs[[x]] < 0)))
-      enr.wrapper(intersect(sigs[[x]][[siglevel]], nw((dirxn * signs[[x]]) > 0)),
-          tested = setdiff(names(na.omit(results[[x]][1,])), exclude[[x]]),
-        mapping = mapping[[l]], ...)
+
+dirxn.enrich <- function(sigs,
+                         signs,
+                         results,
+                         siglevel = "strong",
+                         exclude = NULL,
+                         dirxn = 1,
+                         mapping,
+                         ...) {
+    lapply(c(l1 = "level1", l2 = "level2", l3 = "level3"), function(l) {
+        # dirxn = 1 is POSITIVE
+        message(l)
+        enrichments <- lapply.across.names(names(sigs), function(x) {
+            enr.wrapper(intersect(sigs[[x]][[siglevel]],
+                                  nw((dirxn * signs[[x]]) > 0)),
+                        tested = setdiff(names(na.omit(results[[x]][1,])),
+                                         exclude[[x]]),
+                        mapping = mapping[[l]], ...)
+        })
+        return(enrichments)
     })
-  return(enrichments)
-  })
 }
 
 
@@ -63,16 +88,26 @@ do.fisher <- function(list1, list2, background, alt) {
   return(fisher.test(cont.table, alternative = alt))
 }
 
-enrich <- function(hits, mapping, background, minsize = 1, alt = "greater", verbose = T) {
+enrich <- function(hits,
+                   mapping,
+                   background,
+                   minsize = 1,
+                   alt = "greater",
+                   verbose = T) {
   m.hits <- intersect(hits, background)
   possible <- intersect(mapping[,1], background)
   pways.total <- unique(mapping[which(mapping[,1] %in% background), 2])
-  pw.lengths <- sapply(pways.total, function(y) {(mapping[,2] == y) %>% which %>% (function(z)
-                      intersect(mapping[z, 1], background)) %>% length})
+  pw.lengths <- sapply(pways.total, function(y) {
+      (mapping[,2] == y) %>%
+          which %>%
+          (function(z) length(intersect(mapping[z, 1], background)))})
   pways <- nw(pw.lengths >= minsize)
-  if (length(pways) == 0) { return(list(enrichments = NULL, odds.ratios= NULL, overlaps = NULL, sets = NULL)) }
+  if (length(pways) == 0) {
+      return(list(enrichments = NULL,
+                  odds.ratios= NULL,
+                  overlaps = NULL,
+                  sets = NULL)) }
   enrichments <- vector("numeric", length(pways))
-  #perm.enrichments <- vector("numeric", length(pways))
   odds.ratios <- vector("numeric", length(pways))
   overlaps <- list()
   hits.total <- length(m.hits)
@@ -91,17 +126,25 @@ enrich <- function(hits, mapping, background, minsize = 1, alt = "greater", verb
     pway.hits <- length(intersect(in.pway, m.hits))
     nopway.hits <- length(setdiff(m.hits, in.pway))
     nopway.nohits <- length(setdiff(background, union(m.hits, in.pway)))
-    cont.table <- (matrix(nr=2, c(pway.hits, nopway.hits, pway.nohits,
-                                  nopway.nohits)))
+    cont.table <- (matrix(nr=2,
+                          c(pway.hits,
+                            nopway.hits,
+                            pway.nohits,
+                            nopway.nohits)))
     enrichments[np] <- ft$p.value
     odds.ratios[np] <- ft$estimate
     overlaps[[p]] <- intersect(in.pway, m.hits)
-    sets[[p]] <- list(PH = pway.hits, PNH = pway.nohits, NPH = nopway.hits,
+    sets[[p]] <- list(PH = pway.hits,
+                      PNH = pway.nohits,
+                      NPH = nopway.hits,
                       NPNH = nopway.nohits)
   }
   names(odds.ratios) <- pways
   if(verbose) cat(".\n")
-  return(list(enrichments=enrichments, odds.ratios = odds.ratios, overlaps = overlaps, sets = sets))
+  return(list(enrichments=enrichments,
+              odds.ratios = odds.ratios,
+              overlaps = overlaps,
+              sets = sets))
 }
 
 
@@ -122,7 +165,7 @@ signif.overlaps <- function(enr, result) {
   x <- lapply(names(overlap.list), function(n) {
     g <- overlap.list[[n]]
     if (length(g) > 0) {
-      cbind(genes = overlap.list[[n]], 
+      cbind(genes = overlap.list[[n]],
         descs = gene.annot(overlap.list[[n]]),
         estimate = result[1, g],
         qval = qvals(result[2, ])[g])

@@ -1,16 +1,31 @@
+#' Fit phylogenetic (or linear) models.
+#'
+#' @param phyla Character vector giving the names of the phyla.
+#' @param pheno Named numeric vector giving phenotype values per taxon.
+#' @param tree Either a single tree covering all taxa, or a list of per-phylum trees.
+#' @param proteins Named list of gene presence/absence matrices, per phylum.
+#' @param clusters Named list of character vectors of taxon IDs, per phylum.
+#' @param method A function that returns a length-2 numeric vector of
+#'     effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
+#'     \code{lm.fx.pv}).
+#' @param restrict.figfams Optionally, a character vector giving a subset of
+#'     genes to test.
+#' @param drop.zero.var Boolean giving whether to drop genes that are always
+#'     present or always absent in a particular phylum.
+#' @param only.return.names Boolean giving whether to just return the names of
+#'     genes to be tested (for debugging).
+#' @return Named list of p-value and effect-size matrices, one per phylum.
+#' @export
 result.wrapper.plm <- function(phyla,
-                              pheno,
-                              tree,
-                              proteins,
-                              clusters,
-                              randomize = FALSE,
-                              subsample.pheno = FALSE,
-                              method = phylolm.fx.pv,
-                              restrict.figfams = NULL,
-                              drop.zero.var = FALSE,
-                              only.return.names = FALSE,
-                              ...
-                              ) {
+                               pheno,
+                               tree,
+                               proteins,
+                               clusters,
+                               method = phylolm.fx.pv,
+                               restrict.figfams = NULL,
+                               drop.zero.var = FALSE,
+                               only.return.names = FALSE,
+                               ...) {
     opts <- clone_and_merge(pz.options, ...)
     lapply.across.names(phyla, function(p) {
         message(p)
@@ -54,19 +69,34 @@ result.wrapper.plm <- function(phyla,
     })
 }
 
-# a perhaps-more-memory-efficient version for single core
+#' Fit phylogenetic (or linear) models (single core version, single phylum).
+#'
+#' @param gene.matrix Gene presence/absence matrix.
+#' @param tree Phylogeny relating taxa.
+#' @param pheno Named numeric vector giving phenotype values per taxon.
+#' @param phylum.name Name of phylum being considered.
+#' @param method A function that returns a length-2 numeric vector of
+#'     effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
+#'     \code{lm.fx.pv}).
+#' @param restrict.ff Optionally, a character vector giving a subset of
+#'     genes to test.
+#' @param remove.low.variance Boolean giving whether to drop genes that are
+#'     always present or always absent in a particular phylum.
+#' @param use.for.loop Boolean giving whether to use a for loop instead of a
+#'     pbapply.
+#' @return Named list of p-value and effect-size matrices, one per phylum.
+#' @export
 nonparallel.results.generator <- function(gene.matrix,
                                          tree,
                                          taxa,
-                                         phylum.name,
                                          pheno,
+                                         phylum.name="TestPhylum",
                                          method=phylolm.fx.pv,
                                          restrict.ff=NULL,
                                          remove.low.variance=TRUE,
                                          use.for.loop=TRUE
                                          ) {
     message(phylum.name)
-    #message(address(gene.matrix))
     restrict.taxa <- Reduce(intersect, list(colnames(gene.matrix),
                                             tree$tip.label,
                                             names(pheno),
@@ -80,7 +110,8 @@ nonparallel.results.generator <- function(gene.matrix,
         restrict.both <- intersect(restrict.ff, restrict.lv)
         message(sprintf("removing zero-variance genes (%d): %0.2f%% removed",
                         length(restrict.ff) - length(restrict.lv),
-                        100 * (1 - (length(restrict.both) / length(restrict.ff)))
+                        100 * (1 - (length(restrict.both) /
+                                    length(restrict.ff)))
                         ))
         restrict.ff <- restrict.both
     }
@@ -114,8 +145,15 @@ nonparallel.results.generator <- function(gene.matrix,
     }
 }
 
-
-
+#' Wrapper around \emph{phylolm} that returns just the effect size and p-value.
+#'
+#' @param m Named numeric vector of gene presence/absences per taxon.
+#' @param p Named numeric vector of phenotype values per taxon.
+#' @param tr Phylogeny relating taxa (class \code{"phylo"}).
+#' @return Length-2 numeric vector with names \code{"Estimate"} and
+#'     \code{"p.value"}. If there is an error in \code{phylolm}, the values of
+#'     this vector will be \code{c(NA, NA)}.
+#' @export
 phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
     # This seems redundant, but we can avoid touching the giant protein matrix
     # this way and therefore causing an expensive copy
@@ -134,6 +172,14 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
     fx.pv
 }
 
+#' Wrapper around \emph{lm} that returns just the effect size and p-value.
+#'
+#' @param m Named numeric vector of gene presence/absences per taxon.
+#' @param p Named numeric vector of phenotype values per taxon.
+#' @return Length-2 numeric vector with names \code{"Estimate"} and
+#'     \code{"p.value"}. If there is an error in \code{phylolm}, the values of
+#'     this vector will be \code{c(NA, NA)}.
+#' @export
 lm.fx.pv <- function(m, p, coefname="m", restrict=NULL) {
     if (!is.null(restrict)) {
         p <- p[restrict]
@@ -152,6 +198,15 @@ lm.fx.pv <- function(m, p, coefname="m", restrict=NULL) {
     fx.pv
 }
 
+#' Wrapper around \code{phylolm} that automatically discards taxa that are
+#' absent from the tree tip labels, phenotype labels, or gene presence/absence
+#' labels.
+#'
+#' @param m Named numeric vector of gene presence/absences per taxon.
+#' @param p Named numeric vector of phenotype values per taxon.
+#' @param phy Phylogeny relating taxa (class \code{"phylo"}).
+#' @return Output of \code{phylolm}.
+#' @export
 phylolm.subset <- function(p, m, phy) {
     # For testing
     keep <- intersect(names(p), intersect(names(m), phy$tip.label))
@@ -161,6 +216,21 @@ phylolm.subset <- function(p, m, phy) {
     phylolm(p ~ m, phy = phys)
 }
 
+#' Perform phylogenetic (or linear) modeling for a single phylum.
+#'
+#' @param pheno Named numeric vector giving phenotype values per taxon.
+#' @param tree A tree relating taxa within a phylum.
+#' @param mtx Gene presence/absence matrix.
+#' @param method A function that returns a length-2 numeric vector of
+#'     effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
+#'     \code{lm.fx.pv}).
+#' @param restrict.ff Optionally, a character vector giving a subset of
+#'     genes to test.
+#' @param restrict.taxa Optionally, a character vector giving a subset of
+#'     taxa to test.
+#' @return Matrix of p-values (row 1) and effect-sizes (row 2) per gene
+#'     (columns).
+#' @export
 matrix.plm <- function(tree,
                        mtx,
                        pheno,
@@ -195,6 +265,19 @@ matrix.plm <- function(tree,
 # param is ~ p**k * (1-p)**(n-k) (the n choose k is constant wrt p)
 # prior is ( (1/(2b)) * exp(-(|x-m|/b) ) where x, m are on logit scale
 
+#' Obtain a regularized estimate of specificity.
+#'
+#' @param vec TODO
+#' @param env.ids TODO
+#' @param which.env TODO
+#' @param prior TODO
+#' @param b Free parameter giving degree of regularization (see
+#'     \code{optimize.b.wrapper}).
+#' @param add.pc Boolean giving whether to add a pseudocount.
+#' @param min.limit Will not optimize below this value.
+#' @param max.limit Will not optimize above this value.
+#' @return TODO
+#' @export
 regularize.pET <- function(vec,
                           env.ids,
                           which.env = 1,
