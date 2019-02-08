@@ -6,17 +6,24 @@
 #' Read in abundance and metadata, either as one BIOM-format file or as two
 #' tab-delimited files.
 #'
-#' This function uses package-wide options (see ?pz.options), which can be
-#' overridden using the '...' argument. Some particularly relevant options are:
-#' \description{
-#'   \item{env_column}{Name of metadata column containing environment annotations.}
-#'   \item{dset_column{Name of metadata column containing dataset annotations.}
-#'   \item{input_format{Override type of data (must be "biom" or "tabular").}
+#' @details This function uses package-wide options (see \code{?pz.options}),
+#'     which can be overridden using the \code{...} argument. Some particularly
+#'     relevant options are:
+#'
+#' \describe{
+#'   \item{env_column}{String. Name of column in metadata file containing the
+#'     environment annotations.}
+#'   \item{dset_column}{String. Name of column in metadata file containing the
+#'     dataset annotations.}
+#'   \item{input_format}{String. Whether to look for tabular or BIOM-formatted
+#'     data ("tabular" or "biom").}
+#'   \item{type}{String. Type of data to use, either "midas" (shotgun) or "16S"
+#'     (amplicon).}
 #' }
 #'
-#' @return A list with components 'mtx' and 'metadata', corresponding to a
-#'     sparse binary presence/absence matrix (see Matrix package) and a metadata
-#'     data frame.
+#' @return A list with components \code{mtx} and \code{metadata}, corresponding
+#'     to a sparse binary presence/absence matrix (see \code{Matrix} package)
+#'     and a metadata data frame.
 #' @export
 read.abd.metadata <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -49,14 +56,14 @@ read.abd.metadata <- function(...) {
 #' that the metadata are of the correct type.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{env_column}{Name of metadata column containing environment annotations.}
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #' }
 #'
 #' @param metadata A data frame of metadata with environment, dataset, and
 #'     sample columns corresponding to those in the global options (see
-#'     ?pz.options).
+#'     \?pz.options).
 #' @return A data frame of metadata, with environment and
 #'     dataset columns converted to factors.
 #' @export
@@ -106,7 +113,7 @@ read.abd.metadata.biom <- function(...) {
 #' annotations) from two tab-delimited files.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{in_dir}{Input data/metadata directory.}
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #' }
@@ -205,7 +212,7 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
 #' \code{sanity.check.abundance} is used to make sure that the metadata data frame satisfies the requirements specified by the \emph{phylogenize} application.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{env_column}{Name of metadata column containing environment annotations.}
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #' }
@@ -247,7 +254,7 @@ sanity.check.metadata <- function(metadata, ...) {
 #' or environments (effects for these cannot be estimated).
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{env_column}{Name of metadata column containing environment
 #'   annotations.}
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
@@ -314,7 +321,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
 #' 16S data for analysis using BURST.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #'   input files).}
 #'   \item{burst_infile}{String. File name of the sequences written to disk and
@@ -351,7 +358,7 @@ prepare.burst.input <- function(mtx, ...) {
 #' options and returns the same formatted output as BURST.)
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #' input files).}
 #'   \item{burst_infile}{String. File name of the sequences to be read into
@@ -398,7 +405,7 @@ run.burst <- function(...) {
 #' "gene" and "species_or_genus_ID" can be arbitrary.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #'   input files).}
 #'   \item{burst_outfile}{String. File name where BURST writes output which is
@@ -427,15 +434,16 @@ get.burst.results <- function(...) {
 #' then sums any rows that mapped to the same MIDAS ID.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{out_dir}{String. Path to output directory. Default: "output"}
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for
-#'   input files). Default: "."}
-#'   \item{data_dir} String. Path to directory containing the data files
-#'   required to perform a \emph{phylogenize}{analysis. Default: on package
+#'   input files).}
+#'   \item{data_dir}{String. Path to directory containing the data files
+#'   required to perform a \emph{phylogenize} analysis. Default: on package
 #'   load, this default is set to the result of \code{system.file("extdata",
 #'   package="phylogenize")}.}
 #' }
+#'
 #' @param burst A list obtained by running \code{get.burst.results}.
 #' @param mtx A presence/absence or abundance matrix, with row names equal to
 #'     amplicon sequence variant DNA sequences.
@@ -468,7 +476,7 @@ sum.nonunique.burst <- function(burst, mtx, ...) {
 #' of the abundance matrix are now MIDAS IDs.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #'   input files).}
 #'   \item{burst_infile}{String. File name of the sequences written to disk and
@@ -502,12 +510,12 @@ process.16s <- function(abd.meta, ...) {
 #' \code{import.pz.db} decides based on global options which data files to import.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{type}{String. Type of data to use, either "midas" (shotgun) or "16S"
 #'   (amplicon).}
 #'   \item{db_version}{String. Which version of the MIDAS database to use
 #'   ("midas_v1.2" or "midas_v1.0").}
-#'   \item{data_dir} String. Path to directory containing the data files
+#'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis.}
 #' }
 #' @return A list of the data objects required to perform a *phylogenize*
@@ -661,7 +669,7 @@ retain.observed.taxa <- function(trees, phenotype, phenoP, mapped.observed) {
 #' Get phenotype plotting scales.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
 #'   or "specificity").}
 #'   \item{prev_color_low}{String. When graphing prevalence on a tree, this
@@ -701,7 +709,7 @@ get.pheno.plotting.scales <- function(phenotype, trees, phenoP=NULL, ...) {
 #' Get phenotype plotting scales (prevalence-specific).
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{prev_color_low}{String. When graphing prevalence on a tree, this
 #'   color is the lowest value.}
 #'   \item{prev_color_high}{String. When graphing prevalence on a tree, this
@@ -738,7 +746,7 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
 #' Get phenotype plotting scales (specificity-specific).
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{spec_color_high}{String. When graphing specificity on a tree, this
 #'   color is the lowest value (most anti-specific).}
 #'   \item{spec_color_med}{String. When graphing specificity on a tree, this
@@ -779,7 +787,7 @@ get.pheno.plotting.scales.specificity <- function(phenotype,
 #' Plot a phenotype along a list of trees.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
 #'   or "specificity").}
 #' }
@@ -839,7 +847,7 @@ plot.pheno.distributions <- function(phenotype,
 #' plots them. If there's an error, it will fall back to a regular plot.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
 #'   or "specificity").}
 #' }
@@ -874,7 +882,7 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                              stroke.scale=stroke.scale,
                              pheno=phenotype,
                              units=units,
-                             pheno.name=label)
+                             pheno.name=label),
             error = function(e) {
                 pz.message(e)
                 # Fall back to non-interactive
@@ -940,7 +948,7 @@ do.clust.plot <- function(gene.presence,
 #' hits.
 #'
 #' Some particularly relevant global options are:
-#' \description{
+#' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
 #'   or "specificity").}
 #'   \item{gene_color_absent}{String. When graphing gene presence/absence, this color indicates absence.}

@@ -45,13 +45,14 @@ PZ_OPTIONS <- options_manager(
 #'
 #' Function to set and get global options for the \emph{phylogenize} package.
 #'
-#' These options are global because they affect how most of the functions in \emph{phylogenize} work. Descriptions of these options follow.
-#' 
+#' These options are global because they affect how most of the functions in
+#' \emph{phylogenize} work. Descriptions of these options follow.
+#'
 #' @section File input/output and paths:
 #' \describe{
 #'   \item{out_dir}{String. Path to output directory. Default: "output"}
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files). Default: "."}
-#'   \item{data_dir} String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
+#'   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
 #'   \item{abundance_file}{String. Name of abundance tabular file. Default: "test-abundance.tab"}
 #'   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
@@ -66,6 +67,7 @@ PZ_OPTIONS <- options_manager(
 #'   \item{burst_infile}{String. File name of the sequences written to disk and then read into BURST. Default: "input_seqs.txt"}
 #'   \item{burst_outfile}{String. File name where BURST writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
 #' }
+#'
 #' @section Computing phenotypes:
 #' \describe{
 #'   \item{ncl}{Integer. Number of cores to use for parallel computation. Default: 1}
@@ -81,6 +83,7 @@ PZ_OPTIONS <- options_manager(
 #'   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
 #'   \item{burst_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using BURST. Default: 0.985}
 #' }
+#'
 #' @section Graphing:
 #' \describe{
 #'   \item{treemin}{Integer. A phylum must have at least this many representatives in order to be graphed in the report. Default: 5}
@@ -93,6 +96,7 @@ PZ_OPTIONS <- options_manager(
 #'   \item{gene_color_absent}{String. When graphing gene presence/absence, this color indicates absence. Default: "black"}
 #'   \item{gene_color_present}{String. When graphing gene presence/absence, this color indicates presence. Default: "black"}
 #' }
+#'
 #' @section Memory management:
 #' \describe{
 #'   \item{pryr}{Boolean. If TRUE, report memory usage when generating the report. Default: FALSE}

@@ -2,7 +2,8 @@
 #'
 #' @param phyla Character vector giving the names of the phyla.
 #' @param pheno Named numeric vector giving phenotype values per taxon.
-#' @param tree Either a single tree covering all taxa, or a list of per-phylum trees.
+#' @param tree Either a single tree covering all taxa, or a list of per-phylum
+#'     trees.
 #' @param proteins Named list of gene presence/absence matrices, per phylum.
 #' @param clusters Named list of character vectors of taxon IDs, per phylum.
 #' @param method A function that returns a length-2 numeric vector of
@@ -45,7 +46,8 @@ result.wrapper.plm <- function(phyla,
         if (is.null(restrict.figfams)) {
             restrict.figfams <- rownames(proteins[[p]])
         } else {
-            restrict.figfams <- intersect(rownames(proteins[[p]]), restrict.figfams)
+            restrict.figfams <- intersect(rownames(proteins[[p]]),
+                                          restrict.figfams)
         }
         if (drop.zero.var) {
             fvar <- apply(proteins[[p]][, valid], 1, var)
@@ -53,7 +55,8 @@ result.wrapper.plm <- function(phyla,
                                    100 * mean(na.omit(fvar == 0))),
                            "% dropped [no variance]"))
             restrict.figfams <- intersect(restrict.figfams,
-                                          rownames(proteins[[p]])[which(fvar > 0)])
+                                          rownames(proteins[[p]])[
+                                              which(fvar > 0)])
         }
         if (!only.return.names) {
             matrix.plm(tr,
@@ -267,16 +270,20 @@ matrix.plm <- function(tree,
 
 #' Obtain a regularized estimate of specificity.
 #'
-#' @param vec TODO
-#' @param env.ids TODO
-#' @param which.env TODO
-#' @param prior TODO
+#' @param vec A named numeric vector giving presence/absence across samples.
+#' @param env.ids A named factor assigning an environment to each sample (names).
+#' @param which.env A string: in which environment should specificity be calculated?
+#' @param prior Prior probability of \code{which.env}
 #' @param b Free parameter giving degree of regularization (see
 #'     \code{optimize.b.wrapper}).
 #' @param add.pc Boolean giving whether to add a pseudocount.
 #' @param min.limit Will not optimize below this value.
 #' @param max.limit Will not optimize above this value.
-#' @return TODO
+#' @return A list. \code{x}: regularized specificity estimate; \code{p}:
+#'     regularized prevalence estimate; \code{x.init}: naive specificity
+#'     estimate; \code{p.init}: naive prevalence estimate; \code{pT}:
+#'     probability of encountering a particular taxon, marginalized across
+#'     environments
 #' @export
 regularize.pET <- function(vec,
                           env.ids,
@@ -314,7 +321,7 @@ regularize.pET <- function(vec,
             log(1 / (2*b)) -
             (abs(logit(p)-logit(prior))/b)
     }
-    max.p <- prior / pT 
+    max.p <- prior / pT
     max.p <- min(max.p, logistic(max.limit))
     results <- optimize(map.logit, c(min.limit, logit(max.p)), maximum = TRUE)
     initial.x <- pT.E
@@ -329,6 +336,17 @@ regularize.pET <- function(vec,
 }
 
 
+#' Get a distribution of environment prevalences from a matrix.
+#'
+#' This is used to optimize the value of the free parameter $b$ in
+#' \code{regularize.pET}.
+#'
+#' @param mtx A matrix of presence/absence values.
+#' @param ids A named factor assigning samples (matrix columns) to environments.
+#' @param fallback A two-element numeric vector, giving the beta parameters to
+#'     use if fitting fails.
+#' @return A best-fit of prevalences to a beta distribution.
+#' @export
 fit.beta.list <-  function(mtx, ids, fallback = c(NA, NA)) {
     lapply(unique(ids), function(i) {
         tryCatch(
@@ -341,14 +359,29 @@ fit.beta.list <-  function(mtx, ids, fallback = c(NA, NA)) {
     })
 }
 
+#' Simulate a presence/absence matrix.
+#'
+#' @param effect.size A number giving the shift in logit-prevalence between environments for simulated true positives.
+#' @param baseline.distro A two-element numeric vector of beta distribution parameters, giving the distribution of simulated prevalences.
+#' @param which.env String; gives the environment in which an effect will be simulated.
+#' @param samples Named integer vector giving the number of samples per environment.
+#' @param taxa How many taxa to simulate?
+#' @param tpr Fraction of taxa that should be simulated as true positives.
+#' @param sign.pos.prob Fraction of effects that should be positive (vs. negative)?
+#' @return A list. \code{mtx}: a simulated matrix; \code{pT}: true prevalences;
+#'     \code{pTbs}: true prevalences after adding in effects; \code{fx}:
+#'     effects; \code{ids}: mapping of samples to environments;
+#'     \code{input.params}: input parameters used to call
+#'     \code{simulate.binom.mtx}.
+#' @export
 simulate.binom.mtx <- function(effect.size = 2,
-                               baseline.distro = c(shape1 = 0.66,
-                                                   shape2 = 2.62),
-                               samples = c(H = 38, D = 13),
-                               which.env = "D",
-                               taxa = 2000,
-                               tpr = 0.25,
-                               sign.pos.prob = 0.5) {
+                              baseline.distro = c(shape1 = 0.66,
+                                                  shape2 = 2.62),
+                              samples = c(H = 38, D = 13),
+                              which.env = "D",
+                              taxa = 2000,
+                              tpr = 0.25,
+                              sign.pos.prob = 0.5) {
     tp.taxa <- round(tpr * taxa)
     neg.taxa <- taxa - (tp.taxa)
     n.classes <- length(samples)
@@ -381,6 +414,21 @@ simulate.binom.mtx <- function(effect.size = 2,
                                     sign.pos.prob = sign.pos.prob)))
 }
 
+#' Score a simulated regularization by how well it recapitulates the ground truth.
+#'
+#' @param mtx A simulated matrix of presence/absences.
+#' @param ids A factor mapping samples to environments.
+#' @param real.fx A numeric vector giving "true" effect sizes.
+#' @param which.env String or numeric: in which environment is there an effect?
+#' @param prior Prior probability of encountering environment \code{which.env}.
+#' @param b Free parameter governing strength of regularization. Typically, this
+#'     function is called to evaluate different values of $b$.
+#' @param add.pc Boolean: should \code{regularize.pET} add a pseudocount?
+#' @param tol Numeric: values within \code{tol} of the prior will be considered
+#'     to be shrunk back to the prior completely.
+#' @return A vector. \code{fpr}: False positive rate; \code{pwr.hi}: power for
+#'     positive effect sizes; \code{pwr.lo}: power for negative effect sizes.
+#' @export
 score.regularization <- function(mtx,
                                  ids,
                                  real.fx,
@@ -389,8 +437,7 @@ score.regularization <- function(mtx,
                                  b = 0.1,
                                  add.pc = FALSE,
                                  tol = prior * 0.005,
-                                 ...
-                                 ) {
+                                 ...) {
     regularized <- apply(mtx, 1, function(x) {
         regularize.pET(x,
                        ids,
@@ -408,6 +455,29 @@ score.regularization <- function(mtx,
     return(c(fpr = fpr, pwr.hi = pwr.hi, pwr.lo = pwr.lo))
 }
 
+#' Based on a real presence/absence matrix, optimize the value of the
+#' regularization parameter $b$.
+#'
+#' @param real.mtx Presence/absence matrix.
+#' @param real.ids A factor assigning environment labels to samples.
+#' @param which.real.env A numeric or string giving the environment to calculate
+#'     specificity within.
+#' @param which.shape A numeric or string giving the environment in which the
+#'     prevalence distribution should be fit.
+#' @param prior Prior probability of encountering environment \code{which.real.env}.
+#' @param effect.size Effect size to be simulated for "true" positives.
+#' @param bounds Bounds for optimizing $b$.
+#' @param add.pc Boolean giving whether to add a pseudocount when calculating
+#'     prevalences and specificities.
+#' @param tol Numeric: values within \code{tol} of the prior will be considered
+#'     to be shrunk back to the prior completely.
+#' @param a See ?\code{b.scorer}.
+#' @param verbose Boolean: print debugging information?
+#' @param optim.fxn Function summarizing the results of
+#'     \code{score.regularization} into one metric to be optimized.
+#' @param pos.prob Fraction of real effects that should be positive.
+#' @return The output of \code{stats::optimize}.
+#' @export
 optimize.b.wrapper <- function(real.mtx,
                               real.ids,
                               which.real.env = 2,
@@ -459,7 +529,15 @@ optimize.b.wrapper <- function(real.mtx,
     optimize(get.optim, bounds, maximum = TRUE)
 }
 
-
+#' Summarize the statistics from \code{score.regularization} into a single metric.
+#'
+#' @param s Results of \code{score.regularization}
+#' @param a Parameter controlling when to switch from optimizing the FPR to
+#'     optimizing power. If proportion of false positives is above this value,
+#'     return 1-FPR; otherwise, return 1 + the average (geometric mean) power on
+#'     positive and negative effect sizes.
+#' @return Summary statistic ranging between 0 and 2.
+#' @export
 b.scorer <- function(s, a) {
     if (s["fpr"] <= a) {
         (1 + geommean(s[c("pwr.hi", "pwr.lo")]))
@@ -470,6 +548,21 @@ b.scorer <- function(s, a) {
 
 ### calculate prevalence
 
+#' Master function to calculate taxon prevalences with additive smoothing.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{env_column}{String. Name of column in metadata file containing the
+#'   environment annotations.}
+#'   \item{dset_column}{String. Name of column in metadata file containing the
+#'   dataset annotations.}
+#'   \item{which_envir}{String. Environment in which to calculate prevalence or
+#'   specificity. Must match annotations in metadata.}
+#' }
+#'
+#' @param abd.meta A list giving an abundance matrix and metadata.
+#' @return An additively-smoothed estimate of taxon prevalences.
+#' @export
 prev.addw <- function(abd.meta,
                       ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -505,10 +598,30 @@ prev.addw <- function(abd.meta,
     return(logit(addw))
 }
 
+#' Master function to calculate environmental specificity scores.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{env_column}{String. Name of column in metadata file containing the
+#'   environment annotations.}
+#'   \item{dset_column}{String. Name of column in metadata file containing the
+#'   dataset annotations.}
+#'   \item{which_envir}{String. Environment in which to calculate prevalence or
+#'   specificity. Must match annotations in metadata.}
+#'   \item{prior_type}{String. What type of prior to use ("uninformative" or
+#'   "file").}
+#' }
+#'
+#' @param abd.meta A list giving an abundance matrix and metadata.
+#' @param pdata Named numeric vector giving priors per environment.
+#' @param b.optim If not NULL, use this value for the regularization parameter
+#'     $b$, otherwise optimize it.
+#' @return An additively-smoothed estimate of taxon prevalences.
+#' @export
 calc.ess <- function(abd.meta,
-                     pdata = NULL,
-                     b.optim = NULL,
-                     ...) {
+                    pdata = NULL,
+                    b.optim = NULL,
+                    ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     E <- opts('env_column')
     D <- opts('dset_column')
@@ -584,7 +697,16 @@ calc.ess <- function(abd.meta,
         phenoP=phenoP))
 }
 
-
+#' Throw an error and optionally log it in errmsg.txt.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
+#'   output to an error message file?}
+#'}
+#'
+#' @param errtext String: error message text.
+#' @export
 pz.error <- function(errtext, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
@@ -594,6 +716,16 @@ pz.error <- function(errtext, ...) {
     stop(errtext)
 }
 
+#' Report a message and optionally log it in errmsg.txt.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
+#'   output to an error message file?}
+#'}
+#'
+#' @param errtext String: message text.
+#' @export
 pz.message <- function(msgtext, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
@@ -603,6 +735,30 @@ pz.message <- function(msgtext, ...) {
     message(msgtext)
 }
 
+#' Report a warning and optionally log it in errmsg.txt.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
+#'   output to an error message file?}
+#'}
+#'
+#' @param errtext String: warning text.
+#' @export
+pz.warning <- function(msgtext, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    if (opts('error_to_file')) {
+        cat(msgtext,
+            file = file.path(opts('out_dir'), "errmsg.txt"))
+    }
+    warning(msgtext)
+}
+
+#' Convert results into a long (vs. wide) format.
+#'
+#' @param results Output of result.wrapper.plm.
+#' @return A single data frame with entries from \code{results}.
+#' @export
 make.results.matrix <- function(results) {
     Reduce(rbind, lapply(names(results), function(rn) {
         data.frame(phylum = rn,
@@ -612,6 +768,19 @@ make.results.matrix <- function(results) {
     }))
 }
 
+#' Filter out genes that are almost always present or absent.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{minimum}{Integer. A particular gene must be observed, and also
+#'   absent, at least this many times to be reported as a significant positive
+#'   association with the phenotype.}
+#' }
+#' @param pz.db A database for use with *phylogenize* analyses.
+#' @param phy.with.sigs A vector of strings giving which phyla had significant
+#'     results.
+#' @return A single data frame with entries from \code{results}.
+#' @export
 threshold.pos.sigs <- function(pz.db, phy.with.sigs, ...) {
     opts <- clone_and_merge(pz.options, ...)
     Min <- opts('minimum')
@@ -626,6 +795,13 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, ...) {
            })
 }
 
+#' Add gene descriptions to significant results; return in a data frame.
+#'
+#' @param phy.with.sigs Character vector giving the phyla with significant hits.
+#' @param pos.sig List of character vectors, one per phylum, of significant hits.
+#' @param gene.to.fxn Data frame used to annotate genes to functions.
+#' @return A single data frame of all significant results plus descriptions.
+#' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
     pos.sig.descs <- Reduce(rbind, lapply(phy.with.sigs, function(n) {
         cbind(phylum=n,
