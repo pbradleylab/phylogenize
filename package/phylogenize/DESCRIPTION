@@ -12,7 +12,8 @@ Encoding: UTF-8
 LazyData: true
 Depends:
     phylolm,
-    settings
+    settings,
+    Matrix
 Imports:
     data.table,
     parallel,
@@ -27,7 +28,6 @@ Imports:
     xml2,
     ggplot2,
     biomformat,
-    Matrix,
     MASS,
     seqinr,
     pbapply,

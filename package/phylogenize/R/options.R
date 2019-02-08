@@ -38,7 +38,9 @@ PZ_OPTIONS <- options_manager(
   burst_16sfile="16s_renamed.frn",
   burst_infile="input_seqs.txt",
   burst_outfile="output_assignments.txt",
-  burst_cutoff=0.985
+  burst_cutoff=0.985,
+  burst_bin='burst12',
+  use_rmd_params=FALSE
 )
 
 #' Set and get options for phylogenize.

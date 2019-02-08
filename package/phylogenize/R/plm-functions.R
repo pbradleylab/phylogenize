@@ -585,7 +585,7 @@ prev.addw <- function(abd.meta,
             list(rm = rm, s = s)
         })
         means.only <- sapply(means.by.study, function(x) x$rm)
-        total.s <- Reduce(sum, lapply(means.by.study, function(x) x$s))
+        total.s <- Reduce(sum, lapply(means.by.study, function(x) length(x$s)))
         avg.prev <- rowMeans(means.only)
         addw <- (1 + (avg.prev * total.s)) / (2 + total.s)
     } else {

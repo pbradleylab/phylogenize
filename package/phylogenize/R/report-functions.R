@@ -1,3 +1,5 @@
+#' @import Matrix
+NULL
 
 #--- I/O and initial processing ---#
 
@@ -76,7 +78,11 @@ check.process.metadata <- function(metadata, ...) {
         pz.error(paste0("dataset column not found: ", opts('dset_column')))
     }
     if (!("sample" %in% colnames(metadata))) {
-        pz.error(paste0("sample column not found: sample"))
+        if (!is.null(rownames(metadata))) {
+            metadata$sample <- rownames(metadata)
+        } else {
+            pz.error(paste0("sample column not found: sample"))
+        }
     }
     metadata[[opts('env_column')]] <- as.factor(metadata[[opts('env_column')]])
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
@@ -102,7 +108,6 @@ read.abd.metadata.biom <- function(...) {
         pz.error(paste0("metadata had no sample names; should not be possible,",
                         " check that your biom file is not corrupt"))
     }
-    metadata$sample <- rownames(metadata)
     rm(biomf); gc()
     return(list(mtx=abd.mtx, metadata=metadata))
 }
@@ -144,7 +149,7 @@ read.abd.metadata.tabular <- function(...) {
 #'     abundance data is the wrong type or class.
 #' @export
 sanity.check.abundance <- function(abd.mtx, ...) {
-    if (!is(abd.mtx, "matrix")) {
+    if ((!is(abd.mtx, "matrix")) & (!is(abd.mtx, "Matrix"))) {
         pz.error(paste0(
             "Abundance matrix must be a matrix of logicals or doubles ",
             "and instead was a ",
@@ -1020,12 +1025,31 @@ single.cluster.plot <- function(gene.presence,
 #' @return Output of rmarkdown::render.
 #' @export
 render.report <- function(output_file='report_output.html',
-                          params=list(honor_params=FALSE)) {
+                          params=list(use_rmd_params=FALSE)) {
     rmarkdown::render(system.file("rmd",
                                   "phylogenize-report.Rmd",
                                   package="phylogenize"),
                       output_file=output_file,
                       params=params)
+}
+
+#' Run *phylogenize* start to finish (alternative invocation).
+#'
+#' @param output_file Path giving what to name the resulting HTML file.
+#' @param ... Parameters to override defaults.
+#' @return Output of rmarkdown::render.
+#' @export
+render.report.alt <- function(output_file='report_output.html',
+                              ...) {
+    do.call(pz.options, list(...))
+    p <- pz.options()
+    for (n in names(p)) {
+        message(paste0(n, ": ", p[[n]], "\n"))
+    }
+    rmarkdown::render(system.file("rmd",
+                                  "phylogenize-report.Rmd",
+                                  package="phylogenize"),
+                      output_file=output_file)
 }
 
 #' Make a pretty enrichment table.

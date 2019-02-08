@@ -9,7 +9,7 @@
 fix.tree <- function(phy, len=1e-6) {
   phy <- ape::multi2di(phy)
   # from Liam Reveil's blog June 23 2015
-  phy$edge.length[phy$edge.length==0] <- max(phyTools::nodeHeights(phy)) * len
+  phy$edge.length[phy$edge.length==0] <- max(phytools::nodeHeights(phy)) * len
   phy
 }
 
@@ -48,7 +48,7 @@ tree.to.dist <- function(tree) {
 #' @param phy A \code{phylo} object.
 #' @param ctrait A named numeric vector assigning trait values to tree tips.
 #' @param cAnc Calculated ancestry for continuous trait; if this is NULL, it is calculated.
-#' @param model Model for calculating ancestry (see phyTools::fastAnc).
+#' @param model Model for calculating ancestry (see phytools::fastAnc).
 #' @param cLimits Scale bar limits for plotting continuous trait.
 #' @param n Character vector giving which nodes to display; if NULL, defaults to intersection of \code{phy$tip.label} and \code{names(ctrait)}.
 #' @param reduced.phy Dichotomous tree with only the nodes in \code{n} represented; if NULL, this is calculated.
@@ -82,7 +82,7 @@ gg.cont.tree <- function(phy,
   if (is.null(n)) { n <- intersect(phy$tip.label, names(ctrait)) }
   if (is.null(reduced.phy)) { reduced.phy <- fix.tree(keep.tips(phy, n)) }
   message("getting continuous trait ancestry")
-  if (is.null(cAnc)) cAnc <- phyTools::fastAnc(reduced.phy, ctrait[n])
+  if (is.null(cAnc)) cAnc <- phytools::fastAnc(reduced.phy, ctrait[n])
   # concatenate tip values and node values
   cDisplay <- truncated(c(ctrait[n], cAnc), cLimits)
   # make color scales
@@ -103,12 +103,12 @@ gg.cont.tree <- function(phy,
   if (reverse) {
       ctree <- ggtree::ggtree(reduced.phy,
                               ladderize = ladderize,
-                              aes_string(color = cDisplay), ...) +
+                              ggplot2::aes_string(color = cDisplay), ...) +
           cColors + ggplot2::scale_x_reverse() + ggplot2::theme(legend.position = "bottom")
   } else {
       ctree <- ggtree::ggtree(reduced.phy,
                               ladderize = ladderize,
-                              aes_string(color = cDisplay), ...) +
+                              ggplot2::aes_string(color = cDisplay), ...) +
           cColors + ggplot2::theme(legend.position = "bottom")
   }
   if (plot) print(ctree)
