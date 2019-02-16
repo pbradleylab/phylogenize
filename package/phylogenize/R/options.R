@@ -40,7 +40,10 @@ PZ_OPTIONS <- options_manager(
   burst_outfile="output_assignments.txt",
   burst_cutoff=0.985,
   burst_bin='burst12',
-  use_rmd_params=FALSE
+  use_rmd_params=FALSE,
+  devel=FALSE,
+  devel_pkgdir='package/phylogenize',
+  resume=FALSE
 )
 
 #' Set and get options for phylogenize.

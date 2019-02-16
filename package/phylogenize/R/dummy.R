@@ -567,3 +567,80 @@ make.simulated.denoised.data <- function(mtx, tag.length=100, ...) {
                 n=rs$names))
 }
 
+#' Make a dummy gene-to-species matrix by subsampling.
+#'
+#' For each matrix in the input list, find the top percentile most-variable
+#' genes (using formula for binomial distribution), then subsample the matrix,
+#' returning at most \code{n} genes. Fewer genes will be returned if the total
+#' number of original genes or the number above the percentile cutoff is lower
+#' than the desired \code{n}. Matrices with 1 or fewer genes after sampling will
+#' be dropped.
+#'
+#' @param g2s.matrices A list of sparse binary matrices, one per phylum.
+#' @param n Integer: how many genes per phylum to sample?
+#' @param fp Double: what proportion of highest-variance genes to sample from?
+#' @param minN Integer: minimum number of genes to return in a matrix
+dummy.g2s <- function(g2s.matrices, n, fp=0.1, minN=2) {
+    new.g2s <- lapply(g2s.matrices, function(m) {
+        ng <- ncol(m)
+        if (ng < n) { s <- ng } else { s <- n }
+        vars <- apply(m, 2, function(col) {
+            length(col) * mean(col) * (1 - mean(col))
+        })
+        var.pctl <- order(vars, decreasing=TRUE) / length(vars)
+        top.var <- which(var.pctl <= fp)
+        ntv <- length(top.var)
+        if (ntv < s) {
+            s <- ntv
+        }
+        m[, sample(top.var, s)]
+    })
+    Filter(function(x) {
+        if (is.null(x)) return(FALSE)
+        if (is.vector(x)) return(FALSE)
+        if (ncol(x) >= minN) return(TRUE)
+        return(FALSE)
+    }, new.g2s)
+}
+
+#' Downsample trees.
+#'
+#' @param trees List of trees.
+#' @param n Number of taxa to retain (maximum)
+dummy.trees <- function(trees, n=50) {
+    lapply(trees, function(tr) {
+        tips <- tr$tip.label
+        s <- min(n, length(tips))
+        keep.tips(tr, sample(tips, s))
+    })
+}
+
+#' Wrapper to generate a low-memory, fast-running dummy database. Make sure
+#' \code{Matrix} is loaded.
+#'
+#' @param nt Number of taxa to sample per phylum.
+#' @param ng Number of genes to sample per phylum.
+#' @param fp Fraction of most-variable genes to sample.
+#' @param minN Only keep phyla with at least this many genes.
+generate.test.pzdb <- function(nt=75, ng=50, fp=0.1, minN=2, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    pz.db <- import.pz.db(...)
+    dtr <- dummy.trees(pz.db$trees, nt)
+    for (n in names(pz.db$gene.presence)) {
+        d <- dtr[[n]]$tip.label
+        if (is(pz.db$gene.presence[[n]], "Matrix")) {
+            dd <- intersect(d, colnames(pz.db$gene.presence[[n]]))
+            if (length(dd) > 2) {
+                pz.db$gene.presence[[n]] <- pz.db$gene.presence[[n]][, dd]
+            }
+        } else if (is.vector(pz.db$gene.presence[[n]])) {
+            if (all(d %in% names(pz.db$gene.presence[[n]]))) {
+                pz.db$gene.presence[[n]] <- pz.db$gene.presence[[n]][d]
+            }
+        } # otherwise don't change
+    }
+    gp <- dummy.g2s(pz.db$gene.presence, ng, fp, minN)
+    saveRDS(gp, file.path(opts('data_dir'), "test-gene-presence-binary.rds"))
+    saveRDS(dtr, file.path(opts('data_dir'), "test-trees.rds"))
+    write.csv(pz.db$taxonomy, file.path(opts('data_dir'), "test-taxonomy.csv"))
+}

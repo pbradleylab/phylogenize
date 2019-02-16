@@ -42,7 +42,9 @@ read.abd.metadata <- function(...) {
     }
     sanity.check.abundance(abd.meta$mtx, ...)
     sanity.check.metadata(abd.meta$metadata, ...)
-    if (opts('type') == '16S') abd.meta <- process.16s(abd.meta, ...)
+    if (opts('type') %in% c('16S', '16S-test')) {
+        abd.meta <- process.16s(abd.meta, ...)
+    }
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
     # binarize to save memory usage since we care about pres/abs
     abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
@@ -553,7 +555,7 @@ import.pz.db <- function(...) {
     } else if (opts('type') == "16S-test") {
         gp.file <- "test-gene-presence-binary.rds"
         tr.file <- "test-trees.rds"
-        tax.file <- "text-taxonomy.csv"
+        tax.file <- "test-taxonomy.csv"
     } else {
         pz.error(paste0("Unknown data type ", opts('type')))
     }
@@ -591,9 +593,9 @@ import.pz.db <- function(...) {
 #' Clean up imported database.
 #'
 #' \code{adjust.db} removes any phyla with fewer than \code{opts('treemin')}
-#' representatives and removes tips from trees that were not observed in the
-#' data. It also adds a couple of variables into the database that give lists of
-#' taxa per tree and the total number of remaining phyla.
+#' representatives, removes tips from trees that were not observed in the data,
+#' and resolves polytomies. It also adds a couple of variables into the database
+#' that give lists of taxa per tree and the total number of remaining phyla.
 #'
 #' @param pz.db A database (typically obtained with \code{import.pz.db}).
 #' @param abd.meta A list consisting of a taxon abundance matrix and the
@@ -610,6 +612,7 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     pz.db$trees <- pz.db$trees[saved.phyla]
     pz.db$taxa <- lapply(pz.db$trees, function(x) x$tip.label)
     pz.db$nphyla <- length(pz.db$trees)
+    pz.db$trees <- lapply(pz.db$trees, fix.tree)
     pz.db
 }
 
@@ -668,6 +671,21 @@ retain.observed.taxa <- function(trees, phenotype, phenoP, mapped.observed) {
     trees <- trees[which(n.not.prior > 0)]
     trees
 }
+
+#' Remove taxa from a phenotype that aren't in our trees and gene matrices
+#' (usually only necessary for testing).
+#'
+#' @param phenotype A quantitative phenotype (named numeric vector).
+#' @param pz.db A database.
+#' @return A phenotype with only the measurements represented in the database.
+#' @export
+clean.pheno <- function(phenotype, pz.db) {
+    tips <- Reduce(union, lapply(pz.db$trees, function(x) x$tip.label))
+    cols <- Reduce(union, lapply(pz.db$gene.presence, colnames))
+    valid.names <- intersect(tips, cols)
+    phenotype[intersect(names(phenotype), valid.names)]
+}
+
 
 #--- Plotting ---#
 
@@ -808,41 +826,60 @@ plot.phenotype.trees <- function(phenotype,
                                  scale,
                                  ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    plotted.pheno.trees <- lapply(1:length(trees), function(tn) {
-        gg.cont.tree(trees[[tn]],
-                     phenotype,
-                     cLimits=scale$phy.limits[[tn]],
-                     colors=scale$colors,
-                     cName = paste0(names(trees)[tn],
-                                    ": ",
-                                    opts('which_phenotype')),
-                     plot = FALSE)
+    if (any(!(names(trees) %in% names(scale$phy.limits)))) {
+        pz.error("phylum-specific limits must be calculated for every tree")
+    }
+    plotted.pheno.trees <- lapply(names(trees), function(tn) {
+        tryCatch({gg.cont.tree(trees[[tn]],
+                               phenotype,
+                               cLimits=scale$phy.limits[[tn]],
+                               colors=scale$colors,
+                               cName=paste0(tn,
+                                            ": ",
+                                            opts('which_phenotype')),
+                               plot=FALSE)},
+                 error=function(e) {
+                     pz.warning(e)
+                     NA
+                 })
     })
     names(plotted.pheno.trees) <- names(trees)
-    plotted.pheno.trees
+    plotted.pheno.trees[vapply(plotted.pheno.trees, is.list, TRUE)]
 }
 
 #' Plot distributions of a phenotype across phyla.
 #'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
+#'   or "specificity").}
+#' }
 #' @param phenotype A named vector with the phenotype values for each taxon.
 #' @param pz.db A database containing a \code{taxonomy} and \code{trees}.
 #' @return A ggplot object with the phenotype distribution plotted per phylum.
 #' @export
 plot.pheno.distributions <- function(phenotype,
-                                     pz.db) {
+                                     pz.db,
+                                     ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
     kept.species <- Reduce(c, lapply(pz.db$trees, function(x) x$tip.label))
     pheno.phylum <- pz.db$taxonomy[match(names(phenotype),
                                          pz.db$taxonomy$cluster), "phylum"]
     pheno.characteristics <- data.frame(pheno=phenotype,
                                         phylum=pheno.phylum,
                                         cluster=names(phenotype))
-    distros <- ggplot(subset(pheno.characteristics, cluster %in% kept.species),
-                      aes(pheno, color = phylum, fill = phylum)) +
-        geom_density() +
-        facet_grid(phylum ~ .) +
-        xlab(opts('which_phenotype')) +
-        ggtitle(paste0("Distributions of phenotype (",
-                       opts('which_phenotype'), ")"))
+    sub.pheno <- subset(pheno.characteristics, cluster %in% kept.species)
+    distros <- ggplot2::ggplot(sub.pheno,
+                               ggplot2::aes(pheno,
+                                            color = phylum,
+                                            fill = phylum)) +
+        ggplot2::geom_density() +
+        ggplot2::xlab(opts('which_phenotype')) +
+        ggplot2::ggtitle(paste0("Distributions of phenotype (",
+                                opts('which_phenotype'), ")"))
+    if (length(unique(sub.pheno$phylum) > 1)) { # don't assume >1 phylum
+        distros <- distros + ggplot2::facet_grid(phylum ~ .)
+    }
     return(distros)
 }
 
@@ -869,18 +906,18 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                                          stroke.scale=0.3,
                                          units='%') {
     for (pn in 1:length(plotted.pheno.trees)) {
-        p <- plotted.pheno.trees[[pn]]$tree
+        p <- plotted.pheno.trees[[pn]]
         rp <- p$rphy
         tr <- p$tree
-        rp2 <- p
+        rp2 <- rp
         # pad tip labels so the additional stuff doesn't get cut off when
         # calculating x limits
         rp2$tip.label <- paste0(rp2$tip.label, " (phenotype: ......", units, ")")
         xlim <- plot(rp2, plot=FALSE)$x.lim
-        new.tr <- p +
-            geom_tiplab() +
+        new.tr <- tr +
+            ggtree::geom_tiplab() +
             ggplot2::xlim(xlim[1], xlim[2])
-        fn <- fig_path('svg', number = pn)
+        fn <- knitr::fig_path('svg', number = pn)
         tryCatch(
             hack.tree.labels(new.tr,
                              fn,
@@ -985,34 +1022,36 @@ single.cluster.plot <- function(gene.presence,
     names(dimnames(sig.bin)) <- c("gene", "id")
     col.df <- data.frame(id=names(plotted.tree$disp),
                          disp=plotted.tree$disp)
-    p <- ggtree(tree, ladderize = TRUE) %<+%
+    p <- ggtree::ggtree(tree, ladderize = TRUE) %<+%
         col.df +
-        geom_tippoint(aes(color=disp, shape = '.'))
+        ggplot2::geom_tippoint(ggplot2::aes(color=disp, shape = '.'))
     if (opts('which_phenotype') == "prevalence") {
-        p <- p + scale_color_gradient(low=plotted.tree$cols["low.col"],
-                                      high=plotted.tree$cols["high.col"])
+        p <- p + ggplot2::scale_color_gradient(
+                              low=plotted.tree$cols["low.col"],
+                              high=plotted.tree$cols["high.col"])
     } else if (opts('which_phenotype') == "specificity") {
-        p <- p + scale_color_gradient2(low=plotted.tree$cols["low.col"],
-                                       mid=plotted.tree$cols["mid.col"],
-                                       high=plotted.tree$cols["high.col"],
-                                       midpoint=mean(plotted.tree$lims))
+        p <- p + ggplot2::scale_color_gradient2(
+                              low=plotted.tree$cols["low.col"],
+                              mid=plotted.tree$cols["mid.col"],
+                              high=plotted.tree$cols["high.col"],
+                              midpoint=mean(plotted.tree$lims))
     }
     if (length(sig.genes) > 1) {
         clust <- hclust(dist(sig.bin, method = "binary"))
         sig.ord <- sparseMelt(t(sig.bin)[, clust$order])
     } else {
-        sig.ord <- melt(t(sig.bin))
+        sig.ord <- reshape2::melt(t(sig.bin))
         sig.ord <- sig.ord[order(sig.ord[, 3]), ]
     }
-    tmp <- facet_plot(p,
+    tmp <- ggplot2::facet_plot(p,
                       paste0('heatmap: ', phylum),
                       sig.ord,
-                      geom_tile,
-                      aes(x = as.numeric(as.factor(gene)),
+                      ggplot2::geom_tile,
+                      ggplot2::aes(x = as.numeric(as.factor(gene)),
                           fill = as.numeric(as.factor(value)))) +
-        scale_fill_gradient(low = opts('gene_color_absent'),
-                            high = opts('gene_color_present'),
-                            na.value = opts('gene_color_absent'))
+        ggplot2::scale_fill_gradient(low = opts('gene_color_absent'),
+                                     high = opts('gene_color_present'),
+                                     na.value = opts('gene_color_absent'))
     tmp
 }
 
@@ -1064,23 +1103,24 @@ output.enr.table <- function(enr.table) {
     enr.table <- enr.table[!is.na(enr.table$q_value), ]
     rownames(enr.table) <- NULL
     enr.table %>%
-        mutate(
+        dplyr::mutate(
             q_value=as.numeric(q_value),
             Gene_significance=capwords(Gene_significance),
             Subsystem_level=toupper(Subsystem_level),
             Phylum=capwords(Phylum),
             Subsystem=gsub("_", " ", enr.table$Subsystem)
         ) %>%
-        mutate(
-            q_value=cell_spec(prettyNum(q_value, digits=2),
-                              "html",
-                              background=kable.recolor(
-                                  -log10(q_value),
-                                  colors=c("#FFFFFF", "#FF8888"),
-                                  limits=c(-10, -log10(0.25)))
-                              )) %>%
-        kable("html", escape=FALSE, align="l") %>%
-        kable_styling(c("striped", "condensed"))
+        dplyr::mutate(
+                   q_value=kableExtra::cell_spec(
+                                           prettyNum(q_value, digits=2),
+                                           "html",
+                                           background=kable.recolor(
+                                               -log10(q_value),
+                                               colors=c("#FFFFFF", "#FF8888"),
+                                               limits=c(-10, -log10(0.25)))
+                                       )) %>%
+        knitr::kable("html", escape=FALSE, align="l") %>%
+        kableExtra::kable_styling(c("striped", "condensed"))
 }
 
 #' Sort an enrichment table.
@@ -1108,9 +1148,11 @@ calc.enr.overlaps <- function(enrichments, results) {
 }
 
 #' Check if a particular string is likely to be DNA.
-#'
+#' 
 #' @param seq String to check for illegal characters.
 #' @return TRUE if it contains no illegal characters, FALSE otherwise.
 is.dna <- function(seq) {
     !(grepl("[^actguwsmkrybdhvn]", tolower(seq)))
 }
+
+

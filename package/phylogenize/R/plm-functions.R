@@ -27,7 +27,7 @@ result.wrapper.plm <- function(phyla,
                                drop.zero.var = FALSE,
                                only.return.names = FALSE,
                                ...) {
-    opts <- clone_and_merge(pz.options, ...)
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
     lapply.across.names(phyla, function(p) {
         message(p)
         if (class(tree) == "phylo") {
@@ -142,9 +142,11 @@ nonparallel.results.generator <- function(gene.matrix,
         close(progress)
         ans
     } else {
-        pbapply(gene.matrix[restrict.ff, restrict.taxa], 1, function(m) {
-            method(m, pheno[restrict.taxa], restrict.tree)
-        })
+        pbapply::pbapply(gene.matrix[restrict.ff, restrict.taxa],
+                         1,
+                         function(m) {
+                             method(m, pheno[restrict.taxa], restrict.tree)
+                         })
     }
 }
 
@@ -219,6 +221,32 @@ phylolm.subset <- function(p, m, phy) {
     phylolm(p ~ m, phy = phys)
 }
 
+
+#' Load the \code{phylogenize} package, either using \code{library} or
+#' \code{devtools} as appropriate.
+#'
+#' @param cl A \code{parallel} cluster
+#' @param devel Boolean; if TRUE, use \code{devtools}, otherwise use
+#'     \code{library}
+#' @param pkgdir Optional string giving path to package; used with
+#'     \code{devtools} only
+cluster.load.pkg <- function(cl, devel, pkgdir="package/phylogenize") {
+    if (devel) {
+        parallel::clusterCall(cl,
+                              "library",
+                              "devtools",
+                              character.only=TRUE)
+        parallel::clusterCall(cl,
+                              "load_all",
+                              pkgdir)
+    } else {
+        parallel::clusterCall(cl,
+                              "library",
+                              "phylogenize",
+                              character.only=TRUE)
+    }
+}
+
 #' Perform phylogenetic (or linear) modeling for a single phylum.
 #'
 #' @param pheno Named numeric vector giving phenotype values per taxon.
@@ -241,16 +269,19 @@ matrix.plm <- function(tree,
                        restrict.taxa=NULL,
                        restrict.ff=NULL,
                        ...) {
-    opts <- clone_and_merge(pz.options, ...)
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
     cores <- opts('ncl')
     message("phylogenetic linear model")
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
-    if (opts('separate.process') || (cores > 1)) {
-        cl <- makeCluster(cores)
-        clusterCall(cl, library, package="phylogenize")
+    if (opts('separate_process') || (cores > 1)) {
+        cl <- parallel::makeCluster(cores)
+        cluster.load.pkg(cl, opts('devel'), opts('devel_pkgdir'))
         force(pheno)
-        force(tr)
+        force(tree)
+        force(restrict.taxa)
+        force(restrict.ff)
+        force(mtx)
     } else {
         cl <- NULL
     }
@@ -350,7 +381,7 @@ regularize.pET <- function(vec,
 fit.beta.list <-  function(mtx, ids, fallback = c(NA, NA)) {
     lapply(unique(ids), function(i) {
         tryCatch(
-            fitdistr(densfun = "beta",
+            MASS::fitdistr(densfun = "beta",
                      start = list(shape1 = 1, shape2 = 1),
                      apply(mtx[, which(ids == i)], 1, function(x) {
                          mean(c(x, 0, 1) > 0)
@@ -619,9 +650,9 @@ prev.addw <- function(abd.meta,
 #' @return An additively-smoothed estimate of taxon prevalences.
 #' @export
 calc.ess <- function(abd.meta,
-                    pdata = NULL,
-                    b.optim = NULL,
-                    ...) {
+                     pdata = NULL,
+                     b.optim = NULL,
+                     ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     E <- opts('env_column')
     D <- opts('dset_column')
@@ -781,8 +812,8 @@ make.results.matrix <- function(results) {
 #'     results.
 #' @return A single data frame with entries from \code{results}.
 #' @export
-threshold.pos.sigs <- function(pz.db, phy.with.sigs, ...) {
-    opts <- clone_and_merge(pz.options, ...)
+threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
     Min <- opts('minimum')
     mapply(pz.db$trees[phy.with.sigs],
            pos.sig[phy.with.sigs],

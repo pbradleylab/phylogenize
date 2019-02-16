@@ -87,13 +87,19 @@ pz.options(
     burst_16sfile = '16s_centroids_90_filt500_nodups.fa',
     ncl = 10,
     use_rmd_params = FALSE)
+generate.test.pzdb(db_version="midas_v1.2")
 test.data <- generate.fake.abd.meta(n.samples=50, n.taxa=150, make.16s=TRUE)
 write.test.biom(test.data, overwrite=TRUE)
+
+devtools::load_all("package/phylogenize")
+setwd("~/projects/phylogenize")
 phylogenize::render.report.alt(
-  output_file = "/home/pbradz/projects/phylogenize/testing-out/testing-prev-output.html",
+  output_file = "/home/pbradz/projects/phylogenize/testing-out-2/testing-prev-output.html",
   in_dir = "/home/pbradz/projects/phylogenize/testing-in/",
+  out_dir = "/home/pbradz/projects/phylogenize/testing-out-2/",
   type = "16S",
   db_version = "midas_v1.2",
+#  db_version = "test",
   which_phenotype = "prevalence",
   which_envir = "env1",
   abundance_file = "",
@@ -102,5 +108,8 @@ phylogenize::render.report.alt(
   input_format = "biom",
   burst_dir = "/home/pbradz/bin/",
   burst_16sfile = '16s_centroids_90_filt500_nodups.fa',
-  ncl = 10,
-  use_rmd_params = FALSE)
+  ncl = 1,
+  use_rmd_params = FALSE,
+  devel = TRUE,
+  devel_pkgdir = file.path(getwd(), "package/phylogenize"),
+  pryr = FALSE)

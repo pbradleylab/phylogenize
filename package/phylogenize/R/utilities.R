@@ -230,13 +230,26 @@ tax.annot <- function(tns, taxonomy) {
 #' Calculate the maximum depth of a list of lists.
 #'
 #' \code{list.depth} calculates the maximum depth of a list of lists. Code is
-#' originally by user "flodel" on stackoverflow: see
+#' modified from original by user "flodel" on stackoverflow: see
 #' https://stackoverflow.com/questions/13432863/determine-level-of-nesting-in-r.
 #'
 #' @param this A list, possibly containing other lists.
 #' @export
-list.depth <- function(this) ifelse(is.list(this),
-                                    1L + max(sapply(this, list.depth)), 0L)
+list.depth <- function(this) {
+    if ((is.list(this)) && (length(this) == 0)) { return(0L) }
+    ifelse(is.list(this), 1L + max(sapply(this, list.depth)), 0L)
+}
+
+#' Make sure that a list of lists has even depth all the way down.
+#'
+#' @param this A list, possibly containing other lists.
+#' @export
+list.even <- function(this) {
+    if (!is.list(this)) return(TRUE)
+    d <- vapply(this, list.depth, FUN.VALUE=1L)
+    this.even <- all(d == d[1])
+    return(this.even & all(vapply(this, list.even, TRUE)))
+}
 
 #' Find the first list element at a desired depth.
 #'
@@ -278,7 +291,7 @@ annotate.nested <- function(nested,
                             n = NULL,
                             n.names = NULL,
                             stop.at = 0) {
-
+    if (!list.even(nested)) { pz.error("need an evenly-nested list") }
     nestedness <- list.depth(nested)
     if (nestedness == stop.at) {
         if (is.null(summarize)) {
@@ -300,7 +313,14 @@ annotate.nested <- function(nested,
         } else {
             n.mtx <- matrix(rep(n, nrow(values)), nc = length(n), byrow = TRUE)
         }
-        if (!is.null(n.names)) { colnames(n.mtx) <- n.names }
+        if (!is.null(n.names)) {
+            if (length(n.names) > ncol(n.mtx)) {
+                pz.warning(paste0(
+                    "more names provided than columns; just using first ",
+                    ncol(n.mtx)))
+            }
+            colnames(n.mtx) <- n.names[1:ncol(n.mtx)]
+        }
         final.df <- cbind(names = rownames(values), n.mtx, value = values)
         rownames(final.df) <- NULL
         return(final.df)
@@ -392,13 +412,13 @@ kable.recolor <- function(x,
         x[x < limits[2]] <- limits[2]
     }
     if (is.null(scale_from)) {
-        x <- round(rescale(x, c(1, 256)))
+        x <- round(scales::rescale(x, c(1, 256)))
     }
     else {
-        x <- round(rescale(x, to = c(1, 256), from = scale_from))
+        x <- round(scales::rescale(x, to = c(1, 256), from = scale_from))
     }
     if (direction == -1) { x <- (257 - x) }
-    cmap <- colorRampPalette(colors)(256)
+    cmap <- grDevices::colorRampPalette(colors)(256)
     color_code <- cmap[x]
     color_code[is.na(color_code)] <- na_color
     return(color_code)
@@ -447,22 +467,22 @@ hack.tree.labels <- function(tree.obj,
                              units = "",
                              ...) {
     tip.labels <- with(tree.obj$data, label[isTip])
-    xml <- xmlSVG(print(tree.obj), standalone = TRUE, ...)
+    xml <- svglite::xmlSVG(print(tree.obj), standalone = TRUE, ...)
     new.style.text <- " \n .faketip:hover ~ .realtip { \n stroke-width: 5; \n opacity: 1; \n  } \n .faketip:hover ~ .specieslabel { \n opacity: 1; \n } \n "
-    style.nodes <- xml_find_all(xml, "//*[local-name()='style']")
-    xml_set_text(style.nodes[1], new.style.text)
-    xml.text <- xml_find_all(xml, "//*[local-name()='text']")
-    xml.text.contents <- sapply(xml.text, xml_text)
+    style.nodes <- xml2::xml_find_all(xml, "//*[local-name()='style']")
+    xml2::xml_set_text(style.nodes[1], new.style.text)
+    xml.text <- xml2::xml_find_all(xml, "//*[local-name()='text']")
+    xml.text.contents <- sapply(xml.text, xml2::xml_text)
     xml.label.indices <- which(xml.text.contents %in% tip.labels)
     xml.label.heights <- sapply(xml.text, function(x) {
-        xml_attrs(x)["y"]
+        xml2::xml_attrs(x)["y"]
     })
     xml.label.pair <- cbind(label = xml.text.contents,
                             y = xml.label.heights)[xml.label.indices, ]
     ordered.labels <- xml.label.pair[order(xml.label.pair[, "y"] %>% as.numeric),
                                      "label"]
-    xml.lines <- xml_find_all(xml, "//*[local-name()='line']")
-    xml.line.props <- sapply(xml.lines, function(x) xml_attrs(x))
+    xml.lines <- xml2::xml_find_all(xml, "//*[local-name()='line']")
+    xml.line.props <- sapply(xml.lines, function(x) xml2::xml_attrs(x))
     xml.x2 <- xml.line.props["x2", ] %>% as.numeric
     xml.y2 <- xml.line.props["y2", ] %>% as.numeric
     # terminus <- max(xml.x2)
@@ -472,54 +492,54 @@ hack.tree.labels <- function(tree.obj,
     xml.y2.sorted <- sort(xml.y2[xml.x2 == terminus])
     # skootch over, remove tip, add title
     for (x in xml.text) {
-        label <- xml_text(x)
+        label <- xml2::xml_text(x)
         if (label %in% ordered.labels) {
-            xml_set_attr(x, "x", as.character(terminus))
-            xml_set_text(x, " ")
+            xml2::xml_set_attr(x, "x", as.character(terminus))
+            xml2::xml_set_text(x, " ")
             if (native.tooltip) {
-                xml_add_sibling(x, read_xml(paste0("<title>",
-                                                   label,
-                                                   "</title>")))
+                xml2::xml_add_sibling(x, xml2::read_xml(paste0("<title>",
+                                                               label,
+                                                               "</title>")))
             }
         }
     }
     for (l in xml.lines) {
-        l.attr <- xml_attrs(l)
+        l.attr <- xml2::xml_attrs(l)
         l.y2 <- as.numeric(l.attr["y2"])
         l.x2 <- as.numeric(l.attr["x2"])
         l.x1 <- as.numeric(l.attr["x1"])
         # This step is necessary because otherwise mouseover won't work
-        style <- xml_attrs(l)["style"]
+        style <- xml2::xml_attrs(l)["style"]
         s.parsed <- style.parse(style)
         for (n in 1:length(s.parsed)) {
-            xml_set_attr(l, names(s.parsed)[n], s.parsed[n])
+            xml2::xml_set_attr(l, names(s.parsed)[n], s.parsed[n])
         }
-        xml_set_attr(l, "style", "")
+        xml2::xml_set_attr(l, "style", "")
         if ("stroke-width" %in% names(s.parsed)) {
-            xml_set_attr(l,
+            xml2::xml_set_attr(l,
                          "stroke-width",
                          (as.numeric(s.parsed["stroke-width"]) * stroke.scale) %>%
                          as.character)
         }
         if (!("stroke" %in% names(s.parsed))) {
-            xml_set_attr(l, "stroke", "#000000")
+            xml2::xml_set_attr(l, "stroke", "#000000")
         }
         if (l.x2 == terminus) {
             label <- ordered.labels[which(xml.y2.sorted == l.y2)]
-            xml_set_attr(l, "id", label)
-            xml_set_attr(l, "class", "realtip")
-            new.group <- read_xml("<g class=\"tip\"> </g>")
-            l2 <- xml_add_child(new.group, l)
-            xml_add_child(new.group, l)
-            xml_set_attr(l2, "opacity", "0")
-            xml_set_attr(l2, "pointer-events", "all")
-            xml_set_attr(l2, "stroke-width", 5)
-            xml_set_attr(l2, "class", "faketip")
-            xml_set_attr(l2, "x1",
+            xml2::xml_set_attr(l, "id", label)
+            xml2::xml_set_attr(l, "class", "realtip")
+            new.group <- xml2::read_xml("<g class=\"tip\"> </g>")
+            l2 <- xml2::xml_add_child(new.group, l)
+            xml2::xml_add_child(new.group, l)
+            xml2::xml_set_attr(l2, "opacity", "0")
+            xml2::xml_set_attr(l2, "pointer-events", "all")
+            xml2::xml_set_attr(l2, "stroke-width", 5)
+            xml2::xml_set_attr(l2, "class", "faketip")
+            xml2::xml_set_attr(l2, "x1",
                          as.character(
                              l.x1 - 500
                          ))
-            xml_set_attr(l2, "x2",
+            xml2::xml_set_attr(l2, "x2",
                          as.character(
                              terminus + 500
                          ))
@@ -533,7 +553,7 @@ hack.tree.labels <- function(tree.obj,
                 }
                 extra.info <- paste0("(", pheno.name, " = ", phi, units,  ")")
             }
-            xml_add_child(new.group, read_xml(paste0(
+            xml2::xml_add_child(new.group, xml2::read_xml(paste0(
               "<text x=\"",
               l.x2 + 5,
               "\" y = \"",
@@ -541,7 +561,7 @@ hack.tree.labels <- function(tree.obj,
               "\" opacity=\"0\" pointer-events=\"all\"" ,
               " style=\"font-family: Arial; font-size: 10px;",
               " fill: ",
-              xml_attr(l, "stroke"),
+              xml2::xml_attr(l, "stroke"),
               ";",
               "\" class=\"specieslabel\"> ",
               label,
@@ -550,14 +570,14 @@ hack.tree.labels <- function(tree.obj,
               " ",
               "</text>")))
             if (native.tooltip) {
-                xml_add_child(new.group, read_xml(paste0("<title>",
-                                                         label,
-                                                         "</title>")))
+                xml2::xml_add_child(new.group, xml2::read_xml(paste0("<title>",
+                                                                     label,
+                                                                     "</title>")))
             }
-            xml_replace(l, new.group)
+            xml2::xml_replace(l, new.group)
         }
     }
-    write_xml(x = xml, file)
+    xml2::write_xml(x = xml, file)
 }
 
 
@@ -586,8 +606,8 @@ style.parse <- function(str) {
 #' @export
 non.interactive.plot <- function(tree.obj, file) {
     warning(paste0("replotting to: ", file))
-    non.int <- xmlSVG(print(tree.obj), standalone = TRUE)
-    write_xml(x = non.int, file)
+    non.int <- svglite::xmlSVG(print(tree.obj), standalone = TRUE)
+    xml2::write_xml(x = non.int, file)
 }
 
 #' A wrapper around \code{annotate.nested} specifically for use with enrichment
@@ -623,7 +643,7 @@ generic.make.tables <- function(enr,
 #' @export
 maybeParApply <- function(mtx, margin, fun, cl=NULL, ...) {
     if (!is.null(cl)) {
-        parApply(cl, mtx, margin, fun, ...)
+        parallel::parApply(cl, mtx, margin, fun, ...)
     } else {
         apply(mtx, margin, fun, ...)
     }
