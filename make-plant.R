@@ -108,7 +108,7 @@ phylogenize::render.report.alt(
   input_format = "biom",
   burst_dir = "/home/pbradz/bin/",
   burst_16sfile = '16s_centroids_90_filt500_nodups.fa',
-  ncl = 1,
+  ncl = 10,
   use_rmd_params = FALSE,
   devel = TRUE,
   devel_pkgdir = file.path(getwd(), "package/phylogenize"),
