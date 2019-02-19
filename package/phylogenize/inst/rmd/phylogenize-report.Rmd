@@ -140,6 +140,7 @@ if (pz.options('which_phenotype') == "prevalence") {
   phenoP <- ess$phenoP
   # Specifically for specificity, only retain observed taxa
   pz.db$trees <- retain.observed.taxa(pz.db$trees,
+                                      phenotype,
                                       phenoP,
                                       mapped.observed)
   pz.db$taxa <- lapply(pz.db$trees, function(x) x$tip.label)
@@ -267,7 +268,7 @@ phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
 pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
 
 pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig)
-pos.sig.thresh.descs <- add.sig.descs(pos.sig.thresh, pz.db$gene.to.fxn)
+pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs, pos.sig.thresh, pz.db$gene.to.fxn)
 
 # recalculate, since some of these may go away
 phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
@@ -279,6 +280,10 @@ rm(pos.sig.thresh.descs)
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
           results.matrix)
 rm(results.matrix)
+result.tbl <- tibble(lapply(results, function(x) as.tibble(t(x)))) %>%
+  rename(results=1) %>%
+  mutate(phylum=names(results)) %>%
+  select(phylum, results)
 
 check.pryr()
 ```
@@ -326,12 +331,6 @@ respectively.
 
 ```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=TRUE}
 enrichments <- perform.enrichments(signif,
-    signs,
-    results,
-    mapping = pz.db$g.mappings,
-    verbose = FALSE)
-
-enrichments <- perform.enrichments(signif,
                                    signs,
                                    results,
                                    mapping = pz.db$g.mappings,
@@ -357,7 +356,7 @@ output.enr.table(enr.table)
 check.pryr()
 
 ### Make CSV of enrichments
-enr.overlap.lists <- calc.enr.overlaps(enrichments, results)
+enr.overlap.lists <- calc.enr.overlaps(enrichments, results, pz.db$gene.to.fxn)
 check.pryr()
 tryCatch({
   if ((list.even(enr.overlap.lists)) &&
@@ -367,10 +366,10 @@ tryCatch({
                                    n.names=c("level",
                                              "phylum",
                                              "process"))
-    write.csv(file=file.path(pz.options('output_dir'),
+    write.csv(file=file.path(pz.options('out_dir'),
                              "enr-overlaps.csv"),
               enr.overlap)
-    write.csv(file=file.path(pz.options('output_dir'),
+    write.csv(file=file.path(pz.options('out_dir'),
                              "enr-overlaps-sorted.csv"),
               sort.overlaps(enr.overlap))
   } else {

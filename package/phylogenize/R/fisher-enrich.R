@@ -150,11 +150,10 @@ dirxn.enrich <- function(sigs,
 #' @param x A vector of p-values.
 #' @return A vector of q-values.
 qvals <- function(x) {
-  qvalue(x,
-         fdr = T,
-         lambda = seq(0.001, 0.95, 0.005)
-  )$qvalues
-
+    qvalue::qvalue(x,
+                   fdr = T,
+                   lambda = seq(0.001, 0.95, 0.005)
+                   )$qvalues
 }
 
 #' Wrapper around \code{p.adjust('BY')}.
@@ -297,7 +296,7 @@ pv1 <- function(x) { x[which(x > 1)] <- 1; return(x) }
 #'   \item{estimate}{Per-gene effect sizes.}
 #'   \item{qval}{Per-gene q-values.}
 #' @export
-signif.overlaps <- function(enr, result) {
+signif.overlaps <- function(enr, result, gene.to.fxn) {
   if (!is.null(enr$table %>% dim)) {
     overlap.list <- enr$full$overlaps[enr$table %>% rownames]
   } else if ("enriched" %in% names(enr$table)) {
@@ -309,7 +308,7 @@ signif.overlaps <- function(enr, result) {
     g <- overlap.list[[n]]
     if (length(g) > 0) {
       cbind(genes = overlap.list[[n]],
-        descs = gene.annot(overlap.list[[n]]),
+        descs = gene.annot(overlap.list[[n]], gene.to.fxn),
         estimate = result[1, g],
         qval = qvals(result[2, ])[g])
     } else {

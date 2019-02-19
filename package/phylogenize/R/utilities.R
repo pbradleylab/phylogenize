@@ -207,11 +207,8 @@ pbmcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
 #' @return A character vector of gene functions, with names equal to \code{x}.
 #' @export
 gene.annot <- function(x, gene.to.fxn) {
-    merge(data.table(x),
-          gene.to.fxn,
-          by.x = colnames(data.table(x))[1],
-          by.y = "gene",
-          all = T)[x]$"function" %withnames% x
+    gf <- data.frame(gene.to.fxn[match(x, gene.to.fxn$gene), ])
+    gf$"function" %withnames% gf$"gene"
 }
 
 
@@ -291,11 +288,17 @@ annotate.nested <- function(nested,
                             n = NULL,
                             n.names = NULL,
                             stop.at = 0) {
-    if (!list.even(nested)) { pz.error("need an evenly-nested list") }
+    if (is.null(nested)) {
+       return(c())
+    }
     nestedness <- list.depth(nested)
     if (nestedness == stop.at) {
         if (is.null(summarize)) {
-            values <- data.frame(value = nested)
+            if (is.matrix(nested)) {
+                values <- data.frame(nested)
+            } else {
+                values <- data.frame(value = nested)
+            }
             rownames(values) <- names(nested)
         } else {
             val.raw <- summarize(nested)
@@ -304,7 +307,11 @@ annotate.nested <- function(nested,
                     rownames(val.raw) <- NULL
                 }
             }
-            values <- data.frame(value = val.raw)
+            if (!is.matrix(val.raw)) {
+                values <- data.frame(value = val.raw)
+            } else {
+                values <- data.frame(val.raw)
+            }
         }
         if (is.null(nrow(values))) {
             n.mtx <- matrix(rep(n, (length(values))),
@@ -321,7 +328,11 @@ annotate.nested <- function(nested,
             }
             colnames(n.mtx) <- n.names[1:ncol(n.mtx)]
         }
-        final.df <- cbind(names = rownames(values), n.mtx, value = values)
+        if (is.matrix(nested)) {
+            final.df <- cbind(names = rownames(values), n.mtx, values)
+        } else {
+            final.df <- cbind(names = rownames(values), n.mtx, value = values)
+        }
         rownames(final.df) <- NULL
         return(final.df)
     } else {
@@ -622,8 +633,8 @@ generic.make.tables <- function(enr,
                              if (is.null(nrow(x$table))) {
                                  names(x$table) <- c("enriched", "V2")
                                  data.frame(t(x$table))
-                             } else if (nrow(x$table) > 0) { 
-                                 x$table 
+                             } else if (nrow(x$table) > 0) {
+                                 x$table
                              } else {
                                  rbind(x$table, c(enriched = NA, V2 = NA))
                              }}

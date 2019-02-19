@@ -292,6 +292,9 @@ matrix.plm <- function(tree,
                        p=pheno,
                        tr=tree,
                        restrict=restrict.taxa)
+    if (opts('separate_process') || (cores > 1)) {
+        parallel::stopCluster(cl)
+    }
     r
 }
 
@@ -527,11 +530,11 @@ optimize.b.wrapper <- function(real.mtx,
     shape.n <- which((real.ids %>% unique %>% sort) == which.shape)
     # Fall back to the overall beta if not enough information to fit a
     # distribution (or too wacky)
-    overall.shape <- fitdistr(densfun = "beta",
-                              start = list(shape1 = 1, shape2 = 1),
-                              apply(real.mtx, 1, function(x) {
-                                  mean(c(x, 0, 1) > 0)
-                              }))$estimate
+    overall.shape <- MASS::fitdistr(densfun = "beta",
+                                    start = list(shape1 = 1, shape2 = 1),
+                                    apply(real.mtx, 1, function(x) {
+                                        mean(c(x, 0, 1) > 0)
+                                    }))$estimate
     shapes <- suppressWarnings(fit.beta.list(real.mtx,
                                              real.ids,
                                              fallback = overall.shape))
@@ -600,17 +603,17 @@ prev.addw <- function(abd.meta,
     envir <- opts('which_envir')
     E <- opts('env_column')
     D <- opts('dset_column')
-    if (!(envir %in% levels(abd.meta$meta[[E]]))) {
+    if (!(envir %in% levels(abd.meta$metadata[[E]]))) {
         stop(paste0("environment ", envir, " not found in metadata"))
     }
-    env.rows <- (abd.meta$meta[[E]] == envir)
-    dsets <- unique(abd.meta$meta[env.rows, D])
+    env.rows <- (abd.meta$metadata[[E]] == envir)
+    dsets <- unique(abd.meta$metadata[env.rows, D])
     if (length(dsets) > 1) {
         means.by.study <- lapply(dsets, function(d) {
             s <- intersect(
                 colnames(abd.meta$mtx),
-                abd.meta$meta$sample[(env.rows &
-                                      (abd.meta$meta[[D]] == d))] %>%
+                abd.meta$metadata$sample[(env.rows &
+                                          (abd.meta$metadata[[D]] == d))] %>%
                 as.character)
             rm <- rowMeans(1 * (abd.meta$mtx[, s] > 0))
             list(rm = rm, s = s)
@@ -621,7 +624,7 @@ prev.addw <- function(abd.meta,
         addw <- (1 + (avg.prev * total.s)) / (2 + total.s)
     } else {
         s <- intersect(colnames(abd.meta$mtx),
-                       abd.meta$meta$sample[env.rows] %>% as.character)
+                       abd.meta$metadata$sample[env.rows] %>% as.character)
         total.s <- length(s)
         rs <- rowSums(1 * (abd.meta$mtx[, s] > 0))
         addw <- (1 + rs) / (2 + total.s)
@@ -658,11 +661,11 @@ calc.ess <- function(abd.meta,
     D <- opts('dset_column')
     ptype <- opts('prior_type')
     envir <- opts('which_envir')
-    if (!(envir %in% levels(meta[[E]]))) {
+    if (!(envir %in% levels(abd.meta$metadata[[E]]))) {
         stop(paste0("environment ", envir, " not found in metadata"))
     }
     env.rows <- (abd.meta$metadata[[E]] == envir)
-    dsets <- unique(abd.meta$meta[env.rows, D])
+    dsets <- unique(abd.meta$metadata[env.rows, D])
     if (length(dsets) > 1) {
         warning("datasets are ignored when calculating specificity")
     }
@@ -835,8 +838,12 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
     pos.sig.descs <- Reduce(rbind, lapply(phy.with.sigs, function(n) {
-        cbind(phylum=n,
-              gene=pos.sig[[n]],
-              description=gene.annot(pos.sig[[n]], gene.to.fxn))
+        if (length(pos.sig[[n]]) > 0) {
+            cbind(phylum=n,
+                  gene=pos.sig[[n]],
+                  description=gene.annot(pos.sig[[n]], gene.to.fxn))
+        } else {
+            c(phylum=n, gene=NA, description=NA)
+        }
     }))
 }

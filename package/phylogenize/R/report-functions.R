@@ -576,7 +576,8 @@ import.pz.db <- function(...) {
                                     "subsys.txt"),
                           header = F))[,1:4]
     colnames(fig.hierarchy) <-  c("level1", "level2", "level3", "function")
-    g.mappings <- lapply.across.names(colnames(fig.hierarchy), function(x) {
+    g.mappings <- lapply.across.names(colnames(fig.hierarchy)[1:3],
+                                      function(x) {
         gene.to.subsys <- merge(data.frame(gene.to.fxn),
                                 fig.hierarchy[, c(x, "function")],
                                 by.x = "function.", by.y = "function")[, -1]
@@ -877,7 +878,7 @@ plot.pheno.distributions <- function(phenotype,
         ggplot2::xlab(opts('which_phenotype')) +
         ggplot2::ggtitle(paste0("Distributions of phenotype (",
                                 opts('which_phenotype'), ")"))
-    if (length(unique(sub.pheno$phylum) > 1)) { # don't assume >1 phylum
+    if (length(unique(sub.pheno$phylum)) > 1) { # don't assume >1 phylum
         distros <- distros + ggplot2::facet_grid(phylum ~ .)
     }
     return(distros)
@@ -1140,10 +1141,13 @@ sort.overlaps <- function(enr.overlap) {
 #' @param results Named list giving p-value and effect size matrices, one per phylum.
 #' @return Named list of enrichment overlap tables (see signif.overlaps), one per phylum.
 #' @export
-calc.enr.overlaps <- function(enrichments, results) {
+calc.enr.overlaps <- function(enrichments, results, gene.to.fxn) {
     enr.overlap.lists <- lapply(enrichments$strong, function(lev) {
         Filter(function(x) length(x) > 0,
-               mapply(lev, results, FUN = signif.overlaps))
+               mapply(lev,
+                      results,
+                      FUN=signif.overlaps,
+                      MoreArgs=list(gene.to.fxn=gene.to.fxn)))
     })
 }
 
