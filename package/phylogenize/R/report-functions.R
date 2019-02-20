@@ -1098,14 +1098,8 @@ render.report.alt <- function(output_file='report_output.html',
 #' @return Mutated enrichment table with better-labeled columns and significance
 #'     coloring.
 output.enr.table <- function(enr.table) {
-#    enr.table <- data.frame(enr.table[, -1])
-#    enr.table <- data.frame(apply(enr.table, 2, as.character),
-#                            stringsAsFactors = FALSE)
-#    enr.table <- enr.table[!is.na(enr.table$q_value), ]
-#    rownames(enr.table) <- NULL
     enr.table %>%
         dplyr::mutate(
-#            q_value=as.numeric(q_value),
             Gene_significance=capwords(Gene_significance),
             Subsystem_level=toupper(Subsystem_level),
             Phylum=capwords(Phylum),
@@ -1124,35 +1118,9 @@ output.enr.table <- function(enr.table) {
         kableExtra::kable_styling(c("striped", "condensed"))
 }
 
-#' Sort an enrichment table.
-#'
-#' @param enr.overlap The output of \code{calc.enr.overlaps}.
-#' @return A sorted enrichment table (by phylum, process, and then effect size)
-#' @export
-sort.overlaps <- function(enr.overlap) {
-    enr.overlap[order(enr.overlap$phylum,
-                      enr.overlap$process,
-                      enr.overlap$value.value.estimate), ]
-}
-
-#' Calculate enrichment overlaps.
-#'
-#' @param enrichments Named list of enrichment results, one per phylum.
-#' @param results Named list giving p-value and effect size matrices, one per phylum.
-#' @return Named list of enrichment overlap tables (see signif.overlaps), one per phylum.
-#' @export
-calc.enr.overlaps <- function(enrichments, results, gene.to.fxn) {
-    enr.overlap.lists <- lapply(enrichments$strong, function(lev) {
-        Filter(function(x) length(x) > 0,
-               mapply(lev,
-                      results,
-                      FUN=signif.overlaps,
-                      MoreArgs=list(gene.to.fxn=gene.to.fxn)))
-    })
-}
 
 #' Check if a particular string is likely to be DNA.
-#' 
+#'
 #' @param seq String to check for illegal characters.
 #' @return TRUE if it contains no illegal characters, FALSE otherwise.
 is.dna <- function(seq) {

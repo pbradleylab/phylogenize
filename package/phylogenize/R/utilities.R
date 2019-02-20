@@ -282,7 +282,6 @@ first.element.at.depth <- function(l, n) {
 #' @param stop.at Stop at this depth and summarize.
 #' @return A 2D data frame representation of the (summarized) values in the
 #'     nested lists.
-#' @export
 annotate.nested <- function(nested,
                             summarize = NULL,
                             n = NULL,
@@ -361,7 +360,6 @@ annotate.nested <- function(nested,
 #'     element is itself a list with the slots "name" and "data". For the ith
 #'     element of the returned list, "name" contains \code{names(iterover)[i]}
 #'     and "data" contains \code{iterover[[i]]}.
-#' @export
 zipData <- function(iterover) {
     n <- names(iterover)
     names(n) <- n
@@ -593,6 +591,9 @@ hack.tree.labels <- function(tree.obj,
 
 
 #' Helper function to parse SVG styles.
+#'
+#' @param str A style string to parse.
+#' @return A named vector of style attributes.
 style.parse <- function(str) {
     semi.split <- strsplit(str, ";") %>% sapply(., trimws)
     if (is.null(dim(semi.split))) {
@@ -619,28 +620,6 @@ non.interactive.plot <- function(tree.obj, file) {
     warning(paste0("replotting to: ", file))
     non.int <- svglite::xmlSVG(print(tree.obj), standalone = TRUE)
     xml2::write_xml(x = non.int, file)
-}
-
-#' A wrapper around \code{annotate.nested} specifically for use with enrichment
-#' tables.
-#' @export
-generic.make.tables <- function(enr,
-                                depth=3,
-                                col.names=NULL) {
-    a <- annotate.nested(enr,
-                         stop.at = list.depth(enr) - depth,
-                         summarize = function(x) {
-                             if (is.null(nrow(x$table))) {
-                                 names(x$table) <- c("enriched", "V2")
-                                 data.frame(t(x$table))
-                             } else if (nrow(x$table) > 0) {
-                                 x$table
-                             } else {
-                                 rbind(x$table, c(enriched = NA, V2 = NA))
-                             }}
-                         )
-    colnames(a) <- col.names
-    a
 }
 
 #' A wrapper around \code{apply} and \code{parApply} that allows them to be
