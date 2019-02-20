@@ -280,11 +280,6 @@ rm(pos.sig.thresh.descs)
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
           results.matrix)
 rm(results.matrix)
-result.tbl <- tibble(lapply(results, function(x) as.tibble(t(x)))) %>%
-  rename(results=1) %>%
-  mutate(phylum=names(results)) %>%
-  select(phylum, results)
-
 check.pryr()
 ```
 
@@ -330,56 +325,59 @@ and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
 
 ```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=TRUE}
-enrichments <- perform.enrichments(signif,
-                                   signs,
-                                   results,
-                                   mapping = pz.db$g.mappings,
-                                   verbose = FALSE)
+
+enrichment.tbl <- multi.enrich(signif,
+                               signs,
+                               pz.db$g.mappings) %>%
+  filter(enr.qval <= 0.25, enr.estimate > 1)
+
+pretty.enr.tbl <- select(enrichment.tbl,
+                         phylum,
+                         cutoff,
+                         termset,
+                         term,
+                         enr.qval,
+                         enr.estimate) %>%
+  rename(Gene_significance=cutoff,
+         Subsystem_level=termset,
+         Phylum=phylum,
+         Subsystem=term,
+         q_value=enr.qval,
+         Enrichment_odds_ratio=enr.estimate)
+
 check.pryr()
-enr.table <- generic.make.tables(enrichments,
-                                 col.names = c(
-                                     "Number",
-                                     "Gene_significance",
-                                     "Subsystem_level",
-                                     "Phylum",
-                                     "Subsystem",
-                                     "q_value"))
+write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
 check.pryr()
-write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), enr.table)
-check.pryr()
+
 ```
 
 ```{r enrichment_display, warning=FALSE,message=FALSE,echo=FALSE}
 options(knitr.table.format = "html")
 check.pryr()
-output.enr.table(enr.table)
+output.enr.table(pretty.enr.tbl)
 check.pryr()
 
 ### Make CSV of enrichments
-enr.overlap.lists <- calc.enr.overlaps(enrichments, results, pz.db$gene.to.fxn)
+
+enr.overlap <- select(enrichment.tbl,
+                      phylum,
+                      cutoff,
+                      termset,
+                      term,
+                      enr.overlap) %>% unnest %>%
+               left_join(., pz.db$gene.to.fxn, by=c("enr.overlap"="gene")) %>%
+               rename(gene=enr.overlap, description=`function`) %>%
+               mutate(effectsize=map2_dbl(phylum, gene, ~results[[.x]][1, .y]))
 check.pryr()
-tryCatch({
-  if ((list.even(enr.overlap.lists)) &&
-      (list.depth(enr.overlap.lists) >= 3) &&
-      (!(all(vapply(enr.overlap.lists, length, 1L) == 0)))) {
-    enr.overlap <- annotate.nested(enr.overlap.lists,
-                                   n.names=c("level",
-                                             "phylum",
-                                             "process"))
-    write.csv(file=file.path(pz.options('out_dir'),
-                             "enr-overlaps.csv"),
-              enr.overlap)
-    write.csv(file=file.path(pz.options('out_dir'),
-                             "enr-overlaps-sorted.csv"),
-              sort.overlaps(enr.overlap))
-  } else {
-    if (all(vapply(enr.overlap.lists, length, 1L) == 0)) {
-      pz.message("No enrichments found")
-    } else pz.message("Something went wrong with calculating enrichments")
-  }
-}, error = function(e) {
-	pz.message(paste0("Something went wrong with calculating enrichments: ", e))
-})
+
+write.csv(file=file.path(pz.options('out_dir'),
+                         "enr-overlaps.csv"),
+          enr.overlap)
+
+write.csv(file=file.path(pz.options('out_dir'),
+                         "enr-overlaps-sorted.csv"),
+          arrange(enr.overlap,
+                  phylum, cutoff, termset, term, -effectsize))
 
 check.pryr()
 rm(enr.overlap)

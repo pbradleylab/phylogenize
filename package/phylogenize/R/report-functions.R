@@ -1098,14 +1098,14 @@ render.report.alt <- function(output_file='report_output.html',
 #' @return Mutated enrichment table with better-labeled columns and significance
 #'     coloring.
 output.enr.table <- function(enr.table) {
-    enr.table <- data.frame(enr.table[, -1])
-    enr.table <- data.frame(apply(enr.table, 2, as.character),
-                            stringsAsFactors = FALSE)
-    enr.table <- enr.table[!is.na(enr.table$q_value), ]
-    rownames(enr.table) <- NULL
+#    enr.table <- data.frame(enr.table[, -1])
+#    enr.table <- data.frame(apply(enr.table, 2, as.character),
+#                            stringsAsFactors = FALSE)
+#    enr.table <- enr.table[!is.na(enr.table$q_value), ]
+#    rownames(enr.table) <- NULL
     enr.table %>%
         dplyr::mutate(
-            q_value=as.numeric(q_value),
+#            q_value=as.numeric(q_value),
             Gene_significance=capwords(Gene_significance),
             Subsystem_level=toupper(Subsystem_level),
             Phylum=capwords(Phylum),

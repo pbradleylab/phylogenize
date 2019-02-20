@@ -13,12 +13,12 @@ LazyData: true
 Depends:
     phylolm,
     settings,
-    Matrix
+    Matrix,
+    tidyverse
 Imports:
     data.table,
     parallel,
     qvalue,
-    tidyverse,
     ggtree,
     ape,
     phytools,
