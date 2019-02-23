@@ -14,12 +14,12 @@ Depends:
     phylolm,
     settings,
     Matrix,
-    tidyverse
+    tidyverse,
+    ggtree
 Imports:
     data.table,
     parallel,
     qvalue,
-    ggtree,
     ape,
     phytools,
     knitr,

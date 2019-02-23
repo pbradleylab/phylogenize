@@ -12,6 +12,7 @@ PZ_OPTIONS <- options_manager(
   input_format="tabular",
   env_column="env",
   dset_column="dataset",
+  sample_column="sample",
   phenotype_file="",
   db_version="midas_v1.2",
   which_phenotype="prevalence",
@@ -43,7 +44,7 @@ PZ_OPTIONS <- options_manager(
   use_rmd_params=FALSE,
   devel=FALSE,
   devel_pkgdir='package/phylogenize',
-  resume=FALSE
+  relative_out_dir=NULL
 )
 
 #' Set and get options for phylogenize.

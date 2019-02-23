@@ -418,7 +418,7 @@ kable.recolor <- function(x,
         x[x < limits[1]] <- limits[1]
     }
     if (any(na.omit(x) > limits[2])) {
-        x[x < limits[2]] <- limits[2]
+        x[x > limits[2]] <- limits[2]
     }
     if (is.null(scale_from)) {
         x <- round(scales::rescale(x, c(1, 256)))
@@ -639,3 +639,17 @@ maybeParApply <- function(mtx, margin, fun, cl=NULL, ...) {
     }
 }
 
+#' Helper function to "melt" a sparse matrix into a long format.
+#'
+#' @param mtx An object of class \code{TsparseMatrix}. @return A data frame with
+#'     the data in \code{mtx} represented in "long" (vs. "wide") format.
+sparseMelt <- function(mtx) {
+    mtxT <- as(mtx, "TsparseMatrix")
+    df <- data.frame(row=mtxT@Dimnames[[1]][mtxT@i + 1],
+                     col=mtxT@Dimnames[[2]][mtxT@j + 1],
+                     value=mtxT@x)
+    if (!is.null(names(dimnames(mtxT)))) {
+        colnames(df)[1:2] <- names(dimnames(mtxT))
+    }
+    df
+}
