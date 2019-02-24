@@ -184,7 +184,6 @@ master.fx.matrix <- function(divided,
 #' Generate fake names for taxa or samples.
 #' @return A vector of fake names.
 #' @name NameFaker
-#' @export
 NULL
 
 #' @rdname NameFaker

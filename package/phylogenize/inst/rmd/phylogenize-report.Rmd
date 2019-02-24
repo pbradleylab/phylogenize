@@ -280,10 +280,17 @@ rm(pos.sig.thresh.descs)
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
           results.matrix)
 rm(results.matrix)
+
+result.qv <- lapply(results, function(x) {
+  t(x) %>% mutate(q.value = qvals(p.value))
+}
+
 result.tbl <- tibble(lapply(results, function(x) as.tibble(t(x)))) %>%
   rename(results=1) %>%
   mutate(phylum=names(results)) %>%
   select(phylum, results)
+
+
 
 check.pryr()
 ```
