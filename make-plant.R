@@ -14,6 +14,7 @@ rmarkdown::render("phylogenize-report.Rmd",
 		burst_dir = "./",
     ncl = 10))
 
+devtools::document("package/phylogenize")
 devtools::load_all("package/phylogenize")
 phylogenize::render.report.alt(
   out_dir = "/home/pbradz/projects/phylogenize/jordan/jlp16s-3/",

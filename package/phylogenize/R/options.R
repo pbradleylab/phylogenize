@@ -44,7 +44,8 @@ PZ_OPTIONS <- options_manager(
   use_rmd_params=FALSE,
   devel=FALSE,
   devel_pkgdir='package/phylogenize',
-  relative_out_dir=NULL
+  relative_out_dir=NULL,
+  single_dset=FALSE
 )
 
 #' Set and get options for phylogenize.
@@ -80,6 +81,8 @@ PZ_OPTIONS <- options_manager(
 #'   \item{type}{String. Type of data to use, either "midas" (shotgun) or "16S" (amplicon). Default: "midas"}
 #'   \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
+#'   \item{sample_column}{String. Name of column in metadata file containing the sample IDs. Default: "sample_id"}
+#'   \item{single_dset}{Boolean. If true, will assume that all samples come from a single dataset called \code{dset1} no matter what, if anything, is in \code{dset_column}. Default: FALSE}
 #'   \item{db_version}{String. Which version of the MIDAS database to use ("midas_v1.2" or "midas_v1.0"). Default: "midas_v1.2"}
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence" or "specificity"). Default: "prevalence"}
 #'   \item{which_envir}{String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. Default: "Stool"}

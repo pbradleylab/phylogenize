@@ -63,6 +63,9 @@ read.abd.metadata <- function(...) {
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment annotations.}
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
+#'   \item{single_dset}{Boolean. If true, will assume that all samples come from
+#'   a single dataset called \code{dset1} no matter what, if anything, is in
+#'   \code{dset_column}.}
 #' }
 #'
 #' @param metadata A data frame of metadata with environment, dataset, and
@@ -75,6 +78,9 @@ check.process.metadata <- function(metadata, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (!(opts('env_column') %in% colnames(metadata))) {
         pz.error(paste0("environment column not found: ", opts('env_column')))
+    }
+    if (opts('single_dset')) {
+        metadata[[opts('dset_column')]] <- rep("dset1", nrow(metadata))
     }
     if (!(opts('dset_column') %in% colnames(metadata))) {
         pz.error(paste0("dataset column not found: ", opts('dset_column')))
