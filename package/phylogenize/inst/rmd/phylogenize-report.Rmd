@@ -36,26 +36,22 @@ params:
   error_to_file: TRUE
 ---
 
-# Settings
-
-This report was generated automatically by [phylogenize](https://phylogenize.org/) (Bradley and Pollard, submitted: https://phylogenize.org), with the following parameters:
-
-  - Type of input data: "`r params$type`"
-  - Phenotype calculated: "`r params$which_phenotype`"
-  - Environment of interest: "`r params$which_envir`"
-  - Prior probabilities for environments: "`r params$prior_type`"
-
 ```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=TRUE}
 
 library(phylogenize)
 library(Matrix)
 
 cache.d <- file.path(pz.options('out_dir'), 'cache')
+dir.create(pz.options('out_dir'))
 dir.create(cache.d)
 knitr::opts_chunk$set(cache.dir=cache.d)
 
 if (pz.options('use_rmd_params')) {
     do.call(pz.options, args=params)
+}
+
+if (is.null(pz.options('relative_out_dir'))) {
+  pz.options(relative_out_dir=pz.options('out_dir'))
 }
 
 check.pryr <- function() {
@@ -102,6 +98,15 @@ gc()
 check.pryr()
 
 ```
+
+# Settings
+
+This report was generated automatically by [phylogenize](https://phylogenize.org/) (Bradley and Pollard, submitted: https://phylogenize.org), with the following parameters:
+
+- Type of input data: "`r pz.options('type')`"
+- Phenotype calculated: "`r pz.options('which_phenotype')`"
+- Environment of interest: "`r pz.options('which_envir')`"
+- Prior probabilities for environments: "`r pz.options('prior_type')`"
 
 # Phenotype calculation
 
@@ -280,18 +285,6 @@ rm(pos.sig.thresh.descs)
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
           results.matrix)
 rm(results.matrix)
-
-result.qv <- lapply(results, function(x) {
-  t(x) %>% mutate(q.value = qvals(p.value))
-}
-
-result.tbl <- tibble(lapply(results, function(x) as.tibble(t(x)))) %>%
-  rename(results=1) %>%
-  mutate(phylum=names(results)) %>%
-  select(phylum, results)
-
-
-
 check.pryr()
 ```
 
@@ -337,60 +330,75 @@ and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
 
 ```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=TRUE}
-enrichments <- perform.enrichments(signif,
-                                   signs,
-                                   results,
-                                   mapping = pz.db$g.mappings,
-                                   verbose = FALSE)
-check.pryr()
-enr.table <- generic.make.tables(enrichments,
-                                 col.names = c(
-                                     "Number",
-                                     "Gene_significance",
-                                     "Subsystem_level",
-                                     "Phylum",
-                                     "Subsystem",
-                                     "q_value"))
-check.pryr()
-write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), enr.table)
-check.pryr()
+
+enrichment.tbl <- multi.enrich(signif,
+                               signs,
+                               pz.db$g.mappings)
+if (!is.null(enrichment.tbl)) {
+  enrichment.tbl <- filter(enrichment.tbl,
+                           enr.qval <= 0.25, enr.estimate > 1)
+  pretty.enr.tbl <- select(enrichment.tbl,
+                          phylum,
+                          cutoff,
+                          termset,
+                          term,
+                          enr.qval,
+                          enr.estimate) %>%
+    rename(Gene_significance=cutoff,
+          Subsystem_level=termset,
+          Phylum=phylum,
+          Subsystem=term,
+          q_value=enr.qval,
+          Enrichment_odds_ratio=enr.estimate) %>%
+    arrange(factor(Gene_significance, levels=names(signif[[1]])),
+            Phylum,
+            Subsystem_level,
+            desc(Enrichment_odds_ratio))
+
+  check.pryr()
+  write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
+  check.pryr()
+}
+
 ```
 
 ```{r enrichment_display, warning=FALSE,message=FALSE,echo=FALSE}
 options(knitr.table.format = "html")
 check.pryr()
-output.enr.table(enr.table)
-check.pryr()
-
-### Make CSV of enrichments
-enr.overlap.lists <- calc.enr.overlaps(enrichments, results, pz.db$gene.to.fxn)
-check.pryr()
-tryCatch({
-  if ((list.even(enr.overlap.lists)) &&
-      (list.depth(enr.overlap.lists) >= 3) &&
-      (!(all(vapply(enr.overlap.lists, length, 1L) == 0)))) {
-    enr.overlap <- annotate.nested(enr.overlap.lists,
-                                   n.names=c("level",
-                                             "phylum",
-                                             "process"))
+if (!is.null(enrichment.tbl)) {
+  output.enr.table(pretty.enr.tbl)
+  check.pryr()
+  if (nrow(enrichment.tbl) > 0) {
+    enr.overlap <- select(enrichment.tbl,
+                          phylum,
+                          cutoff,
+                          termset,
+                          term,
+                          enr.overlap) %>% unnest %>%
+                   left_join(.,
+                             pz.db$gene.to.fxn,
+                             by=c("enr.overlap"="gene")) %>%
+                   rename(gene=enr.overlap, description=`function`) %>%
+                   mutate(effectsize=map2_dbl(phylum,
+                                              gene,
+                                              ~results[[.x]][1, .y]))
+    check.pryr()
     write.csv(file=file.path(pz.options('out_dir'),
                              "enr-overlaps.csv"),
               enr.overlap)
     write.csv(file=file.path(pz.options('out_dir'),
                              "enr-overlaps-sorted.csv"),
-              sort.overlaps(enr.overlap))
-  } else {
-    if (all(vapply(enr.overlap.lists, length, 1L) == 0)) {
-      pz.message("No enrichments found")
-    } else pz.message("Something went wrong with calculating enrichments")
+              arrange(enr.overlap,
+                      phylum,
+                      factor(cutoff, levels=names(signif[[1]])),
+                      termset,
+                      term,
+                      desc(effectsize)))
+    check.pryr()
+    rm(enr.overlap)
+    rm(enrichments)
   }
-}, error = function(e) {
-	pz.message(paste0("Something went wrong with calculating enrichments: ", e))
-})
-
-check.pryr()
-rm(enr.overlap)
-rm(enrichments)
+}
 rm(enr.overlap.lists)
 gc()
 ```
@@ -404,3 +412,28 @@ rm(pz.db)
 gc()
 ```
 
+# Full output files
+
+Links to other files generated by the report:
+
+```{r, results='asis', echo=FALSE}
+
+if (is.null(pz.options('relative_out_dir'))) {
+  r.outdir <- pz.options('out_dir')
+} else {
+  r.outdir <- pz.options('relative_out_dir')
+}
+for (f in c("phenotype.tab",
+            "all-results.csv",
+            "pos-sig-thresholded.csv",
+            "enr-table.csv",
+            "enr-overlaps.csv",
+            "enr-overlaps-sorted.csv")) {
+  fp <- file.path(r.outdir, f)
+  # Note, check the actual output directory when we're trying to figure out what
+  # got made
+  if (file.exists(file.path(pz.options('out_dir'), f))) {
+    cat(paste0(' * [**', f, '**](', fp, ')\n'))
+  }
+}
+```

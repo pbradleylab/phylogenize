@@ -12,6 +12,7 @@ PZ_OPTIONS <- options_manager(
   input_format="tabular",
   env_column="env",
   dset_column="dataset",
+  sample_column="sample",
   phenotype_file="",
   db_version="midas_v1.2",
   which_phenotype="prevalence",
@@ -43,7 +44,9 @@ PZ_OPTIONS <- options_manager(
   use_rmd_params=FALSE,
   devel=FALSE,
   devel_pkgdir='package/phylogenize',
-  resume=FALSE
+  relative_out_dir=NULL,
+  single_dset=FALSE,
+  working_dir='.'
 )
 
 #' Set and get options for phylogenize.
@@ -58,6 +61,7 @@ PZ_OPTIONS <- options_manager(
 #'   \item{out_dir}{String. Path to output directory. Default: "output"}
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files). Default: "."}
 #'   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
+#'   \item{working_dir}{String. Path to directory where relative paths should originate from. Default: \code{"."}}
 #'   \item{abundance_file}{String. Name of abundance tabular file. Default: "test-abundance.tab"}
 #'   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
@@ -79,6 +83,8 @@ PZ_OPTIONS <- options_manager(
 #'   \item{type}{String. Type of data to use, either "midas" (shotgun) or "16S" (amplicon). Default: "midas"}
 #'   \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
+#'   \item{sample_column}{String. Name of column in metadata file containing the sample IDs. Default: "sample_id"}
+#'   \item{single_dset}{Boolean. If true, will assume that all samples come from a single dataset called \code{dset1} no matter what, if anything, is in \code{dset_column}. Default: FALSE}
 #'   \item{db_version}{String. Which version of the MIDAS database to use ("midas_v1.2" or "midas_v1.0"). Default: "midas_v1.2"}
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence" or "specificity"). Default: "prevalence"}
 #'   \item{which_envir}{String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. Default: "Stool"}

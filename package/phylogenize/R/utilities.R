@@ -39,7 +39,7 @@ nw <- function(x) { names(which(x)) }
 #' Find the minimum value of a vector that is still greater than zero.
 #'
 #' @param x Numeric vector.
-#' @export
+#' @export min.nonzero
 min.nonzero <- function(x) min(x[x > 0])
 
 #' Count the number of instances of every unique value of a vector.
@@ -282,7 +282,6 @@ first.element.at.depth <- function(l, n) {
 #' @param stop.at Stop at this depth and summarize.
 #' @return A 2D data frame representation of the (summarized) values in the
 #'     nested lists.
-#' @export
 annotate.nested <- function(nested,
                             summarize = NULL,
                             n = NULL,
@@ -361,7 +360,6 @@ annotate.nested <- function(nested,
 #'     element is itself a list with the slots "name" and "data". For the ith
 #'     element of the returned list, "name" contains \code{names(iterover)[i]}
 #'     and "data" contains \code{iterover[[i]]}.
-#' @export
 zipData <- function(iterover) {
     n <- names(iterover)
     names(n) <- n
@@ -420,7 +418,7 @@ kable.recolor <- function(x,
         x[x < limits[1]] <- limits[1]
     }
     if (any(na.omit(x) > limits[2])) {
-        x[x < limits[2]] <- limits[2]
+        x[x > limits[2]] <- limits[2]
     }
     if (is.null(scale_from)) {
         x <- round(scales::rescale(x, c(1, 256)))
@@ -593,6 +591,9 @@ hack.tree.labels <- function(tree.obj,
 
 
 #' Helper function to parse SVG styles.
+#'
+#' @param str A style string to parse.
+#' @return A named vector of style attributes.
 style.parse <- function(str) {
     semi.split <- strsplit(str, ";") %>% sapply(., trimws)
     if (is.null(dim(semi.split))) {
@@ -621,28 +622,6 @@ non.interactive.plot <- function(tree.obj, file) {
     xml2::write_xml(x = non.int, file)
 }
 
-#' A wrapper around \code{annotate.nested} specifically for use with enrichment
-#' tables.
-#' @export
-generic.make.tables <- function(enr,
-                                depth=3,
-                                col.names=NULL) {
-    a <- annotate.nested(enr,
-                         stop.at = list.depth(enr) - depth,
-                         summarize = function(x) {
-                             if (is.null(nrow(x$table))) {
-                                 names(x$table) <- c("enriched", "V2")
-                                 data.frame(t(x$table))
-                             } else if (nrow(x$table) > 0) {
-                                 x$table
-                             } else {
-                                 rbind(x$table, c(enriched = NA, V2 = NA))
-                             }}
-                         )
-    colnames(a) <- col.names
-    a
-}
-
 #' A wrapper around \code{apply} and \code{parApply} that allows them to be
 #' called with a single syntax.
 #'
@@ -660,3 +639,17 @@ maybeParApply <- function(mtx, margin, fun, cl=NULL, ...) {
     }
 }
 
+#' Helper function to "melt" a sparse matrix into a long format.
+#'
+#' @param mtx An object of class \code{TsparseMatrix}. @return A data frame with
+#'     the data in \code{mtx} represented in "long" (vs. "wide") format.
+sparseMelt <- function(mtx) {
+    mtxT <- as(mtx, "TsparseMatrix")
+    df <- data.frame(row=mtxT@Dimnames[[1]][mtxT@i + 1],
+                     col=mtxT@Dimnames[[2]][mtxT@j + 1],
+                     value=mtxT@x)
+    if (!is.null(names(dimnames(mtxT)))) {
+        colnames(df)[1:2] <- names(dimnames(mtxT))
+    }
+    df
+}

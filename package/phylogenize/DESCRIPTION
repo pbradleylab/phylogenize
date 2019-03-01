@@ -13,13 +13,18 @@ LazyData: true
 Depends:
     phylolm,
     settings,
-    Matrix
+    Matrix,
+    tidyverse,
+    ggtree,
+    biomformat,
+    methods,
+    stats,
+    graphics,
+    grDevices
 Imports:
     data.table,
     parallel,
     qvalue,
-    tidyverse,
-    ggtree,
     ape,
     phytools,
     knitr,
@@ -27,11 +32,13 @@ Imports:
     scales,
     xml2,
     ggplot2,
-    biomformat,
     MASS,
     seqinr,
     pbapply,
-    gtools
+    gtools,
+    svglite,
+    pryr,
+    testthat,
+    ezknitr
 Suggests: 
-    testthat
 RoxygenNote: 6.1.1.9000

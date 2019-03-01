@@ -29,9 +29,9 @@ NULL
 #' @export
 read.abd.metadata <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    if ((opts('env_column') == "sample") ||
-        (opts('dset_column') == "sample")) {
-        pz.error("Environment and dataset columns cannot be titled \"sample\"")
+    colns <- c(opts('env_column'), opts('dset_column'), opts('sample_column'))
+    if (length(unique(colns)) < length(colns)) {
+        pz.error("Environment, dataset, and sample columns must all be different")
     }
     if (opts('input_format') == "tabular") {
         abd.meta <- read.abd.metadata.tabular(...)
@@ -63,6 +63,9 @@ read.abd.metadata <- function(...) {
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment annotations.}
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
+#'   \item{single_dset}{Boolean. If true, will assume that all samples come from
+#'   a single dataset called \code{dset1} no matter what, if anything, is in
+#'   \code{dset_column}.}
 #' }
 #'
 #' @param metadata A data frame of metadata with environment, dataset, and
@@ -76,14 +79,20 @@ check.process.metadata <- function(metadata, ...) {
     if (!(opts('env_column') %in% colnames(metadata))) {
         pz.error(paste0("environment column not found: ", opts('env_column')))
     }
+    if (opts('single_dset')) {
+        metadata[[opts('dset_column')]] <- rep("dset1", nrow(metadata))
+    }
     if (!(opts('dset_column') %in% colnames(metadata))) {
         pz.error(paste0("dataset column not found: ", opts('dset_column')))
     }
-    if (!("sample" %in% colnames(metadata))) {
+    if (!(opts('sample_column') %in% colnames(metadata))) {
         if (!is.null(rownames(metadata))) {
-            metadata$sample <- rownames(metadata)
+            pz.warning(paste0("sample column not found: ",
+                              opts('sample_column'),
+                              "; assuming row names are sample IDs"))
+            metadata[[opts('sample_column')]] <- rownames(metadata)
         } else {
-            pz.error(paste0("sample column not found: sample"))
+            pz.error(paste0("sample column not found: ", opts('sample_column')))
         }
     }
     metadata[[opts('env_column')]] <- as.factor(metadata[[opts('env_column')]])
@@ -101,7 +110,13 @@ check.process.metadata <- function(metadata, ...) {
 #' @export
 read.abd.metadata.biom <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    biomf <- biomformat::read_biom(file.path(opts('in_dir'), opts('biom_file')))
+    bf <- file.path(opts('in_dir'), opts('biom_file'))
+    pz.message(paste0("looking for file: ", normalizePath(bf)))
+    if (!(file.exists(bf))) {
+        pz.error(paste0("file not found: ", bf))
+    } else { pz.message(paste0("located biom file: ", bf)) }
+    # biomf <- biomformat::read_biom(bf)
+    biomf <- biomformat::read_biom(bf)
     abd.mtx <- biomformat::biom_data(biomf)
     metadata <- biomformat::sample_metadata(biomf)
     metadata <- check.process.metadata(metadata, ...)
@@ -130,12 +145,17 @@ read.abd.metadata.biom <- function(...) {
 #' @export
 read.abd.metadata.tabular <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    abd.mtx <- fastread(file.path(opts('in_dir'),
-                                  opts('abundance_file')), cn=FALSE)
+    af <- file.path(opts('in_dir'), opts('abundance_file'))
+    mf <- file.path(opts('in_dir'), opts('metadata_file'))
+    if (!(file.exists(af))) {
+        pz.error(paste0("file not found: ", af))
+    } else { pz.message(paste0("located abundance file: ", af)) }
+    if (!(file.exists(mf))) {
+        pz.error(paste0("file not found: ", mf))
+    } else { pz.message(paste0("located metadata file: ", mf)) }
+    abd.mtx <- fastread(af, cn=FALSE)
     gc()
-    metadata <- data.frame(
-        data.table::fread(file.path(opts('in_dir'),
-                                    opts('metadata_file'))))
+    metadata <- data.frame(data.table::fread(mf))
     metadata <- check.process.metadata(metadata, ...)
     return(list(mtx=abd.mtx, metadata=metadata))
 }
@@ -151,25 +171,25 @@ read.abd.metadata.tabular <- function(...) {
 #'     abundance data is the wrong type or class.
 #' @export
 sanity.check.abundance <- function(abd.mtx, ...) {
-    if ((!is(abd.mtx, "matrix")) & (!is(abd.mtx, "Matrix"))) {
+    if ((!methods::is(abd.mtx, "matrix")) & (!methods::is(abd.mtx, "Matrix"))) {
         pz.error(paste0(
-            "Abundance matrix must be a matrix of logicals or doubles ",
+            "Abundance matrix must be a matrix of logicals/doubles/integers ",
             "and instead was a ",
             class(abd.mtx)))
     }
-    if (is(abd.mtx, "Matrix")) {
-        if (!(typeof(abd.mtx@x[1]) %in% c("logical", "double"))) {
+    if (methods::is(abd.mtx, "Matrix")) {
+        if (!(typeof(abd.mtx@x[1]) %in% c("logical", "double", "integer"))) {
             pz.error(paste0(
-                "Abundance matrix must be a matrix of logicals or doubles ",
+                "Abundance matrix must be a matrix of logicals/doubles/integers ",
                 "and instead contained ",
                 typeof(abd.mtx@x[1])))
         }
-    } else if (is(abd.mtx, "matrix")) {
-        if (!(typeof(abd.mtx) %in% c("logical", "double"))) {
+    } else if (methods::is(abd.mtx, "matrix")) {
+        if (!(typeof(abd.mtx) %in% c("logical", "double", "integer"))) {
             pz.error(paste0(
-                "Abundance matrix must be a matrix of logicals or doubles ",
+                "Abundance matrix must be a matrix of logicals/doubles/integers ",
                 "and instead contained ",
-                typeof(abd.mtx@x[1])))
+                typeof(abd.mtx)))
         }
     }
     if (ncol(abd.mtx) < 2) {
@@ -231,19 +251,20 @@ sanity.check.metadata <- function(metadata, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (!(opts('env_column') %in% colnames(metadata))) {
         pz.error(
-            paste("When looking for environment, no column found labeled",
+            paste0("When looking for environment, no column found labeled ",
                   opts('env_column'))
         )
     }
     if (!(opts('dset_column') %in% colnames(metadata))) {
         pz.error(
-            paste("When looking for dataset, no column found labeled ",
+            paste0("When looking for dataset, no column found labeled ",
                   opts('dset_column'))
         )
     }
-    if (!("sample" %in% colnames(metadata))) {
-        pz.error(
-            "When looking for dataset, no column found labeled \"sample\""
+    if (!(opts('sample_column') %in% colnames(metadata))) {
+        pz.error(paste0(
+            "When looking for dataset, no column found labeled ",
+            opts('sample_column'))
         )
     }
     if (nrow(metadata) < 2) {
@@ -274,16 +295,17 @@ sanity.check.metadata <- function(metadata, ...) {
 #' @export
 harmonize.abd.meta <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    samples.present <- intersect(abd.meta$metadata$sample,
+    samples.present <- intersect(abd.meta$metadata[[opts('sample_column')]],
                                  colnames(abd.meta$mtx))
     if (length(samples.present) == 0) {
         pz.error(paste0("No samples found in both metadata and ",
-                        "abundance matrix"))
+                        "abundance matrix; check for illegal characters ",
+                        "in sample ID column"))
     }
     abd.meta$mtx <- abd.meta$mtx[, samples.present]
     abd.meta$metadata <- abd.meta$metadata[
-                                      abd.meta$metadata$sample %in%
-                                      samples.present, ]
+                            abd.meta$metadata[[opts('sample_column')]] %in%
+                            samples.present, ]
     all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
     all.dsets <- unique(abd.meta$metadata[[opts('dset_column')]])
     env.number <- sapply(all.envs, function(e) {
@@ -309,7 +331,8 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "matrix (need at least 2)"))
     }
     abd.meta$metadata <- abd.meta$metadata[wrows, ]
-    wcols <- intersect(colnames(abd.meta$mtx), abd.meta$metadata$sample)
+    wcols <- intersect(colnames(abd.meta$mtx),
+                       abd.meta$metadata[[opts('sample_column')]])
     if (length(wcols) < 2) {
         pz.error(paste0("Too few columns found in abundance matrix ",
                         "after dropping singletons and matching with metadata ",
@@ -455,7 +478,7 @@ get.burst.results <- function(...) {
 #' @param mtx A presence/absence or abundance matrix, with row names equal to
 #'     amplicon sequence variant DNA sequences.
 #' @return A new matrix with MIDAS IDs as rows.
-#' @export
+#' @export sum.nonunique.burst
 sum.nonunique.burst <- function(burst, mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     uniq.hits <- which(count.each(burst$hits) < 2)
@@ -821,7 +844,7 @@ get.pheno.plotting.scales.specificity <- function(phenotype,
 #' @param scale A list returned from \code{get.pheno.plotting.scales}.
 #' @return A list of ggtree objects in which the phenotype has been plotted
 #'     across each tree in \code{trees}.
-#' @export
+#' @export plot.phenotype.trees
 plot.phenotype.trees <- function(phenotype,
                                  trees,
                                  scale,
@@ -858,7 +881,7 @@ plot.phenotype.trees <- function(phenotype,
 #' @param phenotype A named vector with the phenotype values for each taxon.
 #' @param pz.db A database containing a \code{taxonomy} and \code{trees}.
 #' @return A ggplot object with the phenotype distribution plotted per phylum.
-#' @export
+#' @export plot.pheno.distributions
 plot.pheno.distributions <- function(phenotype,
                                      pz.db,
                                      ...) {
@@ -900,7 +923,7 @@ plot.pheno.distributions <- function(phenotype,
 #' @param label Label to give to the phenotype.
 #' @param stroke.scale How thick to make the highlight.
 #' @param units A string appended to each label, used to give units of phenotype.
-#' @export
+#' @export plot.labeled.phenotype.trees
 plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                                          phenotype,
                                          label='prevalence',
@@ -913,8 +936,8 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
         rp2 <- rp
         # pad tip labels so the additional stuff doesn't get cut off when
         # calculating x limits
-        rp2$tip.label <- paste0(rp2$tip.label, " (phenotype: ......", units, ")")
-        xlim <- plot(rp2, plot=FALSE)$x.lim
+        rp2$tip.label <- paste0(rp2$tip.label, " (phenotype = ...", units, ")")
+        xlim <- plot(rp2, plot=FALSE, no.margin=TRUE)$x.lim
         new.tr <- tr +
             ggtree::geom_tiplab() +
             ggplot2::xlim(xlim[1], xlim[2])
@@ -947,7 +970,7 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 #' @param plotted.tree A ggtree plot of \code{tree}.
 #' @param phylum Name of the phylum represented by \code{tree}
 #' @param verbose Whether to report debugging information (boolean).
-#' @export
+#' @export do.clust.plot
 do.clust.plot <- function(gene.presence,
                           sig.genes,
                           tree,
@@ -957,9 +980,9 @@ do.clust.plot <- function(gene.presence,
                           ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     # Run these on a separate process to avoid memory leak
-    cl <- makeCluster(1)
+    cl <- parallel::makeCluster(1)
     if (verbose) message("exporting data...")
-    clusterExport(cl,
+    parallel::clusterExport(cl,
                   c("gene.presence",
                     "sig.genes",
                     "tree",
@@ -969,9 +992,10 @@ do.clust.plot <- function(gene.presence,
                     "PZ_OPTIONS"),
                   envir=environment())
     if (verbose) message("importing source...")
-    clusterCall(cl, library, phylogenize)
+    # parallel::clusterCall(cl, library, phylogenize)
+    cluster.load.pkg(cl, opts("devel"), opts("devel_pkgdir"))
     if (verbose) message("performing call...")
-    tmpL <- clusterCall(cl,
+    tmpL <- parallel::clusterCall(cl,
                         single.cluster.plot,
                         gene.presence,
                         sig.genes,
@@ -982,7 +1006,7 @@ do.clust.plot <- function(gene.presence,
                         ...)
     print(tmpL[[1]])
     rm(tmpL)
-    stopCluster(cl)
+    parallel::stopCluster(cl)
     gc()
     return(NULL) # Avoid wasting memory since we never touch these
 }
@@ -1025,7 +1049,7 @@ single.cluster.plot <- function(gene.presence,
                          disp=plotted.tree$disp)
     p <- ggtree::ggtree(tree, ladderize = TRUE) %<+%
         col.df +
-        ggplot2::geom_tippoint(ggplot2::aes(color=disp, shape = '.'))
+        ggtree::geom_tippoint(ggplot2::aes(color=disp, shape = '.'))
     if (opts('which_phenotype') == "prevalence") {
         p <- p + ggplot2::scale_color_gradient(
                               low=plotted.tree$cols["low.col"],
@@ -1044,12 +1068,12 @@ single.cluster.plot <- function(gene.presence,
         sig.ord <- reshape2::melt(t(sig.bin))
         sig.ord <- sig.ord[order(sig.ord[, 3]), ]
     }
-    tmp <- ggplot2::facet_plot(p,
-                      paste0('heatmap: ', phylum),
-                      sig.ord,
-                      ggplot2::geom_tile,
-                      ggplot2::aes(x = as.numeric(as.factor(gene)),
-                          fill = as.numeric(as.factor(value)))) +
+    tmp <- ggtree::facet_plot(p,
+                              paste0('heatmap: ', phylum),
+                              sig.ord,
+                              ggplot2::geom_tile,
+                              ggplot2::aes(x = as.numeric(as.factor(gene)),
+                                           fill = as.numeric(as.factor(value)))) +
         ggplot2::scale_fill_gradient(low = opts('gene_color_absent'),
                                      high = opts('gene_color_present'),
                                      na.value = opts('gene_color_absent'))
@@ -1077,19 +1101,27 @@ render.report <- function(output_file='report_output.html',
 #'
 #' @param output_file Path giving what to name the resulting HTML file.
 #' @param ... Parameters to override defaults.
-#' @return Output of rmarkdown::render.
 #' @export
 render.report.alt <- function(output_file='report_output.html',
+                              report_input='phylogenize-report.Rmd',
                               ...) {
     do.call(pz.options, list(...))
+    pz.options(working_dir=normalizePath(getwd()))
+    pz.options(in_dir=normalizePath(pz.options("in_dir")))
+    pz.options(out_dir=normalizePath(pz.options("out_dir")))
+    pz.options(burst_dir=normalizePath(pz.options("burst_dir")))
+    dir.create(pz.options("out_dir"))
     p <- pz.options()
     for (n in names(p)) {
-        message(paste0(n, ": ", p[[n]], "\n"))
+        message(paste0(n, ": ", p[[n]]))
     }
     rmarkdown::render(system.file("rmd",
-                                  "phylogenize-report.Rmd",
+                                  report_input,
                                   package="phylogenize"),
-                      output_file=output_file)
+                      output_file=basename(output_file),
+                      output_dir=pz.options("out_dir"),
+                      intermediates_dir=pz.options("out_dir"),
+                      knit_root_dir=pz.options("out_dir"))
 }
 
 #' Make a pretty enrichment table.
@@ -1097,62 +1129,38 @@ render.report.alt <- function(output_file='report_output.html',
 #' @param enr.table Input enrichment table.
 #' @return Mutated enrichment table with better-labeled columns and significance
 #'     coloring.
+#' @export
 output.enr.table <- function(enr.table) {
-    enr.table <- data.frame(enr.table[, -1])
-    enr.table <- data.frame(apply(enr.table, 2, as.character),
-                            stringsAsFactors = FALSE)
-    enr.table <- enr.table[!is.na(enr.table$q_value), ]
-    rownames(enr.table) <- NULL
     enr.table %>%
         dplyr::mutate(
-            q_value=as.numeric(q_value),
             Gene_significance=capwords(Gene_significance),
             Subsystem_level=toupper(Subsystem_level),
             Phylum=capwords(Phylum),
             Subsystem=gsub("_", " ", enr.table$Subsystem)
         ) %>%
         dplyr::mutate(
-                   q_value=kableExtra::cell_spec(
-                                           prettyNum(q_value, digits=2),
-                                           "html",
-                                           background=kable.recolor(
-                                               -log10(q_value),
-                                               colors=c("#FFFFFF", "#FF8888"),
-                                               limits=c(-10, -log10(0.25)))
-                                       )) %>%
+              q_value=kableExtra::cell_spec(
+                prettyNum(q_value, digits=2),
+                "html",
+                background=kable.recolor(
+                    -log10(q_value),
+                    colors=c("#FFFFFF", "#FF8888"),
+                    limits=c(0, 10)))) %>%
+        dplyr::mutate(
+              Enrichment_odds_ratio=kableExtra::cell_spec(
+                prettyNum(Enrichment_odds_ratio, digits=3),
+                "html",
+                background=kable.recolor(
+                    Enrichment_odds_ratio,
+                    colors=c("#FFFFFF", "#FFFF44"),
+                    limits=c(1, 10)))) %>%
         knitr::kable("html", escape=FALSE, align="l") %>%
         kableExtra::kable_styling(c("striped", "condensed"))
 }
 
-#' Sort an enrichment table.
-#'
-#' @param enr.overlap The output of \code{calc.enr.overlaps}.
-#' @return A sorted enrichment table (by phylum, process, and then effect size)
-#' @export
-sort.overlaps <- function(enr.overlap) {
-    enr.overlap[order(enr.overlap$phylum,
-                      enr.overlap$process,
-                      enr.overlap$value.value.estimate), ]
-}
-
-#' Calculate enrichment overlaps.
-#'
-#' @param enrichments Named list of enrichment results, one per phylum.
-#' @param results Named list giving p-value and effect size matrices, one per phylum.
-#' @return Named list of enrichment overlap tables (see signif.overlaps), one per phylum.
-#' @export
-calc.enr.overlaps <- function(enrichments, results, gene.to.fxn) {
-    enr.overlap.lists <- lapply(enrichments$strong, function(lev) {
-        Filter(function(x) length(x) > 0,
-               mapply(lev,
-                      results,
-                      FUN=signif.overlaps,
-                      MoreArgs=list(gene.to.fxn=gene.to.fxn)))
-    })
-}
 
 #' Check if a particular string is likely to be DNA.
-#' 
+#'
 #' @param seq String to check for illegal characters.
 #' @return TRUE if it contains no illegal characters, FALSE otherwise.
 is.dna <- function(seq) {
