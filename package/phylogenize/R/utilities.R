@@ -39,7 +39,7 @@ nw <- function(x) { names(which(x)) }
 #' Find the minimum value of a vector that is still greater than zero.
 #'
 #' @param x Numeric vector.
-#' @export
+#' @export min.nonzero
 min.nonzero <- function(x) min(x[x > 0])
 
 #' Count the number of instances of every unique value of a vector.

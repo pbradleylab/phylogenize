@@ -36,15 +36,6 @@ params:
   error_to_file: TRUE
 ---
 
-# Settings
-
-This report was generated automatically by [phylogenize](https://phylogenize.org/) (Bradley and Pollard, submitted: https://phylogenize.org), with the following parameters:
-
-  - Type of input data: "`r params$type`"
-  - Phenotype calculated: "`r params$which_phenotype`"
-  - Environment of interest: "`r params$which_envir`"
-  - Prior probabilities for environments: "`r params$prior_type`"
-
 ```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=TRUE}
 
 library(phylogenize)
@@ -107,6 +98,15 @@ gc()
 check.pryr()
 
 ```
+
+# Settings
+
+This report was generated automatically by [phylogenize](https://phylogenize.org/) (Bradley and Pollard, submitted: https://phylogenize.org), with the following parameters:
+
+- Type of input data: "`r pz.options('type')`"
+- Phenotype calculated: "`r pz.options('which_phenotype')`"
+- Environment of interest: "`r pz.options('which_envir')`"
+- Prior probabilities for environments: "`r pz.options('prior_type')`"
 
 # Phenotype calculation
 
@@ -333,68 +333,72 @@ respectively.
 
 enrichment.tbl <- multi.enrich(signif,
                                signs,
-                               pz.db$g.mappings) %>%
-  filter(enr.qval <= 0.25, enr.estimate > 1)
+                               pz.db$g.mappings)
+if (!is.null(enrichment.tbl)) {
+  enrichment.tbl <- filter(enrichment.tbl,
+                           enr.qval <= 0.25, enr.estimate > 1)
+  pretty.enr.tbl <- select(enrichment.tbl,
+                          phylum,
+                          cutoff,
+                          termset,
+                          term,
+                          enr.qval,
+                          enr.estimate) %>%
+    rename(Gene_significance=cutoff,
+          Subsystem_level=termset,
+          Phylum=phylum,
+          Subsystem=term,
+          q_value=enr.qval,
+          Enrichment_odds_ratio=enr.estimate) %>%
+    arrange(factor(Gene_significance, levels=names(signif[[1]])),
+            Phylum,
+            Subsystem_level,
+            desc(Enrichment_odds_ratio))
 
-pretty.enr.tbl <- select(enrichment.tbl,
-                         phylum,
-                         cutoff,
-                         termset,
-                         term,
-                         enr.qval,
-                         enr.estimate) %>%
-  rename(Gene_significance=cutoff,
-         Subsystem_level=termset,
-         Phylum=phylum,
-         Subsystem=term,
-         q_value=enr.qval,
-         Enrichment_odds_ratio=enr.estimate) %>%
-  arrange(factor(Gene_significance, levels=names(signif[[1]])),
-          Phylum,
-          Subsystem_level,
-          desc(Enrichment_odds_ratio))
-
-check.pryr()
-write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
-check.pryr()
+  check.pryr()
+  write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
+  check.pryr()
+}
 
 ```
 
 ```{r enrichment_display, warning=FALSE,message=FALSE,echo=FALSE}
 options(knitr.table.format = "html")
 check.pryr()
-output.enr.table(pretty.enr.tbl)
-check.pryr()
-
-### Make CSV of enrichments
-
-enr.overlap <- select(enrichment.tbl,
+if (!is.null(enrichment.tbl)) {
+  output.enr.table(pretty.enr.tbl)
+  check.pryr()
+  if (nrow(enrichment.tbl) > 0) {
+    enr.overlap <- select(enrichment.tbl,
+                          phylum,
+                          cutoff,
+                          termset,
+                          term,
+                          enr.overlap) %>% unnest %>%
+                   left_join(.,
+                             pz.db$gene.to.fxn,
+                             by=c("enr.overlap"="gene")) %>%
+                   rename(gene=enr.overlap, description=`function`) %>%
+                   mutate(effectsize=map2_dbl(phylum,
+                                              gene,
+                                              ~results[[.x]][1, .y]))
+    check.pryr()
+    write.csv(file=file.path(pz.options('out_dir'),
+                             "enr-overlaps.csv"),
+              enr.overlap)
+    write.csv(file=file.path(pz.options('out_dir'),
+                             "enr-overlaps-sorted.csv"),
+              arrange(enr.overlap,
                       phylum,
-                      cutoff,
+                      factor(cutoff, levels=names(signif[[1]])),
                       termset,
                       term,
-                      enr.overlap) %>% unnest %>%
-               left_join(., pz.db$gene.to.fxn, by=c("enr.overlap"="gene")) %>%
-               rename(gene=enr.overlap, description=`function`) %>%
-               mutate(effectsize=map2_dbl(phylum, gene, ~results[[.x]][1, .y]))
-check.pryr()
-
-write.csv(file=file.path(pz.options('out_dir'),
-                         "enr-overlaps.csv"),
-          enr.overlap)
-
-write.csv(file=file.path(pz.options('out_dir'),
-                         "enr-overlaps-sorted.csv"),
-          arrange(enr.overlap,
-                  phylum,
-                  factor(cutoff, levels=names(signif[[1]])),
-                  termset,
-                  term,
-                  desc(effectsize)))
-
-check.pryr()
-rm(enr.overlap)
-rm(enrichments)
+                      desc(effectsize)))
+    check.pryr()
+    rm(enr.overlap)
+    rm(enrichments)
+  }
+}
 rm(enr.overlap.lists)
 gc()
 ```
@@ -425,8 +429,11 @@ for (f in c("phenotype.tab",
             "enr-table.csv",
             "enr-overlaps.csv",
             "enr-overlaps-sorted.csv")) {
-  cat(paste0(' * [**', f, '**](',
-      file.path(r.outdir, f),
-      ')\n'))
+  fp <- file.path(r.outdir, f)
+  # Note, check the actual output directory when we're trying to figure out what
+  # got made
+  if (file.exists(file.path(pz.options('out_dir'), f))) {
+    cat(paste0(' * [**', f, '**](', fp, ')\n'))
+  }
 }
 ```

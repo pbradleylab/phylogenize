@@ -5,7 +5,7 @@
 #' @param com Multinomial probability distribution for all taxa.
 #' @param nr Read depth.
 #' @return Count matrix.
-#' @export
+#' @export simulate.counts
 simulate.counts <- function(com, nr) {
     counts <- mapply(nr, data.frame(com), FUN = function(r, x) {
         if (all(x == 0)) { return(x) }
@@ -184,7 +184,6 @@ master.fx.matrix <- function(divided,
 #' Generate fake names for taxa or samples.
 #' @return A vector of fake names.
 #' @name NameFaker
-#' @export
 NULL
 
 #' @rdname NameFaker
@@ -348,6 +347,7 @@ generate.fake.abd.meta <- function(n.samples=100,
                                    prev.dist=c(-4,2),
                                    make.16s=FALSE,
                                    tag.length=100,
+                                   t.names=NULL,
                                    ...) {
     env.n.affected <- round(n.taxa * env.frac.affected)
     dset.n.affected <- round(n.taxa * dset.frac.affected)
@@ -383,6 +383,11 @@ generate.fake.abd.meta <- function(n.samples=100,
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
     # binarize to save memory usage since we care about pres/abs
     abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+    if (!is.null(t.names)) {
+        rownames(abd.meta$mtx) <- sample(t.names,
+                                         nrow(abd.meta$mtx),
+                                         replace=FALSE)
+    }
     abd.meta
 }
 
@@ -628,7 +633,7 @@ generate.test.pzdb <- function(nt=75, ng=50, fp=0.1, minN=2, ...) {
     dtr <- dummy.trees(pz.db$trees, nt)
     for (n in names(pz.db$gene.presence)) {
         d <- dtr[[n]]$tip.label
-        if (is(pz.db$gene.presence[[n]], "Matrix")) {
+        if (methods::is(pz.db$gene.presence[[n]], "Matrix")) {
             dd <- intersect(d, colnames(pz.db$gene.presence[[n]]))
             if (length(dd) > 2) {
                 pz.db$gene.presence[[n]] <- pz.db$gene.presence[[n]][, dd]

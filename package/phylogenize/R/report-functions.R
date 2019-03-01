@@ -87,6 +87,9 @@ check.process.metadata <- function(metadata, ...) {
     }
     if (!(opts('sample_column') %in% colnames(metadata))) {
         if (!is.null(rownames(metadata))) {
+            pz.warning(paste0("sample column not found: ",
+                              opts('sample_column'),
+                              "; assuming row names are sample IDs"))
             metadata[[opts('sample_column')]] <- rownames(metadata)
         } else {
             pz.error(paste0("sample column not found: ", opts('sample_column')))
@@ -107,7 +110,13 @@ check.process.metadata <- function(metadata, ...) {
 #' @export
 read.abd.metadata.biom <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    biomf <- biomformat::read_biom(file.path(opts('in_dir'), opts('biom_file')))
+    bf <- file.path(opts('in_dir'), opts('biom_file'))
+    pz.message(paste0("looking for file: ", normalizePath(bf)))
+    if (!(file.exists(bf))) {
+        pz.error(paste0("file not found: ", bf))
+    } else { pz.message(paste0("located biom file: ", bf)) }
+    # biomf <- biomformat::read_biom(bf)
+    biomf <- biomformat::read_biom(bf)
     abd.mtx <- biomformat::biom_data(biomf)
     metadata <- biomformat::sample_metadata(biomf)
     metadata <- check.process.metadata(metadata, ...)
@@ -136,12 +145,17 @@ read.abd.metadata.biom <- function(...) {
 #' @export
 read.abd.metadata.tabular <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    abd.mtx <- fastread(file.path(opts('in_dir'),
-                                  opts('abundance_file')), cn=FALSE)
+    af <- file.path(opts('in_dir'), opts('abundance_file'))
+    mf <- file.path(opts('in_dir'), opts('metadata_file'))
+    if (!(file.exists(af))) {
+        pz.error(paste0("file not found: ", af))
+    } else { pz.message(paste0("located abundance file: ", af)) }
+    if (!(file.exists(mf))) {
+        pz.error(paste0("file not found: ", mf))
+    } else { pz.message(paste0("located metadata file: ", mf)) }
+    abd.mtx <- fastread(af, cn=FALSE)
     gc()
-    metadata <- data.frame(
-        data.table::fread(file.path(opts('in_dir'),
-                                    opts('metadata_file'))))
+    metadata <- data.frame(data.table::fread(mf))
     metadata <- check.process.metadata(metadata, ...)
     return(list(mtx=abd.mtx, metadata=metadata))
 }
@@ -157,20 +171,20 @@ read.abd.metadata.tabular <- function(...) {
 #'     abundance data is the wrong type or class.
 #' @export
 sanity.check.abundance <- function(abd.mtx, ...) {
-    if ((!is(abd.mtx, "matrix")) & (!is(abd.mtx, "Matrix"))) {
+    if ((!methods::is(abd.mtx, "matrix")) & (!methods::is(abd.mtx, "Matrix"))) {
         pz.error(paste0(
             "Abundance matrix must be a matrix of logicals/doubles/integers ",
             "and instead was a ",
             class(abd.mtx)))
     }
-    if (is(abd.mtx, "Matrix")) {
+    if (methods::is(abd.mtx, "Matrix")) {
         if (!(typeof(abd.mtx@x[1]) %in% c("logical", "double", "integer"))) {
             pz.error(paste0(
                 "Abundance matrix must be a matrix of logicals/doubles/integers ",
                 "and instead contained ",
                 typeof(abd.mtx@x[1])))
         }
-    } else if (is(abd.mtx, "matrix")) {
+    } else if (methods::is(abd.mtx, "matrix")) {
         if (!(typeof(abd.mtx) %in% c("logical", "double", "integer"))) {
             pz.error(paste0(
                 "Abundance matrix must be a matrix of logicals/doubles/integers ",
@@ -285,7 +299,8 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                                  colnames(abd.meta$mtx))
     if (length(samples.present) == 0) {
         pz.error(paste0("No samples found in both metadata and ",
-                        "abundance matrix"))
+                        "abundance matrix; check for illegal characters ",
+                        "in sample ID column"))
     }
     abd.meta$mtx <- abd.meta$mtx[, samples.present]
     abd.meta$metadata <- abd.meta$metadata[
@@ -463,7 +478,7 @@ get.burst.results <- function(...) {
 #' @param mtx A presence/absence or abundance matrix, with row names equal to
 #'     amplicon sequence variant DNA sequences.
 #' @return A new matrix with MIDAS IDs as rows.
-#' @export
+#' @export sum.nonunique.burst
 sum.nonunique.burst <- function(burst, mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     uniq.hits <- which(count.each(burst$hits) < 2)
@@ -829,7 +844,7 @@ get.pheno.plotting.scales.specificity <- function(phenotype,
 #' @param scale A list returned from \code{get.pheno.plotting.scales}.
 #' @return A list of ggtree objects in which the phenotype has been plotted
 #'     across each tree in \code{trees}.
-#' @export
+#' @export plot.phenotype.trees
 plot.phenotype.trees <- function(phenotype,
                                  trees,
                                  scale,
@@ -866,7 +881,7 @@ plot.phenotype.trees <- function(phenotype,
 #' @param phenotype A named vector with the phenotype values for each taxon.
 #' @param pz.db A database containing a \code{taxonomy} and \code{trees}.
 #' @return A ggplot object with the phenotype distribution plotted per phylum.
-#' @export
+#' @export plot.pheno.distributions
 plot.pheno.distributions <- function(phenotype,
                                      pz.db,
                                      ...) {
@@ -908,7 +923,7 @@ plot.pheno.distributions <- function(phenotype,
 #' @param label Label to give to the phenotype.
 #' @param stroke.scale How thick to make the highlight.
 #' @param units A string appended to each label, used to give units of phenotype.
-#' @export
+#' @export plot.labeled.phenotype.trees
 plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                                          phenotype,
                                          label='prevalence',
@@ -955,7 +970,7 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 #' @param plotted.tree A ggtree plot of \code{tree}.
 #' @param phylum Name of the phylum represented by \code{tree}
 #' @param verbose Whether to report debugging information (boolean).
-#' @export
+#' @export do.clust.plot
 do.clust.plot <- function(gene.presence,
                           sig.genes,
                           tree,
@@ -1086,19 +1101,27 @@ render.report <- function(output_file='report_output.html',
 #'
 #' @param output_file Path giving what to name the resulting HTML file.
 #' @param ... Parameters to override defaults.
-#' @return Output of rmarkdown::render.
 #' @export
 render.report.alt <- function(output_file='report_output.html',
+                              report_input='phylogenize-report.Rmd',
                               ...) {
     do.call(pz.options, list(...))
+    pz.options(working_dir=normalizePath(getwd()))
+    pz.options(in_dir=normalizePath(pz.options("in_dir")))
+    pz.options(out_dir=normalizePath(pz.options("out_dir")))
+    pz.options(burst_dir=normalizePath(pz.options("burst_dir")))
+    dir.create(pz.options("out_dir"))
     p <- pz.options()
     for (n in names(p)) {
-        message(paste0(n, ": ", p[[n]], "\n"))
+        message(paste0(n, ": ", p[[n]]))
     }
     rmarkdown::render(system.file("rmd",
-                                  "phylogenize-report.Rmd",
+                                  report_input,
                                   package="phylogenize"),
-                      output_file=output_file)
+                      output_file=basename(output_file),
+                      output_dir=pz.options("out_dir"),
+                      intermediates_dir=pz.options("out_dir"),
+                      knit_root_dir=pz.options("out_dir"))
 }
 
 #' Make a pretty enrichment table.

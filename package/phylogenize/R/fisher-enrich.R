@@ -37,7 +37,7 @@ fdr.bh <- function(x) { p.adjust(x, 'BH') }
 #'     from \code{list1}, \code{list2}, and \code{background}, augmented with
 #'     the additional field \code{overlap} which gives the intersection of
 #'     \code{list1} and \code{list2}.
-#' @export
+#' @export do.fisher
 do.fisher <- function(list1, list2, background, alt="two.sided") {
     background <- unique(background)
     l1 <- unique(intersect(list1, background))

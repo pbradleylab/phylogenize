@@ -15,7 +15,12 @@ Depends:
     settings,
     Matrix,
     tidyverse,
-    ggtree
+    ggtree,
+    biomformat,
+    methods,
+    stats,
+    graphics,
+    grDevices
 Imports:
     data.table,
     parallel,
@@ -27,11 +32,13 @@ Imports:
     scales,
     xml2,
     ggplot2,
-    biomformat,
     MASS,
     seqinr,
     pbapply,
-    gtools
+    gtools,
+    svglite,
+    pryr,
+    testthat,
+    ezknitr
 Suggests: 
-    testthat
 RoxygenNote: 6.1.1.9000

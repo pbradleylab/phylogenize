@@ -155,6 +155,8 @@ nonparallel.results.generator <- function(gene.matrix,
 #' @param m Named numeric vector of gene presence/absences per taxon.
 #' @param p Named numeric vector of phenotype values per taxon.
 #' @param tr Phylogeny relating taxa (class \code{"phylo"}).
+#' @param coefname Which coefficient from the phylolm to return?
+#' @param restrict If not NULL, a character vector of taxa to consider.
 #' @return Length-2 numeric vector with names \code{"Estimate"} and
 #'     \code{"p.value"}. If there is an error in \code{phylolm}, the values of
 #'     this vector will be \code{c(NA, NA)}.
@@ -181,11 +183,12 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
 #'
 #' @param m Named numeric vector of gene presence/absences per taxon.
 #' @param p Named numeric vector of phenotype values per taxon.
+#' @param tr Phylogeny relating taxa (class \code{"phylo"}).
 #' @return Length-2 numeric vector with names \code{"Estimate"} and
 #'     \code{"p.value"}. If there is an error in \code{phylolm}, the values of
 #'     this vector will be \code{c(NA, NA)}.
 #' @export
-lm.fx.pv <- function(m, p, coefname="m", restrict=NULL) {
+lm.fx.pv <- function(m, p, tr, coefname="m", restrict=NULL) {
     if (!is.null(restrict)) {
         p <- p[restrict]
         m <- m[restrict]
@@ -201,6 +204,55 @@ lm.fx.pv <- function(m, p, coefname="m", restrict=NULL) {
         c(Estimate = NA, p.value = NA)
     })
     fx.pv
+}
+
+#' Wrapper to return random effect sizes and p-values; useful for testing.
+#'
+#' @param m Named numeric vector of gene presence/absences per taxon.
+#' @param p Named numeric vector of phenotype values per taxon.
+#' @param tr Phylogeny relating taxa (class \code{"phylo"}).
+#' @param coefname Which coefficient from the phylolm to return (meaningless
+#'     here)?
+#' @param restrict If not NULL, a character vector of taxa to consider
+#'     (meaningless here).
+#' @return Length-2 numeric vector with names \code{"Estimate"} and
+#'     \code{"p.value"}, with distributions N(0,1) and U(0,1), respectively.
+#' @export
+rnd.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
+    return(c(Estimate = rnorm(n=1, 0, 1),
+             p.value = runif(n=1, 0, 1)))
+}
+
+#' Wrapper to return random effect sizes and p-values with a bias; useful for
+#' testing.
+#'
+#' @param m Named numeric vector of gene presence/absences per taxon.
+#' @param p Named numeric vector of phenotype values per taxon.
+#' @param tr Phylogeny relating taxa (class \code{"phylo"}).
+#' @param coefname Which coefficient from the phylolm to return (meaningless
+#'     here)?
+#' @param restrict If not NULL, a character vector of taxa to consider
+#'     (meaningless here).
+#' @param pos.pct Fraction of times to return a positive effect.
+#' @param pos.fx Shift in mean for positive effects, in standard deviations.
+#' @param pos.beta Length-2 numeric vector of beta parameters for true effect
+#'     p-values.
+#' @return Length-2 numeric vector with names \code{"Estimate"} and
+#'     \code{"p.value"}, with distributions N(0,1) and U(0,1), respectively.
+#' @export
+rndpos.fx.pv <- function(m, p, tr, coefname="m", restrict=NULL,
+                         pos.pct=0.1,
+                         pos.fx=2,
+                         pos.beta=c(shape1=1, shape2=20)) {
+    is.pos <- runif(n=1, min=0, max=1)
+    if (is.pos <= pos.pct) {
+        est <- rnorm(n=1, pos.fx, 1)
+        pv <- rbeta(n=1, shape1=pos.beta[1], shape2=pos.beta[2])
+    } else {
+        est <- rnorm(n=1, 0, 1)
+        pv <- runif(n=1, 0, 1)
+    }
+    return(c(Estimate = est, p.value = pv))
 }
 
 #' Wrapper around \code{phylolm} that automatically discards taxa that are
@@ -407,7 +459,7 @@ fit.beta.list <-  function(mtx, ids, fallback = c(NA, NA)) {
 #'     effects; \code{ids}: mapping of samples to environments;
 #'     \code{input.params}: input parameters used to call
 #'     \code{simulate.binom.mtx}.
-#' @export
+#' @export simulate.binom.mtx
 simulate.binom.mtx <- function(effect.size = 2,
                               baseline.distro = c(shape1 = 0.66,
                                                   shape2 = 2.62),
