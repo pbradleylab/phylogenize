@@ -15,6 +15,8 @@ rmarkdown::render("phylogenize-report.Rmd",
     ncl = 10))
 
 devtools::document("package/phylogenize")
+
+
 devtools::load_all("package/phylogenize")
 phylogenize::render.report.alt(
   out_dir = "/home/pbradz/projects/phylogenize/jordan/jlp16s-3/",
@@ -80,6 +82,31 @@ pz.options(
                  use_rmd_params = FALSE)
 
 
+
+
+devtools::load_all("package/phylogenize")
+setwd("~/projects/phylogenize")
+dir.create("/home/pbradz/projects/phylogenize/emp-new/output-plant-specificity-linear6/")
+phylogenize::render.report.alt(
+  output_file = "/home/pbradz/projects/phylogenize/emp-new/emp-plant-specificity-linear6.html",
+  out_dir = "/home/pbradz/projects/phylogenize/emp-new/output-plant-specificity-linear6/",
+  in_dir = "/home/pbradz/projects/phylogenize",
+  type = "16S",
+  db_version = "midas_v1.2",
+  which_phenotype = "specificity",
+  which_envir = "Plant",
+  abundance_file = "",
+  metadata_file = "",
+  biom_file = "emp_deblur_freeliving.biom",
+  input_format = "biom",
+  burst_dir = "/home/pbradz/bin/",
+  ncl = 1,
+  data_dir = "/home/pbradz/projects/phylogenize/data/",
+  devel = TRUE,
+  devel_pkgdir = "/home/pbradz/projects/phylogenize/package/phylogenize/",
+  linearize = TRUE,
+  skip_graphs = TRUE,
+  use_rmd_params = FALSE)
 
 
 pz.options(

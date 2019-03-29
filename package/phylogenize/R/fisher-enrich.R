@@ -1,14 +1,24 @@
 # Functions for performing enrichment analysis
 
-#' Wrapper around \code{qvalue} that extracts only q-values.
+#' Wrapper around \code{qvalue} that extracts only q-values. If there is an
+#' error in estimating q-values, will automatically fall back to a
+#' Benjamini-Hochberg-style correction (by setting lambda to zero), finally
+#' returning a vector of NAs if this still does not work.
 #'
 #' @param x A vector of p-values.
 #' @return A vector of q-values.
 qvals <- function(x) {
-    qvalue::qvalue(x,
-                   fdr = T,
-                   lambda = seq(0.001, 0.95, 0.005)
-                   )$qvalues
+    tryCatch(qvalue::qvalue(x, fdr=T, lambda=seq(0.001, 0.95, 0.005))$qvalues,
+             error=function(e) {
+                 pz.warning("Falling back to BH...")
+                 tryCatch(qvalue::qvalue(x, fdr=T, lambda=0)$qvalues,
+                          error=function(e) {
+                              pz.warning(e)
+                              q <- rep(NA, length(x))
+                              names(q) <- names(x)
+                              q
+                          })
+             })
 }
 
 #' Wrapper around \code{p.adjust('BY')}.

@@ -173,7 +173,7 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
         coef <- summary(plm)$coefficients
         coef[coefname, c("Estimate", "p.value")]
     }, error = function(e) {
-        warning(paste(e))
+        pz.warning(paste(e))
         c(Estimate = NA, p.value = NA)
     })
     fx.pv
@@ -188,19 +188,19 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
 #'     \code{"p.value"}. If there is an error in \code{phylolm}, the values of
 #'     this vector will be \code{c(NA, NA)}.
 #' @export
-lm.fx.pv <- function(m, p, tr, coefname="m", restrict=NULL) {
+lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
     if (!is.null(restrict)) {
         p <- p[restrict]
         m <- m[restrict]
     }
     fx.pv <- tryCatch({
         lm <- lm(p ~ m)
-        coef <- summary(plm)$coefficients
+        coef <- summary(lm)$coefficients
         pair <- coef[coefname, c("Estimate", "Pr(>|t|)")]
         names(pair) <- c("Estimate", "p.value")
         pair
     }, error = function(e) {
-        warning(paste(e))
+        pz.warning(paste(e))
         c(Estimate = NA, p.value = NA)
     })
     fx.pv
@@ -796,8 +796,9 @@ calc.ess <- function(abd.meta,
 pz.error <- function(errtext, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
-      cat(errtext,
-          file = file.path(opts('out_dir'), "errmsg.txt"))
+      cat(paste0(errtext, "\n"),
+          file = file.path(opts('out_dir'), "errmsg.txt"),
+          append = TRUE)
     }
     stop(errtext)
 }
@@ -815,8 +816,9 @@ pz.error <- function(errtext, ...) {
 pz.message <- function(msgtext, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
-        cat(msgtext,
-            file = file.path(opts('out_dir'), "errmsg.txt"))
+        cat(paste0(msgtext, '\n'),
+            file = file.path(opts('out_dir'), "errmsg.txt"),
+            append = TRUE)
     }
     message(msgtext)
 }
@@ -834,8 +836,9 @@ pz.message <- function(msgtext, ...) {
 pz.warning <- function(msgtext, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
-        cat(msgtext,
-            file = file.path(opts('out_dir'), "errmsg.txt"))
+        cat(paste0(msgtext, '\n'),
+            file = file.path(opts('out_dir'), "errmsg.txt"),
+            append = TRUE)
     }
     warning(msgtext)
 }
