@@ -96,6 +96,7 @@ if (pz.options('assume_below_LOD')) {
 # Make back into a binary sparse matrix to save memory
 gc()
 check.pryr()
+pz.message("Starting evaluation...")
 
 ```
 
@@ -259,7 +260,9 @@ if (pz.options('ncl') > 1) {
                       pz.db$trees[names(pz.db$taxa)],
                       pz.db$taxa,
                       as.list(names(pz.db$taxa)),
-                      MoreArgs=list(pheno=phenotype, use.for.loop=FALSE),
+                      MoreArgs=list(pheno=phenotype,
+                                    method=p.method,
+                                    use.for.loop=FALSE),
                       SIMPLIFY=FALSE)
 }
 signif <- make.sigs(results)

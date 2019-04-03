@@ -35,7 +35,7 @@ PZ_OPTIONS <- options_manager(
   gene_color_present='slateblue2',
   separate_process=TRUE,
   biom_dir='/usr/local/bin/',
-  error_to_file=FALSE,
+  error_to_file=TRUE,
   burst_16sfile="16s_renamed.frn",
   burst_infile="input_seqs.txt",
   burst_outfile="output_assignments.txt",
