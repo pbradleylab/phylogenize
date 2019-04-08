@@ -632,6 +632,10 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     taxa.per.tree <- lapply(pz.db$trees, function(tr) {
         intersect(tr$tip.label, taxa.observed)
     })
+    tL <- vapply(taxa.per.tree, length, 1L)
+    if (all(tL < 2)) {
+        pz.error("Too few taxa found. Was the right database used?")
+    }
     saved.phyla <- nw(sapply(taxa.per.tree, length) >= opts('treemin'))
     pz.db$trees <- pz.db$trees[saved.phyla]
     pz.db$taxa <- lapply(pz.db$trees, function(x) x$tip.label)
@@ -1085,26 +1089,11 @@ single.cluster.plot <- function(gene.presence,
 #' Run *phylogenize* start to finish.
 #'
 #' @param output_file Path giving what to name the resulting HTML file.
-#' @param params List of parameters to override defaults.
-#' @return Output of rmarkdown::render.
-#' @export
-render.report <- function(output_file='report_output.html',
-                          params=list(use_rmd_params=FALSE)) {
-    rmarkdown::render(system.file("rmd",
-                                  "phylogenize-report.Rmd",
-                                  package="phylogenize"),
-                      output_file=output_file,
-                      params=params)
-}
-
-#' Run *phylogenize* start to finish (alternative invocation).
-#'
-#' @param output_file Path giving what to name the resulting HTML file.
 #' @param ... Parameters to override defaults.
 #' @export
-render.report.alt <- function(output_file='report_output.html',
-                              report_input='phylogenize-report.Rmd',
-                              ...) {
+render.report <- function(output_file='report_output.html',
+                          report_input='phylogenize-report.Rmd',
+                          ...) {
     do.call(pz.options, list(...))
     pz.options(working_dir=normalizePath(getwd()))
     pz.options(in_dir=normalizePath(pz.options("in_dir")))
@@ -1120,6 +1109,9 @@ render.report.alt <- function(output_file='report_output.html',
                                   package="phylogenize"),
                       output_file=basename(output_file),
                       output_dir=pz.options("out_dir"),
+                      output_options=list(
+                          cache.path=pz.options("out_dir")
+                      ),
                       intermediates_dir=pz.options("out_dir"),
                       knit_root_dir=pz.options("out_dir"))
 }

@@ -19,6 +19,7 @@ make.pos.sig <- function(sigs, signs, cut = "strong") {
 #' @param method Function that will be used to adjust raw p-values in
 #'     \code{results}.
 #' @param exclude String vector of genes to exclude (optional).
+#' @param min.fx Minimum effect size for calling something significant.
 #' @return List (per phylum) of string vectors of significant hits.
 #' @export
 make.sigs <- function(results,
@@ -26,7 +27,8 @@ make.sigs <- function(results,
                                med = 0.1,
                                weak = 0.25),
                       method = qvals,
-                      exclude = NULL) {
+                      exclude = NULL,
+                      min.fx = 0) {
     lapply.across.names(names(results), function(x) {
         lapply(cuts, function(cut) {
             if (!is.null(exclude)) {
@@ -34,7 +36,9 @@ make.sigs <- function(results,
                                  exclude[[x]])
             } else { valid <- colnames(results[[x]]) }
             tested <- na.omit(results[[x]][2, valid])
-            tryCatch(nw(method(tested) <= cut), error = function(e) character(0))
+            above.min <- nw(abs(results[[x]][1, valid]) >= min.fx)
+            tryCatch(intersect(nw(method(tested) <= cut), above.min),
+                     error = function(e) character(0))
         })
     })
 }

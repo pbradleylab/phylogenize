@@ -161,7 +161,8 @@ nonparallel.results.generator <- function(gene.matrix,
 #'     \code{"p.value"}. If there is an error in \code{phylolm}, the values of
 #'     this vector will be \code{c(NA, NA)}.
 #' @export
-phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
+phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
+                          meas_err=pz.options('meas_err')) {
     # This seems redundant, but we can avoid touching the giant protein matrix
     # this way and therefore causing an expensive copy
     if (!is.null(restrict)) {
@@ -169,9 +170,9 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
         m <- m[restrict]
     }
     fx.pv <- tryCatch({
-        plm <- phylolm(p ~ m, phy=tr)
+        plm <- phylolm(p ~ m, phy=tr, measurement_error=meas_err)
         coef <- summary(plm)$coefficients
-        coef[coefname, c("Estimate", "p.value")]
+        coef[coefname, c("Estimate", "p.value", "StdErr")]
     }, error = function(e) {
         pz.warning(paste(e))
         c(Estimate = NA, p.value = NA)
@@ -796,10 +797,12 @@ calc.ess <- function(abd.meta,
 pz.error <- function(errtext, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
-      cat(paste0(errtext, "\n"),
-          file = file.path(opts('out_dir'), "errmsg.txt"),
-          append = TRUE)
-    }
+        tryCatch({
+          cat(paste0(errtext, "\n"),
+              file = file.path(opts('out_dir'), "errmsg.txt"),
+              append = TRUE)
+          }, error=function(e) NULL)
+        }
     stop(errtext)
 }
 
@@ -816,9 +819,11 @@ pz.error <- function(errtext, ...) {
 pz.message <- function(msgtext, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
-        cat(paste0(msgtext, '\n'),
-            file = file.path(opts('out_dir'), "errmsg.txt"),
-            append = TRUE)
+        tryCatch({
+            cat(paste0(msgtext, '\n'),
+                file = file.path(opts('out_dir'), "errmsg.txt"),
+                append = TRUE)
+        }, error=function(e) NULL)
     }
     message(msgtext)
 }
@@ -836,9 +841,11 @@ pz.message <- function(msgtext, ...) {
 pz.warning <- function(msgtext, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
-        cat(paste0(msgtext, '\n'),
-            file = file.path(opts('out_dir'), "errmsg.txt"),
-            append = TRUE)
+        tryCatch({
+            cat(paste0(msgtext, '\n'),
+                file = file.path(opts('out_dir'), "errmsg.txt"),
+                append = TRUE)
+        }, error=function(e) NULL)
     }
     warning(msgtext)
 }

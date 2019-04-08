@@ -46,7 +46,8 @@ PZ_OPTIONS <- options_manager(
   devel_pkgdir='package/phylogenize',
   relative_out_dir=NULL,
   single_dset=FALSE,
-  working_dir='.'
+  working_dir='.',
+  meas_err=FALSE
 )
 
 #' Set and get options for phylogenize.

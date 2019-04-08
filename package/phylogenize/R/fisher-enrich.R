@@ -7,13 +7,14 @@
 #'
 #' @param x A vector of p-values.
 #' @return A vector of q-values.
-qvals <- function(x) {
+qvals <- function(x, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
     tryCatch(qvalue::qvalue(x, fdr=T, lambda=seq(0.001, 0.95, 0.005))$qvalues,
              error=function(e) {
-                 pz.warning("Falling back to BH...")
+                 pz.warning("Falling back to BH...", ...)
                  tryCatch(qvalue::qvalue(x, fdr=T, lambda=0)$qvalues,
                           error=function(e) {
-                              pz.warning(e)
+                              pz.warning(e, ...)
                               q <- rep(NA, length(x))
                               names(q) <- names(x)
                               q

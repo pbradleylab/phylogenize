@@ -10,7 +10,7 @@ params:
   ncl: 1
   type: "midas"
   source_dir: "."
-  out_dir: "output"
+  out_dir: "."
   in_dir: "."
   data_dir: "./data"
   abundance_file: "abundance.tab"
