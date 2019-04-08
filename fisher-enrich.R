@@ -1,135 +1,129 @@
-
-perform.enrichments <- function(sigs, signs, results, mapping, dirxn = 1, exclude = NULL, ...) {
-  lapply.across.names(c("strong", "med", "weak"), function(x) {
-    dirxn.enrich(sigs, signs, results, siglevel = x,
-      exclude = exclude, fdr.method = fdr.bh, dirxn = dirxn,
-      mapping = mapping, ...)
-  })
-}
-
-enr.wrapper <- function(sig, tested, bg = NULL, mapping, descs = NULL, ms = 3, cutoff = 0.25, fdr.method = qvals, ...) {
-  if (is.null(bg)) { bg = tested }
-  bg.present <- intersect(tested, bg)
-  enriched.and.depleted.list <- enrich(sig, mapping, bg.present, minsize = ms, alt = "two.sided", ...)
-  enr.dep.qvals <- enriched.and.depleted.list$enrichments %>% pv1 %>% fdr.method
-  enriched.and.depleted <- nw(enr.dep.qvals <= cutoff)
-  enriched <- intersect(enriched.and.depleted, nw(enriched.and.depleted.list$odds.ratios > 1))
-  if (!is.null(descs)) {
-    table <- cbind(enriched, enr.dep.qvals[enriched], descs[enriched,])
-  } else {
-    table <- cbind(enriched, enr.dep.qvals[enriched])
-  }
-  t.order <- order(enr.dep.qvals[enriched])
-  return(list(full = enriched.and.depleted.list, qv = enr.dep.qvals, dep.enr <- enriched.and.depleted, 
-      enr = enriched, table = table[t.order,]))
-}
-dirxn.enrich <- function(sigs, signs, results, siglevel = "strong", exclude = NULL, dirxn = 1, mapping, ...) {
-  lapply(
-  c(l1 = "level1", l2 = "level2", l3 = "level3"), function(l) {
-    # dirxn = 1 is POSITIVE
-    message(l)
-    enrichments <- lapply.across.names(names(sigs), function(x) {
-      #print(x)
-      #print(nw(signs[[x]] > 0))
-      #print(intersect(sigs[[x]][[siglevel]], nw(signs[[x]] < 0)))
-      enr.wrapper(intersect(sigs[[x]][[siglevel]], nw((dirxn * signs[[x]]) > 0)),
-          tested = setdiff(names(na.omit(results[[x]][1,])), exclude[[x]]),
-        mapping = mapping[[l]], ...)
-    })
-  return(enrichments)
-  })
-}
-
-
 # Functions for performing enrichment analysis
 
+#' Wrapper around \code{qvalue} that extracts only q-values. If there is an
+#' error in estimating q-values, will automatically fall back to a
+#' Benjamini-Hochberg-style correction (by setting lambda to zero), finally
+#' returning a vector of NAs if this still does not work.
+#'
+#' @param x A vector of p-values.
+#' @return A vector of q-values.
 qvals <- function(x) {
-  qvalue(x,
-         fdr = T,
-         lambda = seq(0.001, 0.95, 0.005)
-  )$qvalues
+    tryCatch(qvalue::qvalue(x, fdr=T, lambda=seq(0.001, 0.95, 0.005))$qvalues,
+             error=function(e) {
+                 pz.warning("Falling back to BH...")
+                 tryCatch(qvalue::qvalue(x, fdr=T, lambda=0)$qvalues,
+                          error=function(e) {
+                              pz.warning(e)
+                              q <- rep(NA, length(x))
+                              names(q) <- names(x)
+                              q
+                          })
+             })
 }
+
+#' Wrapper around \code{p.adjust('BY')}.
+#'
+#' @param x A vector of p-values.
+#' @return A vector of BY FDR values.
 fdr.by <- function(x) { p.adjust(x, 'BY') }
+
+#' Wrapper around \code{p.adjust('BH')}.
+#'
+#' @param x A vector of p-values.
+#' @return A vector of BH FDR values.
 fdr.bh <- function(x) { p.adjust(x, 'BH') }
 
-do.fisher <- function(list1, list2, background, alt) {
-  l1 <- intersect(list1, background)
-  l2 <- intersect(list2, background)
-  both <- intersect(l1, l2) %>% length
-  only1 <- setdiff(l1, l2) %>% length
-  only2 <- setdiff(l2, l1) %>% length
-  neither <- setdiff(background, union(l1, l2)) %>% length
-  cont.table <- matrix(nr=2, c(both, only1, only2, neither))
-  return(fisher.test(cont.table, alternative = alt))
+
+#' Wrapper around \code{fisher.test} that starts with string vectors instead of
+#' a contingency table.
+#'
+#' @param list1 A vector of strings (e.g., names of significant gene hits).
+#' @param list2 A vector of strings (e.g., names of genes in a pathway).
+#' @param background A vector of strings that \code{list1} and \code{list2} were
+#'     drawn from (e.g., names of all genes tested in an assay). Any strings in
+#'     \code{list1} or \code{list2} not in this vector will be discarded.
+#' @param alt The alternative hypothesis (see \code{?fisher.test}).
+#' @return The results of \code{fisher.test} on a contingency table generated
+#'     from \code{list1}, \code{list2}, and \code{background}, augmented with
+#'     the additional field \code{overlap} which gives the intersection of
+#'     \code{list1} and \code{list2}.
+#' @export do.fisher
+do.fisher <- function(list1, list2, background, alt="two.sided") {
+    background <- unique(background)
+    l1 <- unique(intersect(list1, background))
+    l2 <- unique(intersect(list2, background))
+    both <- intersect(l1, l2)
+    only1 <- setdiff(l1, l2)
+    only2 <- setdiff(l2, l1)
+    neither <- setdiff(background, union(l1, l2))
+    cont.table <- matrix(nr=2,
+                         vapply(list(both, only1, only2, neither),
+                                length,
+                                1L))
+    f <- fisher.test(cont.table, alternative = alt)
+    f$overlap <- both
+    f
 }
 
-enrich <- function(hits, mapping, background, minsize = 1, alt = "greater", verbose = T) {
-  m.hits <- intersect(hits, background)
-  possible <- intersect(mapping[,1], background)
-  pways.total <- unique(mapping[which(mapping[,1] %in% background), 2])
-  pw.lengths <- sapply(pways.total, function(y) {(mapping[,2] == y) %>% which %>% (function(z)
-                      intersect(mapping[z, 1], background)) %>% length})
-  pways <- nw(pw.lengths >= minsize)
-  if (length(pways) == 0) { return(list(enrichments = NULL, odds.ratios= NULL, overlaps = NULL, sets = NULL)) }
-  enrichments <- vector("numeric", length(pways))
-  #perm.enrichments <- vector("numeric", length(pways))
-  odds.ratios <- vector("numeric", length(pways))
-  overlaps <- list()
-  hits.total <- length(m.hits)
-  progress.bit <- ceiling(length(pways)/20)
-  sets <- list()
-  if (verbose) cat("|----|----|----|----|\n")
-  for (np in 1:length(pways)) {
-    if (verbose) {
-      if ( (np %% progress.bit) == 0 ) { cat (".") }
+#' Given lists of significant genes (at different thresholds), effect sizes, and
+#' gene set mappings, assemble a tbl of results.
+#'
+#' @param sigs List giving, per phylum (outer) and per significance cutoff
+#'     (inner), significant hits to test for enrichment.
+#' @param signs List giving, per phylum, signs of all gene effect sizes.
+#' @param mappings List of data.frames giving gene-to-gene-set mappings.
+#' @param dirxn Count only genes with this effect sign as significant.
+#' @return A tbl giving Fisher's test p-values, q-values, effect sizes, and overlaps.
+#' @export
+multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
+    d <- sign(dirxn)
+    if ((length(sigs) < 1) || (length(signs) < 1) || (length(mappings) < 1)) {
+        pz.warning("Didn't find significant hits, signs, or mappings")
+        return(c())
     }
-    p <- pways[np]
-    names(enrichments)[np] <- p
-    in.pway <- intersect(background, mapping[which(mapping[,2] == p), 1])
-    ft <- do.fisher(in.pway, m.hits, background, alt)
-    pway.nohits <- length(setdiff(in.pway, m.hits))
-    pway.hits <- length(intersect(in.pway, m.hits))
-    nopway.hits <- length(setdiff(m.hits, in.pway))
-    nopway.nohits <- length(setdiff(background, union(m.hits, in.pway)))
-    cont.table <- (matrix(nr=2, c(pway.hits, nopway.hits, pway.nohits,
-                                  nopway.nohits)))
-    enrichments[np] <- ft$p.value
-    odds.ratios[np] <- ft$estimate
-    overlaps[[p]] <- intersect(in.pway, m.hits)
-    sets[[p]] <- list(PH = pway.hits, PNH = pway.nohits, NPH = nopway.hits,
-                      NPNH = nopway.nohits)
-  }
-  names(odds.ratios) <- pways
-  if(verbose) cat(".\n")
-  return(list(enrichments=enrichments, odds.ratios = odds.ratios, overlaps = overlaps, sets = sets))
+    if (length(sigs[[1]]) < 1) {
+        pz.warning("No significance cutoffs found")
+        return(c())
+    }
+    tbl.mappings <- enframe(map(mappings, ~group_by_at(., colnames(.)[2]) %>%
+                                 nest() %>% rename(term=1) %>%
+                                     mutate(data=map(data, unlist)))) %>%
+        rename(termset=name, terms=value)
+    phylum <- names(sigs)
+    cutoff <- names(sigs[[1]])
+    map.bg <- Reduce(union, map(tbl.mappings$terms,
+                            ~Reduce(union, .$data)))
+    full.table <- crossing(phylum, cutoff, tbl.mappings) %>% unnest()
+    full.table <- mutate(full.table,
+                         enr=pmap(full.table, function(phylum,
+                                                       cutoff,
+                                                       termset,
+                                                       term,
+                                                       data) {
+                             s <- intersect(sigs[[phylum]][[cutoff]],
+                                            nw(signs[[phylum]] == d))
+                             g <- names(which(!is.na(signs[[phylum]])))
+                             do.fisher(data,
+                                       s,
+                                       intersect(map.bg, g))
+                         }))
+    full.table <- mutate(full.table,
+                         enr.pval=map_dbl(enr, ~.$p.value),
+                         enr.estimate=map_dbl(enr, ~.$estimate),
+                         enr.overlap=map(enr, ~.$overlap))
+    full.table <- full.table %>%
+        group_by(phylum, cutoff, termset) %>%
+        mutate(enr.qval=qvals(pv1(enr.pval))) %>%
+        ungroup
 }
 
 
-
-# Sometimes p-values from the Fisher test can be 1+epsilon for some reason;
-# this fixes that problem
-
+#' Fix p-values that are above 1.
+#'
+#' Sometimes, p-values from the Fisher test can apparently be slightly larger
+#' than one for some reason; this works around that problem.
+#'
+#' @param x A vector of p-values.
+#' @return The same vector with all p-values above 1 changed to exactly 1.
 pv1 <- function(x) { x[which(x > 1)] <- 1; return(x) }
 
-signif.overlaps <- function(enr, result) {
-  if (!is.null(enr$table %>% dim)) {
-    overlap.list <- enr$full$overlaps[enr$table %>% rownames]
-  } else if ("enriched" %in% names(enr$table)) {
-    overlap.list <- enr$full$overlaps[enr$table["enriched"]]
-  } else {
-    overlap.list <- list()
-  }
-  x <- lapply(names(overlap.list), function(n) {
-    g <- overlap.list[[n]]
-    if (length(g) > 0) {
-      cbind(genes = overlap.list[[n]], 
-        descs = gene.annot(overlap.list[[n]]),
-        estimate = result[1, g],
-        qval = qvals(result[2, ])[g])
-    } else {
-      cbind(NA, NA, NA, NA)
-    }
-  })
-  names(x) <- names(overlap.list)
-  x
-}
