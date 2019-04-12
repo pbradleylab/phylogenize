@@ -2,6 +2,7 @@ devtools::document("package/phylogenize")
 devtools::load_all("package/phylogenize")
 setwd("~/projects/phylogenize")
 hmp_dir <- normalizePath(file.path(".", "hmp"))
+emp_dir <- normalizePath(file.path(".", "emp"))
 
 
 perform_associations <- FALSE
@@ -9,7 +10,7 @@ if (perform_associations) {
     phylogenize::render.report(
                      output_file=file.path(hmp_dir, "16S-results.html"),
                      in_dir=hmp_dir,
-                     out_dir=file.path(hmp_dir, "16S-output"),
+                     out_dir=file.path(hmp_dir, "16S-results"),
                      type="16S",
                      db_version="midas_v1.2",
                      which_phenotype="prevalence",
@@ -19,7 +20,8 @@ if (perform_associations) {
                      data_dir=system.file(package="phylogenize", "extdata"),
                      input_format="tabular",
                      burst_dir="/home/pbradz/bin/",
-                     ncl=1,
+                     ncl=10,
+                     meas_err=TRUE,
                      devel=TRUE,
                      devel_pkgdir=file.path(getwd(), "package/phylogenize"),
                      pryr=FALSE)
@@ -56,15 +58,58 @@ if (perform_associations) {
                      data_dir=system.file(package="phylogenize", "extdata"),
                      input_format="tabular",
                      burst_dir="/home/pbradz/bin/",
-                     ncl=1,
+                     ncl=10,
+                     meas_err=TRUE,
                      devel=TRUE,
                      devel_pkgdir=file.path(getwd(), "package/phylogenize"),
                      pryr=FALSE)
+
+    phylogenize::render.report(
+                     output_file=file.path(emp_dir, "emp-plant-specificity.html"),
+                     out_dir = file.path(emp_dir, "plant-specificity-output"),
+                     in_dir = "/home/pbradz/projects/phylogenize",
+                     type = "16S",
+                     db_version = "midas_v1.2",
+                     which_phenotype = "specificity",
+                     which_envir = "Plant",
+                     abundance_file = "",
+                     metadata_file = "",
+                     biom_file = "emp_deblur_freeliving.biom",
+                     input_format = "biom",
+                     burst_dir = "/home/pbradz/bin/",
+                     meas_err=TRUE,
+                     ncl = 10,
+                     data_dir = "/home/pbradz/projects/phylogenize/data/",
+                     devel = TRUE,
+                     devel_pkgdir = "/home/pbradz/projects/phylogenize/package/phylogenize/",
+                     use_rmd_params = FALSE)
+
+    phylogenize::render.report(
+                     output_file=file.path(emp_dir, "emp-plant-specificity-linear.html"),
+                     out_dir = file.path(emp_dir, "plant-specificity-linear-output"),
+                     in_dir = "/home/pbradz/projects/phylogenize",
+                     type = "16S",
+                     db_version = "midas_v1.2",
+                     which_phenotype = "specificity",
+                     which_envir = "Plant",
+                     abundance_file = "",
+                     metadata_file = "",
+                     biom_file = "emp_deblur_freeliving.biom",
+                     input_format = "biom",
+                     burst_dir = "/home/pbradz/bin/",
+                     meas_err=TRUE,
+                     ncl = 10,
+                     data_dir = "/home/pbradz/projects/phylogenize/data/",
+                     devel = TRUE,
+                     devel_pkgdir = "/home/pbradz/projects/phylogenize/package/phylogenize/",
+                     linearize=TRUE,
+                     use_rmd_params = FALSE)
 }
 
 ## Compare phenotypes (prevalence)
 ## Compare effect sizes and significance by phylum (for top 4 phyla)
 
+pz.db <- import.pz.db(db_version="midas_v1.2")
 library(tidyverse)
 library(cowplot)
 last_elem <- function(x) x[length(x)]
@@ -77,7 +122,7 @@ shotgun_pheno <- read_tsv(file.path(hmp_dir, "shotgun-output", "phenotype.tab"),
                           col_types=c("cd"), skip=1)
 sixteen_pheno <- read_tsv(file.path(hmp_dir, "16S-output", "phenotype.tab"),
                           col_names=c("id", "pheno_16"), skip=1)
-plant_pheno <- read_tsv(file.path(emp_dir, "plant-phylo", "phenotype.tab"),
+plant_pheno <- read_tsv(file.path(emp_dir, "plant-specificity-output", "phenotype.tab"),
                           col_names=c("id", "pheno_16"),
                           col_types=c("cd"), skip=1)
 sixteen_rn <- mutate(sixteen_pheno,
@@ -172,37 +217,32 @@ total_cor <- genes_signif %>%
 restricted_cor <- genes_signif %>%
     filter(sixteen_qv <= 0.05 | shotgun_qv <= 0.05) %>%
     group_by(phylum) %>%
-    summarize(cor=cor(shotgun_fx, sixteen_fx))
-
-restricted_cor_sp <- genes_signif %>%
-    filter(sixteen_qv <= 0.05 | shotgun_qv <= 0.05) %>%
-    group_by(phylum) %>%
-    summarize(cor=cor(shotgun_fx, sixteen_fx, method="spearman"))
+    summarize(cor=cor(shotgun_fx, sixteen_fx, use="pairwise.complete.obs"))
 
 pos_sig_jaccard <- genes_signif %>%
     group_by(phylum) %>%
     filter(shotgun_qv <= 0.05 | sixteen_qv <= 0.05) %>%
     summarize(jaccard=mean(shotgun_qv <= 0.05 & sixteen_qv <= 0.05))
 
-g_test <- genes_signif %>%
-    group_by(phylum) %>%
-    nest %>%
-    mutate(data=map(data,
-                    ~ fisher.test(matrix(nr=2,
-                                         c(nrow(.),
-                                           sum(.$shotgun_qv <= 0.25),
-                                           sum(.$sixteen_qv <= 0.25),
-                                           sum(.$shotgun_qv <= 0.25 &
-                                               .$sixteen_qv <= 0.25)))))) %>%
-    mutate(pv=map_dbl(data, ~.$p.value),
-           est=map_dbl(data, ~.$estimate))
-
+#g_test <- genes_signif %>%
+#    group_by(phylum) %>%
+#    nest %>%
+#    mutate(data=map(data,
+#                    ~ fisher.test(matrix(nr=2,
+#                                         c(nrow(.),
+#                                           sum(.$shotgun_qv <= 0.25),
+#                                           sum(.$sixteen_qv <= 0.25),
+#                                           sum(.$shotgun_qv <= 0.25 &
+#                                               .$sixteen_qv <= 0.25)))))) %>%
+#    mutate(pv=map_dbl(data, ~.$p.value),
+#           est=map_dbl(data, ~.$estimate))
+#
 pdf(width=4.33,height=4.33,file="hmp-compare-genefx.pdf")
 ggplot(genes_signif %>% filter(best_qv <= 0.05),
        aes(x=shotgun_fx, y=sixteen_fx)) +
 #    geom_point(aes(color=best_qv)) +
                                         #    scale_color_gradient(low="black",high="white", limits=c(0, 0.05)) +
-    geom_hex(bins=20) + scale_fill_gradient(low="darkgray",high="black") +
+    geom_hex(bins=40) + scale_fill_gradient(low="darkgray",high="black") +
     facet_wrap(~phylum) +
     geom_text(data=mutate(restricted_cor,
                           label=sprintf("cor_restricted = %0.2f", cor)),
@@ -215,7 +255,6 @@ dev.off()
 
 pz.db.0 <- import.pz.db(db_version="midas_v1.0")
 
-pz.db <- import.pz.db(db_version="midas_v1.2")
 sixteen_thresh_results <- group_by(sixteen_results, phylum) %>%
     nest %>%
     mutate(data=map(data, function(x) {
@@ -408,3 +447,11 @@ expected_sd <- apply(d_noise, 1, sd)
 d_full <- left_join(d_noise_long, enframe(b), by=c("tips"="name"))
 tcor <- corBrownian(phy=a)
 w <- apply(d_noise, 1, function(x) 1/var(x))
+
+min_fx_pv <- function(fx, se, df, min_fx=0.25) {
+    
+    if (abs(fx) < abs(min_fx)) return(1)
+    t_stat = abs((fx-min_fx)/se)
+    2 * pt(-t_stat, df)
+}
+

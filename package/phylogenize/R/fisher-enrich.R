@@ -117,7 +117,7 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
         mutate(enr.qval=qvals(pv1(enr.pval))) %>%
         ungroup
 }
-
+neq_sixteen_shotgun <- full_join(neq_pst_sixteen %>% mutate(neq_sixteen=TRUE), neq_pst_shotgun %>% mutate(neq_shotgun=TRUE), by=c("gene","phylum","description")) %>% mutate(neq_sixteen=map_lgl(neq_sixteen, ~!is.na(.x))) %>% mutate(neq_shotgun=map_lgl(neq_shotgun, ~!is.na(.x))
 
 #' Fix p-values that are above 1.
 #'

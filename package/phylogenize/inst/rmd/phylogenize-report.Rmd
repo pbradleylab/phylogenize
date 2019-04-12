@@ -267,7 +267,8 @@ if (pz.options('ncl') > 1) {
 }
 signif <- make.sigs(results)
 signs <- make.signs(results)
-pos.sig <- make.pos.sig(sigs=signif, signs=signs)
+# pos.sig <- make.pos.sig(sigs=signif, signs=signs)
+pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
 results.matrix <- make.results.matrix(results)
 
 knitr::kable(sapply(pos.sig, length), col.names = "significant genes")

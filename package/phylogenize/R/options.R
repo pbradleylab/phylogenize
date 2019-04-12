@@ -21,11 +21,12 @@ PZ_OPTIONS <- options_manager(
   prior_file="",
   minimum=3,
   treemin=5,
+  pctmin=0.025,
   assume_below_LOD=TRUE,
   skip_graphs=FALSE,
   burst_dir="/usr/local/bin",
   linearize=FALSE,
-  pryr=TRUE,
+  pryr=FALSE,
   prev_color_low='black',
   prev_color_high='orange2',
   spec_color_low='slateblue',
@@ -47,7 +48,8 @@ PZ_OPTIONS <- options_manager(
   relative_out_dir=NULL,
   single_dset=FALSE,
   working_dir='.',
-  meas_err=FALSE
+  meas_err=FALSE,
+  min_fx=0
 )
 
 #' Set and get options for phylogenize.
@@ -94,11 +96,14 @@ PZ_OPTIONS <- options_manager(
 #'   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
 #'   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
 #'   \item{burst_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using BURST. Default: 0.985}
+#'   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: FALSE}
+#'   \item{min_fx}{Positive double. Effects that are significantly equivalent to this effect size will be excluded from significant positive hits. If zero, the equivalence test will be skipped. Default: 0}
 #' }
 #'
 #' @section Graphing:
 #' \describe{
 #'   \item{treemin}{Integer. A phylum must have at least this many representatives in order to be graphed in the report. Default: 5}
+#'   \item{pctmin}{Integer. A phylum must have at least this percent of observed representatives in order to be graphed in the report. Default: 0.01}
 #'   \item{skip_graphs}{Boolean. If TRUE, skip making graphs in the report, which can be time- and memory-consuming. Default: FALSE}
 #'   \item{prev_color_low}{String. When graphing prevalence on a tree, this color is the lowest value. Default: "black"}
 #'   \item{prev_color_high}{String. When graphing prevalence on a tree, this color is the highest value. Default: "orange2"}

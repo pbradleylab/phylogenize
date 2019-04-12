@@ -636,7 +636,12 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     if (all(tL < 2)) {
         pz.error("Too few taxa found. Was the right database used?")
     }
-    saved.phyla <- nw(sapply(taxa.per.tree, length) >= opts('treemin'))
+    passed.min <- nw(tL >= opts('treemin'))
+    totalL <- vapply(pz.db$trees, function(tr) { length(tr$tip.label) }, 1L)
+    pct.obs <- mapply(function(x, y) x / y, tL, totalL)
+    pz.message(format(pct.obs))
+    passed.pct <- nw(pct.obs >= opts('pctmin'))
+    saved.phyla <- intersect(passed.min, passed.pct)
     pz.db$trees <- pz.db$trees[saved.phyla]
     pz.db$taxa <- lapply(pz.db$trees, function(x) x$tip.label)
     pz.db$nphyla <- length(pz.db$trees)

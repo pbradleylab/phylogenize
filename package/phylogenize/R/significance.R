@@ -11,6 +11,68 @@ make.pos.sig <- function(sigs, signs, cut = "strong") {
     })
 }
 
+#' Get vectors of significant genes with positive effect sizes.
+#'
+#' @param results List of result matrices (4 x N).
+#' @param method Method for performing multiple test adjustment.
+#' @param qcut_sig Desired q-value cutoff for significance test.
+#' @param qcut_eq Desired q-value cutoff for equivalence test (N.B.:
+#'     significantly equivalent hits will be *excluded*).
+#' @param min_fx Minimum effect size for equivalence test.
+#' @param exclude Optional list of character vectors of genes to exclude.
+#' @return List of character vectors of hits that were significantly different
+#'     from zero, had positive effect sizes, and not significantly equivalent to
+#'     a minimum effect size.
+#' @export
+nonequiv.pos.sig <- function(results,
+                             method=qvals,
+                             qcut_sig=0.05,
+                             qcut_eq=0.05,
+                             min_fx=0.25,
+                             exclude=NULL) {
+    if (is.null(exclude)) exclude <- lapply(results, function(.) NULL)
+    mapply(function(r, ex) {
+        valid <- colnames(r)[which(!is.na(r[1, ]))]
+        if (!is.null(ex)) {
+            valid <- setdiff(valid, ex)
+        }
+        tryCatch({
+            tested <- na.omit(r[2, valid])
+            qv <- method(tested)
+            fx_sig <- nw(qv <= qcut_sig)
+            if (min_fx > 0) {
+              neq <- apply(r[, valid], 2,
+                          function(x) equiv_test(x[1], x[3], x[4], min_fx))
+              neq_qv <- method(neq)
+              neq_sig <- nw(neq_qv > qcut_eq)
+            } else {
+              neq_sig <- valid
+            }
+            which_pos <- nw(r[1, valid] > 0)
+            Reduce(intersect, list(fx_sig,
+                                   neq_sig,
+                                   which_pos))
+            }, error=function(e) character(0))
+    }, results, exclude, SIMPLIFY=FALSE)
+}
+
+#' Equivalence test based on two one-sided tests.
+#'
+#' @param fx Estimated effect size.
+#' @param se Estimated standard error of the effect size.
+#' @param df Degrees of freedom.
+#' @param min_fx Minimum effect size we care about.
+#' @return A p-value; reject non-equivalence if below alpha.
+equiv_test <- function(fx, se, df, min_fx=0.25) {
+                                        # test 1: H0 is fx >= min_fx, HA is fx < min_fx
+                                        # test 2: H0 is fx <= -min_fx, HA is fx > -min_fx
+    t_stat1 <- -(fx - min_fx) / se # more negative as fx >> min_fx
+    t_stat2 <- -(-min_fx - fx) / se # more negative as fx << -min_fx
+    pv1 <- pt(t_stat1, df, lower.tail=FALSE)
+    pv2 <- pt(t_stat2, df, lower.tail=FALSE)
+    max(pv1, pv2)
+}
+
 #' Get vectors of significant genes from result tables.
 #'
 #' @param results List of result matrices with two rows (effect size and

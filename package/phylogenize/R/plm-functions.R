@@ -97,8 +97,9 @@ nonparallel.results.generator <- function(gene.matrix,
                                          method=phylolm.fx.pv,
                                          restrict.ff=NULL,
                                          remove.low.variance=TRUE,
-                                         use.for.loop=TRUE
-                                         ) {
+                                         use.for.loop=TRUE,
+                                         ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
     message(phylum.name)
     restrict.taxa <- Reduce(intersect, list(colnames(gene.matrix),
                                             tree$tip.label,
@@ -120,8 +121,8 @@ nonparallel.results.generator <- function(gene.matrix,
     }
     restrict.tree <- keep.tips(tree, restrict.taxa)
     if (use.for.loop) {
-        ans <- matrix(nr = 2, nc = length(restrict.ff), NA)
-        dimnames(ans) <- list(c("Estimate", "p.value"),
+        ans <- matrix(nr = 4, nc = length(restrict.ff), NA)
+        dimnames(ans) <- list(c("Estimate", "p.value", "StdErr", "df"),
                               restrict.ff)
         message(paste0(c('|',rep('-', 48), "|"), collapse=''))
         progress <- txtProgressBar(min = 1,
@@ -137,7 +138,8 @@ nonparallel.results.generator <- function(gene.matrix,
             setTxtProgressBar(progress, fn)
             ans[, fn] <- method(gene.matrix[restrict.ff[fn], restrict.taxa],
                                 pheno.restrict,
-                                restrict.tree)
+                                restrict.tree,
+                                meas_err=opts('meas_err'))
         }
         close(progress)
         ans
@@ -145,7 +147,8 @@ nonparallel.results.generator <- function(gene.matrix,
         pbapply::pbapply(gene.matrix[restrict.ff, restrict.taxa],
                          1,
                          function(m) {
-                             method(m, pheno[restrict.taxa], restrict.tree)
+                             method(m, pheno[restrict.taxa], restrict.tree,
+                                    meas_err=opts('meas_err'))
                          })
     }
 }
@@ -162,7 +165,7 @@ nonparallel.results.generator <- function(gene.matrix,
 #'     this vector will be \code{c(NA, NA)}.
 #' @export
 phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
-                          meas_err=pz.options('meas_err')) {
+                          meas_err=FALSE) {
     # This seems redundant, but we can avoid touching the giant protein matrix
     # this way and therefore causing an expensive copy
     if (!is.null(restrict)) {
@@ -172,10 +175,11 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
     fx.pv <- tryCatch({
         plm <- phylolm(p ~ m, phy=tr, measurement_error=meas_err)
         coef <- summary(plm)$coefficients
-        coef[coefname, c("Estimate", "p.value", "StdErr")]
+        c(coef[coefname, c("Estimate", "p.value", "StdErr")],
+          df=(plm$n - plm$d))
     }, error = function(e) {
         pz.warning(paste(e))
-        c(Estimate = NA, p.value = NA)
+        c(Estimate = NA, p.value = NA, StdErr = NA, df = NA)
     })
     fx.pv
 }
@@ -189,7 +193,8 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
 #'     \code{"p.value"}. If there is an error in \code{phylolm}, the values of
 #'     this vector will be \code{c(NA, NA)}.
 #' @export
-lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
+lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
+                     meas_err=FALSE) {
     if (!is.null(restrict)) {
         p <- p[restrict]
         m <- m[restrict]
@@ -197,12 +202,12 @@ lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
     fx.pv <- tryCatch({
         lm <- lm(p ~ m)
         coef <- summary(lm)$coefficients
-        pair <- coef[coefname, c("Estimate", "Pr(>|t|)")]
-        names(pair) <- c("Estimate", "p.value")
-        pair
+        pair <- coef[coefname, c("Estimate", "Pr(>|t|)", "Std. Error")]
+        names(pair) <- c("Estimate", "p.value", "StdErr")
+        c(pair, df = df.residual(lm))
     }, error = function(e) {
         pz.warning(paste(e))
-        c(Estimate = NA, p.value = NA)
+        c(Estimate = NA, p.value = NA, StdErr = NA, df = NA)
     })
     fx.pv
 }
@@ -219,7 +224,8 @@ lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
 #' @return Length-2 numeric vector with names \code{"Estimate"} and
 #'     \code{"p.value"}, with distributions N(0,1) and U(0,1), respectively.
 #' @export
-rnd.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
+rnd.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
+                      meas_err=FALSE) {
     return(c(Estimate = rnorm(n=1, 0, 1),
              p.value = runif(n=1, 0, 1)))
 }
@@ -244,7 +250,9 @@ rnd.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL) {
 rndpos.fx.pv <- function(m, p, tr, coefname="m", restrict=NULL,
                          pos.pct=0.1,
                          pos.fx=2,
-                         pos.beta=c(shape1=1, shape2=20)) {
+                         pos.beta=c(shape1=1, shape2=20),
+                         meas_err=FALSE,
+                         se=0.1) {
     is.pos <- runif(n=1, min=0, max=1)
     if (is.pos <= pos.pct) {
         est <- rnorm(n=1, pos.fx, 1)
@@ -253,7 +261,7 @@ rndpos.fx.pv <- function(m, p, tr, coefname="m", restrict=NULL,
         est <- rnorm(n=1, 0, 1)
         pv <- runif(n=1, 0, 1)
     }
-    return(c(Estimate = est, p.value = pv))
+    return(c(Estimate = est, p.value = pv, StdErr = se))
 }
 
 #' Wrapper around \code{phylolm} that automatically discards taxa that are
@@ -344,7 +352,8 @@ matrix.plm <- function(tree,
                        cl,
                        p=pheno,
                        tr=tree,
-                       restrict=restrict.taxa)
+                       restrict=restrict.taxa,
+                       meas_err=opts('meas_err'))
     if (opts('separate_process') || (cores > 1)) {
         parallel::stopCluster(cl)
     }
@@ -860,7 +869,9 @@ make.results.matrix <- function(results) {
         data.frame(phylum = rn,
                    gene = results[[rn]] %>% colnames,
                    effect.size = results[[rn]][1,],
-                   p.value = results[[rn]][2,])
+                   p.value = results[[rn]][2,],
+                   std.err = results[[rn]][3,],
+                   df = results[[rn]][4,])
     }))
 }
 
@@ -884,9 +895,16 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
            pos.sig[phy.with.sigs],
            pz.db$gene.presence[phy.with.sigs],
            FUN = function(tr, x, y) {
-               y2 <- y[x, intersect(tr$tip.label, colnames(y))]
-               r1 <- rowSums(y2)
-               r2 <- rowSums(1 - y2)
+               i <- intersect(tr$tip.label, colnames(y))
+               if (length(i) == 0) { return(character(0)) }
+               y2 <- y[x, i]
+               if (length(i) > 1) {
+                   r1 <- rowSums(y2)
+                   r2 <- rowSums(1 - y2)
+               } else {
+                   r1 <- sum(y2)
+                   r2 <- sum(1 - y2)
+               }
                names(which((r2 >= Min) & (r1 >= Min)))
            })
 }
