@@ -20,7 +20,8 @@ Depends:
     methods,
     stats,
     graphics,
-    grDevices
+    grDevices,
+    future
 Imports:
     data.table,
     parallel,

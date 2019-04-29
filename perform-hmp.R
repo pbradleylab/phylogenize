@@ -690,6 +690,7 @@ ggplot(rhizo_cmp_enr %>% filter(cutoff=="strong"),
     geom_point(size=3, alpha=0.3) +
     facet_wrap(~phylum)
 dev.off()
+
 write_tsv(rhizo_cmp_enr %>% filter(cutoff=="strong") %>%
           filter(conditional.phylo <= 0.25, conditional.linear > 0.25) %>%
          select(phylum, termset, term, conditional.phylo, conditional.linear, enr.estimate.phylo, enr.estimate.linear),
