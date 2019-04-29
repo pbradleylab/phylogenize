@@ -117,7 +117,97 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
         mutate(enr.qval=qvals(pv1(enr.pval))) %>%
         ungroup
 }
-neq_sixteen_shotgun <- full_join(neq_pst_sixteen %>% mutate(neq_sixteen=TRUE), neq_pst_shotgun %>% mutate(neq_shotgun=TRUE), by=c("gene","phylum","description")) %>% mutate(neq_sixteen=map_lgl(neq_sixteen, ~!is.na(.x))) %>% mutate(neq_shotgun=map_lgl(neq_shotgun, ~!is.na(.x))
+
+#' Get q-values for results in tbl format.
+#'
+#' @param results A tbl of results with columns for "phylum" and "p.value".
+#' @param method A function: method for obtaining q-values from p-values.
+#' @param ... Additional parameters to pass to \code{method}.
+#' @return A tbl with an additional "q.value" column.
+#' @export
+tbl.result.qvs <- function(results, method=qvals, ...) {
+    results <- results %>%
+        group_by(phylum) %>%
+        nest %>%
+        mutate(q.value=map(data, ~ {
+            method(.x$p.value)
+        })) %>%
+        unnest
+    results
+}
+
+#' An alternative way to get the enrichment table, using a tbl of results
+#' instead of separate inputs for significant results, effect signs, etc.
+#'
+#' @param results A tidyverse tbl of results with at least the following
+#'     columns: "phylum", "gene", "effect.size", and "q.value" (if only
+#'     "p.value" is present, first apply function \code{result.qvs}).
+#' @param mappings List of data.frames giving gene-to-gene-set mappings.
+#' @param dirxn Count only genes with this effect sign as significant.
+#' @return A tbl giving Fisher's test p-values, q-values, effect sizes, and overlaps.
+#' @export
+alt.multi.enrich <- function(results, mappings, dirxn=1,
+                             qcuts=c(strong=0.05, med=0.1, weak=0.25),
+                             future=FALSE) {
+    d <- sign(dirxn)
+    if (length(mappings) < 1) {
+        pz.warning("Didn't find significant hits, signs, or mappings")
+        return(c())
+    }
+    tbl.mappings <- enframe(map(mappings, ~group_by_at(., colnames(.)[2]) %>%
+                                              nest() %>% rename(term=1) %>%
+                                              mutate(data=map(data, unlist)))) %>%
+        rename(termset=name, terms=value)
+    phyla <- unique(results$phylum)
+    cutoff <- names(qcuts)
+    map.bg <- Reduce(union, map(tbl.mappings$terms,
+                                ~Reduce(union, .$data)))
+    full.table <- crossing(phylum=phyla, cutoff, tbl.mappings) %>% unnest()
+    if (future) {
+        map_fxn <- functional::Curry(furrr::future_pmap, .progress=TRUE)
+    } else {
+        map_fxn <- purrr::pmap
+    }
+    full.table <- mutate(full.table,
+                         enr=map_fxn(full.table,
+                                     indiv.enr,
+                                     results=results,
+                                     qcuts=qcuts,
+                                     dirxn=dirxn,
+                                     bg=map.bg))
+    full.table <- mutate(full.table,
+                         enr.pval=map_dbl(enr, ~.$p.value),
+                         enr.estimate=map_dbl(enr, ~.$estimate),
+                         enr.overlap=map(enr, ~.$overlap))
+    full.table <- full.table %>%
+        group_by(phylum, cutoff, termset) %>%
+        mutate(enr.qval=qvals(pv1(enr.pval))) %>%
+        ungroup
+}
+
+#' Internal function to perform an individual enrichment.
+indiv.enr <- function(phylum, cutoff, termset, term, data, results,
+                      qcuts=c(strong=0.05), dirxn=1, bg=NULL) {
+    s <- filter(results,
+                q.value <= qcuts[cutoff],
+                phylum == !!phylum,
+                sign(effect.size) == dirxn) %>%
+        select(gene) %>%
+        unlist
+    g <- filter(results,
+                phylum == !!phylum,
+                !is.na(effect.size)) %>%
+        select(gene) %>%
+        unlist
+    if (is.null(bg)) {
+        bg <- g
+    } else {
+        bg <- intersect(bg, g)
+    }
+    do.fisher(data,
+              s,
+              bg)
+}
 
 #' Fix p-values that are above 1.
 #'

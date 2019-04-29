@@ -39,6 +39,8 @@ Imports:
     svglite,
     pryr,
     testthat,
-    ezknitr
+    ezknitr,
+    furrr,
+    functional
 Suggests: 
 RoxygenNote: 6.1.1.9000

@@ -1,6 +1,3 @@
-# Tree functions
-# Namespace fixes
-
 #' Fudge trees with unresolved polytomies.
 #'
 #' \code{fix.tree} converts polytomies to dichotomies with very small branch lengths.
@@ -58,6 +55,7 @@ tree.to.dist <- function(tree) {
 #' @param cName String giving the title of the plot.
 #' @param reverse Mirror the resulting plotted tree.
 #' @param ladderize Ladderize the plotted tree.
+#' @param ... Additional arguments passed to ggplot2.
 #' @return A ggtree plot of a continuous trait plotted along a tree.
 gg.cont.tree <- function(phy,
                          ctrait,
@@ -125,4 +123,32 @@ gg.cont.tree <- function(phy,
               cols = colors,
               lims = cLimits,
               disp = cDisplay))
+}
+
+
+#' Remove clades above a certain size with no observed tips.
+#'
+#' @param phy A phylo object.
+#' @param observed A character vector giving all the observed tips. May contain
+#'     tips not in the tree, which will be ignored.
+#' @param pct Double; a cutoff. For example, \code{pct}=0.1 means that any
+#'     unobserved clade containing at least 10% of the total number of tips in
+#'     the tree will be dropped.
+#' @return A new, trimmed phylo object.
+#' @export
+rem_unobs_clades <- function(phy, observed, pct=0.1) {
+    ntips <- length(phy$tip.label)
+    nodes <- (1:(phy$Nnode)) + ntips
+    tiplist <- lapply(nodes, function(n) {
+        clade <- ape::extract.clade(phy, n)
+        clade.tips <- clade$tip.label
+        nc <- length(clade.tips)
+        if (((nc / ntips) >= pct) && (!any(clade.tips %in% observed))) {
+            return(clade.tips)
+        } else {
+            return(character(0))
+        }
+    })
+    to.drop <- Reduce(union, tiplist)
+    ape::drop.tip(phy, to.drop)
 }

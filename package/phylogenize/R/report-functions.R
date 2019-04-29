@@ -105,6 +105,15 @@ check.process.metadata <- function(metadata, ...) {
 #' Read in taxon-by-sample matrix of abundances and metadata (sample
 #' annotations) from a single BIOM-formatted file.
 #'
+#' @details This function uses package-wide options (see \code{?pz.options}),
+#'     which can be overridden using the \code{...} argument. Some particularly
+#'     relevant options are:
+#'
+#' \describe{
+#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files). Default: "."}
+#'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
+#' }
+#'
 #' @return A list with components \code{mtx} (matrix of abundances) and
 #'     \code{metadata} (data frame of metadata).
 #' @export
@@ -1162,6 +1171,22 @@ output.enr.table <- function(enr.table) {
 #' @return TRUE if it contains no illegal characters, FALSE otherwise.
 is.dna <- function(seq) {
     !(grepl("[^actguwsmkrybdhvn]", tolower(seq)))
+}
+
+#' Download data from figshare (or provide it locally) and un-gzip it into the
+#' package directory so that it can be imported.
+#'
+#' @param data_path Optional: provide a path to a local file containing a
+#'     compressed .tar archive of data. Must extract to the subdirectory
+#'     \code{extdata/}.
+#' @param figshare_url Optional: override the URL from which to obtain the data.
+install.data.figshare <- function(data_path=NULL,
+                                  figshare_url="https://ndownloader.figshare.com/files/15013790?private_link=122ea0030cf11c65e32b") {
+    if (is.null(data_path)) {
+        data_path = tempfile()
+        curl::curl_download(figshare_url, data_path)
+    }
+    untar(data_path, exdir = system.file("", package="phylogenize"))
 }
 
 
