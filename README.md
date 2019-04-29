@@ -1,7 +1,15 @@
-# phylogenize (v0.8 beta)
+# phylogenize (v0.9 beta)
 
 
 ## Running locally without the web server
+
+To run *phylogenize* locally without the web server, you will need to first install the R package:
+
+`devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")`
+
+You may use this package directly, or together with the QIIME2 interface (see: [https://bitbucket.org/pbradz/q2-phylogenize]).
+
+
 
 To run *phylogenize* locally without the web server, you will need to render the RMarkdown notebook "phylogenize-report.Rmd," overriding the values in the header. An example script is provided in `example-job.R`. Here is a full list of fields that can be overridden and their descriptions:
 
