@@ -215,7 +215,7 @@ def create_app(config=None):
         else:
           outtext = str("".join(outlines))
         try:
-          pctlines = list(filter(lambda x: re.search(r'\\|.*\\| *\%', x),
+          pctlines = list(filter(lambda x: re.search(r' *\%$', x),
             outlines))
           pctline = pctlines[-1]
           pct = float(re.sub('.*\\| (.*)%', '\\1', pctline))

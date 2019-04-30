@@ -119,7 +119,7 @@ while True:
         env_column=jobdict["env_column"],
         sample_column=jobdict["sample_column"],
         burst_cutoff=jobdict["burst_cutoff"],
-        assume_below_lod_R=TRUE,
+        assume_below_lod_R="TRUE",
         single_dset_R=jobdict["single_dset"],
         minimum=jobdict["minimum"]
       ))
