@@ -124,7 +124,7 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
 #' @param method A function: method for obtaining q-values from p-values.
 #' @param ... Additional parameters to pass to \code{method}.
 #' @return A tbl with an additional "q.value" column.
-#' @export tbl.results.qvs
+#' @export tbl.result.qvs
 tbl.result.qvs <- function(results, method=qvals, ...) {
     results <- results %>%
         group_by(phylum) %>%
