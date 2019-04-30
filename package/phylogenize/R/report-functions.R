@@ -1189,5 +1189,3 @@ install.data.figshare <- function(data_path=NULL,
     }
     untar(data_path, exdir = system.file("", package="phylogenize"))
 }
-
-

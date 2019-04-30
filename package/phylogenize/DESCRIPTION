@@ -20,9 +20,10 @@ Depends:
     methods,
     stats,
     graphics,
-    grDevices,
-    future
+    grDevices
 Imports:
+    functional,
+    future,
     data.table,
     parallel,
     qvalue,
