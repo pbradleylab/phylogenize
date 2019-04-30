@@ -75,30 +75,54 @@ while True:
       os.chdir(jobdict["output_dir"])
       # Don't use output_dir directly because then paths get screwed up on
       # render
-      job_rscript = \
-        ("rmarkdown::render(\"%s\", " % (jobdict["report_name"]) + \
-          "output_format = \"html_document\", " + \
-          ("params = list(type = \"%s\", " % (jobdict["type"])) + \
-          ("out_dir = \"%s\", " % (jobdict["output_dir"])) + \
-          ("in_dir = \"%s\", " % (jobdict["input_dir"])) + \
-          ("source_dir = \"%s\", " % (jobdict["report_dir"])) + \
-          ("burst_dir = \"%s\", " % (os.path.join(
-            jobdict["report_dir"], "bin/"))) + \
-          ("data_dir = \"%s\", " % (os.path.join(jobdict["report_dir"],
-            "data"))) + \
-          ("abundance_file = \"%s\", " % (jobdict["abundance_file"])) + \
-          ("metadata_file = \"%s\", " % (jobdict["metadata_file"])) + \
-          ("biom_file = \"%s\", " % (jobdict["biom_file"])) + \
-          ("input_format = \"%s\", " % jobdict["input_format"]) + \
-          ("phenotype_file = \"%s\", " % jobdict["phenotype_file"]) + \
-          ("db_version = \"%s\", " % jobdict["db_version"]) + \
-          ("which_phenotype = \"%s\", " % jobdict["which_phenotype"]) + \
-          ("which_envir = \"%s\", " % jobdict["which_envir"]) + \
-          ("prior_type = \"%s\", " % jobdict["prior_type"]) + \
-          ("prior_file = \"%s\", " % jobdict["prior_file"]) + \
-          ("minimum = %d" % (int(jobdict["minimum"]))) + \
-          "))"
-        )
+      Rcmd=(('sapply(c("phylogenize", "graphics", "stats", "methods",'
+             '"grDevices", "biomformat"), function(.) library('
+             'character.only=TRUE, .));'
+             'phylogenize::render.report.alt('
+             'output_file="{output_file}", '
+             'input_format="{input_format}", '
+             'biom_file="{biom_file}", '
+             'db_version="{db_version}", '
+             'abundance_file="{abundance_file}", '
+             'metadata_file="{metadata_file}", '
+             'burst_cutoff="{burst_cutoff}", '
+             'in_dir="{input_dir}", '
+             'out_dir="{output_dir}", '
+             'ncl={ncl}, '
+             'type="{data_type}", '
+             'which_phenotype="{which_phenotype}", '
+             'which_envir="{which_envir}", '
+             'dset_column="{dset_column}", '
+             'env_column="{env_column}", '
+             'sample_column="{sample_column}", '
+             'burst_cutoff={burst_cutoff}, '
+             'assume_below_LOD={assume_below_lod_R}, '
+             'single_dset={single_dset_R}, '
+             'minimum={minimum}, '
+             'relative_out_dir=".", '
+             'working_dir="{output_dir}"'
+             ')'
+      ).format(
+        output_file="index.html",
+        input_dir=jobdict["input_dir"],
+        output_dir=jobdict["output_dir"],
+        ncl=1,
+        db_version=jobdict["db_version"],
+        abundance_file=jobdict["abundance_file"],
+        metadata_file=jobdict["metadata_file"],
+        biom_file=jobdict["biom_file"],
+        data_type=jobdict["type"],
+        input_format=jobdict["input_format"],
+        which_phenotype=jobdict["which_phenotype"],
+        which_envir=jobdict["which_envir"],
+        dset_column=jobdict["dset_column"],
+        env_column=jobdict["env_column"],
+        sample_column=jobdict["sample_column"],
+        burst_cutoff=jobdict["burst_cutoff"],
+        assume_below_lod_R=TRUE,
+        single_dset_R=jobdict["single_dset"],
+        minimum=jobdict["minimum"]
+      ))
       JobList[JobN] = subprocess.Popen(["/usr/bin/Rscript", "-e", job_rscript], \
           stdout=JobOutput[JobN], \
           stderr=JobErr[JobN])

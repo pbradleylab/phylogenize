@@ -89,7 +89,7 @@ def create_app(config=None):
         ("16S", "16S"),
         ("midas", "Shotgun (MIDAS)")
       ],
-      default = "16S", 
+      default = "16S",
       label = "Data type"
     )
     database = RadioField(
@@ -104,7 +104,7 @@ def create_app(config=None):
       choices = [
         ("prevalence", "prevalence"),
         ("specificity", "specificity")
-      ], 
+      ],
       default = "prevalence"
     )
     which_envir = StringField("Environment",
@@ -277,7 +277,7 @@ def create_app(config=None):
     subfile = secure_filename(subfile)
     direc = os.path.abspath(os.path.join(app.config['APPLICATION_ROOT'], app.config['UPLOAD_FOLDER'], result_id))
     prf = os.path.join(os.path.join(direc, "output"), "phylogenize-report_files")
-    return(send_from_directory(prf, subfile)) 
+    return(send_from_directory(prf, subfile))
 
   def process_form(form=None, request=None):
 
@@ -290,7 +290,7 @@ def create_app(config=None):
             app.config['REPORT_TEMPLATE_PATH']
       )
     ))
-    
+
     uploaded_biom = False
     if form.biomfile.data:
       uploaded_biom = True
@@ -334,25 +334,30 @@ def create_app(config=None):
     prior_type = "uninformative"
 
     rmark_dict = {
-        'output_dir': ODir,
-        'input_dir': IDir,
-        'direc': direc,
-        'result_id': new_result_id,
-        'upload_folder': upload_folder,
-        'abundance_file': 'abundance.tab',
-        'metadata_file': 'metadata.tab',
-        'biom_file': 'data.biom',
-        'type': datatype,
-        'input_format': input_format,
-        'phenotype_file': 'phenotype.tab',
-        'db_version': database,
-        'which_envir': which_envir,
-        'prior_type': prior_type,
-        'which_phenotype': phenotype,
-        'prior_file': "prior.tab",
-        'minimum': minimum,
-        'report_name': report_name,
-        'report_dir': report_dir
+      'output_dir': ODir,
+      'input_dir': IDir,
+      'direc': direc,
+      'result_id': new_result_id,
+      'upload_folder': upload_folder,
+      'abundance_file': 'abundance.tab',
+      'metadata_file': 'metadata.tab',
+      'biom_file': 'data.biom',
+      'type': datatype,
+      'input_format': input_format,
+      'phenotype_file': 'phenotype.tab',
+      'db_version': database,
+      'which_envir': which_envir,
+      'prior_type': prior_type,
+      'which_phenotype': phenotype,
+      'prior_file': "prior.tab",
+      'minimum': minimum,
+      'report_name': report_name,
+      'report_dir': report_dir,
+      'dset_column': "dataset",
+      'env_column': "env",
+      'sample_column': "sample",
+      'single_dset': "FALSE",
+      'burst_cutoff': 0.985
     }
     beanstalk.put(json.dumps(rmark_dict))
     return(new_result_id)

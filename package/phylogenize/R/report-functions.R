@@ -1180,6 +1180,7 @@ is.dna <- function(seq) {
 #'     compressed .tar archive of data. Must extract to the subdirectory
 #'     \code{extdata/}.
 #' @param figshare_url Optional: override the URL from which to obtain the data.
+#' @export
 install.data.figshare <- function(data_path=NULL,
                                   figshare_url="https://ndownloader.figshare.com/files/15013790?private_link=122ea0030cf11c65e32b") {
     if (is.null(data_path)) {
