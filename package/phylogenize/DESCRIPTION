@@ -20,10 +20,11 @@ Depends:
     methods,
     stats,
     graphics,
-    grDevices
-Imports:
+    grDevices,
     functional,
     future,
+    furrr
+Imports:
     data.table,
     parallel,
     qvalue,
@@ -41,8 +42,6 @@ Imports:
     svglite,
     pryr,
     testthat,
-    ezknitr,
-    furrr,
-    functional
+    ezknitr
 Suggests: 
 RoxygenNote: 6.1.1.9000
