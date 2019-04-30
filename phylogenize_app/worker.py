@@ -123,6 +123,7 @@ while True:
         single_dset_R=jobdict["single_dset"],
         minimum=jobdict["minimum"]
       ))
+      job_rscript=Rcmd
       JobList[JobN] = subprocess.Popen(["/usr/bin/Rscript", "-e", job_rscript], \
           stdout=JobOutput[JobN], \
           stderr=JobErr[JobN])
