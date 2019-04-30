@@ -16,7 +16,7 @@
 #' @param only.return.names Boolean giving whether to just return the names of
 #'     genes to be tested (for debugging).
 #' @return Named list of p-value and effect-size matrices, one per phylum.
-#' @export
+#' @export result.wrapper.plm
 result.wrapper.plm <- function(phyla,
                                pheno,
                                tree,

@@ -413,7 +413,7 @@ prepare.burst.input <- function(mtx, ...) {
 #' }
 #'
 #' @return Returns TRUE unless an error is thrown.
-#' @export
+#' @export run.burst
 run.burst <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     r <- system2(file.path(opts('burst_dir'), opts('burst_bin')),
