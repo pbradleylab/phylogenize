@@ -11,6 +11,10 @@ To run *phylogenize* locally, you will need to first install the R package from 
 
 You will also need a copy of the BURST binaries from [github.com/knights-lab/BURST]. By default *phylogenize* expects these binaries to be in `/usr/local/bin` but you can override this (see below).
 
+Finally, you will need to download and install the data files that *phylogenize* needs to run. That has been automated so that all you should need to do is run the following function:
+
+`phylogenize::install.data.figshare()`
+
 You may use this package by itself, using the web interface, or using the QIIME2 interface (see: [https://bitbucket.org/pbradz/q2-phylogenize]).
 
 ### Running *phylogenize* locally in R
