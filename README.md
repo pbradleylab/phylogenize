@@ -1,44 +1,70 @@
 # phylogenize (v0.9 beta)
 
 
-## Running locally without the web server
+## Running *phylogenize* locally
 
-To run *phylogenize* locally without the web server, you will need to first install the R package:
+To run *phylogenize* locally, you will need to first install the R package from within this repository:
 
 `devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")`
 
-You may use this package directly, or together with the QIIME2 interface (see: [https://bitbucket.org/pbradz/q2-phylogenize]).
+(Note that you need to tell R to look in a specific subdirectory of this repository -- i.e., `package/phylogenize` -- and not the root.)
+
+You will also need a copy of the BURST binaries from [github.com/knights-lab/BURST]. By default *phylogenize* expects these binaries to be in `/usr/local/bin` but you can override this (see below).
+
+You may use this package by itself, using the web interface, or using the QIIME2 interface (see: [https://bitbucket.org/pbradz/q2-phylogenize]).
+
+### Running *phylogenize* locally in R
+
+The main function in *phylogenize* is `render.report`. The parameters that you are the most likely to use are as follows:
+
+| Option            | Default         |   Description  |
+|-------------------|-----------------|----------------|
+| in_dir | "." | String. Path to input directory (i.e., where to look for input files. |
+| out_dir | "output" | String. Path to output directory. |
+| abundance_file | "test-abundance.tab" | String. Name of abundance tabular file. |
+| metadata_file | "test-metadata.tab" | String. Name of metadata tabular file. |
+| biom_file | "test.biom" | String. Name of BIOM abundance-and-metadata file. |
+| input_format | "tabular" | String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). |
+| ncl | 1 | Integer. Number of cores to use for parallel computation. |
+| type | "midas" |  Type of data to use, either "midas" (shotgun) or "16S" (amplicon). |
+| env_column | "env" | String. Name of column in metadata file containing the environment annotations. |
+| dset_column | "dataset" | String. Name of column in metadata file containing the dataset annotations. |
+| sample_column | "sample_id" | Name of column in metadata file containing the sample IDs. |
+| single_dset | FALSE | Boolean. If true, will assume that all samples come from a single dataset called `"dset1"` no matter what, if anything, is in `dset_column`. |
+| db_version | "midas_v1.2" | String. Which version of the MIDAS database to use ("midas_v1.2" or "midas_v1.0"). |
+| which_phenotype | "prevalence" | String. Which phenotype to calculate ("prevalence" or "specificity"). |
+| which_envir | "Stool" | String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. |
+| burst_dir | "/usr/local/bin" | String. Path to the BURST binaries. |
+
+Compared to some R packages, passing options to *phylogenize* works a little differently under the hood. Instead of having its own parameters, `render.report` and other *phylogenize* functions look for global options that can either be set using the function `pz.options` or overridden as extra arguments. This allows you to set parameters once and then work with the *phylogenize* functions without retyping them, and therefore makes the code easier to read. To see the full list of parameters that can be overridden, see `?pz.options`.
+
+Here is an example invocation of `render.report`: 
+
+~~~~
+phylogenize::render.report(
+    output_file="16S-results.html",
+    in_dir=hmp_dir,
+    out_dir=file.path("hmp", "16S-results"),
+    type="16S",
+    db_version="midas_v1.2",
+    which_phenotype="prevalence",
+    which_envir="Stool",
+    abundance_file="hmp-16s-dada2-full.tab",
+    metadata_file="hmp-16s-phylogenize-metadata-full.tab",
+    input_format="tabular",
+    burst_dir="/home/pbradz/bin/",
+    ncl=10)
+~~~~
+
+This invocation will generate a report under "./hmp/16S-results" called "16S-results.html".
+
+### Running *phylogenize* locally with QIIME2
 
 
+To run *phylogenize* with QIIME2, you will need to install the plugin available at [https://bitbucket.org/pbradz/q2-phylogenize].
 
-To run *phylogenize* locally without the web server, you will need to render the RMarkdown notebook "phylogenize-report.Rmd," overriding the values in the header. An example script is provided in `example-job.R`. Here is a full list of fields that can be overridden and their descriptions:
 
-| Field            | Description |
-|------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| ncl              | Maximum number of threads to run simultaneously. If you are short on memory, keep this at 1 to run phylogenize single-threaded. |
-| type             | Can be "midas" (shotgun data) or "16S" (16S amplicon data). |
-| out_dir          | Directory for storing output. Will be created if it doesn't exist. |
-| in_dir           | Directory where input files are stored. |
-| abundance_file   | If providing tabular data, this is the tab-delimited data matrix. |
-| metadata_file    | If providing tabular data, this is the tab-delimited metadata matrix. |
-| biom_file        | If providing BIOM-formatted data, this is the .biom file containing both data and sample metadata. |
-| input_format     | Can be "tabular" or "biom" |
-| env_column       | Which column of the metadata matrix contains environment annotations? Defaults to "env" |
-| dset_column      | Which column of the metadata matrix contains dataset annotations? Defaults to "dataset" |
-| phenotype_file   | Optional phenotype tabular file (allows you to skip calculating it) |
-| db_version       | Can be "midas_v1.0" or "midas_v1.2". Defaults to "midas_v1.2" |
-| which_phenotype  | Can be "prevalence" or "specificity." Defaults to "prevalence" |
-| which_envir      | Which environment should be chosen to calculate the phenotype? Needs to match an annotation in the sample metadata. |
-| prior_type       | For calculating specificity, what should the prior probability of the environment be? Can be "uninformative" or "provided" (if prior_file is provided). Defaults to "uninformative" |
-| prior_file       | Tab-delimited file giving priors per environment. |
-| minimum          | Lower bound for the number of species a gene must appear in, in order to be counted as positive and significant. Defaults to 3 |
-| treemin          | Lower bound for the number of observed taxa per phylum-level tree. Phyla with fewer observed taxa will be skipped. Defaults to 5 |
-| assume_below_LOD | Can be TRUE or FALSE. If true, taxa with zero observations will be assumed to be absent everywhere; if false, taxa with zero observations will be removed. Defaults to TRUE |
-| burst_dir        | Location of BURST binaries. Defaults to "`./bin`" |
-
-You will probably need to install dependencies first (run `install-dependencies.R`, plus there may be some system-wide dependencies like libxml and libcairo). You will also need to download a version of BURST (see [github.com/knights-lab/BURST](https://github.com/knights-lab/BURST)).
-
-## Running locally with the web server
+### Running *phylogenize* locally with the web interface
 
 This part of the guide is written assuming you are in a \*nix environment like Ubuntu or OS X. Windows users may be able to accomplish the command-line steps using Cygwin.
 
