@@ -1106,10 +1106,14 @@ single.cluster.plot <- function(gene.presence,
 #' Run *phylogenize* start to finish.
 #'
 #' @param output_file Path giving what to name the resulting HTML file.
+#' @param report_input Optionally override which notebook to knit (useful for
+#'     testing).
+#' @param do_cache Turn on or off Rmarkdown's caching.
 #' @param ... Parameters to override defaults.
 #' @export
 render.report <- function(output_file='report_output.html',
                           report_input='phylogenize-report.Rmd',
+                          do_cache=TRUE,
                           ...) {
     do.call(pz.options, list(...))
     pz.options(working_dir=normalizePath(getwd()))
@@ -1127,7 +1131,8 @@ render.report <- function(output_file='report_output.html',
                       output_file=basename(output_file),
                       output_dir=pz.options("out_dir"),
                       output_options=list(
-                          cache.path=pz.options("out_dir")
+                          cache.path=pz.options("out_dir"),
+                          cache=do_cache
                       ),
                       intermediates_dir=pz.options("out_dir"),
                       knit_root_dir=pz.options("out_dir"))
