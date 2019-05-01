@@ -128,4 +128,11 @@ pz.options <- function(...) {
     PZ_OPTIONS(...)
 }
 
-pz.options(data_dir=system.file("extdata", package="phylogenize"))
+#' Set data directory to internal
+#'
+#' @export
+set_data_internal <- function() {
+    pz.options(data_dir=system.file("extdata", package="phylogenize"))
+}
+
+set_data_internal()

@@ -429,7 +429,7 @@ run.burst <- function(...) {
                    file.path(opts('in_dir'),
                              opts('burst_outfile')))
     pz.message(paste0("Calling BURST with arguments: ",
-                      paste(burst_args, sep=" ")))
+                      paste(burst_args, sep=" ", collapse=" ")))
     r <- system2(file.path(opts('burst_dir'), opts('burst_bin')),
                  args = burst_args)
     if (r != 0) {
