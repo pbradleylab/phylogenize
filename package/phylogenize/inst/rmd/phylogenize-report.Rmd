@@ -44,7 +44,7 @@ library(Matrix)
 cache.d <- file.path(pz.options('out_dir'), 'cache')
 dir.create(pz.options('out_dir'))
 dir.create(cache.d)
-knitr::opts_chunk$set(cache.dir=cache.d)
+knitr::opts_chunk$set(cache.path=cache.d)
 
 if (pz.options('use_rmd_params')) {
     do.call(pz.options, args=params)
