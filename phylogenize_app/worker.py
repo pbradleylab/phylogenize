@@ -78,7 +78,7 @@ while True:
       Rcmd=(('sapply(c("phylogenize", "graphics", "stats", "methods",'
              '"grDevices", "biomformat"), function(.) library('
              'character.only=TRUE, .));'
-             'phylogenize::render.report.alt('
+             'phylogenize::render.report('
              'output_file="{output_file}", '
              'input_format="{input_format}", '
              'biom_file="{biom_file}", '
@@ -86,6 +86,7 @@ while True:
              'abundance_file="{abundance_file}", '
              'metadata_file="{metadata_file}", '
              'burst_cutoff="{burst_cutoff}", '
+             'burst_dir="{burst_dir}", '
              'in_dir="{input_dir}", '
              'out_dir="{output_dir}", '
              'ncl={ncl}, '
@@ -106,6 +107,7 @@ while True:
         output_file="index.html",
         input_dir=jobdict["input_dir"],
         output_dir=jobdict["output_dir"],
+        burst_dir=jobdict["burst_dir"],
         ncl=1,
         db_version=jobdict["db_version"],
         abundance_file=jobdict["abundance_file"],
@@ -141,7 +143,7 @@ while True:
         print("Job %s finished running in slot %d - cleaning up" % \
             (JobDict[N]["result_id"], N + 1))
         # clean up input files, which could be large and are no longer needed
-        if os.path.exists(JobDict[N]["input_dir"]):
+        if os.path.exists(JobDict[N]["input_dir"]) and JobDict[N]["cleanup"]:
           for filename in os.listdir(JobDict[N]["input_dir"]):
             rf = os.path.join(JobDict[N]["input_dir"], filename)
             print("Removing file %s..." % rf)

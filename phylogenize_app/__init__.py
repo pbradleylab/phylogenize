@@ -357,7 +357,9 @@ def create_app(config=None):
       'env_column': "env",
       'sample_column': "sample",
       'single_dset': "FALSE",
-      'burst_cutoff': 0.985
+      'burst_cutoff': 0.985,
+      'burst_dir': app.config['BURST_DIR'],
+      'cleanup': app.config['CLEANUP']
     }
     beanstalk.put(json.dumps(rmark_dict))
     return(new_result_id)

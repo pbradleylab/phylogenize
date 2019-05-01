@@ -416,19 +416,22 @@ prepare.burst.input <- function(mtx, ...) {
 #' @export run.burst
 run.burst <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
+    burst_args = c("-r",
+                   file.path(opts('data_dir'),
+                             opts('burst_16sfile')),
+                   "-fr",
+                   "-q",
+                   file.path(opts('in_dir'),
+                             opts('burst_infile')),
+                   "-i",
+                   "0.985",
+                   "-o",
+                   file.path(opts('in_dir'),
+                             opts('burst_outfile')))
+    pz.message(paste0("Calling BURST with arguments: ",
+                      paste(burst_args, sep=" ")))
     r <- system2(file.path(opts('burst_dir'), opts('burst_bin')),
-                 args = c("-r",
-                          file.path(opts('data_dir'),
-                                    opts('burst_16sfile')),
-                          "-fr",
-                          "-q",
-                          file.path(opts('in_dir'),
-                                    opts('burst_infile')),
-                          "-i",
-                          "0.985",
-                          "-o",
-                          file.path(opts('in_dir'),
-                                    opts('burst_outfile'))))
+                 args = burst_args)
     if (r != 0) {
         pz.error(paste0("BURST failed with error code ", r))
     }
