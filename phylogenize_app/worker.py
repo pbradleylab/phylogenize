@@ -74,13 +74,14 @@ while True:
       JobErr[JobN] = open(os.path.join(jobdict["output_dir"], "stderr.txt"), 'w')
       os.chdir(jobdict["output_dir"])
       # Don't use output_dir directly because then paths get screwed up on
-      # render
+      # render; also turn off cache which messes everything up
       Rcmd=(('sapply(c("phylogenize", "graphics", "stats", "methods",'
              '"grDevices", "biomformat"), function(.) library('
              'character.only=TRUE, .)); '
              'phylogenize::set_data_internal(); '
              'setwd("{output_dir}"); '
              'phylogenize::render.report('
+             'do_cache=FALSE, '
              'output_file="{output_file}", '
              'input_format="{input_format}", '
              'biom_file="{biom_file}", '
