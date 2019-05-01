@@ -78,6 +78,7 @@ while True:
       Rcmd=(('sapply(c("phylogenize", "graphics", "stats", "methods",'
              '"grDevices", "biomformat"), function(.) library('
              'character.only=TRUE, .)); '
+             'phylogenize::set_data_internal(); '
              'phylogenize::render.report('
              'output_file="{output_file}", '
              'input_format="{input_format}", '
