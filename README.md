@@ -3,9 +3,14 @@
 
 ## Running *phylogenize* locally
 
-To run *phylogenize* locally, you will need to first install the R package from within this repository:
+To run *phylogenize* locally, you will need to first install the R package from within this repository. `devtools` is capable of tracking down most of its dependencies, but there are a few packages from BioConductor that it will not be able to, so it's a good idea to install those first:
 
-`devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")`
+~~~~
+install.packages("BiocManager")
+BiocManager::install(c("qvalue","biomformat","ggtree"))
+install.packages("devtools")
+devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
+~~~~
 
 (Note that you need to tell R to look in a specific subdirectory of this repository -- i.e., `package/phylogenize` -- and not the root.)
 
