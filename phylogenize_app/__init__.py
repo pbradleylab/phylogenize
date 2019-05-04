@@ -255,6 +255,7 @@ def create_app(config=None):
     result_id = secure_filename(result_id)
     subfile = secure_filename(subfile)
     direc = os.path.abspath(os.path.join(app.config['APPLICATION_ROOT'], app.config['UPLOAD_FOLDER'], result_id))
+    sf = os.path.join(direc, "output", subfile)
     if subfile == "index.html":
       reportfile = os.path.join(direc,
           "output",
@@ -271,13 +272,11 @@ def create_app(config=None):
         return(send_from_directory(os.path.join(direc, "output"), "output.tgz"))
       else:
         return(redirect(url_for('display_results', result_id=result_id)))
-    else:
-      fext = os.path.splitext(subfile)
-      if fext in ['csv', 'tab', 'txt']:
-        return(send_from_directory(os.path.join(direc, "output"), \
-            os.path.basename(subfile)))
-      else:
-        return(redirect(url_for('display_results', result_id=result_id)))
+    elif os.path.isfile(sf):
+        #return(redirect(url_for('display_results', result_id=result_id)))
+        return(send_from_directory(os.path.join(direc, "output"), subfile))
+    #  else:
+    #    return(redirect(url_for('display_results', result_id=result_id)))
     else:
       return(redirect(url_for('display_results', result_id=result_id)))
 
