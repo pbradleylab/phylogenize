@@ -66,8 +66,8 @@ while True:
       beanstalk.put(job.body, delay = jdelay)
       job.delete()
     elif len(JobSlots) > 0:
-      shutil.copy(os.path.join(jobdict["report_dir"], jobdict["report_name"]),
-          jobdict["output_dir"])
+      # shutil.copy(os.path.join(jobdict["report_dir"], jobdict["report_name"]),
+      #     jobdict["output_dir"])
       JobN = JobSlots[0]
       JobDict[JobN] = jobdict
       JobOutput[JobN] = open(os.path.join(jobdict["output_dir"], "progress.txt"), 'w')
@@ -129,7 +129,7 @@ while True:
         minimum=jobdict["minimum"]
       ))
       job_rscript=Rcmd
-      JobList[JobN] = subprocess.Popen(["/usr/bin/Rscript", "-e", job_rscript], \
+      JobList[JobN] = subprocess.Popen(["/usr/bin/R", "-e", job_rscript], \
           stdout=JobOutput[JobN], \
           stderr=JobErr[JobN])
       JobOutput[JobN].flush()
