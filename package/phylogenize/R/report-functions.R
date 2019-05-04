@@ -1128,8 +1128,8 @@ render.report <- function(output_file='report_output.html',
     file.copy(system.file("rmd",
                           report_input,
                           package="phylogenize"),
-              pz.options(out_dir))
-    rmarkdown::render(file.path(pz.options(out_dir),
+              pz.options("out_dir"))
+    rmarkdown::render(file.path(pz.options("out_dir"),
                                report_input),
                       output_file=basename(output_file),
                       output_dir=pz.options("out_dir"),
