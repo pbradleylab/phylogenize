@@ -38,9 +38,12 @@ from wtforms import (
 from wtforms.validators import Optional, InputRequired
 from pystalkd.Beanstalkd import Connection
 from flask_uploads import configure_uploads, UploadSet
+import string
 
 beanstalk = Connection(host='localhost', port=14711)
 beanstalk.use("phylogenize")
+
+valid_chars = frozenset("-_.() %s%s" % (string.ascii_letters, string.digits))
 
 def nocache(view):
   @wraps(view)
@@ -266,6 +269,13 @@ def create_app(config=None):
           "output.tgz")
       if os.path.isfile(tgzfile):
         return(send_from_directory(os.path.join(direc, "output"), "output.tgz"))
+      else:
+        return(redirect(url_for('display_results', result_id=result_id)))
+    else:
+      fext = os.path.splitext(subfile)
+      if fext in ['csv', 'tab', 'txt']:
+        return(send_from_directory(os.path.join(direc, "output"), \
+            os.path.basename(subfile)))
       else:
         return(redirect(url_for('display_results', result_id=result_id)))
     else:
