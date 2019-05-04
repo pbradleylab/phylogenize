@@ -77,42 +77,43 @@ do.fisher <- function(list1, list2, background, alt="two.sided") {
 #' @return A tbl giving Fisher's test p-values, q-values, effect sizes, and overlaps.
 #' @export
 multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
-    d <- sign(dirxn)
-    if ((length(sigs) < 1) || (length(signs) < 1) || (length(mappings) < 1)) {
-        pz.warning("Didn't find significant hits, signs, or mappings")
-        return(c())
-    }
-    if (length(sigs[[1]]) < 1) {
-        pz.warning("No significance cutoffs found")
-        return(c())
-    }
-    tbl.mappings <- enframe(map(mappings, ~group_by_at(., colnames(.)[2]) %>%
-                                 nest() %>% rename(term=1) %>%
-                                     mutate(data=map(data, unlist)))) %>%
+  d <- sign(dirxn)
+  if ((length(sigs) < 1) || (length(signs) < 1) || (length(mappings) < 1)) {
+    pz.warning("Didn't find significant hits, signs, or mappings")
+    return(c())
+  }
+  if (length(sigs[[1]]) < 1) {
+    pz.warning("No significance cutoffs found")
+    return(c())
+  }
+  tbl.mappings <- tibble::enframe(purrr::map(mappings,
+      ~group_by_at(., colnames(.)[2]) %>%
+        nest() %>% rename(term=1) %>%
+        mutate(data=purrr::map(data, unlist)))) %>%
         rename(termset=name, terms=value)
-    phylum <- names(sigs)
-    cutoff <- names(sigs[[1]])
-    map.bg <- Reduce(union, map(tbl.mappings$terms,
-                            ~Reduce(union, .$data)))
-    full.table <- crossing(phylum, cutoff, tbl.mappings) %>% unnest()
-    full.table <- mutate(full.table,
-                         enr=pmap(full.table, function(phylum,
-                                                       cutoff,
-                                                       termset,
-                                                       term,
-                                                       data) {
-                             s <- intersect(sigs[[phylum]][[cutoff]],
-                                            nw(signs[[phylum]] == d))
-                             g <- names(which(!is.na(signs[[phylum]])))
-                             do.fisher(data,
-                                       s,
-                                       intersect(map.bg, g))
-                         }))
-    full.table <- mutate(full.table,
-                         enr.pval=map_dbl(enr, ~.$p.value),
-                         enr.estimate=map_dbl(enr, ~.$estimate),
-                         enr.overlap=map(enr, ~.$overlap))
-    full.table <- full.table %>%
+      phylum <- names(sigs)
+      cutoff <- names(sigs[[1]])
+      map.bg <- Reduce(union, purrr::map(tbl.mappings$terms,
+          ~Reduce(union, .$data)))
+      full.table <- crossing(phylum, cutoff, tbl.mappings) %>% unnest()
+      full.table <- mutate(full.table,
+        enr=purrr::pmap(full.table, function(phylum,
+            cutoff,
+            termset,
+            term,
+            data) {
+          s <- intersect(sigs[[phylum]][[cutoff]],
+            nw(signs[[phylum]] == d))
+          g <- names(which(!is.na(signs[[phylum]])))
+          do.fisher(data,
+            s,
+            intersect(map.bg, g))
+          }))
+      full.table <- mutate(full.table,
+        enr.pval=purrr::map_dbl(enr, ~.$p.value),
+        enr.estimate=purrr::map_dbl(enr, ~.$estimate),
+        enr.overlap=purrr::map(enr, ~.$overlap))
+      full.table <- full.table %>%
         group_by(phylum, cutoff, termset) %>%
         mutate(enr.qval=qvals(pv1(enr.pval))) %>%
         ungroup
