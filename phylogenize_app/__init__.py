@@ -172,7 +172,7 @@ def create_app(config=None):
     direc = os.path.abspath(os.path.join(app.config['APPLICATION_ROOT'], app.config['UPLOAD_FOLDER'], result_id))
     reportfile = os.path.join(direc,
         "output",
-        "phylogenize-report.html")
+        "index.html")
     if os.path.isfile(reportfile):
       completed = True
     else:
@@ -252,12 +252,12 @@ def create_app(config=None):
     result_id = secure_filename(result_id)
     subfile = secure_filename(subfile)
     direc = os.path.abspath(os.path.join(app.config['APPLICATION_ROOT'], app.config['UPLOAD_FOLDER'], result_id))
-    if subfile == "phylogenize-report.html":
+    if subfile == "index.html":
       reportfile = os.path.join(direc,
           "output",
-          "phylogenize-report.html")
+          "index.html")
       if os.path.isfile(reportfile):
-        return(send_from_directory(os.path.join(direc, "output"), "phylogenize-report.html"))
+        return(send_from_directory(os.path.join(direc, "output"), "index.html"))
       else:
         return(redirect(url_for('display_results', result_id=result_id)))
     elif subfile == "output.tgz":

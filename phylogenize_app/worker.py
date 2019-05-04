@@ -151,7 +151,7 @@ while True:
             rf = os.path.join(JobDict[N]["input_dir"], filename)
             print("Removing file %s..." % rf)
             os.remove(rf)
-        if os.path.isfile(os.path.join(JobDict[N]["output_dir"], "phylogenize-report.html")):
+        if os.path.isfile(os.path.join(JobDict[N]["output_dir"], "index.html")):
           make_tarfile(os.path.join(JobDict[N]["output_dir"], "output.tgz"),
              JobDict[N]["output_dir"])
         JobErr[N].close()
