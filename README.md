@@ -3,6 +3,8 @@
 
 ## Running *phylogenize* locally
 
+(*Important note*: Right now *phylogenize* works only with R 3.5.3 and not 3.6.0, because the version of Bioconductor installed with R 3.6.0 breaks two of the packages used in *phylogenize*. We are working on fixing this problem.)
+
 To run *phylogenize* locally, you will need to first install the R package from within this repository. `devtools` is capable of tracking down most of its dependencies, but there are a few packages from BioConductor that it will not be able to, so it's a good idea to install those first:
 
 ~~~~
