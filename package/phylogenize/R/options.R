@@ -10,6 +10,7 @@ PZ_OPTIONS <- options_manager(
   metadata_file="test-metadata.tab",
   biom_file="test.biom",
   input_format="tabular",
+  separate_metadata=FALSE,
   env_column="env",
   dset_column="dataset",
   sample_column="sample",
