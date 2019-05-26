@@ -61,11 +61,21 @@ def create_app(config=None):
   app = Flask(__name__)
   app.config.from_pyfile('../phylogenize_default.cfg')
   app.config.from_pyfile('../instance/phylogenize.cfg', silent=True)
+  if app.config['RECAPTCHA_DISABLE']:
+    app.testing = True
 
   allowed_files = UploadSet('files', app.config['ALLOWED_EXTENSIONS'])
   configure_uploads(app, allowed_files)
 
   class JobForm(FlaskForm):
+    dataformat = RadioField(
+      choices = [
+        ("tabular", "Tab-separated values"),
+        ("biom", "BIOM format")
+        ],
+      default = "tabular",
+      label = "Data format"
+    )
     abundances = FileField(validators = [
       Optional(),
       FileRequired(),
@@ -78,15 +88,6 @@ def create_app(config=None):
       FileAllowed(app.config['ALLOWED_EXTENSIONS'],
         message='Only tab-delimited files or BIOM files accepted')
     ])
-    biomfile = FileField(
-      label="BIOM file",
-      validators = [
-        Optional(),
-        FileRequired(),
-        FileAllowed(app.config['ALLOWED_EXTENSIONS'],
-          message='Only tab-delimited files or BIOM files accepted')
-      ]
-    )
     datatype = RadioField(
       choices = [
         ("16S", "16S"),
@@ -103,6 +104,22 @@ def create_app(config=None):
       default = "midas_v1.2",
       label = "Database version"
     )
+    multidset = RadioField(
+      choices = [
+        ("TRUE", "1"),
+        ("FALSE", "2+")
+      ],
+      default = "TRUE",
+      label = "Number of datasets"
+    )
+    dset_col = StringField("Dataset column",
+        validators = [InputRequired(message = 'Must provide a dataset column name')],
+        default = "dset"
+    )
+    env_col = StringField("Environment column",
+        validators = [InputRequired(message = 'Must provide an environment column name')],
+        default = "env"
+    )
     phenotype = RadioField(
       choices = [
         ("prevalence", "prevalence"),
@@ -118,21 +135,19 @@ def create_app(config=None):
     def validate(self):
       if not super(JobForm, self).validate():
         return False
-      if not ((self.abundances.data and self.metadata.data) or \
-          self.biomfile.data):
+      correct = False
+      if self.dataformat.data == "tabular" and self.abundances.data and self.metadata.data:
+        correct = True
+      if self.dataformat.data == "biom" and self.abundances.data:
+        correct = True
+      if not correct:
         msg = "Either two tab-delimited files (a species abundance table and a" +\
-          " sample annotation file) or a single BIOM file (including species" +\
-          " abundances and sample annotations) must be uploaded"
-        self.abundances.errors.append(msg)
-        return False
-      if self.abundances.data and self.metadata.data and self.biomfile.data:
-        msg = "Please only submit either two tab-delimited files (a species" +\
-          " abundance table and a sample annotation file) or a single BIOM file" +\
-          " (including species abundances and sample annotations), not both"
+          " sample annotation file), one BIOM file (abundances) and one tab-delimited" +\
+          " file (metadata), or a single BIOM file (including species abundances and " +\
+          " metadata) must be uploaded"
         self.abundances.errors.append(msg)
         return False
       return True
-
 
   @app.route('/', methods=['GET', 'POST'])
   @nocache
@@ -300,10 +315,6 @@ def create_app(config=None):
       )
     ))
 
-    uploaded_biom = False
-    if form.biomfile.data:
-      uploaded_biom = True
-
     # Generate a unique UUID
     while True:
       new_result_id = str(uuid.uuid4())
@@ -323,7 +334,11 @@ def create_app(config=None):
     datatype = str(bleach.clean(form.datatype.data))
     phenotype = str(bleach.clean(form.phenotype.data))
     which_envir = str(bleach.clean(form.which_envir.data))
-    input_format = ("biom" if uploaded_biom else "tabular")
+    input_format = str(bleach.clean(form.dataformat.data))
+    uploaded_biom = (input_format == "biom")
+    single_dset = str(bleach.clean(form.multidset.data))
+    env_column = str(bleach.clean(form.env_col.data))
+    dset_column = str(bleach.clean(form.dset_col.data))
 
     # Upload the BIOM or tabular files
     if uploaded_biom:
@@ -331,12 +346,13 @@ def create_app(config=None):
         folder = IDir,
         name = "data.biom")
     else:
-      allowed_files.save(request.files['metadata'],
-        folder = IDir,
-        name = "metadata.tab")
       allowed_files.save(request.files['abundances'],
         folder = IDir,
         name = "abundance.tab")
+    if form.metadata.data:
+      allowed_files.save(request.files['metadata'],
+        folder = IDir,
+        name = "metadata.tab")
 
     # Set some last options and submit to beanstalk queue as serialized JSON
     minimum = 3
@@ -362,10 +378,10 @@ def create_app(config=None):
       'minimum': minimum,
       'report_name': report_name,
       'report_dir': report_dir,
-      'dset_column': "dataset",
-      'env_column': "env",
+      'dset_column': dset_column,
+      'env_column': env_column,
       'sample_column': "sample",
-      'single_dset': "FALSE",
+      'single_dset': single_dset,
       'burst_cutoff': 0.985,
       'burst_dir': app.config['BURST_DIR'],
       'cleanup': app.config['CLEANUP']

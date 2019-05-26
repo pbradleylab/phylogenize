@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 
+
 {% macro group_title(title) %}
 <span class="bigformlabel">
 			{{ title }}
@@ -8,10 +9,11 @@
 {% endmacro %}
 
 {% macro form_entry(thing, tooltip, upload) %}
+    <div class="form_entry" for="{{ thing.id }}">
 		<label class="control-label">
     <span class="formlabel"
           tooltip="{{ tooltip }}">
-    {{ thing.label }}
+    {{ thing.label(class_="actual_text") }}
     </span>
 		</label>
 		{% if not upload %}
@@ -38,6 +40,7 @@
       {% endfor %}
     </div>
     {% endif %}
+    </div>
 {% endmacro %}
 
 {% macro infotitle(text) %}
@@ -45,6 +48,8 @@
 {% endmacro %}
 
 {% block content %}
+
+
 <div class="jumbotron jumbotron-fluid jumbotron-fancy">
   <div class="container">
     <h1 class="display-4">Analyze your data with phylogenize</h1>
@@ -78,51 +83,95 @@
     enctype="multipart/form-data"
     novalidate>
 			{{ form.hidden_tag() }}
+        <script>
+         $(document).ready(function() {
+             $('#dset_col').prop('readonly', true);
+//             $("div[class='form_entry'][for='dset_col']").hide()
+             $('#multidset').on('click', function() {
+                 multidsetVal = $('input[name=multidset]:checked').val();
+                 if (multidsetVal == "TRUE") {
+                     $('#dset_col').prop('readonly', true);
+                     //$("div[class='form_entry'][for='dset_col']").hide()
+                 } else {
+                     $('#dset_col').prop('readonly', false);
+                     //$("div[class='form_entry'][for='dset_col']").show()
+                 }
+             })
+				     $('#dataformat').bind('click', function() {
+                 dfVal = $('input[name=dataformat]:checked').val();
+                 if (dfVal == "biom") {
+                     $("label[for=metadata][class='actual_text']").text("Metadata (optional)");
+                 } else {
+                     $("label[for=metadata][class='actual_text']").text("Metadata");
+                 }
+				     })
+         })
+        </script>
 
-			<div class="form-row silentform">
-				<div class="col-md-4 silentform form-group-2">
-					{{ group_title("Your data and metadata") }}
-					<div class="form-group form-row">
-						<div class="col-md-6">
-					{{ form_entry(form.abundances, "Tab-separated values. Rows should be
-					MIDAS species IDs or PATRIC genome IDs.", True) }}
-						</div> <div class="col-md-6">
-					{{ form_entry(form.metadata, "Tab-separated values. Rows should be
-					samples, and columns should be as in example file above.", True) }}
-					</div>
-					</div>
-					<div><center>or</center></div>
-					{{ form_entry(form.biomfile, "BIOM file (combined abundance table and
-					sample annotation table). Make sure your sample annotation table has
-					\"env\" and \"dataset\" annotations.", True) }}
-				</div>
-				<div class="col-md-4 silentform">
-					{{ group_title("Information about your data") }}
-					{{ form_entry(form.datatype, "Select whether data were calculated from
-					applying MIDAS to metagenomic data, or DADA2 to 16S data.") }}
-					{{ form_entry(form.database, "Select the version of the database that you
-					used to get relative abundances.") }}
-				</div>
-				<div class="col-md-4 silentform">
-					{{ group_title("Phenotype to calculate") }}
-					{{ form_entry(form.phenotype,	"Select whether you want to associate gene families with prevalence or
-					with environmental specificity scores.") }}
-					{{ form_entry(form.which_envir, "Enter the name of the environment in
-					which you want to calculate prevalence or specificity.") }}
-				</div>
-			</div>
-			<div class="form-row">
-				<div class="col-md-12">
-					{{ form.recaptcha }}<br>
-					<input type="submit" value="Submit" class="btn btn-primary" formmethod="post" />
-				</div>
-			</div>
+        <div class="form-row silentform">
+            <div class="col-md-4 silentform form-group-2">
+                {{ group_title("Your data and metadata") }}
+                {{ form_entry(form.dataformat, "The abundance data may either be
+                in tabular or in BIOM format.") }}
+                <div class="form-group form-row">
+                    <div class="col-md-6">
+                        {{ form_entry(form.abundances, "Tab-separated values or BIOM file.
+                        Rows should be MIDAS species IDs (shotgun) or amplicon sequence
+                        variant (ASV) sequences (16S).", True) }}
+                    </div> <div class="col-md-6">
+                        {{ form_entry(form.metadata, "Tab-separated values (leave blank if
+                        providing a single BIOM file). Rows should be samples, and columns
+                        should be as in example file above.", True) }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 silentform">
+                {{ group_title("Information about your data") }}
+                <div class="form-group form-row">
+                <div class="col-md-6">
+                {{ form_entry(form.datatype, "Select whether data were calculated from
+                    applying MIDAS to metagenomic data, or DADA2 to 16S data.") }}
+                </div>
+
+                <div class="col-md-6">
+                {{ form_entry(form.database, "Select the version of the database
+                that you used to get relative abundances.") }}
+                </div>
+                </div>
+
+                <div class="form-group form-row">
+                <div class="col-md-4">
+                {{ form_entry(form.multidset, "Select whether phylogenize should normalize across multiple datasets in your input data.") }}
+                </div>
+                    <div class="col-md-4">
+                {{ form_entry(form.dset_col, "If normalizing over multiple datasets, give the name of the metadata column representing which dataset a sample comes from.") }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form_entry(form.env_col, "Give the name of the metadata column representing which environment a sample comes from.") }}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 silentform">
+                {{ group_title("Phenotype to calculate") }}
+                {{ form_entry(form.phenotype, "Select whether you want to associate
+                gene families with prevalence or with environmental specificity
+                scores.") }}
+                {{ form_entry(form.which_envir, "Enter the name of the environment in
+                which you want to calculate prevalence or specificity.") }}
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col-md-12">
+                {{ form.recaptcha }}<br>
+                <input type="submit" value="Submit" class="btn btn-primary" formmethod="post" />
+				    </div>
+			  </div>
 		</form>
 	</div>
 </section>
-</div>
-</div>
-<p>
+    </div>
+    </div>
+    <p>
 
 
-{% endblock %}
+        {% endblock %}
