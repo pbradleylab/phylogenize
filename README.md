@@ -3,7 +3,6 @@
 
 ## Running *phylogenize* locally
 
-(*Important note*: Right now *phylogenize* works only with R 3.5.3 and not 3.6.0, because the version of Bioconductor installed with R 3.6.0 breaks two of the packages used in *phylogenize*. We are working on fixing this problem.)
 
 To run *phylogenize* locally, you will need to first install the R package from within this repository. `devtools` is capable of tracking down most of its dependencies, but there are a few packages from BioConductor that it will not be able to, so it's a good idea to install those first:
 
@@ -15,6 +14,13 @@ devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
 ~~~~
 
 (Note that you need to tell R to look in a specific subdirectory of this repository -- i.e., `package/phylogenize` -- and not the root.)
+
+***Important note***: If you are using R >= 3.6.0, you will need to install the latest development versions of `phytools` and `treeio`, which have an important bug fix:
+
+```
+devtools::install_github("liamrevell/phytools")
+devtools::install_github("GuangchuangYu/treeio")
+```
 
 You will also need a copy of the BURST binaries from [github.com/knights-lab/BURST]. By default *phylogenize* expects these binaries to be in `/usr/local/bin` but you can override this (see below).
 
