@@ -81,12 +81,13 @@ To run *phylogenize* with QIIME2, you will need to install *phylogenize* within 
 
 First, switch to the correct environment using `source activate qiime2-2019.4` (see [here](https://docs.qiime2.org/2019.4/install/native/#activate-the-conda-environment)).
 
-Next, you will likely need to install a few libraries and packages not included in QIIME2's conda environment. From the UNIX command line:
+Next, you will likely need to install a few libraries and packages that are either not included, or difficult to install from source, in QIIME2's conda environment. From the UNIX command line:
 
 ```
 conda install libcurl
 conda install r-devtools
 conda install -c bioconda bioconductor-rhdf5lib
+conda install -c conda-forge r-magick
 ```
 
 Next, run R within the same environment and install the *phylogenize* library. However, you will need to work around a [known issue in conda](https://github.com/r-lib/devtools/issues/1722) before calling `devtools::install_bitbucket`. The following should work (from within R):
@@ -97,6 +98,7 @@ Sys.setenv(TAR="/bin/tar")   # replace with path to tar in your installation, if
 install.packages("BiocManager")
 BiocManager::install(c("qvalue","biomformat","ggtree"))
 devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
+phylogenize::install.data.figshare()    # nb: this may take a while to download
 ```
 
 Finally, install the plugin. From the UNIX command line (i.e., not R):
