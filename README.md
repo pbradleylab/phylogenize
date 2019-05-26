@@ -77,9 +77,40 @@ This invocation will generate a report under "./hmp/16S-results" called "16S-res
 
 ### Running *phylogenize* locally with QIIME2
 
+To run *phylogenize* with QIIME2, you will need to install *phylogenize* within the QIIME2 conda environment, then install the [q2-phylogenize plugin](https://bitbucket.org/pbradz/q2-phylogenize).
 
-To run *phylogenize* with QIIME2, you will need to install the plugin available at [https://bitbucket.org/pbradz/q2-phylogenize].
+First, switch to the correct environment using `source activate qiime2-2019.4` (see [here](https://docs.qiime2.org/2019.4/install/native/#activate-the-conda-environment)).
 
+Next, you will likely need to install a few libraries and packages not included in QIIME2's conda environment. From the UNIX command line:
+
+```
+conda install libcurl
+conda install r-devtools
+conda install -c bioconda bioconductor-rhdf5lib
+```
+
+Next, run R within the same environment and install the *phylogenize* library. However, you will need to work around a [known issue in conda](https://github.com/r-lib/devtools/issues/1722) before calling `devtools::install_bitbucket`. The following should work (from within R):
+
+```
+options(unzip="internal")
+Sys.setenv(TAR="/bin/tar")   # replace with path to tar in your installation, if necessary
+install.packages("BiocManager")
+BiocManager::install(c("qvalue","biomformat","ggtree"))
+devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
+```
+
+Finally, install the plugin. From the UNIX command line (i.e., not R):
+
+```
+git clone bitbucket.org/pbradz/q2-phylogenize
+cd q2-phylogenize
+python setup.py build
+python setup.py install
+```
+
+Further information about how to use q2-phylogenize can be found on its [git repository](https://bitbucket.org/pbradz/q2-phylogenize).
+
+```
 
 ### Running *phylogenize* locally with the web interface
 
