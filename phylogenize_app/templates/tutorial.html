@@ -71,12 +71,14 @@
 <li><strong>Your sample metadata.</strong> This should be a matrix mapping sample IDs to environments and/or datasets, where:
 <ul>
 <li>each row corresponds to a sample in your data</li>
-<li>there are at least the following three columns:</li>
-<li><em>sample</em>: this column contains the sample IDs, matching the sample IDs in your data
+<li>there are at least the following two columns:</li>
 <ul>
-<li><em>env</em>: this column contains the environment labels corresponding to each sample</li>
-<li><em>dataset</em>: this column contains the batch or dataset to which each sample belongs</li>
-<li>Note: if there is only one dataset or environment, it is fine to have all of these entries be the same.
+<li><em>sample</em>: this column contains the sample IDs, matching the sample IDs in your data
+    <li><em>env</em>: this column contains the environment labels corresponding to each sample</li>
+</ul>
+<li>and may also have the column <em>dataset</em>: this column contains the batch or dataset to which each sample belongs.</li>
+<li>Note (new in v0.9): if you only have one dataset, you don't need to specify a dataset column.</li>
+<li>Note (new in v0.9): you can now specify different column names for <em>env</em> and <em>dataset</em>, and if you provide metadata in a BIOM file the <em>sample</em> column will be automatically generated.</li>
 <li>Note: right now, you can only calculate specificity if there is just one dataset.</li>
 </li>
 </ul></li>
@@ -86,7 +88,8 @@
 <ul>
 	<li><i>prevalence</i>: how frequently is a microbe observed in a given environment?
 			<li><i>specificity</i>: how specific is a microbe for a given environment compared to all others?</li>
-<li>Note: to calculate specificity, there must be more than one environment present.</li>
+      <li>Note: to calculate specificity, there must be more than one environment present.</li>
+
 </ul></li>
 <li><strong>A choice of environment.</strong> Prevalence and specificity are defined with respect to a given environment, like &quot;soil&quot; or &quot;stool&quot; or &quot;marine.&quot;</li>
 <ul>
@@ -107,7 +110,7 @@
 <p><em>phylogenize</em> works by mapping these ASVs back to <a href="https://www.github.com/snayfach/MIDAS">MIDAS</a> genome clusters using the fast aligner <a href="https://github.com/knights-lab/BURST">BURST</a>. The default threshold for matching a genome cluster is 98.5% sequence identity, since we found that this gives a reasonable sensitivity-specificity threshold. Ambiguous matches are discarded, and reads/abundances mapping to the same genome cluster are summed together. (In practice, though, we have never actually seen ambiguous matches.)</p>
 <h2 id="gathering-your-data-and-metadata">Gathering your data and metadata</h2>
 <p>Your data and metadata should be in either <em>tabular</em> or <em>BIOM</em> format. Tabular format is simpler, but takes up more space. The maximum file upload is 35M, so if your data are larger, you will need to convert them to BIOM format (see below) or, alternatively, to run <em>phylogenize</em> locally.</p>
-<p>You can upload either two tab-delimited files (data and metadata) or one BIOM file (data plus metadata). Right now you cannot, for example, provide separate tabular metadata for a BIOM-formatted file.</p>
+<p>You can upload either two tab-delimited files (data and metadata), one BIOM file (data plus metadata), or, new in v0.9, provide separate tabular metadata and a BIOM-formatted abundance file.</p>
 <h3 id="tabular-format-data">Tabular format data</h3>
 <p>If you choose the tabular format, your data and metadata will be in two separate tab-delimited files. They should look something like this:</p>
 <div class="figure">

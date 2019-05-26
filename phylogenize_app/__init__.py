@@ -114,7 +114,7 @@ def create_app(config=None):
     )
     dset_col = StringField("Dataset column",
         validators = [InputRequired(message = 'Must provide a dataset column name')],
-        default = "dset"
+        default = "dataset"
     )
     env_col = StringField("Environment column",
         validators = [InputRequired(message = 'Must provide an environment column name')],

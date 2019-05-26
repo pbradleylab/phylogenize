@@ -127,12 +127,21 @@ read.abd.metadata.biom <- function(...) {
     # biomf <- biomformat::read_biom(bf)
     biomf <- biomformat::read_biom(bf)
     abd.mtx <- biomformat::biom_data(biomf)
-    metadata <- biomformat::sample_metadata(biomf)
-    metadata <- check.process.metadata(metadata, ...)
-    # work around different naming convention
-    if (is.null(rownames(metadata))) {
-        pz.error(paste0("metadata had no sample names; should not be possible,",
-                        " check that your biom file is not corrupt"))
+    if (!opts('separate_metadata')) {
+      metadata <- biomformat::sample_metadata(biomf)
+      metadata <- check.process.metadata(metadata, ...)
+      # work around different naming convention
+      if (is.null(rownames(metadata))) {
+          pz.error(paste0("metadata had no sample names; should not be possible,",
+                          " check that your biom file is not corrupt"))
+      }
+    } else {
+        mf <- file.path(opts('in_dir'), opts('metadata_file'))
+        if (!(file.exists(mf))) {
+            pz.error(paste0("file not found: ", mf))
+        } else { pz.message(paste0("located metadata file: ", mf)) }
+        metadata <- data.frame(data.table::fread(mf))
+        metadata <- check.process.metadata(metadata, ...)
     }
     rm(biomf); gc()
     return(list(mtx=abd.mtx, metadata=metadata))

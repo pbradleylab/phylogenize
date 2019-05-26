@@ -68,6 +68,7 @@ PZ_OPTIONS <- options_manager(
 #'   \item{abundance_file}{String. Name of abundance tabular file. Default: "test-abundance.tab"}
 #'   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
+#'   \item{separate_metadata}{Boolean. For BIOM data, is there a separate tabular abundance table? Default: FALSE}
 #'   \item{input_format}{String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). Default: "tabular"}
 #'   \item{phenotype_file}{String. Name of input file for optional pre-calculated phenotype. Default: ""}
 #'   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
