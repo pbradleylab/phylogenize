@@ -349,10 +349,15 @@ def create_app(config=None):
       allowed_files.save(request.files['abundances'],
         folder = IDir,
         name = "abundance.tab")
+
     if form.metadata.data:
       allowed_files.save(request.files['metadata'],
         folder = IDir,
         name = "metadata.tab")
+      if uploaded_biom:
+        separate_metadata = "TRUE"
+      else:
+        separate_metadata = "FALSE"
 
     # Set some last options and submit to beanstalk queue as serialized JSON
     minimum = 3
@@ -367,6 +372,7 @@ def create_app(config=None):
       'abundance_file': 'abundance.tab',
       'metadata_file': 'metadata.tab',
       'biom_file': 'data.biom',
+      'separate_metadata': separate_metadata,
       'type': datatype,
       'input_format': input_format,
       'phenotype_file': 'phenotype.tab',

@@ -88,6 +88,7 @@ while True:
              'db_version="{db_version}", '
              'abundance_file="{abundance_file}", '
              'metadata_file="{metadata_file}", '
+             'separate_metadata="{separate_metadata}"',
              'burst_cutoff="{burst_cutoff}", '
              'burst_dir="{burst_dir}", '
              'in_dir="{input_dir}", '
@@ -112,6 +113,7 @@ while True:
         output_dir=jobdict["output_dir"],
         burst_dir=jobdict["burst_dir"],
         ncl=1,
+        separate_metadata=jobdict["separate_metadata"],
         db_version=jobdict["db_version"],
         abundance_file=jobdict["abundance_file"],
         metadata_file=jobdict["metadata_file"],
