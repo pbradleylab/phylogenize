@@ -110,7 +110,7 @@
 <p><em>phylogenize</em> works by mapping these ASVs back to <a href="https://www.github.com/snayfach/MIDAS">MIDAS</a> genome clusters using the fast aligner <a href="https://github.com/knights-lab/BURST">BURST</a>. The default threshold for matching a genome cluster is 98.5% sequence identity, since we found that this gives a reasonable sensitivity-specificity threshold. Ambiguous matches are discarded, and reads/abundances mapping to the same genome cluster are summed together. (In practice, though, we have never actually seen ambiguous matches.)</p>
 <h2 id="gathering-your-data-and-metadata">Gathering your data and metadata</h2>
 <p>Your data and metadata should be in either <em>tabular</em> or <em>BIOM</em> format. Tabular format is simpler, but takes up more space. The maximum file upload is 35M, so if your data are larger, you will need to convert them to BIOM format (see below) or, alternatively, to run <em>phylogenize</em> locally.</p>
-<p>You can upload either two tab-delimited files (data and metadata), one BIOM file (data plus metadata), or, new in v0.9, provide separate tabular metadata and a BIOM-formatted abundance file.</p>
+<p>You can upload either two tab-delimited files (data and metadata), one BIOM file (data plus metadata), or, new in v0.9, provide separate tabular metadata with a BIOM-formatted abundance file.</p>
 <h3 id="tabular-format-data">Tabular format data</h3>
 <p>If you choose the tabular format, your data and metadata will be in two separate tab-delimited files. They should look something like this:</p>
 <div class="figure">
@@ -127,16 +127,16 @@ of each sample), and <em>dataset</em> (giving the batch or experiment of each
 sample).</p>
 <h3 id="biom-format-data">BIOM format data</h3>
 <p><a href="http://biom-format.org/">BIOM format</a> data is more compact for tabular data and is more suitable for larger datasets. This is because 1. BIOM represents matrices that are mostly zeroes (i.e., &quot;sparse&quot;) more efficiently, and most taxonomic matrices are sparse, and 2. BIOM files can use a binary representation (HDF5) that takes up less space than plain text.</p>
-<p>A BIOM file can contain multiple tables, so you will only need to upload one file. This one file needs to have the following tables:</p>
+<p>A BIOM file can contain multiple tables, so you will only need to upload one file (though if you prefer, you can upload a separate metadata file as described above). This one file needs to have the following tables:</p>
 <ul>
 <li>Observation matrix or &quot;OTU table&quot;
 <ul>
 <li>Despite the name, rows should actually be either MIDAS species IDs or amplicon sequence variants (ASVs), not OTUs</li>
-<li>Sample metadata matrix</li>
+<li>Sample metadata matrix (unless uploading separately above)</li>
 <li>Make sure the sample metadata includes columns labeled <em>env</em> and <em>dataset</em>, just as with tabular data.</li>
 </ul></li>
 </ul>
-<p>To convert your tabular data into a BIOM file, <a href="http://biom-format.org/index.html">install the <code>biom</code> utility</a>. Then run the conversion as follows (adapted from the biom-format.org documentation):</p>
+<p>To convert your tabular data into a single BIOM file, <a href="http://biom-format.org/index.html">install the <code>biom</code> utility</a>. Then run the conversion as follows (adapted from the biom-format.org documentation):</p>
 <pre><code>biom convert -i your_data.tab -o your_data_and_metadata.biom --to-hdf5 --table-type=&quot;OTU table&quot; --sample-metadata-fp metadata.tab</code></pre>
 <p>Replace <code>your_data.tab</code> and <code>metadata.tab</code> with the
 names of your tab-delimited data files and, optionally,
