@@ -80,7 +80,7 @@ To run *phylogenize* with QIIME2, you will need to install *phylogenize* within 
 
 First, switch to the correct environment using `source activate qiime2-2019.4` (see [here](https://docs.qiime2.org/2019.4/install/native/#activate-the-conda-environment)).
 
-Next, you will likely need to install a few libraries and packages that are either not included, or difficult to install from source, in QIIME2's conda environment. From the UNIX command line:
+Installing *phylogenize* within conda is a little tricky. You will need to manually install a few libraries and packages that are either not included, or difficult to install from source. From the UNIX command line:
 
 ```
 conda install libcurl
@@ -111,7 +111,6 @@ python setup.py install
 
 Further information about how to use q2-phylogenize can be found on its [git repository](https://bitbucket.org/pbradz/q2-phylogenize).
 
-```
 
 ### Running *phylogenize* locally with the web interface
 
