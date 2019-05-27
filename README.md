@@ -3,8 +3,7 @@
 
 ## Running *phylogenize* locally
 
-
-To run *phylogenize* locally, you will need to first install the R package from within this repository. `devtools` is capable of tracking down most of its dependencies, but there are a few packages from BioConductor that it will not be able to, so it's a good idea to install those first:
+To run *phylogenize* locally, you will need to first install the R package from within this repository. Because *phylogenize* is an analysis and visualization pipeline, it has more dependencies than the average package, so this will require a little patience. `devtools` is capable of tracking down most of these dependencies automatically, but there are a few packages from BioConductor that it will not be able to find. It's a good idea to install those first:
 
 ~~~~
 install.packages("BiocManager")
@@ -15,20 +14,20 @@ devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
 
 (Note that you need to tell R to look in a specific subdirectory of this repository -- i.e., `package/phylogenize` -- and not the root.)
 
-***Important note***: If you are using R >= 3.6.0, you will need to install the latest development versions of `phytools` and `treeio`, which have an important bug fix:
+***Important note***: If you are using R >= 3.6.0, you will need to install the latest development versions of `phytools` and `treeio`, which have an important [bug fix](https://github.com/liamrevell/phytools/issues/47) (thanks to Liam Revell and Guangchuang Yu for fixing this so quickly):
 
 ```
 devtools::install_github("liamrevell/phytools")
 devtools::install_github("GuangchuangYu/treeio")
 ```
 
-You will also need a copy of the BURST binaries from [github.com/knights-lab/BURST]. By default *phylogenize* expects these binaries to be in `/usr/local/bin` but you can override this (see below).
+You will also need a copy of the BURST binaries from [their Github](github.com/knights-lab/BURST). BURST is a high-speed pairwise aligner that *phylogenize* uses to map 16S amplicon sequence variants back to a database of genomes. By default *phylogenize* expects these binaries to be in `/usr/local/bin`, but you can override this (see below).
 
 Finally, you will need to download and install the data files that *phylogenize* needs to run. That has been automated so that all you should need to do is run the following function:
 
 `phylogenize::install.data.figshare()`
 
-You may use this package by itself, using the web interface, or using the QIIME2 interface (see: [https://bitbucket.org/pbradz/q2-phylogenize]).
+You may use this package by itself, using the web interface, or using the [QIIME2 interface](https://bitbucket.org/pbradz/q2-phylogenize).
 
 ### Running *phylogenize* locally in R
 
