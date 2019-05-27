@@ -465,7 +465,7 @@ write.test.biom <- function(abd.meta,
                             ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     cn <- colnames(abd.meta$metadata)
-    colnames(abd.meta$metadata)[which(cn=="sample")] <- "#SampleID"
+    colnames(abd.meta$metadata)[which(cn==opts('sample_column'))] <- "#SampleID"
     abd.meta$mtx <- prep.mtx.for.write(abd.meta$mtx, initial.octo=TRUE)
     td <- tempdir()
     af <- file.path(td, "test-abundance.tab")

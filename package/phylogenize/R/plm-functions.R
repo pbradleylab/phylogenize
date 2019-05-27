@@ -674,7 +674,7 @@ prev.addw <- function(abd.meta,
         means.by.study <- lapply(dsets, function(d) {
             s <- intersect(
                 colnames(abd.meta$mtx),
-                abd.meta$metadata$sample[(env.rows &
+                abd.meta$metadata[[S]][(env.rows &
                                           (abd.meta$metadata[[D]] == d))] %>%
                 as.character)
             rm <- rowMeans(1 * (abd.meta$mtx[, s] > 0))
@@ -686,7 +686,7 @@ prev.addw <- function(abd.meta,
         addw <- (1 + (avg.prev * total.s)) / (2 + total.s)
     } else {
         s <- intersect(colnames(abd.meta$mtx),
-                       abd.meta$metadata$sample[env.rows] %>% as.character)
+                       abd.meta$metadata[[S]][env.rows] %>% as.character)
         total.s <- length(s)
         rs <- rowSums(1 * (abd.meta$mtx[, s] > 0))
         addw <- (1 + rs) / (2 + total.s)
@@ -721,6 +721,7 @@ calc.ess <- function(abd.meta,
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     E <- opts('env_column')
     D <- opts('dset_column')
+    S <- opts('sample_column')
     ptype <- opts('prior_type')
     envir <- opts('which_envir')
     if (!(envir %in% levels(abd.meta$metadata[[E]]))) {
@@ -731,7 +732,7 @@ calc.ess <- function(abd.meta,
     if (length(dsets) > 1) {
         warning("datasets are ignored when calculating specificity")
     }
-    meta.present <- abd.meta$meta[(abd.meta$meta$sample %>% as.character %in%
+    meta.present <- abd.meta$meta[(abd.meta$meta[[S]] %>% as.character %in%
                                    colnames(abd.meta$mtx)), ]
     envirs <- unique(meta.present[[E]])
     if (ptype == "uninformative") {
@@ -747,7 +748,7 @@ calc.ess <- function(abd.meta,
         stop(paste0("don't know how to compute priors of type ", ptype))
     }
     ids <- sapply(colnames(abd.meta$mtx),
-                  function (sn) abd.meta$meta[(abd.meta$meta$sample == sn), E])
+                  function (sn) abd.meta$meta[(abd.meta$meta[[S]] == sn), E])
     if (length(unique(ids)) < 2) {
         stop("error: only one environment found")
     }
