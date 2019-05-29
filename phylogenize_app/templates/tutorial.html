@@ -367,37 +367,35 @@
         <ul>
             <li><code>phenotype.tab</code>: Tab-delimited file giving the
                 calculated phenotype values for every microbe.
-                <ul>
-                    <li><code>pos-sig-thresholded.csv</code>: Comma-delimited
-                        file giving all FIGfam gene families significantly
-                        positively associated with the phenotype, within a given
-                        phylum. This file also contains descriptions of the
-                        significant genes.</li>
-                    <li><code>all-results.csv</code>: Comma-delimited file
-                        giving the effect size and uncorrected p-value for the
-                        association of every FIGfam gene family in every phylum
-                        with the calculated phenotype. This can be useful if,
-                        for example, you want to apply your own threshold for
-                        significance or a different p-value correction method,
-                        or if you want to further filter your results by effect
-                        size.</li>
-                    <li><code>enr-table.csv</code>: FDR-corrected SEED subsystem
-                        enrichments for the significantly positively associated
-                        FIGfam gene families. These are pre-computed for three
-                        gene-wise levels of significance: &quot;strong&quot;
-                        (0.05), &quot;med&quot; (0.1), and &quot;weak&quot;
-                        (0.25). SEED subsystems significant at an FDR of 25% are
-                        returned.</li>
-                    <li><code>enr-overlaps.csv</code> and
-                        <code>enr-overlaps-sorted.csv</code>: These files give the
-                        individual significant FIGfams underlying any SEED subsystem
-                        enrichments, which can aid interpretation.</li>
-                    <li><code>progress.txt</code> and <code>stderr.txt</code>:
-                        These are the outputs of <em>phylogenize</em>; if your job
-                        finished without an error message, you probably don't need
-                        to refer to them.</li>
-                </ul></li>
+                <li><code>pos-sig-thresholded.csv</code>: Comma-delimited file
+                    giving all FIGfam gene families significantly positively
+                    associated with the phenotype, within a given phylum. This
+                    file also contains descriptions of the significant
+                    genes.</li>
+                <li><code>all-results.csv</code>: Comma-delimited file giving
+                    the effect size and uncorrected p-value for the association
+                    of every FIGfam gene family in every phylum with the
+                    calculated phenotype. This can be useful if, for example,
+                    you want to apply your own threshold for significance or a
+                    different p-value correction method, or if you want to
+                    further filter your results by effect size.</li>
+                <li><code>enr-table.csv</code>: FDR-corrected SEED subsystem
+                    enrichments for the significantly positively associated
+                    FIGfam gene families. These are pre-computed for three
+                    gene-wise levels of significance: &quot;strong&quot; (0.05),
+                    &quot;med&quot; (0.1), and &quot;weak&quot; (0.25). SEED
+                    subsystems significant at an FDR of 25% are returned.</li>
+                <li><code>enr-overlaps.csv</code> and
+                    <code>enr-overlaps-sorted.csv</code>: These files give the
+                    individual significant FIGfams underlying any SEED subsystem
+                    enrichments, which can aid interpretation.</li>
+                <li><code>progress.txt</code> and <code>stderr.txt</code>: These
+                    are the outputs of <em>phylogenize</em>; if your job
+                    finished without an error message, you probably don't need
+                    to refer to them.</li>
+            </li>
         </ul>
+
         <p>To make <em>phylogenize</em> available for other users, results will
             be deleted approximately 7 days after completion, so it is a good
             idea to save the report and results to disk before then.</p>
