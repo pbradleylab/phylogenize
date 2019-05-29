@@ -665,6 +665,7 @@ prev.addw <- function(abd.meta,
     envir <- opts('which_envir')
     E <- opts('env_column')
     D <- opts('dset_column')
+    S <- opts('sample_column')
     if (!(envir %in% levels(abd.meta$metadata[[E]]))) {
         stop(paste0("environment ", envir, " not found in metadata"))
     }
@@ -675,7 +676,7 @@ prev.addw <- function(abd.meta,
             s <- intersect(
                 colnames(abd.meta$mtx),
                 abd.meta$metadata[[S]][(env.rows &
-                                          (abd.meta$metadata[[D]] == d))] %>%
+                                        (abd.meta$metadata[[D]] == d))] %>%
                 as.character)
             rm <- rowMeans(1 * (abd.meta$mtx[, s] > 0))
             list(rm = rm, s = s)
@@ -732,7 +733,8 @@ calc.ess <- function(abd.meta,
     if (length(dsets) > 1) {
         warning("datasets are ignored when calculating specificity")
     }
-    meta.present <- abd.meta$meta[(abd.meta$meta[[S]] %>% as.character %in%
+    meta.present <- abd.meta$meta[(abd.meta$meta[[S]] %>%
+                                   as.character %in%
                                    colnames(abd.meta$mtx)), ]
     envirs <- unique(meta.present[[E]])
     if (ptype == "uninformative") {
@@ -780,8 +782,8 @@ calc.ess <- function(abd.meta,
                        add.pc = TRUE)
     })
     logist.pheno <- regularized[2, ]
-    # "hard-shrink" anything shrunk almost to the prior to prevent these tiny
-    # differences from affecting the result in the absence of a strong change
+                                        # "hard-shrink" anything shrunk almost to the prior to prevent these tiny
+                                        # differences from affecting the result in the absence of a strong change
     logist.pheno[which(logist.pheno %btwn%
                        c(this.prior - tolerance,
                          this.prior + tolerance))] <- this.prior

@@ -1,4 +1,4 @@
-# phylogenize (v0.9 beta)
+# phylogenize (v0.91 beta)
 
 
 ## Running *phylogenize* locally
