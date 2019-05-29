@@ -238,11 +238,13 @@
             </li>
             <li>Sample metadata matrix (unless uploading separately
                 above)</li>
-            <li>Make sure the sample metadata includes columns labeled
-                <em>env</em> and <em>dataset</em>, or specify the columns
-                that you want to use under &quot;Dataset column&quot; and
-                &quot;Environment column&quot;, just as with tabular
-                data.</li>
+            <li>Make sure the sample metadata includes a column with environment
+                annotations (by default: <em>env</em>) and, if there are
+                multiple datasets, dataset annotations (by default:
+                <em>dataset</em>). Whatever these columns are named, they should
+                match the names you provide in the &quot;Environment
+                column&quot; and &quot;Dataset column&quot; fields respectively,
+                just as with tabular data.</li>
         </ul>
 
         <p>To convert your tabular data into a single BIOM file,
@@ -315,7 +317,7 @@
         <p>The exact details of how prevalence and specificity are calculated
             can be read in our
             <a href="http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006242">
-                paper </a>.
+                paper</a>.
             Basically, we perform additional steps to re-weight datasets equally
             (for prevalence), to make sure that small numbers of observations
             don't skew the results (for specificity), and to transform these
@@ -327,10 +329,12 @@
             <em>phylogenize</em> will return an error because there is not enough
             signal to compute specificity.</p>
 
-        <p>Note: while you do not have to rarefy your data, you should make sure
-            that read depth does not systematically differ across environments.
-            If it does, then rarefying may be a good idea because some microbes
-            will simply appear more by chance in deeper-sequenced data.</p>
+        <p>Note: while you do not have to rarefy your data (i.e., resample to
+            the same read depth), you should make sure that read depth does not
+            systematically differ across environments. If it does, then
+            rarefying may be a good idea because some microbes will simply
+            appear more by chance in deeper-sequenced data, and if read depth is
+            correlated with environment, you may get spurious associations.</p>
 
         <h2 id="choosing-an-environment">Choosing an environment</h2>
 
