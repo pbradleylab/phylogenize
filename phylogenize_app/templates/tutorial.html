@@ -48,193 +48,490 @@
 </div>
 
 <section><p>
-<div class="container">
+    <div class="container">
 
-<h1 id="what-is-phylogenize">What is <em>phylogenize</em>?</h1>
-<p><em>phylogenize</em> is a web tool that allows users to link microbial genes to either microbial prevalence in, or specificity for, a given environment, while taking into account the phylogenetic relationship between microbes. The method is described in <a href="http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006242">Bradley, Nayfach, and Pollard (2018)</a>.</p>
-<h1 id="how-do-i-use-phylogenize">How do I use <em>phylogenize</em>?</h1>
-<p>To use <em>phylogenize</em>, you need the following things:</p>
-<ul>
-<li><strong>Your data.</strong> This should be a matrix where:
-<ul>
-<li>each row is a species ID (shotgun data) or a sequence variant (16S data)
-<ul>
-<li>each column is a sample ID of your choosing</li>
-<li>each entry is any of the following:</li>
-<li>a number of reads
-<ul>
-<li>a relative abundance</li>
-<li>0 for absence and 1 for presence</li>
-</ul></li>
-</ul></li>
-</ul></li>
-<li><strong>Your sample metadata.</strong> This should be a matrix mapping sample IDs to environments and/or datasets, where:
-<ul>
-<li>each row corresponds to a sample in your data</li>
-<li>there are at least the following two columns:</li>
-<ul>
-<li><em>sample</em>: this column contains the sample IDs, matching the sample IDs in your data
-    <li><em>env</em>: this column contains the environment labels corresponding to each sample</li>
-</ul>
-<li>and may also have the column <em>dataset</em>: this column contains the batch or dataset to which each sample belongs.</li>
-<li>Note (new in v0.9): if you only have one dataset, you don't need to specify a dataset column.</li>
-<li>Note (new in v0.9): you can now specify different column names for <em>env</em> and <em>dataset</em>, and if you provide metadata in a BIOM file the <em>sample</em> column will be automatically generated.</li>
-<li>Note: right now, you can only calculate specificity if there is just one dataset.</li>
-</li>
-</ul></li>
-</ul></li>
-<li><strong>Information about your data</strong>. This tells <em>phylogenize</em> how your data were processed (shotgun vs. 16S) and what version of the database to use (most people can leave this set to the default).</li>
-<li><strong>A choice of phenotype.</strong> This is the variable you are linking to gene presence. It can be one of:</li>
-<ul>
-	<li><i>prevalence</i>: how frequently is a microbe observed in a given environment?
-			<li><i>specificity</i>: how specific is a microbe for a given environment compared to all others?</li>
-      <li>Note: to calculate specificity, there must be more than one environment present.</li>
+        <h1 id="what-is-phylogenize">What is <em>phylogenize</em>?</h1>
 
-</ul></li>
-<li><strong>A choice of environment.</strong> Prevalence and specificity are defined with respect to a given environment, like &quot;soil&quot; or &quot;stool&quot; or &quot;marine.&quot;</li>
-<ul>
-<li>Note: this entry needs to match the <em>env</em> column in your sample metadata above.</li>
-</ul>
-</ul></li>
-</ul>
-<div class="figure">
-	<img class="inline" src="{{ url_for('static', filename="phylogenize-form-example.png") }}" alt="Example of form" />
-<p class="caption">Example of form</p>
-</div>
-<h2 id="what-types-of-data-does-phylogenize-accept">What types of data does <em>phylogenize</em> accept?</h2>
-<p><em>phylogenize</em> requires taxonomic abundances. These can either be derived from shotgun data or 16S data.</p>
-<h3 id="shotgun-data">Shotgun data</h3>
-<p>Shotgun data should be processed with <a href="https://github.com/snayfach/MIDAS">MIDAS</a>, with database version either v1.2 (recommended) or v1.0 (deprecated). You do not need to run the full MIDAS pipeline; you will just need to do metagenomic species profiling as described <a href="https://github.com/snayfach/MIDAS/blob/master/docs/species.md">here</a>. The output file you need should be called <code>species_profile.txt</code>.</p>
-<h3 id="s-data">16S data</h3>
-<p>16S data should be processed using a denoising algorithm. Two common options are <a href="https://github.com/biocore/deblur">Deblur</a> and <a href="https://benjjneb.github.io/dada2/">DADA2</a>. Both of these algorithms will result in abundances for &quot;amplicon sequence variants&quot; (ASVs), which correspond to the distinct DNA sequences that are obtained by denoising.</p>
-<p><em>phylogenize</em> works by mapping these ASVs back to <a href="https://www.github.com/snayfach/MIDAS">MIDAS</a> genome clusters using the fast aligner <a href="https://github.com/knights-lab/BURST">BURST</a>. The default threshold for matching a genome cluster is 98.5% sequence identity, since we found that this gives a reasonable sensitivity-specificity threshold. Ambiguous matches are discarded, and reads/abundances mapping to the same genome cluster are summed together. (In practice, though, we have never actually seen ambiguous matches.)</p>
-<h2 id="gathering-your-data-and-metadata">Gathering your data and metadata</h2>
-<p>Your data and metadata should be in either <em>tabular</em> or <em>BIOM</em> format. Tabular format is simpler, but takes up more space. The maximum file upload is 35M, so if your data are larger, you will need to convert them to BIOM format (see below) or, alternatively, to run <em>phylogenize</em> locally.</p>
-<p>You can upload either two tab-delimited files (data and metadata), one BIOM file (data plus metadata), or, new in v0.9, provide separate tabular metadata with a BIOM-formatted abundance file.</p>
-<h3 id="tabular-format-data">Tabular format data</h3>
-<p>If you choose the tabular format, your data and metadata will be in two separate tab-delimited files. They should look something like this:</p>
-<div class="figure">
-	<img class="inline" src="{{ url_for('static', filename="data-corner.png") }}" alt="Top corner of data" />
-<p class="caption">Top corner of data</p>
-</div>
-<div class="figure">
-	<img class="inline" src="{{ url_for('static', filename="metadata-corner.png") }}" alt="Top corner of metadata" />
-<p class="caption">Top corner of metadata</p>
-</div>
-<p>Note that the metadata table needs to have columns labeled <em>sample</em>
-(matching the columns of your data table), <em>env</em> (giving the environment
-of each sample), and <em>dataset</em> (giving the batch or experiment of each
-sample).</p>
-<h3 id="biom-format-data">BIOM format data</h3>
-<p><a href="http://biom-format.org/">BIOM format</a> data is more compact for tabular data and is more suitable for larger datasets. This is because 1. BIOM represents matrices that are mostly zeroes (i.e., &quot;sparse&quot;) more efficiently, and most taxonomic matrices are sparse, and 2. BIOM files can use a binary representation (HDF5) that takes up less space than plain text.</p>
-<p>A BIOM file can contain multiple tables, so you will only need to upload one file (though if you prefer, you can upload a separate metadata file as described above). This one file needs to have the following tables:</p>
-<ul>
-<li>Observation matrix or &quot;OTU table&quot;
-<ul>
-<li>Despite the name, rows should actually be either MIDAS species IDs or amplicon sequence variants (ASVs), not OTUs</li>
-<li>Sample metadata matrix (unless uploading separately above)</li>
-<li>Make sure the sample metadata includes columns labeled <em>env</em> and <em>dataset</em>, just as with tabular data.</li>
-</ul></li>
-</ul>
-<p>To convert your tabular data into a single BIOM file, <a href="http://biom-format.org/index.html">install the <code>biom</code> utility</a>. Then run the conversion as follows (adapted from the biom-format.org documentation):</p>
-<pre><code>biom convert -i your_data.tab -o your_data_and_metadata.biom --to-hdf5 --table-type=&quot;OTU table&quot; --sample-metadata-fp metadata.tab</code></pre>
-<p>Replace <code>your_data.tab</code> and <code>metadata.tab</code> with the
-names of your tab-delimited data files and, optionally,
-<code>your_data_and_metadata</code> with the name of your dataset. <i>Important
-	note</i>: before doing this step, edit your metadata file and rename the &quot;sample&quot; column
-&quot;#SampleID&quot;, otherwise the metadata won't actually be added (!) and
-<i>phylogenize</i>
-will throw a &quot;metadata not found&quot; error.</p>
-<p>For more help using the <code>biom</code> utility, try looking at the pages entitled <a href="http://biom-format.org/documentation/biom_conversion.html">&quot;Converting between file formats&quot;</a> and <a href="http://biom-format.org/documentation/adding_metadata.html">&quot;Adding sample and observation metadata to biom files&quot;</a>. These documents also cover how to rename columns to match what <em>phylogenize</em> accepts, if you already have a BIOM file, for example, because you've run QIIME.</p>
-<h2 id="information-about-your-data">Information about your data</h2>
-<p>&quot;Data type&quot; is relatively self-explanatory: is your data 16S amplicon sequencing data, or shotgun metagenomics data processed with MIDAS?</p>
-<p>For most people, the MIDAS database version will be the latest, v1.2. We also provide the option to use a previous version of the database, since species are named differently in MIDAS v1.2 and v1.0, but for most people the default (1.2) will be appropriate.</p>
-<h2 id="choosing-a-phenotype">Choosing a phenotype</h2>
-<p><em>phylogenize</em> can associate genes with either microbial <em>prevalence</em> or microbial <em>specificity</em> for a given environment. Prevalence gives how often a microbe is found in an environment. Specificity compares this prevalence to prevalences in all other provided environments. The following toy example gives an intuition for what this means:</p>
-<div class="figure">
-	<img src="{{ url_for('static', filename="healthy-sick.png") }}" class="inline" alt="Cartoon of prevalence and specificity calculations" />
-<p class="caption">Cartoon of prevalence and specificity calculations</p>
-</div>
-<p>Microbe 1 is detected (black boxes) often in both samples from healthy (A-G) and sick (H-N) individuals. Microbe 2 is detected more frequently in healthy than sick samples, and microbe 3 is detected relatively seldom in either. This means that microbes 1 and 2 will have <em>high prevalence</em> in the &quot;healthy&quot; environment, while microbe 3 will have <em>low prevalence</em>. However, microbe 2 is the only microbe to have <em>high specificity</em> for &quot;healthy&quot; over &quot;sick,&quot; because of the difference in prevalence between these environments.</p>
-<p>Prevalence will tend to capture both cosmopolitan microbes and ones that are particularly well-adapted to a given environment. Specificity is useful for contrasting two sites (like gut vs. skin) or states (healthy vs. sick).</p>
-<p>The exact details of how prevalence and specificity are calculated can be read in our <a href="http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006242">paper</a>. Basically, we perform additional steps to re-weight datasets equally (for prevalence), to make sure that small numbers of observations don't skew the results (for specificity), and to transform these quantities into something approximately normally-distributed (both).</p>
-<p>Note: it is possible with low numbers of samples that no microbes will be specific to a given environment, in which case <em>phylogenize</em> will return an error because there is not enough signal to compute specificity.</p>
-<p>Note: while you do not have to rarefy your data, you should make sure that read depth does not systematically differ across environments. If it does, then rarefying may be a good idea because some microbes will simply appear more by chance in deeper-sequenced data.</p>
-<h2 id="choosing-an-environment">Choosing an environment</h2>
-<p>Simply enter the name of the environment for which you are interested in calculating a phenotype. This should match an entry in the <em>env</em> column of the sample metadata exactly. At least two samples per environment are necessary.</p>
-<h2 id="results-pages">Results pages</h2>
-<p>Your results will be delivered at a URL that should look like: <code>www.phylogenize.org/results/&lt;result_id&gt;</code> with a long string replacing <code>&lt;result_id&gt;</code>. This is where you should eventually be able to pick up your results. We do not make the result IDs searchable, so it is a good idea to bookmark or otherwise note this URL.</p>
-<p>Anyone with this URL will be able to see your results, so only share it with members of your team and collaborators. (Also, even though we don't make these URLs publicly searchable, you still should not upload any data with personally-identifiable information, sensitive personal information, or any other information that needs to remain 100% completely secure.)</p>
-<p>The results have two components. The first is an HTML report summarizing and visualizing the data. The second is a .tgz file (compressed archive) that should contain the full set of results, including:</p>
-<ul>
-<li><code>phenotype.tab</code>: Tab-delimited file giving the calculated phenotype values for every microbe.
-<ul>
-<li><code>pos-sig-thresholded.csv</code>: Comma-delimited file giving all FIGfam gene families significantly positively associated with the phenotype, within a given phylum. This file also contains descriptions of the significant genes.</li>
-<li><code>all-results.csv</code>: Comma-delimited file giving the effect size and uncorrected p-value for the association of every FIGfam gene family in every phylum with the calculated phenotype. This can be useful if, for example, you want to apply your own threshold for significance or a different p-value correction method, or if you want to further filter your results by effect size.</li>
-<li><code>enr-table.csv</code>: FDR-corrected SEED subsystem enrichments for the significantly positively associated FIGfam gene families. These are pre-computed for three gene-wise levels of significance: &quot;strong&quot; (0.05), &quot;med&quot; (0.1), and &quot;weak&quot; (0.25). SEED subsystems significant at an FDR of 25% are returned.</li>
-<li><code>enr-overlaps.csv</code> and <code>enr-overlaps-sorted.csv</code>: These files give the individual significant FIGfams underlying any SEED subsystem enrichments, which can aid interpretation.</li>
-<li><code>progress.txt</code> and <code>stderr.txt</code>: These are the outputs of <em>phylogenize</em>; if your job finished without an error message, you probably don't need to refer to them.</li>
-</ul></li>
-</ul>
-<p>To make <em>phylogenize</em> available for other users, results will be deleted approximately 7 days after completion, so it is a good idea to save the report and results to disk before then.</p>
-<h2 id="getting-started-example-data">Getting started: example data</h2>
-<p>If you would like to take <i>phylogenize</i> for a test drive, we have
-provided a <a href="{{ url_for('static', filename="hmp-16s.biom") }}">BIOM dataset</a> containing 16S data and metadata from the Human
-Microbiome Project, re-analyzed with DADA2. (The data are read counts, merged
-by individual. The various regions sequenced of the 16S gene are provided in a
-single file. Reads corresponding to different samples from the same individual
-have been summed.) <b>Note</b>: this is a large dataset, so it may take a long
-time to run (on the order of an hour).</p>
-<p>You will have to provide an environment to calculate either specificity or
-prevalence. The
-various environments represented in this dataset are:
-<ul><li>Anterior nares</li>
-<li>Attached/Keratinized gingiva</li>
-<li>Buccal mucosa</li>
-<li>Hard palate</li>
-<li>L_Antecubital fossa</li>
-<li>Mid vagina</li>
-<li>Palatine Tonsils</li>
-<li>Posterior fornix</li>
-<li>R_Antecubital fossa</li>
-<li>Retroauricular crease</li>
-<li>Saliva</li>
-<li>Stool</li>
-<li>Subgingival plaque</li>
-<li>Supragingival plaque</li>
-<li>Throat</li>
-<li>Tongue dorsum</li>
-<li>Vaginal introitus</li>
-</ul>
-<p>
-If you would just like to look at a sample report, you can view one 
-<a href="{{ url_for('static', filename='phylogenize-report-demo.html') }}">here</a>.</p>
+        <p><em>phylogenize</em> is a web tool that allows users to link
+        microbial genes to either microbial prevalence in, or specificity for, a
+        given environment, while taking into account the phylogenetic
+        relationship between microbes. The method is described in <a
+        href="http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006242">Bradley,
+        Nayfach, and Pollard (2018)</a>.</p>
 
-<h1 id="troubleshooting">Troubleshooting</h1>
-<ul>
-<li><em>phylogenize</em> appears to be stuck a little over halfway through.
-<ul>
-<li>This is probably totally normal; the progress bar is approximate and this is likely to be the step where associations are actually calculated. If you check back, you should eventually see more subtle signs of progress under &quot;monitor warnings/errors.&quot;</li>
-</ul>
-<li><em>phylogenize</em> doesn't appear to be running my job: the bar is stuck at 0%.
-<ul>
-<li>Because <em>phylogenize</em> takes a lot of memory to run, only one job can run at a time. If you reload the page and look under &quot;monitor warnings/errors&quot; you should see information about how many other jobs are in the queue. If you don't see this information and the job is still stuck at 0% for a prolonged period of time, contact support (see About/Contact in the navigation bar).</li>
-</ul></li>
-<li><em>phylogenize</em> gave me an error that I don't understand.</li>
-<ul>
-<li>Check that your data tables satisfy the above requirements (in particular, are your metadata columns named correctly, and do your sample IDs match up?).
-<li>If your job ran out of memory, try converting it to BIOM format (see above).</li>
-<li>If there's still a problem, e-mail the webmaster (see About/Contact in the navigation bar). Add your result ID (the string of characters after &quot;results&quot; in the URL) and attach your input files and the output that appears when you click &quot;monitor warnings/errors&quot;.</li>
-</ul></li>
-</ul></li>
-</ul>
-<h1 id="how-do-i-run-phylogenize-locally">How do I run <em>phylogenize</em> locally?</h1>
-<p>If you are getting an &quot;out of memory&quot; error, you have a lot of jobs, or you have a more specific use case that is not covered by the server, we recommend that you download <em>phylogenize</em> from our code repository at <a href="https://www.bitbucket.com/pbradz/phylogenize">https://bitbucket.com/pbradz/phylogenize</a>. The core of <em>phylogenize</em> is an RMarkdown notebook, <code>phylogenize-report.Rmd</code>, which can be run either with or without the web app (written in Python using Flask). The web app provides a user interface and a scheduling system (using Beanstalk).</p>
-<h1 id="how-should-i-cite-phylogenize">How should I cite <em>phylogenize</em>?</h1>
-<p>
-Bradley PH and Pollard KS, "phylogenize: a web tool to identify microbial genes underlying environment associations." In review.<p>
-Bradley PH, Nayfach S, and Pollard KS, "Phylogeny-corrected identification of microbial gene families relevant to human gut colonization." PLOS Comput Biol 14 (8), e1006242.<p>
-</div>
+        <h1 id="how-do-i-use-phylogenize">How do I use <em>phylogenize</em>?</h1>
+
+        <p>To use <em>phylogenize</em>, you need the following things:</p>
+        <ul>
+            <li><strong>Your data.</strong> This should be a matrix where:
+                <ul>
+                    <li>each row is a species ID (shotgun data) or a sequence variant (16S data)
+                        <ul>
+                            <li>each column is a sample ID of your choosing</li>
+                            <li>each entry is any of the following:</li>
+                            <li>a number of reads
+                                <ul>
+                                    <li>a relative abundance</li>
+                                    <li>0 for absence and 1 for presence</li>
+                                </ul></li>
+                        </ul></li>
+                </ul>
+            </li>
+            <li><strong>Your sample metadata.</strong> This should be a matrix
+            mapping sample IDs to environments and/or datasets, where:
+                <ul>
+                    <li>each row corresponds to a sample in your data</li>
+                    <li>there are at least the following two columns:</li>
+                    <ul>
+                        <li><em>sample</em>: this column contains the sample
+                            IDs, matching the sample IDs in your data</li>
+                        <li><em>env</em>: this column contains the environment
+                            labels corresponding to each sample</li>
+                    </ul>
+                    <li>and may also have the column <em>dataset</em>: this
+                    column contains the batch or dataset to which each sample
+                    belongs. This is used for adjusting prevalence estimates
+                    across studies with unequal numbers of samples.</li>
+                    <li>Note (new in v0.9): if you only have one dataset, you
+                        don't need to specify a dataset column. Just select 1
+                        under &quot;Number of datasets&quot;.</li>
+                    <li>Note (new in v0.9): you can now specify different column
+                        names for <em>env</em> and <em>dataset</em>, and if you
+                        provide metadata in a BIOM file the <em>sample</em>
+                        column will be automatically generated.</li>
+                    <li>Note: right now, you can only calculate specificity if
+                        there is just one dataset.</li>
+                </ul>
+            </li>
+            <li><strong>Information about your data</strong>. This tells
+                <em>phylogenize</em> how your data were processed (shotgun vs.
+                16S) and what version of the database to use (most people can
+                leave this set to the default).</li>
+            <li><strong>A choice of phenotype.</strong> This is the variable you
+                are linking to gene presence. It can be one of:
+                <ul>
+                    <li><i>prevalence</i>: how frequently is a microbe observed in a
+                        given environment?</li>
+                    <li><i>specificity</i>: how specific is a microbe for a
+                        given environment compared to all others?</li>
+                    <li>Note: to calculate specificity, there must be more than
+                        one environment present.</li>
+                </ul>
+            </li>
+            <li><strong>A choice of environment.</strong> Prevalence and
+            specificity are defined with respect to a given environment, like
+            &quot;soil&quot; or &quot;stool&quot; or &quot;marine.&quot;
+                <ul>
+                    <li>Note: this entry needs to match the <em>env</em> column
+                        in your sample metadata above (or the column you named under
+                        &quot;Environment column&quot;).</li>
+                </ul>
+            </li>
+        </ul>
+
+        <div class="figure">
+            <img class="inline" src="{{ url_for('static',
+                        filename="phylogenize-form-example.png") }}"
+                        alt="Example of form" />
+            <p class="caption">Example of form</p>
+        </div>
+
+        <h2 id="what-types-of-data-does-phylogenize-accept">What types of data
+            does <em>phylogenize</em> accept?</h2>
+
+        <p><em>phylogenize</em> requires taxonomic abundances. These can either
+            be derived from shotgun data or 16S data.</p>
+
+        <h3 id="shotgun-data">Shotgun data</h3>
+
+        <p>Shotgun data should be processed with
+            <a href="https://github.com/snayfach/MIDAS">MIDAS</a>, with database
+            version either v1.2 (recommended) or v1.0 (deprecated). You do not need
+            to run the full MIDAS pipeline; you will just need to do metagenomic
+            species profiling as described
+            <a href="https://github.com/snayfach/MIDAS/blob/master/docs/species.md">here</a>.
+            The output file you need should be called <code>species_profile.txt
+            </code>.</p>
+
+        <h3 id="sixteens-data">16S data</h3>
+
+        <p>16S data should be processed using a denoising algorithm. Two common
+        options are <a href="https://github.com/biocore/deblur">Deblur</a> and
+        <a href="https://benjjneb.github.io/dada2/">DADA2</a>. Both of these
+        algorithms will result in abundances for &quot;amplicon sequence
+        variants&quot; (ASVs), which correspond to the distinct DNA sequences
+        that are obtained by denoising.</p>
+
+        <p><em>phylogenize</em> works by mapping these ASVs back to
+            <a href="https://www.github.com/snayfach/MIDAS">MIDAS</a> genome
+        clusters using the fast aligner
+        <a href="https://github.com/knights-lab/BURST">BURST</a>. The default
+        threshold for matching a genome cluster is 98.5% sequence identity,
+        since we found that this gives a reasonable sensitivity-specificity
+        threshold. Ambiguous matches are discarded, and reads/abundances mapping
+        to the same genome cluster are summed together. (In practice, though, we
+        have never actually seen ambiguous matches.)</p>
+
+        <h2 id="gathering-your-data-and-metadata">Gathering your data and
+            metadata</h2>
+
+        <p>Your data and metadata should be in either <em>tabular</em> or
+            <em>BIOM</em> format. Tabular format is simpler, but takes up more
+            space. The maximum file upload is 35M, so if your data are larger,
+            you will need to convert them to BIOM format (see below) or,
+            alternatively, to run <em>phylogenize</em> locally.</p>
+
+        <p>You can upload either two tab-delimited files (data and metadata),
+            one BIOM file (data plus metadata), or, new in v0.9, provide
+            separate tabular metadata with a BIOM-formatted abundance file.</p>
+
+        <h3 id="tabular-format-data">Tabular format data</h3>
+
+        <p>If you choose the tabular format, your data and metadata will be in
+            two separate tab-delimited files. They should look something like
+            this:</p>
+
+        <div class="figure">
+            <img class="inline"
+                 src="{{ url_for('static', filename="data-corner.png") }}"
+                 alt="Top corner of data" />
+            <p class="caption">Top corner of data</p>
+        </div>
+
+        <div class="figure">
+            <img class="inline"
+                 src="{{ url_for('static', filename="metadata-corner.png") }}"
+                 alt="Top corner of metadata" />
+            <p class="caption">Top corner of metadata</p>
+        </div>
+
+        <p>Note that the metadata table needs to have a column labeled <em>sample</em>
+            (matching the columns of your data table). The table should also
+            giving the environment of each sample (by default,
+            <em>phylogenize</em> looks for a column named &quot;env&quot;, but
+            you can change this in the &quot;Environment column&quot; field).
+            If your data represents samples from different datasets, batches, or
+            studies, one column should also say which dataset, batch, or study
+            each sample is taken from (by default: &quot;dataset&quot;).</p>
+
+        <h3 id="biom-format-data">BIOM format data</h3>
+
+        <p><a href="http://biom-format.org/">BIOM format</a> data is more
+            compact for tabular data and is more suitable for larger datasets.
+            This is because 1. BIOM represents matrices that are mostly zeroes
+            (i.e., &quot;sparse&quot;) more efficiently, and most taxonomic
+            matrices are sparse, and 2. BIOM files can use a binary
+            representation (HDF5) that takes up less space than plain text.</p>
+
+        <p>A BIOM file can contain multiple tables, so you will only need to
+            upload one file (though if you prefer, you can upload a separate
+            metadata file as described above). This one file needs to have the
+            following tables:</p>
+
+        <ul>
+            <li>Observation matrix or &quot;OTU table&quot;
+                <ul>
+                    <li>Despite the name, rows should actually be either MIDAS
+                        species IDs or amplicon sequence variants (ASVs), not
+                        OTUs</li>
+                </ul>
+            </li>
+            <li>Sample metadata matrix (unless uploading separately
+                above)</li>
+            <li>Make sure the sample metadata includes columns labeled
+                <em>env</em> and <em>dataset</em>, or specify the columns
+                that you want to use under &quot;Dataset column&quot; and
+                &quot;Environment column&quot;, just as with tabular
+                data.</li>
+        </ul>
+
+        <p>To convert your tabular data into a single BIOM file,
+            <a href="http://biom-format.org/index.html">install the
+                <code>biom</code> utility</a>. Then run the conversion as
+            follows (adapted from the biom-format.org documentation):</p>
+
+        <pre><code>biom convert -i your_data.tab -o your_data_and_metadata.biom --to-hdf5 --table-type=&quot;OTU table&quot; --sample-metadata-fp metadata.tab</code></pre>
+
+        <p>Replace <code>your_data.tab</code> and <code>metadata.tab</code> with
+            the names of your tab-delimited data files and, optionally,
+            <code>your_data_and_metadata</code> with the name of your dataset.
+            <i>Important note</i>: before doing this step, edit your metadata
+            file and rename the &quot;sample&quot; column to
+            &quot;#SampleID&quot;, otherwise the metadata won't actually be
+            added (!) and <i>phylogenize</i> will throw a &quot;metadata not
+            found&quot; error.</p>
+
+        <p>For more help using the <code>biom</code> utility, try looking at the
+            pages entitled
+            <a href="http://biom-format.org/documentation/biom_conversion.html">
+                &quot;Converting between file formats&quot;</a> and
+            <a href="http://biom-format.org/documentation/adding_metadata.html">
+                &quot;Adding sample and observation metadata to biom
+                files&quot;</a>.</p>
+
+        <h2 id="information-about-your-data">Information about your data</h2>
+
+        <p>&quot;Data type&quot; is relatively self-explanatory: is your data
+            16S amplicon sequencing data, or shotgun metagenomics data processed
+            with MIDAS?</p>
+
+        <p>For most people, the MIDAS database version will be the latest, v1.2.
+            We also provide the option to use a previous version of the
+            database, since species are named differently in MIDAS v1.2 and
+            v1.0, but for most people the default (1.2) will be appropriate.</p>
+
+        <h2 id="choosing-a-phenotype">Choosing a phenotype</h2>
+
+        <p><em>phylogenize</em> can associate genes with either microbial
+            <em>prevalence</em> or microbial <em>specificity</em> for a given
+            environment. Prevalence gives how often a microbe is found in an
+            environment. Specificity compares this prevalence to prevalences in
+            all other provided environments. The following toy example gives an
+            intuition for what this means:</p>
+        <div class="figure">
+            <img src="{{ url_for('static', filename="healthy-sick.png") }}"
+                 class="inline"
+                 alt="Cartoon of prevalence and specificity calculations" />
+            <p class="caption">
+                Cartoon of prevalence and specificity calculations
+            </p>
+        </div>
+        <p>Microbe 1 is detected (black boxes) often in both samples from
+            healthy (A-G) and sick (H-N) individuals. Microbe 2 is detected more
+            frequently in healthy than sick samples, and microbe 3 is detected
+            relatively seldom in either. This means that microbes 1 and 2 will
+            have <em>high prevalence</em> in the &quot;healthy&quot;
+            environment, while microbe 3 will have <em>low prevalence</em>.
+            However, microbe 2 is the only microbe to have <em>high
+            specificity</em> for &quot;healthy&quot; over &quot;sick,&quot;
+            because of the difference in prevalence between these
+            environments.</p>
+
+        <p>Prevalence will tend to capture both cosmopolitan microbes and ones
+            that are particularly well-adapted to a given environment.
+            Specificity is useful for contrasting two sites (like gut vs. skin)
+            or states (healthy vs. sick).</p>
+
+        <p>The exact details of how prevalence and specificity are calculated
+            can be read in our
+            <a href="http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006242">
+                paper </a>.
+            Basically, we perform additional steps to re-weight datasets equally
+            (for prevalence), to make sure that small numbers of observations
+            don't skew the results (for specificity), and to transform these
+            quantities into something approximately normally-distributed
+            (both).</p>
+
+        <p>Note: it is possible with low numbers of samples that no microbes
+            will be specific to a given environment, in which case
+            <em>phylogenize</em> will return an error because there is not enough
+            signal to compute specificity.</p>
+
+        <p>Note: while you do not have to rarefy your data, you should make sure
+            that read depth does not systematically differ across environments.
+            If it does, then rarefying may be a good idea because some microbes
+            will simply appear more by chance in deeper-sequenced data.</p>
+
+        <h2 id="choosing-an-environment">Choosing an environment</h2>
+
+        <p>Simply enter the name of the environment for which you are interested
+            in calculating a phenotype. This should match an entry in the
+            <em>env</em> column of the sample metadata (or the other column you
+            named in the &quot;Environment column&quot; field) exactly. At least
+            two samples per environment are necessary.</p>
+
+        <h2 id="results-pages">Results pages</h2>
+
+        <p>Your results will be delivered at a URL that should look like:
+            <code>www.phylogenize.org/results/&lt;result_id&gt;</code> with a
+            long string replacing <code>&lt;result_id&gt;</code>. This is where
+            you should eventually be able to pick up your results. We do not
+            make the result IDs searchable, so it is a good idea to bookmark or
+            otherwise note this URL.</p>
+
+        <p>Anyone with this URL will be able to see your results, so only share
+            it with members of your team and collaborators. (Also, even though we
+            don't make these URLs publicly searchable, you still should not upload
+            any data with personally-identifiable information, sensitive personal
+            information, or any other information that needs to remain 100%
+            completely secure.)</p>
+
+        <p>The results have two components. The first is an HTML report
+            summarizing and visualizing the data. The second is a .tgz file
+            (compressed archive) that should contain the full set of results,
+            including:</p>
+        <ul>
+            <li><code>phenotype.tab</code>: Tab-delimited file giving the
+                calculated phenotype values for every microbe.
+                <ul>
+                    <li><code>pos-sig-thresholded.csv</code>: Comma-delimited
+                        file giving all FIGfam gene families significantly
+                        positively associated with the phenotype, within a given
+                        phylum. This file also contains descriptions of the
+                        significant genes.</li>
+                    <li><code>all-results.csv</code>: Comma-delimited file
+                        giving the effect size and uncorrected p-value for the
+                        association of every FIGfam gene family in every phylum
+                        with the calculated phenotype. This can be useful if,
+                        for example, you want to apply your own threshold for
+                        significance or a different p-value correction method,
+                        or if you want to further filter your results by effect
+                        size.</li>
+                    <li><code>enr-table.csv</code>: FDR-corrected SEED subsystem
+                        enrichments for the significantly positively associated
+                        FIGfam gene families. These are pre-computed for three
+                        gene-wise levels of significance: &quot;strong&quot;
+                        (0.05), &quot;med&quot; (0.1), and &quot;weak&quot;
+                        (0.25). SEED subsystems significant at an FDR of 25% are
+                        returned.</li>
+                    <li><code>enr-overlaps.csv</code> and
+                        <code>enr-overlaps-sorted.csv</code>: These files give the
+                        individual significant FIGfams underlying any SEED subsystem
+                        enrichments, which can aid interpretation.</li>
+                    <li><code>progress.txt</code> and <code>stderr.txt</code>:
+                        These are the outputs of <em>phylogenize</em>; if your job
+                        finished without an error message, you probably don't need
+                        to refer to them.</li>
+                </ul></li>
+        </ul>
+        <p>To make <em>phylogenize</em> available for other users, results will
+            be deleted approximately 7 days after completion, so it is a good
+            idea to save the report and results to disk before then.</p>
+
+        <h2 id="getting-started-example-data">Getting started: example data</h2>
+
+        <p>If you would like to take <i>phylogenize</i> for a test drive, we
+            have provided a <a href="{{ url_for('static',
+            filename="hmp-16s.biom") }}">BIOM dataset</a> containing 16S data
+            and metadata from the Human Microbiome Project, re-analyzed with
+            DADA2. (The data are read counts, merged by individual. The various
+            regions sequenced of the 16S gene are provided in a single file.
+            Reads corresponding to different samples from the same individual
+            have been summed.) <b>Note</b>: this is a large dataset, so it may
+            take a long time to run (on the order of an hour).</p>
+
+        <p>You will have to provide an environment to calculate either
+            specificity or prevalence. The various environments represented in
+            this dataset are:
+            <ul><li>Anterior nares</li>
+                <li>Attached/Keratinized gingiva</li>
+                <li>Buccal mucosa</li>
+                <li>Hard palate</li>
+                <li>L_Antecubital fossa</li>
+                <li>Mid vagina</li>
+                <li>Palatine Tonsils</li>
+                <li>Posterior fornix</li>
+                <li>R_Antecubital fossa</li>
+                <li>Retroauricular crease</li>
+                <li>Saliva</li>
+                <li>Stool</li>
+                <li>Subgingival plaque</li>
+                <li>Supragingival plaque</li>
+                <li>Throat</li>
+                <li>Tongue dorsum</li>
+                <li>Vaginal introitus</li>
+            </ul>
+            <p>
+                If you would just like to look at a sample report, you can view one
+                <a href="{{ url_for('static', filename='phylogenize-report-demo.html') }}">here</a>.</p>
+
+            <h1 id="troubleshooting">Troubleshooting</h1>
+
+            <ul>
+                <li><em>phylogenize</em> appears to be stuck a little over halfway through.
+                    <ul>
+                        <li>This is probably totally normal; the progress bar is
+                            approximate and this is likely to be the step where
+                            associations are actually calculated. If you check
+                            back, you should eventually see more subtle signs of
+                            progress under &quot;monitor warnings/errors.
+                            &quot;</li>
+                    </ul>
+                </li>
+                <li><em>phylogenize</em> doesn't appear to be running my
+                    job: the bar is stuck at 0%.
+                    <ul>
+                        <li>Because <em>phylogenize</em> takes a lot of memory
+                            to run, only one job can run at a time. If you
+                            reload the page and look under &quot;monitor
+                            warnings/errors&quot; you should see information
+                            about how many other jobs are in the queue. If you
+                            don't see this information and the job is still
+                            stuck at 0% for a prolonged period of time, contact
+                            support (see About/Contact in the navigation
+                            bar).</li>
+                    </ul>
+                </li>
+                <li><em>phylogenize</em> gave me an error that I don't
+                    understand.
+                    <ul>
+                        <li>Check that your data tables satisfy the above
+                            requirements (in particular, are your metadata
+                            columns named correctly, and do your sample IDs
+                            match up?).
+                            <li>If your job ran out of memory, try converting it
+                                to BIOM format (see above).</li>
+                            <li>If there's still a problem, e-mail the webmaster
+                                (see About/Contact in the navigation bar). Add
+                                your result ID (the string of characters after
+                                &quot;results&quot; in the URL) and attach your
+                                input files and the output that appears when you
+                                click &quot;monitor warnings/errors&quot;.</li>
+                            <li>You may also report a bug in
+                                <em>phylogenize</em> using the <a
+                                href="https://bitbucket.org/pbradz/phylogenize/issues">issue
+                                tracker</a>.</li>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+
+        <h1 id="how-do-i-run-phylogenize-locally">How do I run
+            <em>phylogenize</em> locally?</h1>
+
+        <p>If you are getting an &quot;out of memory&quot; error, you have a lot
+            of jobs, or you have a more specific use case that is not covered by the
+            server, we recommend that you download <em>phylogenize</em> from our
+            code repository at
+            <a href="https://www.bitbucket.com/pbradz/phylogenize">https://bitbucket.com/pbradz/phylogenize</a>.
+        </p>
+        <p>The core of <em>phylogenize</em> is an R package, with a web app written
+            in Python using Flask. The web app provides a user interface and a
+            scheduling system (using Beanstalk). <em>phylogenize</em> can also
+            be run in <a href="https://qiime2.org/">QIIME2</a> using the plugin
+            <a
+                href="https://bitbucket.org/pbradz/q2-phylogenize">q2-phylogenize</a>.
+        </p>
+        <p>
+            This means that there are three ways to run <em>phylogenize</em>
+            locally:
+            <ul>
+                <li>In R, calling functions from the R package directly;</li>
+                <li>In QIIME2, using the plugin <a href="https://bitbucket.org/pbradz/q2-phylogenize">q2-phylogenize</a></li>;
+                <li>In the web browser, by running the web application locally.</li>
+            </ul>
+            For most people, the first two approaches are probably the easiest.
+            The third option is recommended only if you want multiple people to
+            be able to run <em>phylogenize</em> on the same local machine.
+        </p>
+        <p>
+            Instructions on how to use <em>phylogenize</em> as an R package or
+            through a local web server are found on its <a
+            href="https://bitbucket.org/pbradz/phylogenize">Bitbucket site</a>.
+            Instructions on how to use <em>phylogenize</em> with QIIME2 can be
+            found on the <a href="https://bitbucket.org/pbradz/q2-phylogenize">
+            q2-phylogenize</a> Bitbucket repository.
+
+        <h1 id="how-should-i-cite-phylogenize">How should I cite
+            <em>phylogenize</em>?</h1>
+
+        <p>
+            Bradley PH and Pollard KS, "phylogenize: a web tool to identify
+            microbial genes underlying environment associations." In review.<p>
+            Bradley PH, Nayfach S, and Pollard KS, "Phylogeny-corrected
+            identification of microbial gene families relevant to human gut
+            colonization." PLOS Comput Biol 14 (8), e1006242.<p>
+    </div>
 </section>
 
 
