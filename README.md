@@ -29,6 +29,14 @@ Finally, you will need to download and install the data files that *phylogenize*
 
 You may use this package by itself, using the web interface, or using the [QIIME2 interface](https://bitbucket.org/pbradz/q2-phylogenize).
 
+To **reinstall** *phylogenize*, the following should be all that's necessary:
+
+```
+devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
+phylogenize::install.data.figshare()
+```
+
+
 ### Running *phylogenize* locally in R
 
 The main function in *phylogenize* is `render.report`. The parameters that you are the most likely to use are as follows:
