@@ -16,6 +16,7 @@ fix.tree <- function(phy, len=1e-6) {
 #'
 #' @param tree A \code{phylo} object.
 #' @param keep A character vector of tip labels. Any tip not in this vector will be dropped.
+#' @export keep.tips
 keep.tips <- function(tree, keep) {
   ape::drop.tip(tree, setdiff(tree$tip.label, keep))
 }
@@ -57,6 +58,7 @@ tree.to.dist <- function(tree) {
 #' @param ladderize Ladderize the plotted tree.
 #' @param ... Additional arguments passed to ggplot2.
 #' @return A ggtree plot of a continuous trait plotted along a tree.
+#' @export
 gg.cont.tree <- function(phy,
                          ctrait,
                          cAnc = NULL,

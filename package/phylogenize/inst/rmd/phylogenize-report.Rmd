@@ -65,13 +65,22 @@ check.pryr <- function() {
 if (!pz.options('skip_graphs')) {
     library(svglite)
     knitr::knit_hooks$set(custom.plot = knitr::hook_plot_custom)
-    # This next part courtesy of Yihui Xie
+    # Thanks to Yihui Xie:
+    # https://github.com/yihui/knitr/issues/754#issuecomment-40540980
     local({
         hook_plot = knitr::knit_hooks$get('plot')
         knitr::knit_hooks$set(plot = function(x, options) {
             x = paste(x, collapse = '.')
             if (!grepl('\\.svg', x)) return(hook_plot(x, options))
-            paste(readLines(x)[-1], collapse = '\n')
+            if (file.exists(x)) {
+              paste(readLines(x)[-1], collapse = '\n')
+            } else {
+              paste("<!-- file not found: ",
+                    x,
+                    " -->",
+                    sep = '',
+                    collapse = '')
+            }
         })
     })
 }
@@ -167,6 +176,10 @@ pheno.distros <- plot.pheno.distributions(phenotype,
                                           pz.db)
 
 print(pheno.distros)
+write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
+            phenotype,
+            sep = '\t')
+
 
 # be a little parsimonious with memory here
 rm(abd.meta); gc()
@@ -185,10 +198,6 @@ if (!pz.options('skip_graphs')) {
                                  label=pz.options('which_phenotype'))
 }
 
-write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
-            phenotype,
-            sep = '\t')
-
 check.pryr()
 ```
 
@@ -204,7 +213,7 @@ subtrees <- lapply(pz.db$trees, function(tr) {
 })
 subtrees <- Filter(function(x) {
   if (is.null(x)) return(FALSE)
-  if (length(x$tip.label) > 1) return(TRUE)
+  if (length(x$tip.label) > 2) return(TRUE)
   return(FALSE)
 }, subtrees)
 
