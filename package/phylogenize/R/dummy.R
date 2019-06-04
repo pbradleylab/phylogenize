@@ -73,7 +73,7 @@ make.sim <- function(n.taxa,
     random.prevalences <- logistic(logitprev.mtx)
     rownames(random.prevalences) <- rownames(com)
     for (nt in 1:n.taxa) {
-        prev.vec <- rbinom(n.samples, prob=random.prevalences[nt, ], size = 1)
+        prev.vec <- rbinom(n.samples, prob=random.prevalences[nt, , drop=FALSE], size = 1)
         com[nt, (prev.vec == 0)] <- 0
     }
     # need to renormalize after zeroing out
@@ -598,7 +598,7 @@ dummy.g2s <- function(g2s.matrices, n, fp=0.1, minN=2) {
         if (ntv < s) {
             s <- ntv
         }
-        m[, sample(top.var, s)]
+        m[, sample(top.var, s), drop=FALSE]
     })
     Filter(function(x) {
         if (is.null(x)) return(FALSE)
@@ -636,7 +636,7 @@ generate.test.pzdb <- function(nt=75, ng=50, fp=0.1, minN=2, ...) {
         if (methods::is(pz.db$gene.presence[[n]], "Matrix")) {
             dd <- intersect(d, colnames(pz.db$gene.presence[[n]]))
             if (length(dd) > 2) {
-                pz.db$gene.presence[[n]] <- pz.db$gene.presence[[n]][, dd]
+                pz.db$gene.presence[[n]] <- pz.db$gene.presence[[n]][, dd, drop=FALSE]
             }
         } else if (is.vector(pz.db$gene.presence[[n]])) {
             if (all(d %in% names(pz.db$gene.presence[[n]]))) {

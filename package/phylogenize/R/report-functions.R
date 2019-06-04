@@ -244,7 +244,7 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
     if (length(nz.cols) < 2) {
         pz.error("Too few columns with at least one non-zero entry")
     }
-    nz.rows <- which(Matrix::colSums(abd.mtx[, nz.cols]) > 0)
+    nz.rows <- which(Matrix::colSums(abd.mtx[, nz.cols, drop=FALSE]) > 0)
     if (length(nz.cols) < 2) {
         pz.error("Too few rows with at least one non-zero entry")
     }
@@ -320,7 +320,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "abundance matrix; check for illegal characters ",
                         "in sample ID column"))
     }
-    abd.meta$mtx <- abd.meta$mtx[, samples.present]
+    abd.meta$mtx <- abd.meta$mtx[, samples.present, drop=FALSE]
     abd.meta$metadata <- abd.meta$metadata[
                             abd.meta$metadata[[opts('sample_column')]] %in%
                             samples.present, ]
@@ -348,7 +348,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "dropping singletons and matching with abundance ",
                         "matrix (need at least 2)"))
     }
-    abd.meta$metadata <- abd.meta$metadata[wrows, ]
+    abd.meta$metadata <- abd.meta$metadata[wrows, , drop=FALSE]
     wcols <- intersect(colnames(abd.meta$mtx),
                        abd.meta$metadata[[opts('sample_column')]])
     if (length(wcols) < 2) {
@@ -356,7 +356,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "after dropping singletons and matching with metadata ",
                         "(need at least 2)"))
     }
-    abd.meta$mtx <- abd.meta$mtx[, wcols]
+    abd.meta$mtx <- abd.meta$mtx[, wcols, drop=FALSE]
     abd.meta$mtx <- remove.allzero.abundances(abd.meta$mtx)
     abd.meta
 }
@@ -471,8 +471,8 @@ get.burst.results <- function(...) {
     # map to MIDAS IDs using Burst
     assignments <- data.frame(
         data.table::fread(file.path(opts('in_dir'), opts('burst_outfile'))))
-    row.hits <- as.numeric(gsub("Row", "", assignments[,1]))
-    row.targets <- sapply(assignments[,2],
+    row.hits <- as.numeric(gsub("Row", "", assignments[, 1]))
+    row.targets <- sapply(assignments[, 2],
                           function(x) strsplit(x, " ")[[1]][3])
     return(list(hits=row.hits, targets=row.targets, assn=assignments))
 }
@@ -505,14 +505,14 @@ sum.nonunique.burst <- function(burst, mtx, ...) {
     uniq.hits <- which(count.each(burst$hits) < 2)
     rh <- burst$hits[uniq.hits]
     rt <- burst$targets[uniq.hits]
-    subset.abd <- mtx[rh, ]
+    subset.abd <- mtx[rh, , drop=FALSE]
     urt <- unique(rt)
     summed.uniq <- sapply(urt, function(r) {
         w <- which(rt == r)
         if (length(w) > 1) {
-            apply(subset.abd[w, ], 2, sum)
+            apply(subset.abd[w, , drop=FALSE], 2, sum)
         } else {
-            subset.abd[w, ]
+            subset.abd[w, , drop=FALSE]
         }
     }) %>% t
     rownames(summed.uniq) <- urt
@@ -548,7 +548,7 @@ process.16s <- function(abd.meta, ...) {
     burst <- get.burst.results(...)
     summed.uniq <- sum.nonunique.burst(burst, abd.meta$mtx, ...)
     csu <- colSums(summed.uniq)
-    abd.meta$mtx <- apply(summed.uniq[, which(csu > 0)],
+    abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],
                           2,
                           function(x) x / sum(x))
     abd.meta
@@ -623,8 +623,8 @@ import.pz.db <- function(...) {
     g.mappings <- lapply.across.names(colnames(fig.hierarchy)[1:3],
                                       function(x) {
         gene.to.subsys <- merge(data.frame(gene.to.fxn),
-                                fig.hierarchy[, c(x, "function")],
-                                by.x = "function.", by.y = "function")[, -1]
+                                fig.hierarchy[, c(x, "function"), drop=FALSE],
+                                by.x = "function.", by.y = "function")[, -1, drop=FALSE]
     })
     # finished
     return(list(gene.presence = gene.presence,
@@ -918,7 +918,9 @@ plot.pheno.distributions <- function(phenotype,
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     kept.species <- Reduce(c, lapply(pz.db$trees, function(x) x$tip.label))
     pheno.phylum <- pz.db$taxonomy[match(names(phenotype),
-                                         pz.db$taxonomy$cluster), "phylum"]
+                                         pz.db$taxonomy$cluster),
+                                   "phylum",
+                                   drop=TRUE]
     pheno.characteristics <- data.frame(pheno=phenotype,
                                         phylum=pheno.phylum,
                                         cluster=names(phenotype))
@@ -1069,7 +1071,7 @@ single.cluster.plot <- function(gene.presence,
                                 ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     sig.bin <- gene.presence[intersect(rownames(gene.presence),
-                                       sig.genes), ]
+                                       sig.genes), , drop=FALSE]
     if (is.null(dim(sig.bin))) {
         sig.bin <- as.matrix(sig.bin) %>% t
         rownames(sig.bin) <- sig.genes
@@ -1093,10 +1095,10 @@ single.cluster.plot <- function(gene.presence,
     }
     if (length(sig.genes) > 1) {
         clust <- hclust(dist(sig.bin, method = "binary"))
-        sig.ord <- sparseMelt(t(sig.bin)[, clust$order])
+        sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop=FALSE])
     } else {
         sig.ord <- reshape2::melt(t(sig.bin))
-        sig.ord <- sig.ord[order(sig.ord[, 3]), ]
+        sig.ord <- sig.ord[order(sig.ord[, 3]), , drop=FALSE]
     }
     tmp <- ggtree::facet_plot(p,
                               paste0('heatmap: ', phylum),

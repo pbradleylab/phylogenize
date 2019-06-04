@@ -50,7 +50,7 @@ result.wrapper.plm <- function(phyla,
                                           restrict.figfams)
         }
         if (drop.zero.var) {
-            fvar <- apply(proteins[[p]][, valid], 1, var)
+            fvar <- apply(proteins[[p]][, valid, drop=FALSE], 1, var)
             message(paste0(sprintf("%.01f",
                                    100 * mean(na.omit(fvar == 0))),
                            "% dropped [no variance]"))
@@ -108,7 +108,7 @@ nonparallel.results.generator <- function(gene.matrix,
     if (is.null(restrict.ff)) restrict.ff <- rownames(gene.matrix)
     if (remove.low.variance) {
         restrict.lv <- names(which(
-            apply(gene.matrix[restrict.ff, restrict.taxa],
+            apply(gene.matrix[restrict.ff, restrict.taxa, drop=FALSE],
                   1,
                   var) > 0))
         restrict.both <- intersect(restrict.ff, restrict.lv)
@@ -144,7 +144,7 @@ nonparallel.results.generator <- function(gene.matrix,
         close(progress)
         ans
     } else {
-        pbapply::pbapply(gene.matrix[restrict.ff, restrict.taxa],
+        pbapply::pbapply(gene.matrix[restrict.ff, restrict.taxa, drop=FALSE],
                          1,
                          function(m) {
                              method(m, pheno[restrict.taxa], restrict.tree,
@@ -346,7 +346,7 @@ matrix.plm <- function(tree,
     } else {
         cl <- NULL
     }
-    r <- maybeParApply(mtx[restrict.ff, restrict.taxa],
+    r <- maybeParApply(mtx[restrict.ff, restrict.taxa, drop=FALSE],
                        1,
                        method,
                        cl,
@@ -448,7 +448,7 @@ fit.beta.list <-  function(mtx, ids, fallback = c(NA, NA)) {
         tryCatch(
             MASS::fitdistr(densfun = "beta",
                      start = list(shape1 = 1, shape2 = 1),
-                     apply(mtx[, which(ids == i)], 1, function(x) {
+                     apply(mtx[, which(ids == i), drop=FALSE], 1, function(x) {
                          mean(c(x, 0, 1) > 0)
                      }))$estimate,
             error = function(e) fallback)
@@ -542,7 +542,7 @@ score.regularization <- function(mtx,
                        b = b,
                        add.pc = add.pc)
     })
-    posteriors <- regularized[2, ]
+    posteriors <- regularized[2, , drop=TRUE]
     signif <- 1 * (abs(posteriors - prior) > tol)
     predicted.signs <- signif * sign(posteriors - prior)
     fpr <- (signif[real.fx == 0] %>% mean)
@@ -670,7 +670,7 @@ prev.addw <- function(abd.meta,
         stop(paste0("environment ", envir, " not found in metadata"))
     }
     env.rows <- (abd.meta$metadata[[E]] == envir)
-    dsets <- unique(abd.meta$metadata[env.rows, D])
+    dsets <- unique(abd.meta$metadata[env.rows, D, drop=TRUE])
     if (length(dsets) > 1) {
         means.by.study <- lapply(dsets, function(d) {
             s <- intersect(
@@ -678,7 +678,7 @@ prev.addw <- function(abd.meta,
                 abd.meta$metadata[[S]][(env.rows &
                                         (abd.meta$metadata[[D]] == d))] %>%
                 as.character)
-            rm <- rowMeans(1 * (abd.meta$mtx[, s] > 0))
+            rm <- rowMeans(1 * (abd.meta$mtx[, s, drop=FALSE] > 0))
             list(rm = rm, s = s)
         })
         means.only <- sapply(means.by.study, function(x) x$rm)
@@ -689,7 +689,7 @@ prev.addw <- function(abd.meta,
         s <- intersect(colnames(abd.meta$mtx),
                        abd.meta$metadata[[S]][env.rows] %>% as.character)
         total.s <- length(s)
-        rs <- rowSums(1 * (abd.meta$mtx[, s] > 0))
+        rs <- rowSums(1 * (abd.meta$mtx[, s, drop=FALSE] > 0))
         addw <- (1 + rs) / (2 + total.s)
     }
     return(logit(addw))
@@ -729,7 +729,7 @@ calc.ess <- function(abd.meta,
         stop(paste0("environment ", envir, " not found in metadata"))
     }
     env.rows <- (abd.meta$metadata[[E]] == envir)
-    dsets <- unique(abd.meta$metadata[env.rows, D])
+    dsets <- unique(abd.meta$metadata[env.rows, D, drop=TRUE])
     if (length(dsets) > 1) {
         warning("datasets are ignored when calculating specificity")
     }
@@ -745,7 +745,7 @@ calc.ess <- function(abd.meta,
     } else if (ptype == "alpha") {
         stop("not implemented yet, sorry")
     } else if (ptype == "file") {
-        priors <- pdata[pdata$env %in% envirs, ]
+        priors <- pdata[pdata$env %in% envirs, , drop=FALSE]
     } else {
         stop(paste0("don't know how to compute priors of type ", ptype))
     }
@@ -781,13 +781,13 @@ calc.ess <- function(abd.meta,
                        prior = this.prior,
                        add.pc = TRUE)
     })
-    logist.pheno <- regularized[2, ]
+    logist.pheno <- regularized[2, , drop=TRUE]
                                         # "hard-shrink" anything shrunk almost to the prior to prevent these tiny
                                         # differences from affecting the result in the absence of a strong change
     logist.pheno[which(logist.pheno %btwn%
                        c(this.prior - tolerance,
                          this.prior + tolerance))] <- this.prior
-    phenoP <- logit(c(priors[priors$env == envir, "prior"]))
+    phenoP <- logit(c(priors[priors$env == envir, "prior", drop=TRUE]))
     return(list(
         b.optim=b.optim,
         ess=logit(logist.pheno),

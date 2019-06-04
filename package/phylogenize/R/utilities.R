@@ -145,8 +145,8 @@ fastread <- function(location, cn = TRUE) {
     # rownames are useful
     master <- data.frame(data.table::fread(location, header = T),
                          check.names = cn)
-    rn <- master[,1]
-    rest <- master[,-1]
+    rn <- master[, 1, drop=TRUE]
+    rest <- master[, -1, drop=FALSE]
     rownames(rest) <- rn
     return(data.matrix(rest))
 }
@@ -207,7 +207,7 @@ pbmcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
 #' @return A character vector of gene functions, with names equal to \code{x}.
 #' @export
 gene.annot <- function(x, gene.to.fxn) {
-    gf <- data.frame(gene.to.fxn[match(x, gene.to.fxn$gene), ])
+    gf <- data.frame(gene.to.fxn[match(x, gene.to.fxn$gene), , drop=FALSE])
     gf$"function" %withnames% gf$"gene"
 }
 
@@ -495,7 +495,7 @@ hack.tree.labels <- function(tree.obj,
         xml2::xml_attrs(x)["y"]
     })
     xml.label.pair <- cbind(label = xml.text.contents,
-                            y = xml.label.heights)[xml.label.indices, ]
+                            y = xml.label.heights)[xml.label.indices, , drop=FALSE]
     ordered.labels <- xml.label.pair[order(xml.label.pair[, "y"] %>% as.numeric),
                                      "label"]
     xml.lines <- xml2::xml_find_all(xml, "//*[local-name()='line']")

@@ -32,23 +32,23 @@ nonequiv.pos.sig <- function(results,
                              exclude=NULL) {
     if (is.null(exclude)) exclude <- lapply(results, function(.) NULL)
     mapply(function(r, ex) {
-        valid <- colnames(r)[which(!is.na(r[1, ]))]
+        valid <- colnames(r)[which(!is.na(r[1, , drop=TRUE]))]
         if (!is.null(ex)) {
             valid <- setdiff(valid, ex)
         }
         tryCatch({
-            tested <- na.omit(r[2, valid])
+            tested <- na.omit(r[2, valid, drop=TRUE])
             qv <- method(tested)
             fx_sig <- nw(qv <= qcut_sig)
             if (min_fx > 0) {
-              neq <- apply(r[, valid], 2,
+              neq <- apply(r[, valid, drop=TRUE], 2,
                           function(x) equiv_test(x[1], x[3], x[4], min_fx))
               neq_qv <- method(neq)
               neq_sig <- nw(neq_qv > qcut_eq)
             } else {
               neq_sig <- valid
             }
-            which_pos <- nw(r[1, valid] > 0)
+            which_pos <- nw(r[1, valid, drop=TRUE] > 0)
             Reduce(intersect, list(fx_sig,
                                    neq_sig,
                                    which_pos))
@@ -97,8 +97,8 @@ make.sigs <- function(results,
                 valid <- setdiff(colnames(results[[x]]),
                                  exclude[[x]])
             } else { valid <- colnames(results[[x]]) }
-            tested <- na.omit(results[[x]][2, valid])
-            above.min <- nw(abs(results[[x]][1, valid]) >= min.fx)
+            tested <- na.omit(results[[x]][2, valid, drop=TRUE])
+            above.min <- nw(abs(results[[x]][1, valid, drop=TRUE]) >= min.fx)
             tryCatch(intersect(nw(method(tested) <= cut), above.min),
                      error = function(e) character(0))
         })
@@ -113,7 +113,7 @@ make.sigs <- function(results,
 #' @export
 make.signs <- function(results) {
   lapply(results, function(r) {
-    sign(r[1, ]) %>% na.omit
+    sign(r[1, , drop=TRUE]) %>% na.omit
   })
 }
 
@@ -192,6 +192,6 @@ get.top.N <- function(p,
         gn <- names(which(genomes.per.protein[[p]] >= total.n.cutoff))
         sig.up <- intersect(sig.up, gn)
     }
-    sig.pv <- results[[p]][2, sig.up]
+    sig.pv <- results[[p]][2, sig.up, drop=TRUE]
     setdiff(names(sort(sig.pv, dec = F)), exclude)[1:N]
 }
