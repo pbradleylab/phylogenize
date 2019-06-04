@@ -434,16 +434,24 @@ kable.recolor <- function(x,
 }
 
 #' Capitalize the first letter of a word/vector of words.
-#'
 #' @param s Word or vector of words.
-#' @param strict If TRUE, also force non-initial letters to be lowercase.
-#' @export
-capwords <- function(s, strict = FALSE) {
-    cap <- function(s) paste(toupper(substring(s, 1, 1)),
-    {s <- substring(s, 2); if(strict) tolower(s) else s},
-    sep = "", collapse = " " )
-    sapply(strsplit(s, split = " "), cap, USE.NAMES = !is.null(names(s)))
+capwords <- function(words, USE.NAMES=FALSE) {
+    cap1 <- function(w) {
+        first <- substr(w, 1, 1)
+        if (nchar(w) > 1) {
+            rest <- substr(w, 2, nchar(w))
+        } else {
+            rest <- ''
+        }
+        paste0(toupper(first), rest)
+    }
+    if (length(words) >= 1) {
+        return(vapply(words, cap1, '', USE.NAMES))
+    } else {
+        return(words)
+    }
 }
+
 ###
 
 # Super gross XML hack follows to make SVGs of trees interactive

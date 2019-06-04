@@ -898,21 +898,17 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
            pos.sig[phy.with.sigs],
            pz.db$gene.presence[phy.with.sigs],
            FUN = function(tr, x, y) {
-               i <- intersect(tr$tip.label, colnames(y))
+               i <- na.omit(intersect(tr$tip.label, colnames(y)))
                if (length(i) == 0) { return(character(0)) }
-               y2 <- y[x, i]
-               if (length(i) > 1) {
-                   r1 <- rowSums(y2)
-                   r2 <- rowSums(1 - y2)
-               } else {
-                   r1 <- sum(y2)
-                   r2 <- sum(1 - y2)
-               }
+               if (length(x) == 0) { return(character(0)) }
+               y2 <- y[x, i, drop=FALSE]
+               r1 <- rowSums(y2)
+               r2 <- rowSums(1 - y2)
                names(which((r2 >= Min) & (r1 >= Min)))
            })
 }
 
-#' Add gene descriptions to significant results; return in a data frame.
+#' Add gene descriptions to significant results; return in a tibble.
 #'
 #' @param phy.with.sigs Character vector giving the phyla with significant hits.
 #' @param pos.sig List of character vectors, one per phylum, of significant hits.
@@ -920,13 +916,9 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 #' @return A single data frame of all significant results plus descriptions.
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
-    pos.sig.descs <- Reduce(rbind, lapply(phy.with.sigs, function(n) {
-        if (length(pos.sig[[n]]) > 0) {
-            cbind(phylum=n,
-                  gene=pos.sig[[n]],
-                  description=gene.annot(pos.sig[[n]], gene.to.fxn))
-        } else {
-            c(phylum=n, gene=NA, description=NA)
-        }
-    }))
+    pos.sig.tbl <- enframe(pos.sig, name="phylum", value="gene") %>% unnest
+    pos.sig.descs <- left_join(pos.sig.tbl,
+                               gene.to.fxn,
+                               by="gene") %>%
+        rename(description=`function`)
 }
