@@ -4,12 +4,10 @@
 \alias{capwords}
 \title{Capitalize the first letter of a word/vector of words.}
 \usage{
-capwords(s, strict = FALSE)
+capwords(words, USE.NAMES = FALSE)
 }
 \arguments{
 \item{s}{Word or vector of words.}
-
-\item{strict}{If TRUE, also force non-initial letters to be lowercase.}
 }
 \description{
 Capitalize the first letter of a word/vector of words.

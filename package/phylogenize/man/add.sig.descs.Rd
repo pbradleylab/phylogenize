@@ -2,7 +2,7 @@
 % Please edit documentation in R/plm-functions.R
 \name{add.sig.descs}
 \alias{add.sig.descs}
-\title{Add gene descriptions to significant results; return in a data frame.}
+\title{Add gene descriptions to significant results; return in a tibble.}
 \usage{
 add.sig.descs(phy.with.sigs, pos.sig, gene.to.fxn)
 }
@@ -17,5 +17,5 @@ add.sig.descs(phy.with.sigs, pos.sig, gene.to.fxn)
 A single data frame of all significant results plus descriptions.
 }
 \description{
-Add gene descriptions to significant results; return in a data frame.
+Add gene descriptions to significant results; return in a tibble.
 }

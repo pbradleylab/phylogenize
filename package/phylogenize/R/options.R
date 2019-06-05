@@ -126,7 +126,7 @@ PZ_OPTIONS <- options_manager(
 #'
 #' @export
 pz.options <- function(...) {
-    stop_if_reserved(...)
+    settings::stop_if_reserved(...)
     PZ_OPTIONS(...)
 }
 

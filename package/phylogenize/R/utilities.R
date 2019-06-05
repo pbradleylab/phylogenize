@@ -446,7 +446,7 @@ capwords <- function(words, USE.NAMES=FALSE) {
         paste0(toupper(first), rest)
     }
     if (length(words) >= 1) {
-        return(vapply(words, cap1, '', USE.NAMES))
+        return(vapply(words, cap1, '', USE.NAMES=USE.NAMES))
     } else {
         return(words)
     }
