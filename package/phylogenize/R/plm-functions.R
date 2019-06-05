@@ -905,7 +905,8 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
                r1 <- rowSums(y2)
                r2 <- rowSums(1 - y2)
                names(which((r2 >= Min) & (r1 >= Min)))
-           })
+           },
+           SIMPLIFY=FALSE)
 }
 
 #' Add gene descriptions to significant results; return in a tibble.

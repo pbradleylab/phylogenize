@@ -1093,11 +1093,12 @@ single.cluster.plot <- function(gene.presence,
                               high=plotted.tree$cols["high.col"],
                               midpoint=mean(plotted.tree$lims))
     }
+    if (length(sig.genes) == 0) { return(p) }
     if (length(sig.genes) > 1) {
         clust <- hclust(dist(sig.bin, method = "binary"))
         sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop=FALSE])
     } else {
-        sig.ord <- reshape2::melt(t(sig.bin))
+        sig.ord <- sparseMelt(t(sig.bin))
         sig.ord <- sig.ord[order(sig.ord[, 3]), , drop=FALSE]
     }
     tmp <- ggtree::facet_plot(p,
@@ -1210,4 +1211,22 @@ install.data.figshare <- function(data_path=NULL,
         curl::curl_download(figshare_url, data_path)
     }
     untar(data_path, exdir = system.file("", package="phylogenize"))
+}
+
+
+#' Return a boolean telling whether a phenotype has nonzero variance in different phyla.
+#'
+#' @param phenotype A quantitative phenotype.
+#' @param taxa From `pz.db$taxa`.
+#' @return A boolean vector with length equal to `length(taxa)`.
+#' @export
+pheno_nonzero_var <- function(phenotype,
+                           taxa) {
+    vapply(taxa,
+           function(tx) {
+               p <- phenotype[intersect(names(phenotype),
+                                        tx)]
+               return((var(p) > 0))
+           },
+           TRUE)
 }

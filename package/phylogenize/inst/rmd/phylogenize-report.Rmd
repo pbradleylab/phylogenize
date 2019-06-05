@@ -246,7 +246,7 @@ check.pryr()
 # Associations between genes and taxa
 
 This table gives an overview of how many genes were significantly associated at
-an FDR of 5%. 
+an FDR of 5%.
 
 ```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=TRUE}
 
@@ -256,19 +256,21 @@ if (pz.options('linearize')) { # mostly for testing
   p.method <- phylolm.fx.pv
 }
 
+taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$taxa)))
+
 if (pz.options('ncl') > 1) {
-    results <- result.wrapper.plm(phyla=names(pz.db$taxa),
+    results <- result.wrapper.plm(phyla=taxaN,
                                   pheno=phenotype,
-                                  tree=pz.db$trees,
-                                  clusters=pz.db$taxa,
-                                  proteins=pz.db$gene.presence,
+                                  tree=pz.db$trees[taxaN],
+                                  clusters=pz.db$taxa[taxaN],
+                                  proteins=pz.db$gene.presence[taxaN],
                                   method=p.method)
 } else {
     results <- mapply(nonparallel.results.generator,
-                      pz.db$gene.presence[names(pz.db$taxa)],
-                      pz.db$trees[names(pz.db$taxa)],
-                      pz.db$taxa,
-                      as.list(names(pz.db$taxa)),
+                      pz.db$gene.presence[taxaN],
+                      pz.db$trees[taxaN],
+                      pz.db$taxa[taxaN],
+                      as.list(taxaN),
                       MoreArgs=list(pheno=phenotype,
                                     method=p.method,
                                     use.for.loop=FALSE),
