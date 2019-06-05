@@ -25,7 +25,10 @@ You will also need a copy of the BURST binaries from [their Github](github.com/k
 
 Finally, you will need to download and install the data files that *phylogenize* needs to run. That has been automated so that all you should need to do is run the following function:
 
-`phylogenize::install.data.figshare()`
+```
+library(phylogenize)
+phylogenize::install.data.figshare()
+```
 
 You may use this package by itself, using the web interface, or using the [QIIME2 interface](https://bitbucket.org/pbradz/q2-phylogenize).
 
