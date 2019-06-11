@@ -509,11 +509,7 @@ sum.nonunique.burst <- function(burst, mtx, ...) {
     urt <- unique(rt)
     summed.uniq <- sapply(urt, function(r) {
         w <- which(rt == r)
-        if (length(w) > 1) {
-            apply(subset.abd[w, , drop=FALSE], 2, sum)
-        } else {
-            subset.abd[w, , drop=FALSE]
-        }
+        apply(subset.abd[w, , drop=FALSE], 2, sum)
     }) %>% t
     rownames(summed.uniq) <- urt
     summed.uniq
@@ -1221,7 +1217,7 @@ install.data.figshare <- function(data_path=NULL,
 #' @return A boolean vector with length equal to `length(taxa)`.
 #' @export
 pheno_nonzero_var <- function(phenotype,
-                           taxa) {
+                              taxa) {
     vapply(taxa,
            function(tx) {
                p <- phenotype[intersect(names(phenotype),
