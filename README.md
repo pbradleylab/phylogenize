@@ -86,7 +86,7 @@ render.report(
 
 This invocation will generate a report under "./hmp/16S-results" called "16S-results.html".
 
-Note that for now it is necessary to call `phylogenize::set.data.internal()` if you don't explicitly load the package with `library(phylogenize)`; that function is automatically triggered when the package is loaded with `library()`. If you get an error `ERROR: invalid input file.` after BURST is invoked, this is probably the reason why.
+Note that for now it is necessary to call `phylogenize::set_data_internal()` if you don't explicitly load the package with `library(phylogenize)`; that function is automatically triggered when the package is loaded with `library()`. If you get an error `ERROR: invalid input file.` after BURST is invoked, this is probably the reason why.
 
 ### Running *phylogenize* locally with QIIME2
 
