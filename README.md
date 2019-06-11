@@ -68,7 +68,8 @@ Compared to some R packages, passing options to *phylogenize* works a little dif
 Here is an example invocation of `render.report`: 
 
 ~~~~
-phylogenize::render.report(
+library(phylogenize)
+render.report(
     output_file="16S-results.html",
     in_dir=hmp_dir,
     out_dir=file.path("hmp", "16S-results"),
@@ -84,6 +85,8 @@ phylogenize::render.report(
 ~~~~
 
 This invocation will generate a report under "./hmp/16S-results" called "16S-results.html".
+
+Note that for now it is necessary to call `phylogenize::set_data_internal()` if you don't explicitly load the package with `library(phylogenize)`; that function is automatically triggered when the package is loaded with `library()`. If you get an error `ERROR: invalid input file.` after BURST is invoked, this is probably the reason why.
 
 ### Running *phylogenize* locally with QIIME2
 
