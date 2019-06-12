@@ -23,6 +23,8 @@ devtools::install_github("GuangchuangYu/treeio")
 
 You will also need a copy of the BURST binaries from [their Github](github.com/knights-lab/BURST). BURST is a high-speed pairwise aligner that *phylogenize* uses to map 16S amplicon sequence variants back to a database of genomes. By default *phylogenize* expects these binaries to be in `/usr/local/bin`, but you can override this (see below).
 
+**Note for Mac**: *phylogenize* should work with an [earlier version of BURST](https://github.com/knights-lab/BURST/releases/tag/v0.99.4a) as long as the binary is renamed `burst12` and copied to `/usr/local/bin` or your preferred path (again, see below for how to override this).
+
 Finally, you will need to download and install the data files that *phylogenize* needs to run. That has been automated so that all you should need to do is run the following function:
 
 ```

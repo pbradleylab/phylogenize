@@ -134,27 +134,32 @@ pz.options <- function(...) {
 #'
 #' @param fail Boolean. If TRUE, set_data_internal will not attempt to download
 #'     and install data from Figshare if it is missing.
+#' @param startup Boolean. Is this function being called by .onLoad?
 #' @export
-set_data_internal <- function(fail=FALSE) {
+set_data_internal <- function(fail=FALSE, startup=FALSE) {
+    if (startup) {
+        M <- packageStartupMessage
+    } else {
+        M <- message
+    }
     dd <- system.file("extdata", package="phylogenize")
     if (dd == "") {
         if (!fail) {
-            pz.message("Installing data from Figshare...")
+            M("Installing data from Figshare...")
             tryCatch(install.data.figshare(), error = function(e) {
-                pz.warning(paste("Installing from Figshare failed: ", e))
+                warning(paste("Installing from Figshare failed: ", e))
             })
         }
-        pz.warning(paste("Data not found; *phylogenize* will not run properly.",
-                         "Please try phylogenize::install.data.figshare()",
-                         "later or install the data manually into",
-                         file.path(system.file("", package="phylogenize"),
-                                   "extdata"),
-                         "."))
+        warning(paste("Data not found; *phylogenize* will not run properly.",
+                      "Please try phylogenize::install.data.figshare()",
+                      "later or install the data manually into",
+                      file.path(system.file("", package="phylogenize"),
+                                "extdata"),
+                      "."))
     }
     pz.options(data_dir=dd)
 }
 
 .onLoad <- function(libname, pkgname) {
-    dd <- system.file("extdata", package="phylogenize")
-    set_data_internal()
+    set_data_internal(startup=TRUE)
 }
