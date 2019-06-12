@@ -64,7 +64,7 @@ PZ_OPTIONS <- options_manager(
 #' \describe{
 #'   \item{out_dir}{String. Path to output directory. Default: "output"}
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files). Default: "."}
-#'   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
+#'   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: "./data", but on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
 #'   \item{working_dir}{String. Path to directory where relative paths should originate from. Default: \code{"."}}
 #'   \item{abundance_file}{String. Name of abundance tabular file. Default: "test-abundance.tab"}
 #'   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
@@ -132,11 +132,29 @@ pz.options <- function(...) {
 
 #' Set data directory to internal
 #'
+#' @param fail Boolean. If TRUE, set_data_internal will not attempt to download
+#'     and install data from Figshare if it is missing.
 #' @export
-set_data_internal <- function() {
-    pz.options(data_dir=system.file("extdata", package="phylogenize"))
+set_data_internal <- function(fail=FALSE) {
+    dd <- system.file("extdata", package="phylogenize")
+    if (dd == "") {
+        if (!fail) {
+            pz.message("Installing data from Figshare...")
+            tryCatch(install.data.figshare(), error = function(e) {
+                pz.warning(paste("Installing from Figshare failed: ", e))
+            })
+        }
+        pz.warning(paste("Data not found; *phylogenize* will not run properly.",
+                         "Please try phylogenize::install.data.figshare()",
+                         "later or install the data manually into",
+                         file.path(system.file("", package="phylogenize"),
+                                   "extdata"),
+                         "."))
+    }
+    pz.options(data_dir=dd)
 }
 
 .onLoad <- function(libname, pkgname) {
+    dd <- system.file("extdata", package="phylogenize")
     set_data_internal()
 }

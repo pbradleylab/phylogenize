@@ -4,7 +4,11 @@
 \alias{set_data_internal}
 \title{Set data directory to internal}
 \usage{
-set_data_internal()
+set_data_internal(fail = FALSE)
+}
+\arguments{
+\item{fail}{Boolean. If TRUE, set_data_internal will not attempt to download
+and install data from Figshare if it is missing.}
 }
 \description{
 Set data directory to internal
