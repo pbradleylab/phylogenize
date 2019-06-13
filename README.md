@@ -202,8 +202,8 @@ The application should then be accessible from http://localhost:5000.
  * Testing, troubleshooting, and debugging AWS/Mac installation: [Chunyu Zhao](https://github.com/zhaoc1)
  * More testing: [Jordan Bisanz](https://github.com/jbisanz) and other members of the [Turnbaugh lab](https://turnbaughlab.ucsf.edu/)
  * Funding: 
-     - National Science Foundation [DMS-1069303, DMS-1563159]
-     - Gordon & Betty Moore Foundation [#3300]
+     - National Science Foundation (DMS-106[]9303, DMS-156[]3159)
+     - Gordon & Betty Moore Foundation (#3300)
    
 ## Contact
 
