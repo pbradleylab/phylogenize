@@ -4,7 +4,7 @@
 
 *phylogenize* is a tool that allows users to link microbial genes to environments, accounting for phylogeny. More specifically, given community composition data, *phylogenize* links genes in microbial genomes to either microbial prevalence in, or specificity for, a given environment, while also taking into account an important potential confounder: the phylogenetic relationships between microbes. *phylogenize* comes with [web](https://www.phylogenize.org), QIIME2, and R interfaces.
 
-The method is described fully in [Bradley, Nayfach, and Pollard (2018)(http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006242).
+The method is described fully in [Bradley, Nayfach, and Pollard (2018)](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006242).
 
 ## Installing the *phylogenize* package and its dependencies
 
@@ -123,7 +123,9 @@ devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
 phylogenize::install.data.figshare()
 ```
 
-## Running *phylogenize* using the R interface
+## Running *phylogenize*
+
+### Running *phylogenize* using the R interface
 
 The main function in *phylogenize* is `render.report`. The parameters that you are the most likely to use are as follows:
 
@@ -172,7 +174,7 @@ This invocation will generate a report under "./hmp/16S-results" called "16S-res
 Note that for now it is necessary to call `phylogenize::set_data_internal()` if you don't explicitly load the package with `library(phylogenize)`; that function is automatically triggered when the package is loaded with `library()`. If you get an error `ERROR: invalid input file.` after BURST is invoked, this is probably the reason why.
 
 
-## Running *phylogenize* locally with the web interface
+### Running *phylogenize* locally with the web interface
 
 *phylogenize* also can be used with its own graphical user interface and job manager, which can be accessed with a web browser. We provide an installation of *phylogenize* at [https://www.phylogenize.org], but you can also run this interface locally. (The next part of the guide assumes a \*-nix environment like Ubuntu or OS X, but you may also be able to run this on Windows using the Windows Subsystem for Linux or Cygwin.)
 
@@ -202,4 +204,8 @@ The application should then be accessible from http://localhost:5000.
  * Funding: 
    * National Science Foundation [DMS-1069303, DMS-1563159]
    * Gordon & Betty Moore Foundation [#3300]
+   
+## Contact
+
+If you have questions or comments, please contact [support@phylogenize.org]. If *phylogenize* is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!
  
