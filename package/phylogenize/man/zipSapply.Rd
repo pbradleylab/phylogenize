@@ -2,7 +2,8 @@
 % Please edit documentation in R/utilities.R
 \name{zipSapply}
 \alias{zipSapply}
-\title{A wrapper for lapply that allows access to list element names, with simplification at the end to an array.}
+\title{A wrapper for lapply that allows access to list element names, with
+simplification at the end to an array.}
 \usage{
 zipSapply(iterover, fxn, ...)
 }
@@ -14,5 +15,7 @@ zipSapply(iterover, fxn, ...)
 and the original list element is accessible as \code{x$data}.}
 }
 \description{
-A wrapper for lapply that allows access to list element names, with simplification at the end to an array.
+A wrapper for lapply that allows access to list element names, with
+simplification at the end to an array.
 }
+\keyword{internal}

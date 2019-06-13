@@ -14,3 +14,4 @@ x \%withnames\% y
 \description{
 Assign names to a vector.
 }
+\keyword{internal}

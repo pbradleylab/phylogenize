@@ -17,3 +17,4 @@ Count matrix.
 \description{
 Simulate microbe counts given multinomial probabilities and number of reads.
 }
+\keyword{internal}

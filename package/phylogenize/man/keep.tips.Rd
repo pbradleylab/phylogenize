@@ -9,7 +9,8 @@ keep.tips(tree, keep)
 \arguments{
 \item{tree}{A \code{phylo} object.}
 
-\item{keep}{A character vector of tip labels. Any tip not in this vector will be dropped.}
+\item{keep}{A character vector of tip labels. Any tip not in this vector will
+be dropped.}
 }
 \description{
 \code{keep.tips} keeps only the set of specified tips in a tree.

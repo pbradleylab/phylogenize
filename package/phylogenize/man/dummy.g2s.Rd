@@ -23,3 +23,4 @@ number of original genes or the number above the percentile cutoff is lower
 than the desired \code{n}. Matrices with 1 or fewer genes after sampling will
 be dropped.
 }
+\keyword{internal}

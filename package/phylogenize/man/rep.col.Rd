@@ -18,3 +18,4 @@ A matrix consisting of \code{nc} repeats of the column-vector
 \description{
 Convenience function to repeat a vector as columns.
 }
+\keyword{internal}

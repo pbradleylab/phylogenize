@@ -2,7 +2,8 @@
 % Please edit documentation in R/dummy.R
 \name{make.simulated.denoised.data}
 \alias{make.simulated.denoised.data}
-\title{Wrapper function to simulate data "denoised" by an algorithm like DADA2 or Deblur.}
+\title{Wrapper function to simulate data "denoised" by an algorithm like DADA2 or
+Deblur.}
 \usage{
 make.simulated.denoised.data(mtx, tag.length = 100, ...)
 }
@@ -23,3 +24,4 @@ A list:
 \description{
 Extra arguments get passed to \code{random.species.from.file}.
 }
+\keyword{internal}

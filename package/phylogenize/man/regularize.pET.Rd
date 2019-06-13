@@ -35,3 +35,4 @@ A list. \code{x}: regularized specificity estimate; \code{p}:
 \description{
 Obtain a regularized estimate of specificity.
 }
+\keyword{internal}

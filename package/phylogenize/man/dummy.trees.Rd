@@ -14,3 +14,4 @@ dummy.trees(trees, n = 50)
 \description{
 Downsample trees.
 }
+\keyword{internal}

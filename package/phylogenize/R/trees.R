@@ -1,11 +1,15 @@
 #' Fudge trees with unresolved polytomies.
 #'
-#' \code{fix.tree} converts polytomies to dichotomies with very small branch lengths.
+#' \code{fix.tree} converts polytomies to dichotomies with very small branch
+#' lengths.
 #'
-#' @param len Zero-length branches will be replaced with this fraction of the maximum node height.
+#' @param len Zero-length branches will be replaced with this fraction of the
+#'     maximum node height.
+#' @keywords internal
 fix.tree <- function(phy, len=1e-6) {
   phy <- ape::multi2di(phy)
-  # from Liam Reveil's blog June 23 2015
+  ## from Liam Revell's blog, June 23 2015:
+  ## http://blog.phytools.org/2015/06/update-to-rerootingmethod-for-ancestral.html
   phy$edge.length[phy$edge.length==0] <- max(phytools::nodeHeights(phy)) * len
   phy
 }
@@ -15,7 +19,8 @@ fix.tree <- function(phy, len=1e-6) {
 #' \code{keep.tips} keeps only the set of specified tips in a tree.
 #'
 #' @param tree A \code{phylo} object.
-#' @param keep A character vector of tip labels. Any tip not in this vector will be dropped.
+#' @param keep A character vector of tip labels. Any tip not in this vector will
+#'     be dropped.
 #' @export keep.tips
 keep.tips <- function(tree, keep) {
   ape::drop.tip(tree, setdiff(tree$tip.label, keep))
@@ -27,14 +32,17 @@ keep.tips <- function(tree, keep) {
 #'
 #' @param phy A \code{phylo} object.
 #' @return A vector of root-to-tip distances.
+#' @keywords internal
 tipToRoot <- function(phy) phy %>% ape::vcv.phylo %>% diag
 
 #' Get tip-to-tip distances.
 #'
-#' \code{tree.to.dist} returns all tip-to-tip distances in distance matrix format.
+#' \code{tree.to.dist} returns all tip-to-tip distances in distance matrix
+#' format.
 #'
 #' @param tree A \code{phylo} object.
 #' @return A \code{dist} object representing tip-to-tip distances.
+#' @keywords internal
 tree.to.dist <- function(tree) {
   ((1 - (ape::vcv(tree, TRUE))) / 2) %>% as.dist
 }
@@ -137,7 +145,7 @@ gg.cont.tree <- function(phy,
 #'     unobserved clade containing at least 10% of the total number of tips in
 #'     the tree will be dropped.
 #' @return A new, trimmed phylo object.
-#' @export
+#' @keywords internal
 rem_unobs_clades <- function(phy, observed, pct=0.1) {
     ntips <- length(phy$tip.label)
     nodes <- (1:(phy$Nnode)) + ntips

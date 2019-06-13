@@ -22,3 +22,4 @@ A new, trimmed phylo object.
 \description{
 Remove clades above a certain size with no observed tips.
 }
+\keyword{internal}

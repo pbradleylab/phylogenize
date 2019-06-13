@@ -21,3 +21,4 @@ error in estimating q-values, will automatically fall back to a
 Benjamini-Hochberg-style correction (by setting lambda to zero), finally
 returning a vector of NAs if this still does not work.
 }
+\keyword{internal}

@@ -24,3 +24,4 @@ A list:
 \description{
 Wrapper function for generating an effect size matrix automatically.
 }
+\keyword{internal}

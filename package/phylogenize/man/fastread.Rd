@@ -18,3 +18,4 @@ A data matrix with rownames equal to the first column of the input
 \description{
 Wrapper around fastread that preserves row names.
 }
+\keyword{internal}

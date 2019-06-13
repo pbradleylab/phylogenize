@@ -21,3 +21,4 @@ A list of the results of applying \code{FUN} to \code{X}, with
 Apply a function to a vector of names, with the returned list having those
 names.
 }
+\keyword{internal}

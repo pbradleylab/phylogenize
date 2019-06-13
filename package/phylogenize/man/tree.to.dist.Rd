@@ -13,5 +13,7 @@ tree.to.dist(tree)
 A \code{dist} object representing tip-to-tip distances.
 }
 \description{
-\code{tree.to.dist} returns all tip-to-tip distances in distance matrix format.
+\code{tree.to.dist} returns all tip-to-tip distances in distance matrix
+format.
 }
+\keyword{internal}

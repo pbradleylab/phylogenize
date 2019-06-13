@@ -21,3 +21,4 @@ A p-value; reject non-equivalence if below alpha.
 \description{
 Equivalence test based on two one-sided tests.
 }
+\keyword{internal}

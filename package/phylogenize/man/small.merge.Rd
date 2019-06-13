@@ -17,3 +17,4 @@ A merged matrix with row names.
 \description{
 Merge two vectors/matrices by (row) names, returning a matrix with row names.
 }
+\keyword{internal}

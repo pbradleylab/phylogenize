@@ -21,3 +21,4 @@ Some particularly relevant global options are:
   \item{dset_column}{Name of metadata column containing dataset annotations.}
 }
 }
+\keyword{internal}

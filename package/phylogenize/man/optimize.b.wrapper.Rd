@@ -49,3 +49,4 @@ The output of \code{stats::optimize}.
 Based on a real presence/absence matrix, optimize the value of the
 regularization parameter $b$.
 }
+\keyword{internal}

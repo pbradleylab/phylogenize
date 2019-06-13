@@ -15,3 +15,4 @@ A vector of root-to-tip distances.
 \description{
 \code{tipToRoot} returns all tip-to-root distances.
 }
+\keyword{internal}

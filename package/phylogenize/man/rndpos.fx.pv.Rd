@@ -37,3 +37,4 @@ Length-2 numeric vector with names \code{"Estimate"} and
 Wrapper to return random effect sizes and p-values with a bias; useful for
 testing.
 }
+\keyword{internal}

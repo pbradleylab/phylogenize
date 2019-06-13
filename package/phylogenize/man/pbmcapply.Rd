@@ -21,3 +21,4 @@ pbmcapply(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...)
 \description{
 Apply a function over a margin of a matrix in parallel (with progress bar).
 }
+\keyword{internal}

@@ -25,3 +25,4 @@ A list:
 \description{
 Function for picking taxa to simulate.
 }
+\keyword{internal}

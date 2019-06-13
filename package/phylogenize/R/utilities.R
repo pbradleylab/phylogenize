@@ -6,46 +6,46 @@
 #'
 #' @param x Value(s) to test (numeric vector).
 #' @param y Numeric vector of length 2, giving minimum and maximum values of \code{x}.
-#' @export
+#' @keywords internal
 `%btwn%` <- function(x, y) { (x > min(y)) & (x < max(y)) }
 
 #' Test whether a value is between two other values (inclusive).
 #'
 #' @param x Value(s) to test (numeric vector).
 #' @param y Numeric vector of length 2, giving minimum and maximum values of \code{x}.
-#' @export
+#' @keywords internal
 `%btwn.inc%` <- function(x, y) { (x >= min(y)) & (x <= max(y)) }
 
 #' Intersect two vectors.
 #'
 #' @param x First vector.
 #' @param y Second vector.
-#' @export
+#' @keywords internal
 `%intr%` <- function(x, y) intersect(x,y)
 
 #' Assign names to a vector.
 #'
 #' @param x Vector to have names assigned (any type).
 #' @param y Character vector giving new names for values in \code{x}.
-#' @export
+#' @keywords internal
 `%withnames%` <- function(x, y) { names(x) <- y; x }
 
 #' Abbreviation for \code{names(which(x))}.
 #'
 #' @param x Boolean vector.
-#' @export
+#' @keywords internal
 nw <- function(x) { names(which(x)) }
 
 #' Find the minimum value of a vector that is still greater than zero.
 #'
 #' @param x Numeric vector.
-#' @export min.nonzero
+#' @keywords internal
 min.nonzero <- function(x) min(x[x > 0])
 
 #' Count the number of instances of every unique value of a vector.
 #'
 #' @param x Vector to be counted.
-#' @export
+#' @keywords internal
 count.each <- function(x, na.rm = FALSE) {
     u <- unique(x)
     simplify2array(lapply.across.names(u, function(y)
@@ -56,7 +56,7 @@ count.each <- function(x, na.rm = FALSE) {
 #'
 #' @param x Pattern to find.
 #' @param y Values to search for pattern \code{x}.
-#' @export
+#' @keywords internal
 grepv <- function(x, y, ...) grep(x, y, ..., value = TRUE)
 
 #' Apply a function to a vector of names, with the returned list having those
@@ -67,7 +67,7 @@ grepv <- function(x, y, ...) grep(x, y, ..., value = TRUE)
 #'     as list indices).
 #' @return A list of the results of applying \code{FUN} to \code{X}, with
 #'     \code{X} as the list elements' names.
-#' @export
+#' @keywords internal
 lapply.across.names <- function(X, FUN, ...) {
     r <- lapply(X, FUN, ...)
     names(r) <- X
@@ -82,7 +82,7 @@ lapply.across.names <- function(X, FUN, ...) {
 #'     as list indices).
 #' @return A list of the results of applying \code{FUN} to \code{X}, with
 #'     \code{X} as the list elements' names.
-#' @export
+#' @keywords internal
 pblapply.across.names <- function(X, FUN, ...) {
     r <- pblapply(X, FUN, ...)
     names(r) <- X
@@ -94,7 +94,7 @@ pblapply.across.names <- function(X, FUN, ...) {
 #' @param x First vector or matrix.
 #' @param y Second vector or matrix.
 #' @return A merged matrix with row names.
-#' @export
+#' @keywords internal
 small.merge <- function(x, y, ...) {
     z <- merge(x, y, by = 0)
     r <- z[, -1]
@@ -105,7 +105,7 @@ small.merge <- function(x, y, ...) {
 #' Calculate geometric mean of a vector of values.
 #'
 #' @param x Numeric vector of values.
-#' @export
+#' @keywords internal
 geommean <- function(x) exp(sum(log(x)) / length(x))
 
 #' Calculate logit of a value or vector of values.
@@ -126,7 +126,7 @@ logistic <- function(x) exp(x) / (1 + exp(x))
 #' @param lim Two-element numeric vector giving the lower and upper limits.
 #' @return A vector where elements below (or above) the lower (or upper) limit
 #'     have been replaced with that limit.
-#' @export
+#' @keywords internal
 truncated <- function(x, lim = c(logit(0.001), logit(0.25))) {
     y <- x
     y[which(x < lim[1])] <- lim[1]
@@ -140,7 +140,7 @@ truncated <- function(x, lim = c(logit(0.001), logit(0.25))) {
 #' @param cn Whether to check that the row names are valid, non-duplicated R row names.
 #' @return A data matrix with rownames equal to the first column of the input
 #'     file and colnames equal to the first row.
-#' @export
+#' @keywords internal
 fastread <- function(location, cn = TRUE) {
     # rownames are useful
     master <- data.frame(data.table::fread(location, header = T),
@@ -160,7 +160,7 @@ fastread <- function(location, cn = TRUE) {
 #' @param FUN A function to be applied.
 #' @param mc.cores Number of cores to use.
 #' @param simplify Whether to simplify the results using \code{simplify2array}.
-#' @export
+#' @keywords internal
 mcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
     if (MARGIN == 1) {
         mlist <- lapply(seq_len(nrow(X)), function(i) X[i, ])
@@ -183,7 +183,7 @@ mcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
 #' @param FUN A function to be applied.
 #' @param mc.cores Number of cores to use.
 #' @param simplify Whether to simplify the results using \code{simplify2array}.
-#' @export
+#' @keywords internal
 pbmcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
     if (MARGIN == 1) {
         mlist <- lapply(seq_len(nrow(X)), function(i) X[i, ])
@@ -223,31 +223,6 @@ tax.annot <- function(tns, taxonomy) {
     taxonomy$species[match(tns, taxonomy$cluster)]
 }
 
-
-#' Calculate the maximum depth of a list of lists.
-#'
-#' \code{list.depth} calculates the maximum depth of a list of lists. Code is
-#' modified from original by user "flodel" on stackoverflow: see
-#' https://stackoverflow.com/questions/13432863/determine-level-of-nesting-in-r.
-#'
-#' @param this A list, possibly containing other lists.
-#' @export
-list.depth <- function(this) {
-    if ((is.list(this)) && (length(this) == 0)) { return(0L) }
-    ifelse(is.list(this), 1L + max(sapply(this, list.depth)), 0L)
-}
-
-#' Make sure that a list of lists has even depth all the way down.
-#'
-#' @param this A list, possibly containing other lists.
-#' @export
-list.even <- function(this) {
-    if (!is.list(this)) return(TRUE)
-    d <- vapply(this, list.depth, FUN.VALUE=1L)
-    this.even <- all(d == d[1])
-    return(this.even & all(vapply(this, list.even, TRUE)))
-}
-
 #' Find the first list element at a desired depth.
 #'
 #' \code{first.element.at.depth} returns the first list element if \code{n} is
@@ -257,95 +232,11 @@ list.even <- function(this) {
 #' @param l A list.
 #' @param n A number giving a particular depth of nesting.
 #' @return The first element of a list
-#' @export
+#' @keywords internal
 first.element.at.depth <- function(l, n) {
     if (n == 1) { l[[1]] } else { (first.element.at.depth(l[[1]], n - 1)) }
 }
 
-#' Transform nested lists into a data frame.
-#'
-#' \code{annotate.nested} takes a nested list (i.e., a list of lists, each of
-#' which lists may also be a list of lists), and transforms it into a tabular
-#' structure. This is useful for visualizing and processing the results of
-#' nested \code{lapply} statements, such as those that might be used when
-#' performing a grid search across multiple parameters.
-#'
-#' @param nested A nested list.
-#' @param summarize If NULL, indicates that no summarizing should be done on the
-#'     most basic list elements; if a function or closure, this function or
-#'     closure will be applied to the most basic list elements (for example,
-#'     \code{mean} would take the mean of vectors at the "bottom" of the nested
-#'     list), and the return value are incorporated into the final table instead
-#'     of the originals.
-#' @param n An optional vector of values to bind to the result table.
-#' @param n.names An optional vector of names for the columns in the final table.
-#' @param stop.at Stop at this depth and summarize.
-#' @return A 2D data frame representation of the (summarized) values in the
-#'     nested lists.
-annotate.nested <- function(nested,
-                            summarize = NULL,
-                            n = NULL,
-                            n.names = NULL,
-                            stop.at = 0) {
-    if (is.null(nested)) {
-       return(c())
-    }
-    nestedness <- list.depth(nested)
-    if (nestedness == stop.at) {
-        if (is.null(summarize)) {
-            if (is.matrix(nested)) {
-                values <- data.frame(nested)
-            } else {
-                values <- data.frame(value = nested)
-            }
-            rownames(values) <- names(nested)
-        } else {
-            val.raw <- summarize(nested)
-            if (class(val.raw) != "numeric") {
-                if ((!is.null(nrow(val.raw))) || (nrow(val.raw) > 0)) {
-                    rownames(val.raw) <- NULL
-                }
-            }
-            if (!is.matrix(val.raw)) {
-                values <- data.frame(value = val.raw)
-            } else {
-                values <- data.frame(val.raw)
-            }
-        }
-        if (is.null(nrow(values))) {
-            n.mtx <- matrix(rep(n, (length(values))),
-                            nc = length(n),
-                            byrow = TRUE)
-        } else {
-            n.mtx <- matrix(rep(n, nrow(values)), nc = length(n), byrow = TRUE)
-        }
-        if (!is.null(n.names)) {
-            if (length(n.names) > ncol(n.mtx)) {
-                pz.warning(paste0(
-                    "more names provided than columns; just using first ",
-                    ncol(n.mtx)))
-            }
-            colnames(n.mtx) <- n.names[1:ncol(n.mtx)]
-        }
-        if (is.matrix(nested)) {
-            final.df <- cbind(names = rownames(values), n.mtx, values)
-        } else {
-            final.df <- cbind(names = rownames(values), n.mtx, value = values)
-        }
-        rownames(final.df) <- NULL
-        return(final.df)
-    } else {
-        if (is.null(names(nested))) { names(nested) <- 1:length(nested) }
-        Reduce(rbind,
-               lapply.across.names(names(nested), function(x)
-                   annotate.nested(nested[[x]],
-                                   summarize = summarize,
-                                   n = c(n, x),
-                                   n.names = n.names,
-                                   stop.at = stop.at)))
-    }
-
-}
 
 #' ``Zip'' a list of data together with its names.
 #'
@@ -360,6 +251,7 @@ annotate.nested <- function(nested,
 #'     element is itself a list with the slots "name" and "data". For the ith
 #'     element of the returned list, "name" contains \code{names(iterover)[i]}
 #'     and "data" contains \code{iterover[[i]]}.
+#' @keywords internal
 zipData <- function(iterover) {
     n <- names(iterover)
     names(n) <- n
@@ -375,18 +267,19 @@ zipData <- function(iterover) {
 #' @param fxn A function to apply to each element \code{x} of
 #'     \code{zipData(iterover)}, where the name is accessible as \code{x$name}
 #'     and the original list element is accessible as \code{x$data}.
-#' @export
+#' @keywords internal
 zipLapply <- function(iterover, fxn, ...) {
     lapply(zipData(iterover), fxn, ...)
 }
 
-#' A wrapper for lapply that allows access to list element names, with simplification at the end to an array.
+#' A wrapper for lapply that allows access to list element names, with
+#' simplification at the end to an array.
 #'
 #' @param iterover List to iterate over. This list will be transformed by \code{zipData}.
 #' @param fxn A function to apply to each element \code{x} of
 #'     \code{zipData(iterover)}, where the name is accessible as \code{x$name}
 #'     and the original list element is accessible as \code{x$data}.
-#' @export
+#' @keywords internal
 zipSapply <- function(iterover, fxn, ...) {
     simplify2array(zipLapply(iterover, fxn), ...)
 }
@@ -435,6 +328,7 @@ kable.recolor <- function(x,
 
 #' Capitalize the first letter of a word/vector of words.
 #' @param s Word or vector of words.
+#' @keywords internal
 capwords <- function(words, USE.NAMES=FALSE) {
     cap1 <- function(w) {
         first <- substr(w, 1, 1)
@@ -602,6 +496,7 @@ hack.tree.labels <- function(tree.obj,
 #'
 #' @param str A style string to parse.
 #' @return A named vector of style attributes.
+#' @keywords internal
 style.parse <- function(str) {
     semi.split <- strsplit(str, ";") %>% sapply(., trimws)
     if (is.null(dim(semi.split))) {
@@ -638,7 +533,7 @@ non.interactive.plot <- function(tree.obj, file) {
 #' @param fun Function to apply over matrix.
 #' @param cl If NULL, \code{apply} will be called; otherwise, should be the
 #'     object returned by \code{makeCluster}.
-#' @export
+#' @keywords internal
 maybeParApply <- function(mtx, margin, fun, cl=NULL, ...) {
     if (!is.null(cl)) {
         parallel::parApply(cl, mtx, margin, fun, ...)
@@ -651,6 +546,7 @@ maybeParApply <- function(mtx, margin, fun, cl=NULL, ...) {
 #'
 #' @param mtx An object of class \code{TsparseMatrix}. @return A data frame with
 #'     the data in \code{mtx} represented in "long" (vs. "wide") format.
+#' @keywords internal
 sparseMelt <- function(mtx) {
     mtxT <- as(mtx, "TsparseMatrix")
     df <- data.frame(row=mtxT@Dimnames[[1]][mtxT@i + 1],

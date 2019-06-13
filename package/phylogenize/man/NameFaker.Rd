@@ -21,3 +21,4 @@ A vector of fake names.
 \description{
 Generate fake names for taxa or samples.
 }
+\keyword{internal}

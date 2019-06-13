@@ -116,7 +116,7 @@ check.process.metadata <- function(metadata, ...) {
 #'
 #' @return A list with components \code{mtx} (matrix of abundances) and
 #'     \code{metadata} (data frame of metadata).
-#' @export
+#' @keywords internal
 read.abd.metadata.biom <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     bf <- file.path(opts('in_dir'), opts('biom_file'))
@@ -160,7 +160,7 @@ read.abd.metadata.biom <- function(...) {
 #'
 #' @return A list with components \code{mtx} (matrix of abundances) and
 #'     \code{metadata} (data frame of metadata).
-#' @export
+#' @keywords internal
 read.abd.metadata.tabular <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     af <- file.path(opts('in_dir'), opts('abundance_file'))
@@ -795,7 +795,7 @@ get.pheno.plotting.scales <- function(phenotype, trees, phenoP=NULL, ...) {
 #' @return A list of overall limits (\code{limits}), phylum-specific limits
 #'     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
 #'     (\code{zero}).
-#' @export
+#' @keywords internal
 get.pheno.plotting.scales.prevalence <- function(phenotype,
                                                  trees,
                                                  phenoP=NULL,
@@ -834,7 +834,7 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
 #' @return A list of overall limits (\code{limits}), phylum-specific limits
 #'     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
 #'     (\code{zero}).
-#' @export
+#' @keywords internal
 get.pheno.plotting.scales.specificity <- function(phenotype,
                                                   trees,
                                                   phenoP=NULL,
@@ -1188,6 +1188,7 @@ output.enr.table <- function(enr.table) {
 #'
 #' @param seq String to check for illegal characters.
 #' @return TRUE if it contains no illegal characters, FALSE otherwise.
+#' @keywords internal
 is.dna <- function(seq) {
     !(grepl("[^actguwsmkrybdhvn]", tolower(seq)))
 }
@@ -1207,6 +1208,7 @@ install.data.figshare <- function(data_path=NULL,
         curl::curl_download(figshare_url, data_path)
     }
     untar(data_path, exdir = system.file("", package="phylogenize"))
+    return(TRUE)
 }
 
 

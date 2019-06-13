@@ -20,3 +20,4 @@ cluster.load.pkg(cl, devel, pkgdir = "package/phylogenize")
 Load the \code{phylogenize} package, either using \code{library} or
 \code{devtools} as appropriate.
 }
+\keyword{internal}

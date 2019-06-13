@@ -23,3 +23,4 @@ Wrapper around \code{phylolm} that automatically discards taxa that are
 absent from the tree tip labels, phenotype labels, or gene presence/absence
 labels.
 }
+\keyword{internal}

@@ -12,3 +12,4 @@ count.each(x, na.rm = FALSE)
 \description{
 Count the number of instances of every unique value of a vector.
 }
+\keyword{internal}

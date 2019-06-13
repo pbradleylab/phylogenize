@@ -223,7 +223,7 @@ lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
 #'     (meaningless here).
 #' @return Length-2 numeric vector with names \code{"Estimate"} and
 #'     \code{"p.value"}, with distributions N(0,1) and U(0,1), respectively.
-#' @export
+#' @keywords internal
 rnd.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
                       meas_err=FALSE) {
     return(c(Estimate = rnorm(n=1, 0, 1),
@@ -246,7 +246,7 @@ rnd.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
 #'     p-values.
 #' @return Length-2 numeric vector with names \code{"Estimate"} and
 #'     \code{"p.value"}, with distributions N(0,1) and U(0,1), respectively.
-#' @export
+#' @keywords internal
 rndpos.fx.pv <- function(m, p, tr, coefname="m", restrict=NULL,
                          pos.pct=0.1,
                          pos.fx=2,
@@ -272,7 +272,7 @@ rndpos.fx.pv <- function(m, p, tr, coefname="m", restrict=NULL,
 #' @param p Named numeric vector of phenotype values per taxon.
 #' @param phy Phylogeny relating taxa (class \code{"phylo"}).
 #' @return Output of \code{phylolm}.
-#' @export
+#' @keywords internal
 phylolm.subset <- function(p, m, phy) {
     # For testing
     keep <- intersect(names(p), intersect(names(m), phy$tip.label))
@@ -291,6 +291,7 @@ phylolm.subset <- function(p, m, phy) {
 #'     \code{library}
 #' @param pkgdir Optional string giving path to package; used with
 #'     \code{devtools} only
+#' @keywords internal
 cluster.load.pkg <- function(cl, devel, pkgdir="package/phylogenize") {
     if (devel) {
         parallel::clusterCall(cl,
@@ -380,7 +381,7 @@ matrix.plm <- function(tree,
 #'     estimate; \code{p.init}: naive prevalence estimate; \code{pT}:
 #'     probability of encountering a particular taxon, marginalized across
 #'     environments
-#' @export
+#' @keywords internal
 regularize.pET <- function(vec,
                           env.ids,
                           which.env = 1,
@@ -442,7 +443,7 @@ regularize.pET <- function(vec,
 #' @param fallback A two-element numeric vector, giving the beta parameters to
 #'     use if fitting fails.
 #' @return A best-fit of prevalences to a beta distribution.
-#' @export
+#' @keywords internal
 fit.beta.list <-  function(mtx, ids, fallback = c(NA, NA)) {
     lapply(unique(ids), function(i) {
         tryCatch(
@@ -457,8 +458,10 @@ fit.beta.list <-  function(mtx, ids, fallback = c(NA, NA)) {
 
 #' Simulate a presence/absence matrix.
 #'
-#' @param effect.size A number giving the shift in logit-prevalence between environments for simulated true positives.
-#' @param baseline.distro A two-element numeric vector of beta distribution parameters, giving the distribution of simulated prevalences.
+#' @param effect.size A number giving the shift in logit-prevalence between
+#'     environments for simulated true positives.
+#' @param baseline.distro A two-element numeric vector of beta distribution
+#'     parameters, giving the distribution of simulated prevalences.
 #' @param which.env String; gives the environment in which an effect will be simulated.
 #' @param samples Named integer vector giving the number of samples per environment.
 #' @param taxa How many taxa to simulate?
@@ -469,7 +472,7 @@ fit.beta.list <-  function(mtx, ids, fallback = c(NA, NA)) {
 #'     effects; \code{ids}: mapping of samples to environments;
 #'     \code{input.params}: input parameters used to call
 #'     \code{simulate.binom.mtx}.
-#' @export simulate.binom.mtx
+#' @keywords internal
 simulate.binom.mtx <- function(effect.size = 2,
                               baseline.distro = c(shape1 = 0.66,
                                                   shape2 = 2.62),
@@ -524,7 +527,7 @@ simulate.binom.mtx <- function(effect.size = 2,
 #'     to be shrunk back to the prior completely.
 #' @return A vector. \code{fpr}: False positive rate; \code{pwr.hi}: power for
 #'     positive effect sizes; \code{pwr.lo}: power for negative effect sizes.
-#' @export
+#' @keywords internal
 score.regularization <- function(mtx,
                                  ids,
                                  real.fx,
@@ -573,7 +576,7 @@ score.regularization <- function(mtx,
 #'     \code{score.regularization} into one metric to be optimized.
 #' @param pos.prob Fraction of real effects that should be positive.
 #' @return The output of \code{stats::optimize}.
-#' @export
+#' @keywords internal
 optimize.b.wrapper <- function(real.mtx,
                               real.ids,
                               which.real.env = 2,
@@ -633,7 +636,7 @@ optimize.b.wrapper <- function(real.mtx,
 #'     return 1-FPR; otherwise, return 1 + the average (geometric mean) power on
 #'     positive and negative effect sizes.
 #' @return Summary statistic ranging between 0 and 2.
-#' @export
+#' @keywords internal
 b.scorer <- function(s, a) {
     if (s["fpr"] <= a) {
         (1 + geommean(s[c("pwr.hi", "pwr.lo")]))
@@ -782,8 +785,10 @@ calc.ess <- function(abd.meta,
                        add.pc = TRUE)
     })
     logist.pheno <- regularized[2, , drop=TRUE]
-                                        # "hard-shrink" anything shrunk almost to the prior to prevent these tiny
-                                        # differences from affecting the result in the absence of a strong change
+                                        # "hard-shrink" anything shrunk almost
+                                        # to the prior to prevent these tiny
+                                        # differences from affecting the result
+                                        # in the absence of a strong change
     logist.pheno[which(logist.pheno %btwn%
                        c(this.prior - tolerance,
                          this.prior + tolerance))] <- this.prior

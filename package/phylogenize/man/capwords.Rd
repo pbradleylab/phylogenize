@@ -12,3 +12,4 @@ capwords(words, USE.NAMES = FALSE)
 \description{
 Capitalize the first letter of a word/vector of words.
 }
+\keyword{internal}

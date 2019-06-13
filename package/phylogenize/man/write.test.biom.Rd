@@ -25,3 +25,4 @@ Some global options that may be helpful include:
   necessary to write the BIOM file and add the metadata.}
 }
 }
+\keyword{internal}

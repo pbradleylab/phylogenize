@@ -144,25 +144,31 @@ set_data_internal <- function(fail=FALSE, startup=FALSE) {
     }
     dd <- system.file("extdata", package="phylogenize")
     instdir <- system.file("", package="phylogenize")
+    success <- FALSE
     if (grepl("00LOCK-", instdir)) {
+        success <- TRUE
         M("Skipping check for data during staged install")
     } else {
         if (dd == "") {
             if (!fail) {
                 M("Installing data from Figshare...")
-                tryCatch(install.data.figshare(), error = function(e) {
+                success <- tryCatch(install.data.figshare(), error = function(e) {
                     warning(paste("Installing from Figshare failed: ", e))
+                    return(FALSE)
                 })
             }
-            warning(paste("Data not found; *phylogenize* will not run properly.",
-                          "Please try phylogenize::install.data.figshare()",
-                          "later or install the data manually into",
-                          file.path(system.file("", package="phylogenize"),
-                                    "extdata"),
-                          "."))
+            if (!success) {
+                warning(paste("Data not found; *phylogenize* will not run",
+                              "properly. Please try",
+                              "phylogenize::install.data.figshare()",
+                              "later or install the data manually into",
+                              file.path(system.file("", package="phylogenize"),
+                                        "extdata"),
+                              "."))
+            }
         }
     }
-    pz.options(data_dir=dd)
+    if (success) pz.options(data_dir=dd)
 }
 
 .onLoad <- function(libname, pkgname) {

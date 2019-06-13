@@ -15,3 +15,4 @@ A numeric matrix where each column has been divided by its sum.
 \description{
 Normalize a matrix by columns (i.e., force them to sum to one).
 }
+\keyword{internal}

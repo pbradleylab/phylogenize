@@ -14,3 +14,4 @@ x \%intr\% y
 \description{
 Intersect two vectors.
 }
+\keyword{internal}

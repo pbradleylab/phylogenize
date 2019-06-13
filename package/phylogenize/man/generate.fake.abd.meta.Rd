@@ -54,3 +54,4 @@ A list (comparable to what is read in by *phylogenize*):
 \description{
 Wrapper script to generate fake data and metadata.
 }
+\keyword{internal}

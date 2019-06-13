@@ -20,3 +20,4 @@ Summary statistic ranging between 0 and 2.
 \description{
 Summarize the statistics from \code{score.regularization} into a single metric.
 }
+\keyword{internal}

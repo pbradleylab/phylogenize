@@ -23,3 +23,4 @@ Return value of \code{base::write.table}.
 \description{
 Write and then read in tabular data.
 }
+\keyword{internal}

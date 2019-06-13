@@ -17,3 +17,4 @@ and the original list element is accessible as \code{x$data}.}
 \description{
 A wrapper for lapply that allows access to list element names.
 }
+\keyword{internal}

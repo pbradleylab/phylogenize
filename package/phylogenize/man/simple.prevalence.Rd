@@ -15,3 +15,4 @@ Prevalence with additive smoothing.
 \description{
 Calculate prevalence (with additive smoothing) for taxa given an abundance matrix.
 }
+\keyword{internal}

@@ -29,3 +29,4 @@ Some particularly relevant global options are:
   color is the highest value.}
 }
 }
+\keyword{internal}

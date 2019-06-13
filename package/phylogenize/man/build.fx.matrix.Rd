@@ -25,3 +25,4 @@ An effect size matrix.
 \description{
 Assemble an effect-size matrix from a set of distinct effects.
 }
+\keyword{internal}

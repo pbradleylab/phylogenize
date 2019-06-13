@@ -15,3 +15,4 @@ A vector of BH FDR values.
 \description{
 Wrapper around \code{p.adjust('BH')}.
 }
+\keyword{internal}

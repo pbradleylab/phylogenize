@@ -14,3 +14,4 @@ x \%btwn.inc\% y
 \description{
 Test whether a value is between two other values (inclusive).
 }
+\keyword{internal}

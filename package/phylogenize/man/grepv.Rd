@@ -14,3 +14,4 @@ grepv(x, y, ...)
 \description{
 Abbreviation for \code{grep} with \code{value=TRUE}.
 }
+\keyword{internal}

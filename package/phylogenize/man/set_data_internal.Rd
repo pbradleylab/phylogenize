@@ -4,11 +4,13 @@
 \alias{set_data_internal}
 \title{Set data directory to internal}
 \usage{
-set_data_internal(fail = FALSE)
+set_data_internal(fail = FALSE, startup = FALSE)
 }
 \arguments{
 \item{fail}{Boolean. If TRUE, set_data_internal will not attempt to download
 and install data from Figshare if it is missing.}
+
+\item{startup}{Boolean. Is this function being called by .onLoad?}
 }
 \description{
 Set data directory to internal

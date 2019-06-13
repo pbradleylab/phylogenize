@@ -15,3 +15,4 @@ TRUE if it contains no illegal characters, FALSE otherwise.
 \description{
 Check if a particular string is likely to be DNA.
 }
+\keyword{internal}

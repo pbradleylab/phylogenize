@@ -31,3 +31,4 @@ Some particularly relevant global options are:
   specific).}
 }
 }
+\keyword{internal}

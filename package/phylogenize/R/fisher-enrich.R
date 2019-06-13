@@ -7,6 +7,7 @@
 #'
 #' @param x A vector of p-values.
 #' @return A vector of q-values.
+#' @keywords internal
 qvals <- function(x, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     tryCatch(qvalue::qvalue(x, fdr=T, lambda=seq(0.001, 0.95, 0.005))$qvalues,
@@ -26,12 +27,14 @@ qvals <- function(x, ...) {
 #'
 #' @param x A vector of p-values.
 #' @return A vector of BY FDR values.
+#' @keywords internal
 fdr.by <- function(x) { p.adjust(x, 'BY') }
 
 #' Wrapper around \code{p.adjust('BH')}.
 #'
 #' @param x A vector of p-values.
 #' @return A vector of BH FDR values.
+#' @keywords internal
 fdr.bh <- function(x) { p.adjust(x, 'BH') }
 
 
@@ -187,6 +190,7 @@ alt.multi.enrich <- function(results, mappings, dirxn=1,
 }
 
 #' Internal function to perform an individual enrichment.
+#' @keywords internal
 indiv.enr <- function(phylum, cutoff, termset, term, data, results,
                       qcuts=c(strong=0.05), dirxn=1, bg=NULL) {
     s <- filter(results,
@@ -217,5 +221,6 @@ indiv.enr <- function(phylum, cutoff, termset, term, data, results,
 #'
 #' @param x A vector of p-values.
 #' @return The same vector with all p-values above 1 changed to exactly 1.
+#' @export
 pv1 <- function(x) { x[which(x > 1)] <- 1; return(x) }
 

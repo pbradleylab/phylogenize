@@ -20,3 +20,4 @@ generate.test.pzdb(nt = 75, ng = 50, fp = 0.1, minN = 2, ...)
 Wrapper to generate a low-memory, fast-running dummy database. Make sure
 \code{Matrix} is loaded.
 }
+\keyword{internal}

@@ -63,6 +63,7 @@ nonequiv.pos.sig <- function(results,
 #' @param df Degrees of freedom.
 #' @param min_fx Minimum effect size we care about.
 #' @return A p-value; reject non-equivalence if below alpha.
+#' @keywords internal
 equiv_test <- function(fx, se, df, min_fx=0.25) {
                                         # test 1: H0 is fx >= min_fx, HA is fx < min_fx
                                         # test 2: H0 is fx <= -min_fx, HA is fx > -min_fx

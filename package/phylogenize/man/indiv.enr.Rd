@@ -10,3 +10,4 @@ indiv.enr(phylum, cutoff, termset, term, data, results, qcuts = c(strong
 \description{
 Internal function to perform an individual enrichment.
 }
+\keyword{internal}

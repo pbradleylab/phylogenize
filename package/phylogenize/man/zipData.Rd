@@ -22,3 +22,4 @@ This function takes a list and constructs a new structured list with fields
 using lapply- or sapply-like syntax while still having access to the names of
 the list elements.
 }
+\keyword{internal}

@@ -27,3 +27,4 @@ A new effect size matrix.
 \description{
 Add a true effect to a matrix of effect sizes (or generate a new one).
 }
+\keyword{internal}

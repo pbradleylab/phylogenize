@@ -27,3 +27,4 @@ Length-2 numeric vector with names \code{"Estimate"} and
 \description{
 Wrapper to return random effect sizes and p-values; useful for testing.
 }
+\keyword{internal}

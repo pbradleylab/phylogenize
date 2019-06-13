@@ -24,3 +24,4 @@ This function uses package-wide options (see \code{?pz.options}),
   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
 }
 }
+\keyword{internal}

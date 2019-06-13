@@ -10,9 +10,11 @@
   sign.pos.prob = 0.5)
 }
 \arguments{
-\item{effect.size}{A number giving the shift in logit-prevalence between environments for simulated true positives.}
+\item{effect.size}{A number giving the shift in logit-prevalence between
+environments for simulated true positives.}
 
-\item{baseline.distro}{A two-element numeric vector of beta distribution parameters, giving the distribution of simulated prevalences.}
+\item{baseline.distro}{A two-element numeric vector of beta distribution
+parameters, giving the distribution of simulated prevalences.}
 
 \item{samples}{Named integer vector giving the number of samples per environment.}
 
@@ -34,3 +36,4 @@ A list. \code{mtx}: a simulated matrix; \code{pT}: true prevalences;
 \description{
 Simulate a presence/absence matrix.
 }
+\keyword{internal}

@@ -21,3 +21,4 @@ object returned by \code{makeCluster}.}
 A wrapper around \code{apply} and \code{parApply} that allows them to be
 called with a single syntax.
 }
+\keyword{internal}

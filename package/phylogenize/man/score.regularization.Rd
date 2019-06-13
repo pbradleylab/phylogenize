@@ -33,3 +33,4 @@ A vector. \code{fpr}: False positive rate; \code{pwr.hi}: power for
 \description{
 Score a simulated regularization by how well it recapitulates the ground truth.
 }
+\keyword{internal}

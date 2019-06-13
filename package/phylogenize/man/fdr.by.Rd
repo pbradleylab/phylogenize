@@ -15,3 +15,4 @@ A vector of BY FDR values.
 \description{
 Wrapper around \code{p.adjust('BY')}.
 }
+\keyword{internal}

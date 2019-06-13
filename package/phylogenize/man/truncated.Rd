@@ -18,3 +18,4 @@ A vector where elements below (or above) the lower (or upper) limit
 \description{
 Truncate a vector with a particular lower and upper limit.
 }
+\keyword{internal}

@@ -12,3 +12,4 @@
 \description{
 Find the minimum value of a vector that is still greater than zero.
 }
+\keyword{internal}

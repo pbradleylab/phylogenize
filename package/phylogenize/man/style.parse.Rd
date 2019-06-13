@@ -15,3 +15,4 @@ A named vector of style attributes.
 \description{
 Helper function to parse SVG styles.
 }
+\keyword{internal}

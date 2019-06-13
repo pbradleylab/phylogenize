@@ -13,3 +13,4 @@ the data in \code{mtx} represented in "long" (vs. "wide") format.}
 \description{
 Helper function to "melt" a sparse matrix into a long format.
 }
+\keyword{internal}

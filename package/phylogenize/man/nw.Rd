@@ -12,3 +12,4 @@ nw(x)
 \description{
 Abbreviation for \code{names(which(x))}.
 }
+\keyword{internal}

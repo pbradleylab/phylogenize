@@ -5,7 +5,7 @@
 #' @param com Multinomial probability distribution for all taxa.
 #' @param nr Read depth.
 #' @return Count matrix.
-#' @export simulate.counts
+#' @keywords internal
 simulate.counts <- function(com, nr) {
     counts <- mapply(nr, data.frame(com), FUN = function(r, x) {
         if (all(x == 0)) { return(x) }
@@ -21,7 +21,7 @@ simulate.counts <- function(com, nr) {
 #'
 #' @param mtx Abundance matrix (rows: taxa; columns: samples).
 #' @return Prevalence with additive smoothing.
-#' @export
+#' @keywords internal
 simple.prevalence <- function(mtx) {
     apply(cbind(1 * (mtx > 0), 1, 0), 1, mean)
 }
@@ -30,7 +30,7 @@ simple.prevalence <- function(mtx) {
 #'
 #' @param mtx Numeric matrix.
 #' @return A numeric matrix where each column has been divided by its sum.
-#' @export
+#' @keywords internal
 colnorm <- function(mtx) {
     apply(mtx, 2, function(x) {
         if (all(x == 0)) return(x)
@@ -53,7 +53,7 @@ colnorm <- function(mtx) {
 #'   \item{sim}{A simulated abundance matrix}
 #'   \item{com}{Multinomial distribution used to simulate abundances}
 #'   \item{prev}{Distribution of taxon prevalences.}
-#' @export
+#' @keywords internal
 make.sim <- function(n.taxa,
                      n.samples,
                      avg.reads, # can be a vector
@@ -95,7 +95,7 @@ make.sim <- function(n.taxa,
 #'     one).
 #' @param fx Size of effect to be added.
 #' @return A new effect size matrix.
-#' @export
+#' @keywords internal
 add.fx.to.matrix <- function(samples,
                              taxa,
                              which.taxa,
@@ -121,7 +121,7 @@ add.fx.to.matrix <- function(samples,
 #'     affected, one for every distinct effect.
 #' @param fx Numeric vector of sizes of effects to be added.
 #' @return An effect size matrix.
-#' @export
+#' @keywords internal
 build.fx.matrix <- function(samples,
                             taxa,
                             fx,
@@ -161,7 +161,7 @@ build.fx.matrix <- function(samples,
 #'     affected in each distinct dataset effect.
 #' @return An effect size matrix incorporating both environmental and dataset
 #'     effects.
-#' @export
+#' @keywords internal
 master.fx.matrix <- function(divided,
                              taxa,
                              env.fx,
@@ -184,14 +184,17 @@ master.fx.matrix <- function(divided,
 #' Generate fake names for taxa or samples.
 #' @return A vector of fake names.
 #' @name NameFaker
+#' @keywords internal
 NULL
 
 #' @rdname NameFaker
 #' @param n.taxa Number of taxa.
+#' @keywords internal
 get.taxon.names <- function(n.taxa) { paste0("taxon", 1:n.taxa) }
 
 #' @rdname NameFaker
 #' @param n.samples Number of samples.
+#' @keywords internal
 get.sample.names <- function(n.samples) { paste0("sample", 1:n.samples) }
 
 #' Wrapper function for generating an effect size matrix automatically.
@@ -204,7 +207,7 @@ get.sample.names <- function(n.samples) { paste0("sample", 1:n.samples) }
 #'   \item{mtx}{An effect size matrix.}
 #'   \item{fx}{The chosen, randomly generated effect sizes (see
 #'     \code{pick.env.dset.fx}.}
-#' @export
+#' @keywords internal
 master.mtx.wrapper <- function(n.taxa,
                                divided,
                                env.n.affected,
@@ -234,7 +237,7 @@ master.mtx.wrapper <- function(n.taxa,
 #'   \item{mtx}{An effect size matrix.}
 #'   \item{fx}{The chosen, randomly generated effect sizes (see
 #'     \code{pick.env.dset.fx}.}
-#' @export
+#' @keywords internal
 pick.env.dset.fx <- function(n.taxa,
                              env.n.affected,
                              dset.n.affected,
@@ -277,7 +280,7 @@ pick.env.dset.fx <- function(n.taxa,
 #'   \item{env}{Like \code{dset} for environments.}
 #'   \item{metadata}{A data frame of metadata associating samples with datasets
 #'     and environments.}
-#' @export
+#' @keywords internal
 divide.samples <- function(n.samples,
                            n.dsets,
                            n.envirs) {
@@ -303,6 +306,7 @@ divide.samples <- function(n.samples,
 #' @param nc Number of times to repeat vector.
 #' @return A matrix consisting of \code{nc} repeats of the column-vector
 #'     \code{vec}.
+#' @keywords internal
 rep.col <- function(vec, nc) {
     matrix(rep(vec, each=nc), ncol=nc, byrow=TRUE)
 }
@@ -332,7 +336,7 @@ rep.col <- function(vec, nc) {
 #' @return A list (comparable to what is read in by *phylogenize*):
 #'   \item{mtx}{Simulated abundance matrix}
 #'   \item{metadata}{Simulated metadata data frame}
-#' @export
+#' @keywords internal
 generate.fake.abd.meta <- function(n.samples=100,
                                    n.taxa=1000,
                                    n.envs=3,
@@ -399,7 +403,7 @@ generate.fake.abd.meta <- function(n.samples=100,
 #' @param metafile String: write metadata data frame to this file.
 #' @param prep Boolean: convert matrix to a data frame and add a row name title.
 #' @return Return value of \code{base::write.table}.
-#' @export
+#' @keywords internal
 write.test.tabular <- function(abd.meta,
                                abdfile="test-abundance.tab",
                                metafile="test-metadata.tab",
@@ -429,6 +433,7 @@ write.test.tabular <- function(abd.meta,
 #'     will be \code{#OTU ID}; if false, the name of the column will be
 #'     \code{OTU_ID}. The former is necessary for the BIOM format.
 #' @return A data frame derived from \code{mtx}.
+#' @keywords internal
 prep.mtx.for.write <- function(mtx, initial.octo=FALSE) {
     mtx2 <- data.frame(as.matrix(mtx) * 1)
     if (initial.octo) {
@@ -459,7 +464,7 @@ prep.mtx.for.write <- function(mtx, initial.octo=FALSE) {
 #'     a data frame of metadata, \code{metadata}.
 #' @param overwrite Boolean: if a BIOM file exists at the location specified,
 #'     overwrite it?
-#' @export
+#' @keywords internal
 write.test.biom <- function(abd.meta,
                             overwrite=FALSE,
                             ...) {
@@ -515,9 +520,11 @@ write.test.biom <- function(abd.meta,
 #' @param tag.length Positive integer: how long should the ASVs be?
 #' @return A list:
 #'   \item{seqs}{String vector: sequences of simulated ASVs.}
-#'   \item{names}{String vector: names of the taxa to which the ASVs "should" map.}
-#'   \item{species.map}{Numeric vector where the $i$'th element gives the number of the species that taxon $i$ was mapped to.}
-#' @export
+#'   \item{names}{String vector: names of the taxa to which the ASVs "should"
+#'     map.}
+#'   \item{species.map}{Numeric vector where the $i$'th element gives the number
+#'     of the species that taxon $i$ was mapped to.}
+#' @keywords internal
 random.species.from.file <- function(n.taxa,
                                      tag.length=100,
                                      ...) {
@@ -546,7 +553,8 @@ random.species.from.file <- function(n.taxa,
                 map=species.map))
 }
 
-#' Wrapper function to simulate data "denoised" by an algorithm like DADA2 or Deblur.
+#' Wrapper function to simulate data "denoised" by an algorithm like DADA2 or
+#' Deblur.
 #'
 #' Extra arguments get passed to \code{random.species.from.file}.
 #'
@@ -559,7 +567,7 @@ random.species.from.file <- function(n.taxa,
 #'     \code{mtx}.}
 #'   \item{n}{Names of the MIDAS taxa to which the rows of \code{mtx} "should"
 #'     map.}
-#' @export
+#' @keywords internal
 make.simulated.denoised.data <- function(mtx, tag.length=100, ...) {
     taxa <- rownames(mtx)
     rs <- random.species.from.file(n.taxa=length(taxa),
@@ -585,6 +593,7 @@ make.simulated.denoised.data <- function(mtx, tag.length=100, ...) {
 #' @param n Integer: how many genes per phylum to sample?
 #' @param fp Double: what proportion of highest-variance genes to sample from?
 #' @param minN Integer: minimum number of genes to return in a matrix
+#' @keywords internal
 dummy.g2s <- function(g2s.matrices, n, fp=0.1, minN=2) {
     new.g2s <- lapply(g2s.matrices, function(m) {
         ng <- ncol(m)
@@ -612,6 +621,7 @@ dummy.g2s <- function(g2s.matrices, n, fp=0.1, minN=2) {
 #'
 #' @param trees List of trees.
 #' @param n Number of taxa to retain (maximum)
+#' @keywords internal
 dummy.trees <- function(trees, n=50) {
     lapply(trees, function(tr) {
         tips <- tr$tip.label
@@ -627,6 +637,7 @@ dummy.trees <- function(trees, n=50) {
 #' @param ng Number of genes to sample per phylum.
 #' @param fp Fraction of most-variable genes to sample.
 #' @param minN Only keep phyla with at least this many genes.
+#' @keywords internal
 generate.test.pzdb <- function(nt=75, ng=50, fp=0.1, minN=2, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     pz.db <- import.pz.db(...)

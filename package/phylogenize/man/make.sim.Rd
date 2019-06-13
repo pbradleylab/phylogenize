@@ -32,3 +32,4 @@ A list:
 \description{
 Construct a simulation of microbial sequencing data.
 }
+\keyword{internal}

@@ -21,3 +21,4 @@ A data frame derived from \code{mtx}.
 Convert a matrix to a data frame of numeric values, then add a column for row
 names.
 }
+\keyword{internal}

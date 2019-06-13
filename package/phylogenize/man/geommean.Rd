@@ -12,3 +12,4 @@ geommean(x)
 \description{
 Calculate geometric mean of a vector of values.
 }
+\keyword{internal}

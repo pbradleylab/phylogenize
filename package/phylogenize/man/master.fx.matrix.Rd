@@ -30,3 +30,4 @@ An effect size matrix incorporating both environmental and dataset
 Construct a master effect size matrix given environmental and dataset
 effects (wraps \code{master.fx.matrix}).
 }
+\keyword{internal}

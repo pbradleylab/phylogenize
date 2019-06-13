@@ -21,3 +21,4 @@ A best-fit of prevalences to a beta distribution.
 This is used to optimize the value of the free parameter $b$ in
 \code{regularize.pET}.
 }
+\keyword{internal}

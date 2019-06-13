@@ -7,8 +7,11 @@
 fix.tree(phy, len = 1e-06)
 }
 \arguments{
-\item{len}{Zero-length branches will be replaced with this fraction of the maximum node height.}
+\item{len}{Zero-length branches will be replaced with this fraction of the
+maximum node height.}
 }
 \description{
-\code{fix.tree} converts polytomies to dichotomies with very small branch lengths.
+\code{fix.tree} converts polytomies to dichotomies with very small branch
+lengths.
 }
+\keyword{internal}
