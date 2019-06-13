@@ -2,13 +2,13 @@
 
 # phylogenize (v0.92 beta)
 
-*phylogenize* is a tool that allows users to link microbial genes to environments, accounting for phylogeny. More specifically, given community composition data, *phylogenize* links genes in microbial genomes to either microbial prevalence in, or specificity for, a given environment, while also taking into account an important potential confounder: the phylogenetic relationships between microbes. *phylogenize* comes with [web](https://www.phylogenize.org), QIIME2, and R interfaces.
+*phylogenize* is a tool that allows users to link microbial genes to environments, accounting for phylogeny. More specifically, given community composition data, *phylogenize* links genes in microbial genomes to either microbial prevalence in, or specificity for, a given environment, while also taking into account an important potential confounder: the phylogenetic relationships between microbes. *phylogenize* comes with [web](https://www.phylogenize.org), QIIME 2, and R interfaces.
 
 The method is described fully in [Bradley, Nayfach, and Pollard (2018)](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006242).
 
 ## Installing the *phylogenize* package and its dependencies
 
-The "core" of *phylogenize* is an R package, so to run *phylogenize* locally, you will need to first install that package from this repository. There are separate instructions depending on whether you are installing *phylogenize* for use 1. with R or the web interface on a local machine, 2. with QIIME2 or in a conda environment, or 3. on AWS.
+The "core" of *phylogenize* is an R package, so to run *phylogenize* locally, you will need to first install that package from this repository. There are separate instructions depending on whether you are installing *phylogenize* for use 1. with R or the web interface on a local machine, 2. with QIIME 2 or in a conda environment, or 3. on AWS.
 
 ### Installing BURST
 
@@ -46,11 +46,11 @@ phylogenize::install.data.figshare()
 ```
 
 
-### Installing *phylogenize* package for use with QIIME2 or in another conda environment
+### Installing *phylogenize* package for use with QIIME 2 or in another conda environment
 
-QIIME2 runs in a conda environment, meaning it has its own installation of R and related packages. To run *phylogenize* with QIIME2, you will need to install *phylogenize* within the QIIME2 conda environment, then install the [q2-phylogenize plugin](https://bitbucket.org/pbradz/q2-phylogenize). The instructions are similar for installing in any other conda environment, except of course you won't need the plugin.
+QIIME 2 runs in a conda environment, meaning it has its own installation of R and related packages. To run *phylogenize* with QIIME 2, you will need to install *phylogenize* within the QIIME 2 conda environment, then install the [q2-phylogenize plugin](https://bitbucket.org/pbradz/q2-phylogenize). The instructions are similar for installing in any other conda environment, except of course you won't need the plugin.
 
-First, switch to the correct environment. For QIIME2, this is accomplished with `source activate qiime2-2019.4` (see [here](https://docs.qiime2.org/2019.4/install/native/#activate-the-conda-environment)).
+First, switch to the correct environment. For QIIME 2, this is accomplished with `source activate qiime2-2019.4` (see [here](https://docs.qiime2.org/2019.4/install/native/#activate-the-conda-environment)).
 
 Installing *phylogenize* within conda is a little tricky. You will need to manually install a few libraries and packages that are either not included, or difficult to install from source. From the UNIX command line:
 
@@ -83,7 +83,7 @@ python setup.py build
 python setup.py install
 ```
 
-Further information about how to use q2-phylogenize can be found on its [git repository](https://bitbucket.org/pbradz/q2-phylogenize). If you are just using conda and not QIIME2, you can just proceed to the section entitled "Running *phylogenize* using the R interface."
+Further information about how to use q2-phylogenize can be found on its [git repository](https://bitbucket.org/pbradz/q2-phylogenize). If you are just using conda and not QIIME 2, you can just proceed to the section entitled "Running *phylogenize* using the R interface."
 
 ### Installing *phylogenize* package for use on AWS
 
@@ -199,11 +199,11 @@ The application should then be accessible from http://localhost:5000.
 
  * Project lead and repository maintainer: [Patrick H. Bradley](http://docpollard.org/people/patrick-j-h-bradley/)
  * Principal investigator: [Katherine S. Pollard](http://docpollard.org)
- * Testing and troubleshooting: [Chunyu Zhao](https://github.com/zhaoc1)
+ * Testing, troubleshooting, and debugging AWS/Mac installation: [Chunyu Zhao](https://github.com/zhaoc1)
  * More testing: [Jordan Bisanz](https://github.com/jbisanz) and other members of the [Turnbaugh lab](https://turnbaughlab.ucsf.edu/)
  * Funding: 
-   * National Science Foundation [DMS-1069303, DMS-1563159]
-   * Gordon & Betty Moore Foundation [#3300]
+     - National Science Foundation [DMS-1069303, DMS-1563159]
+     - Gordon & Betty Moore Foundation [#3300]
    
 ## Contact
 
