@@ -377,7 +377,7 @@ if (!is.null(enrichment.tbl)) {
 
 ```
 
-```{r enrichment_display, warning=FALSE,message=FALSE,echo=FALSE}
+```{r enrichment_display, warning=FALSE,message=FALSE,echo=FALSE, results='asis'}
 options(knitr.table.format = "html")
 check.pryr()
 if (!is.null(enrichment.tbl)) {
