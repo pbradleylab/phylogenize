@@ -145,7 +145,7 @@ tbl.result.qvs <- function(results, method=qvals, ...) {
 #'
 #' @param results A tidyverse tbl of results with at least the following
 #'     columns: "phylum", "gene", "effect.size", and "q.value" (if only
-#'     "p.value" is present, first apply function \code{result.qvs}).
+#'     "p.value" is present, first apply function \code{tbl.result.qvs}).
 #' @param mappings List of data.frames giving gene-to-gene-set mappings.
 #' @param dirxn Count only genes with this effect sign as significant.
 #' @return A tbl giving Fisher's test p-values, q-values, effect sizes, and overlaps.

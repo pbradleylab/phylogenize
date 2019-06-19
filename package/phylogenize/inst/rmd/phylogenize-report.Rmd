@@ -346,6 +346,7 @@ respectively.
 
 ```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=TRUE}
 
+pretty.enr.tbl <- NULL
 enrichment.tbl <- multi.enrich(signif,
                                signs,
                                pz.db$g.mappings)
@@ -376,12 +377,13 @@ if (!is.null(enrichment.tbl)) {
 }
 
 ```
+Enrichment tables:
 
-```{r enrichment_display, warning=FALSE,message=FALSE,echo=FALSE, results='asis'}
+```{r enrichment_display, echo=FALSE, results='asis'}
 options(knitr.table.format = "html")
 check.pryr()
-if (!is.null(enrichment.tbl)) {
-  output.enr.table(pretty.enr.tbl)
+if (!is.null(pretty.enr.tbl)) {
+  print(output.enr.table(pretty.enr.tbl))
   check.pryr()
   if (nrow(enrichment.tbl) > 0) {
     enr.overlap <- select(enrichment.tbl,
