@@ -166,6 +166,8 @@ set_data_internal <- function(fail=FALSE, startup=FALSE) {
                                         "extdata"),
                               "."))
             }
+        } else {
+            success <- TRUE
         }
     }
     if (success) pz.options(data_dir=dd)
