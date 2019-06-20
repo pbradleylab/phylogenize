@@ -1,0 +1,64 @@
+looking for file: /home/pbradz/projects/phylogenize/emp/emp_deblur_orig_metadata.biom
+located biom file: /home/pbradz/projects/phylogenize/emp/emp_deblur_orig_metadata.biom
+sample column not found: sample; assuming row names are sample IDs
+Calling BURST with arguments: -r /home/pbradz/R/x86_64-pc-linux-gnu-library/3.6/phylogenize/extdata/16s_renamed.frn -fr -q /home/pbradz/projects/phylogenize/emp/input_seqs.txt -i 0.985 -o /home/pbradz/projects/phylogenize/emp/output_assignments.txt
+17 non-singleton environment(s) found
+1 non-singleton dataset(s) found
+0.2727273
+ 0.4642857
+ 0.3723565
+ 0.3682573
+ 0.3376220
+ 0.7619048
+ 0.5956175
+ 0.5555556
+ 0.2000000
+ 0.5500000
+ 0.3044776
+ 0.1333333
+ 0.6000000
+ 0.2048193
+ 0.3684211
+ 0.7096774
+ 0.3333333
+ 0.5000000
+ 0.1000000
+Starting evaluation...
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+Falling back to BH...
+Error in if (pi0 <= 0) {: missing value where TRUE/FALSE needed
+
+Falling back to BH...
+Error in if (pi0 <= 0) {: missing value where TRUE/FALSE needed
+
+Falling back to BH...
+Error in if (pi0 <= 0) {: missing value where TRUE/FALSE needed
+
+Falling back to BH...
+Falling back to BH...
+Falling back to BH...
+Falling back to BH...
+Error in if (pi0 <= 0) {: missing value where TRUE/FALSE needed
+
+Falling back to BH...

@@ -1,0 +1,299 @@
+"","Phylum","Gene_significance","Subsystem_level","Subsystem","q_value","Enrichment_odds_ratio"
+"1","actinobacteria","strong","level1","Amino Acids and Derivatives",0.00111990754350744,2.18916037820203
+"2","actinobacteria","strong","level1","Carbohydrates",0.234138775216482,1.45848389305981
+"3","actinobacteria","strong","level2","Catabolism of an unknown compound",0.00029287509825863,87.8271999983571
+"4","actinobacteria","strong","level2","Quinone cofactors",0.0746358269902322,4.58776940599715
+"5","actinobacteria","strong","level2","Metabolism of central aromatic intermediates",0.0316308894880114,3.63468768056252
+"6","actinobacteria","strong","level2","Branched-chain amino acids",0.0649212784983101,3.39566047397744
+"7","actinobacteria","strong","level2","Protein degradation",0.243335731319952,3.18951249405876
+"8","actinobacteria","strong","level2","Arginine; urea cycle, polyamines",0.0312114936532661,3.11149623820178
+"9","actinobacteria","strong","level2","Aminosugars",0.243335731319952,3.09490451118633
+"10","actinobacteria","strong","level2","Monosaccharides",0.00396632433696467,2.46963073696002
+"11","actinobacteria","strong","level3","CBSS-262316.1.peg.2929",0.00131558514176493,87.8271999983571
+"12","actinobacteria","strong","level3","SigmaB_stress_responce_regulation",0.00131558514176493,43.9209738244492
+"13","actinobacteria","strong","level3","Menaquinone_Biosynthesis_via_Futalosine",0.0260242477175406,23.31535637848
+"14","actinobacteria","strong","level3","ABC_transporter_branched-chain_amino_acid_(TC_3.A.1.4.1)",0.150909343095214,17.4015520285482
+"15","actinobacteria","strong","level3","HMG_CoA_Synthesis",0.0643670466379995,13.9839976353288
+"16","actinobacteria","strong","level3","Homogentisate_pathway_of_aromatic_compound_degradation",0.199135409989568,13.0527300699337
+"17","actinobacteria","strong","level3","Leucine_Degradation_and_HMG-CoA_Metabolism",0.00131558514176493,11.8641541389963
+"18","actinobacteria","strong","level3","CO_Dehydrogenase",0.0912791647910388,11.6543748798628
+"19","actinobacteria","strong","level3","Polyamine_Metabolism",0.00131558514176493,8.93109145854853
+"20","actinobacteria","strong","level3","L-rhamnose_utilization",0.00308238381989073,7.30156384045858
+"21","actinobacteria","strong","level3","Xylose_utilization",0.0300797752513579,6.51593071407955
+"22","actinobacteria","strong","level3","Molybdenum_cofactor_biosynthesis",0.179596352105038,5.8453641220155
+"23","actinobacteria","strong","level3","L-Arabinose_utilization",0.107856269019058,5.55883794685732
+"24","actinobacteria","strong","level3","Chitin_and_N-acetylglucosamine_utilization",0.199135409989568,5.4789958086379
+"25","bacteroidetes","strong","level1","Nitrogen Metabolism",0.173693592470815,3.13100745934775
+"26","bacteroidetes","strong","level1","Stress Response",0.219538818805972,2.52668056171201
+"27","bacteroidetes","strong","level2","Oxidative stress",0.0668470751343226,4.89907297926911
+"28","bacteroidetes","strong","level2","Tetrapyrroles",0.0668470751343226,4.36079585410834
+"29","bacteroidetes","strong","level2","",0.20762501337435,1.92999770968965
+"30","bacteroidetes","strong","level3","Nitrogen_fixation",0.13437057877298,11.5903834596654
+"31","bacteroidetes","strong","level3","Transport_of_Nickel_and_Cobalt",0.13437057877298,11.5903834596654
+"32","bacteroidetes","strong","level3","ECF_class_transporters",0.13437057877298,11.5903834596654
+"33","bacteroidetes","strong","level3","Coenzyme_B12_biosynthesis",0.0190698824724808,7.85704565027606
+"34","firmicutes","strong","level1","Motility and Chemotaxis",2.3867263291764e-33,31.352304587749
+"35","firmicutes","strong","level1","Amino Acids and Derivatives",0.227014634270575,1.65462038330655
+"36","firmicutes","strong","level2","Flagellar motility in Prokaryota",2.63223899050461e-26,29.572823170725
+"37","firmicutes","strong","level2","Arginine; urea cycle, polyamines",0.000127302629010555,5.05725422963648
+"38","firmicutes","strong","level2","Protein degradation",0.213031470718035,4.9249379767819
+"39","firmicutes","strong","level3","Multidrug_Resistance,_Tripartite_Systems_Found_in_Gram_Negative_Bacteria",0.140928813928578,Inf
+"40","firmicutes","strong","level3","Aromatic_amino_acid_interconversions_with_aryl_acids",0.0606884532092021,38.0436528171582
+"41","firmicutes","strong","level3","Bacterial_Chemotaxis",2.92849256943907e-10,35.7597711866277
+"42","firmicutes","strong","level3","Flagellum",2.57869353235586e-24,34.8993513469814
+"43","firmicutes","strong","level3","Flagellar_motility",1.24659803099473e-10,31.9117149463826
+"44","firmicutes","strong","level3","Urea_decomposition",5.75268051791139e-07,20.3703124068045
+"45","firmicutes","strong","level3","Flagellum_in_Campylobacter",0.143281756488538,19.0356684497647
+"46","fusobacteria","strong","level1","Stress Response",0.131948207245754,50.2467635941817
+"47","fusobacteria","strong","level2","Heat shock",0.0334123840905321,203.700713147375
+"48","fusobacteria","strong","level3","Heat_shock_dnaK_gene_cluster_extended",0.179552531327626,203.700713147375
+"49","planctomycetes","strong","level1","Secondary Metabolism",0.217985688465878,15.3036211023404
+"50","planctomycetes","strong","level1","Metabolism of Aromatic Compounds",0.169525521945645,6.73481418312529
+"51","planctomycetes","strong","level2","Metabolism of central aromatic intermediates",0.0847874887098957,12.8553184614484
+"52","planctomycetes","strong","level3","Homogentisate_pathway_of_aromatic_compound_degradation",0.074127605531932,93.6169857193226
+"53","proteobacteria","strong","level1","Potassium metabolism",0.0226791777430443,5.09049599449454
+"54","proteobacteria","strong","level1","Nitrogen Metabolism",5.57195729674264e-06,4.2666460274802
+"55","proteobacteria","strong","level1","Respiration",0.0100611695155526,2.21768750218448
+"56","proteobacteria","strong","level2","Protein secretion system, Type II",0.12410910037498,6.52358693495977
+"57","proteobacteria","strong","level2","Detoxification",0.122276653442175,5.69551916670052
+"58","proteobacteria","strong","level2","Quinone cofactors",0.12410910037498,5.03586723276827
+"59","proteobacteria","strong","level2","One-carbon Metabolism",0.122276653442175,3.64757814492072
+"60","proteobacteria","strong","level2","",0.00645114122586864,1.87388692734252
+"61","proteobacteria","strong","level3","Multidrug_Resistance,_Tripartite_Systems_Found_in_Gram_Negative_Bacteria",0.19632959310802,51.7011333145585
+"62","proteobacteria","strong","level3","Methanogenesis",0.0029236610780231,26.2503590182929
+"63","proteobacteria","strong","level3","Alkanesulfonates_Utilization",0.0610942215103806,25.9821137531518
+"64","proteobacteria","strong","level3","Pyrroloquinoline_Quinone_biosynthesis",0.0610942215103806,25.9821137531518
+"65","proteobacteria","strong","level3","Coenzyme_PQQ_synthesis",0.0935708914789808,19.4914207591705
+"66","proteobacteria","strong","level3","Benzoate_transport_and_degradation_cluster",0.000609204151069981,12.5350544826805
+"67","proteobacteria","strong","level3","Cysteine_Biosynthesis",0.0511526704127959,9.37024029698397
+"68","proteobacteria","strong","level3","Nitrogen_fixation",0.000609204151069981,9.26875280198529
+"69","proteobacteria","strong","level3","Formate_hydrogenase",0.00479695294449561,7.88283314450904
+"70","proteobacteria","strong","level3","Potassium_homeostasis",0.0591920319236056,6.58329077068468
+"71","proteobacteria","strong","level3","Nitrate_and_nitrite_ammonification",0.0128379060734129,6.44180920254417
+"72","proteobacteria","strong","level3","Hydrogenases",0.136466182208307,4.93096824220773
+"73","acidobacteria","med","level1","Motility and Chemotaxis",0.0664127544389118,3.69121723029609
+"74","actinobacteria","med","level1","Sulfur Metabolism",0.208423346176567,2.04045408797009
+"75","actinobacteria","med","level1","Amino Acids and Derivatives",0.00327303989748418,1.92744873898488
+"76","actinobacteria","med","level1","Carbohydrates",0.0420920878457193,1.51648435429161
+"77","actinobacteria","med","level2","Catabolism of an unknown compound",0.000579190204756795,65.0894242343439
+"78","actinobacteria","med","level2","Quinone cofactors",0.0222926821725915,4.99494948043627
+"79","actinobacteria","med","level2","Metabolism of central aromatic intermediates",0.0222926821725915,3.37402148331925
+"80","actinobacteria","med","level2","Branched-chain amino acids",0.032863968423639,3.22013620670381
+"81","actinobacteria","med","level2","Arginine; urea cycle, polyamines",0.0291578295133652,2.72633903105924
+"82","actinobacteria","med","level2","Monosaccharides",8.24433894088237e-05,2.69687597958385
+"83","actinobacteria","med","level3","CBSS-262316.1.peg.2929",0.0020749804843312,65.0894242343439
+"84","actinobacteria","med","level3","ABC_transporter_branched-chain_amino_acid_(TC_3.A.1.4.1)",0.0020749804843312,65.0894242343439
+"85","actinobacteria","med","level3","SigmaB_stress_responce_regulation",0.00363454869780313,32.510645564539
+"86","actinobacteria","med","level3","Menaquinone_Biosynthesis_via_Futalosine",0.00363454869780313,32.510645564539
+"87","actinobacteria","med","level3","L-fucose_utilization_temp",0.0228934853662672,25.9363557882034
+"88","actinobacteria","med","level3","CO_Dehydrogenase",0.0228934853662672,13.0148707679689
+"89","actinobacteria","med","level3","Leucine_Degradation_and_HMG-CoA_Metabolism",0.0020749804843312,10.7909187623839
+"90","actinobacteria","med","level3","HMG_CoA_Synthesis",0.121056262776373,10.3765613709238
+"91","actinobacteria","med","level3","Polyamine_Metabolism",0.0057574726686259,6.58431837015673
+"92","actinobacteria","med","level3","L-rhamnose_utilization",0.00363454869780313,6.28910713033237
+"93","actinobacteria","med","level3","Molybdenum_cofactor_biosynthesis",0.115745377949363,5.58838141640071
+"94","actinobacteria","med","level3","Chitin_and_N-acetylglucosamine_utilization",0.12892520557881,5.21473310544711
+"95","actinobacteria","med","level3","Xylose_utilization",0.109948428399361,4.81566962189462
+"96","bacteroidetes","med","level1","Nitrogen Metabolism",0.0592867707477489,3.46180875833349
+"97","bacteroidetes","med","level1","Stress Response",0.079551494478611,2.68966859354999
+"98","bacteroidetes","med","level2","Oxidative stress",0.0144431820129832,5.4946477580125
+"99","bacteroidetes","med","level2","Tetrapyrroles",0.196439937533006,3.56462417639908
+"100","bacteroidetes","med","level2","",0.197980541725623,1.84786667166033
+"101","bacteroidetes","med","level3","Coenzyme_B12_biosynthesis",0.0695498188468162,6.42364391412458
+"102","firmicutes","med","level1","Motility and Chemotaxis",1.82716279135033e-30,22.5037232369384
+"103","firmicutes","med","level1","Dormancy and Sporulation",2.78297639594761e-05,4.01777809014347
+"104","firmicutes","med","level1","Amino Acids and Derivatives",0.0670077872936739,1.70592966943006
+"105","firmicutes","med","level2","Flagellar motility in Prokaryota",8.96055031737323e-25,22.4223370197699
+"106","firmicutes","med","level2","Arginine; urea cycle, polyamines",5.3453761804139e-05,4.41268551767601
+"107","firmicutes","med","level3","Multidrug_Resistance,_Tripartite_Systems_Found_in_Gram_Negative_Bacteria",0.18521523739216,Inf
+"108","firmicutes","med","level3","Flagellum",1.45429723640305e-23,27.8901784001021
+"109","firmicutes","med","level3","Aromatic_amino_acid_interconversions_with_aryl_acids",0.10654296646555,25.1128645024216
+"110","firmicutes","med","level3","Flagellar_motility",8.66740744870865e-10,24.5473216449484
+"111","firmicutes","med","level3","Bacterial_Chemotaxis",3.12228115907898e-08,23.171794196327
+"112","firmicutes","med","level3","Sporulation_Cluster_III_A",0.0108902546005105,16.881272080185
+"113","firmicutes","med","level3","Urea_decomposition",2.00878173043225e-05,13.2439924367333
+"114","firmicutes","med","level3","Sporulation_gene_orphans",2.87554409889472e-06,8.21522416215895
+"115","firmicutes","med","level3","Cysteine_Biosynthesis",0.0330864702623012,7.81728407012941
+"116","firmicutes","med","level3","Nitrogen_fixation",0.016180108489019,7.4332397317795
+"117","fusobacteria","med","level1","Phosphorus Metabolism",0.00111221852846395,30.0094649333334
+"118","fusobacteria","med","level3","High_affinity_phosphate_transporter_and_control_of_PHO_regulon",0.000595507417155176,95.113219582315
+"119","fusobacteria","med","level3","Phosphate_metabolism",0.00533915713995926,36.9133327336926
+"120","planctomycetes","med","level1","Secondary Metabolism",0.217985688465878,15.3036211023404
+"121","planctomycetes","med","level1","Metabolism of Aromatic Compounds",0.169525521945645,6.73481418312529
+"122","planctomycetes","med","level2","Metabolism of central aromatic intermediates",0.0847874887098957,12.8553184614484
+"123","planctomycetes","med","level3","Homogentisate_pathway_of_aromatic_compound_degradation",0.074127605531932,93.6169857193226
+"124","proteobacteria","med","level1","Nitrogen Metabolism",2.41255519563279e-05,3.43162583986333
+"125","proteobacteria","med","level1","Potassium metabolism",0.0686227058863981,3.41458345152702
+"126","proteobacteria","med","level1","Sulfur Metabolism",0.184225487069828,2.27888123186107
+"127","proteobacteria","med","level1","Metabolism of Aromatic Compounds",0.023278272776706,2.15558549181141
+"128","proteobacteria","med","level1","Respiration",0.0127611371540992,1.98455181667045
+"129","proteobacteria","med","level2","Protein secretion system, Type II",0.0221972447157913,7.58515543747895
+"130","proteobacteria","med","level2","Organic sulfur assimilation",0.0221972447157913,6.53725033792379
+"131","proteobacteria","med","level2","Detoxification",0.0896567215340958,4.81957200524835
+"132","proteobacteria","med","level2","Quinone cofactors",0.249247763071608,3.38376668657874
+"133","proteobacteria","med","level2","Transcription",0.249247763071608,3.01707947279393
+"134","proteobacteria","med","level2","Metabolism of central aromatic intermediates",0.249247763071608,2.52610194854079
+"135","proteobacteria","med","level2","One-carbon Metabolism",0.249247763071608,2.43802548054056
+"136","proteobacteria","med","level2","",0.0221972447157913,1.58238937602507
+"137","proteobacteria","med","level3","Alkanesulfonates_Utilization",0.0113057010913838,35.1698416816054
+"138","proteobacteria","med","level3","Methanogenesis",0.0106368125950826,17.647559535895
+"139","proteobacteria","med","level3","Pyrroloquinoline_Quinone_biosynthesis",0.148698680001844,17.5264924449039
+"140","proteobacteria","med","level3","Coenzyme_PQQ_synthesis",0.213219545862869,13.1469660926356
+"141","proteobacteria","med","level3","Benzoate_transport_and_degradation_cluster",8.78923189559768e-05,11.9664631735321
+"142","proteobacteria","med","level3","Alkanesulfonate_assimilation",0.0106368125950826,11.8046875963952
+"143","proteobacteria","med","level3","Nitrogen_fixation",3.6106312235419e-05,9.05897416009605
+"144","proteobacteria","med","level3","Widespread_colonization_island",0.0409231753156486,7.58515543747895
+"145","proteobacteria","med","level3","Cysteine_Biosynthesis",0.148698680001844,6.2973801547921
+"146","proteobacteria","med","level3","Formate_hydrogenase",0.0106368125950826,6.1793699639996
+"147","proteobacteria","med","level3","Terminal_cytochrome_C_oxidases",0.115512474289641,5.58350275362064
+"148","proteobacteria","med","level3","Potassium_homeostasis",0.213219545862869,4.41636181227679
+"149","proteobacteria","med","level3","Nitrate_and_nitrite_ammonification",0.098948784111005,4.30636685988417
+"150","verrucomicrobia","med","level1","DNA Metabolism",0.041113881029895,3.15322279417436
+"151","verrucomicrobia","med","level1","Cell Wall and Capsule",0.041113881029895,2.54148393449221
+"152","verrucomicrobia","med","level2","Gram-Positive cell wall components",0.00074661897493856,18.0362195198214
+"153","verrucomicrobia","med","level2","ABC transporters",0.00303345305591357,15.3189055214038
+"154","verrucomicrobia","med","level2","DNA repair",0.0441074563268654,4.16514310522121
+"155","verrucomicrobia","med","level3","D-Alanyl_Lipoteichoic_Acid_Biosynthesis",0.00606032933513663,Inf
+"156","verrucomicrobia","med","level3","ABC_transporter_branched-chain_amino_acid_(TC_3.A.1.4.1)",0.00606032933513663,63.2350748370551
+"157","verrucomicrobia","med","level3","Methicillin_resistance_in_Staphylococci",0.0604170482388657,25.0627086618338
+"158","verrucomicrobia","med","level3","Teichoic_and_lipoteichoic_acids_biosynthesis",0.00606032933513663,19.1574953734248
+"159","verrucomicrobia","med","level3","D-gluconate_and_ketogluconates_metabolism",0.142844251503964,12.536608725528
+"160","verrucomicrobia","med","level3","DNA_Repair_Base_Excision",0.142844251503964,12.536608725528
+"161","verrucomicrobia","med","level3","Cysteine_Biosynthesis",0.0848140203661326,10.5366554695344
+"162","acidobacteria","weak","level1","Motility and Chemotaxis",0.0115223214402641,4.11425753470333
+"163","acidobacteria","weak","level2","Flagellar motility in Prokaryota",0.0983018353372299,4.31370390428699
+"164","actinobacteria","weak","level1","Amino Acids and Derivatives",1.95638693131753e-05,2.01895949346641
+"165","actinobacteria","weak","level1","Carbohydrates",0.00322160960034702,1.53374023993299
+"166","actinobacteria","weak","level1","Metabolism of Aromatic Compounds",0.151027711936321,1.52429865786859
+"167","actinobacteria","weak","level1","Stress Response",0.157917664003536,1.437370980048
+"168","actinobacteria","weak","level2","Catabolism of an unknown compound",0.00349695415559022,39.6271287948503
+"169","actinobacteria","weak","level2","Proline and 4-hydroxyproline",0.0381797763987765,4.54986742177872
+"170","actinobacteria","weak","level2","Quinone cofactors",0.0413159295879636,3.58543287152542
+"171","actinobacteria","weak","level2","Metabolism of central aromatic intermediates",0.00471582298688279,3.2654533863997
+"172","actinobacteria","weak","level2","Arginine; urea cycle, polyamines",0.000380824501612006,3.24371634667614
+"173","actinobacteria","weak","level2","Organic sulfur assimilation",0.185166982112015,2.79523767964484
+"174","actinobacteria","weak","level2","ABC transporters",0.185166982112015,2.79523767964484
+"175","actinobacteria","weak","level2","Branched-chain amino acids",0.0438261924891829,2.67046157786517
+"176","actinobacteria","weak","level2","Aminosugars",0.105789892980125,2.65470374905147
+"177","actinobacteria","weak","level2","Monosaccharides",2.29612997503593e-06,2.59723774203418
+"178","actinobacteria","weak","level2","NAD and NADP",0.182243715941836,2.55542771304578
+"179","actinobacteria","weak","level2","Di- and oligosaccharides",0.182243715941836,1.80121034454232
+"180","actinobacteria","weak","level3","ABC_transporter_branched-chain_amino_acid_(TC_3.A.1.4.1)",0.000579234559650595,Inf
+"181","actinobacteria","weak","level3","SigmaB_stress_responce_regulation",0.00244458325452816,47.6599908698383
+"182","actinobacteria","weak","level3","CBSS-262316.1.peg.2929",0.00939602167974008,39.6271287948503
+"183","actinobacteria","weak","level3","Carbon_monoxide_dehydrogenase_maturation_factors",0.137161905273541,23.6746846563871
+"184","actinobacteria","weak","level3","Menaquinone_Biosynthesis_via_Futalosine",0.017898208086558,19.8149928354839
+"185","actinobacteria","weak","level3","L-fucose_utilization_temp",0.0718834539466858,15.8190021232823
+"186","actinobacteria","weak","level3","CO_Dehydrogenase",0.017898208086558,11.91527706943
+"187","actinobacteria","weak","level3","Threonine_degradation",0.0631683982162747,9.90459821462356
+"188","actinobacteria","weak","level3","L-rhamnose_utilization",0.000579234559650595,6.64225693907853
+"189","actinobacteria","weak","level3","Histidine_Degradation",0.133970683672583,6.60224674724756
+"190","actinobacteria","weak","level3","Leucine_Degradation_and_HMG-CoA_Metabolism",0.0121410960144166,6.53371003670339
+"191","actinobacteria","weak","level3","Proline,_4-hydroxyproline_uptake_and_utilization",0.0203582883417255,6.37566795744831
+"192","actinobacteria","weak","level3","L-Arabinose_utilization",0.00493794196655565,6.29879630303603
+"193","actinobacteria","weak","level3","Chitin_and_N-acetylglucosamine_utilization",0.0167560136072854,5.98797615500637
+"194","actinobacteria","weak","level3","Protocatechuate_branch_of_beta-ketoadipate_pathway",0.08701163840807,5.95302633991585
+"195","actinobacteria","weak","level3","Polyamine_Metabolism",0.00935365349851712,5.50874223720767
+"196","actinobacteria","weak","level3","Urea_decomposition",0.036408866643536,4.78694839881686
+"197","actinobacteria","weak","level3","Inositol_catabolism",0.133970683672583,4.27889186857452
+"198","actinobacteria","weak","level3","Respiratory_Complex_I",0.08701163840807,4.24562528525438
+"199","actinobacteria","weak","level3","Xylose_utilization",0.0631683982162747,4.22186118210281
+"200","actinobacteria","weak","level3","Maltose_and_Maltodextrin_Utilization",0.0718834539466858,3.62802523669029
+"201","actinobacteria","weak","level3","NAD_and_NADP_cofactor_biosynthesis_global",0.239289584198023,3.17964718522646
+"202","bacteroidetes","weak","level1","Nitrogen Metabolism",0.026289078535248,2.86505092598767
+"203","bacteroidetes","weak","level1","Cofactors, Vitamins, Prosthetic Groups, Pigments",0.026289078535248,2.14335455751008
+"204","bacteroidetes","weak","level1","Stress Response",0.112416274841453,2.13409683907652
+"205","bacteroidetes","weak","level2","Oxidative stress",0.00649775890056353,4.65698338492715
+"206","bacteroidetes","weak","level2","Tetrapyrroles",0.126807041598003,3.07673765067631
+"207","bacteroidetes","weak","level2","",0.14660271350891,1.66515087703855
+"208","bacteroidetes","weak","level3","Transport_of_Molybdenum",0.190782308834723,51.1006294587389
+"209","bacteroidetes","weak","level3","Membrane-bound_Ni,_Fe-hydrogenase",0.229929073997095,25.5731179430176
+"210","bacteroidetes","weak","level3","Cobalamin_synthesis",0.190782308834723,8.62846511806536
+"211","bacteroidetes","weak","level3","Coenzyme_B12_biosynthesis",0.0781855705807416,5.05206881022631
+"212","delta.epsilon.subdivisions","weak","level2","Sugar Phosphotransferase Systems, PTS",0.199230121503793,78.4661718344527
+"213","delta.epsilon.subdivisions","weak","level3","ECF_class_transporters",0.186133052795982,10.221554356452
+"214","firmicutes","weak","level1","Motility and Chemotaxis",8.03400579600859e-28,16.4893685889125
+"215","firmicutes","weak","level1","Dormancy and Sporulation",4.05309505431008e-13,5.8400663802359
+"216","firmicutes","weak","level1","Amino Acids and Derivatives",0.0216336699698892,1.5863066479111
+"217","firmicutes","weak","level2","Flagellar motility in Prokaryota",1.28204942656596e-23,17.7305421288324
+"218","firmicutes","weak","level2","Arginine; urea cycle, polyamines",0.00168196998575185,3.09958498403773
+"219","firmicutes","weak","level2","",0.019840377984395,1.49529159624402
+"220","firmicutes","weak","level3","Terminal_cytochrome_O_ubiquinol_oxidase",0.00670760389802019,Inf
+"221","firmicutes","weak","level3","Aromatic_amino_acid_interconversions_with_aryl_acids",0.0233237360388763,39.9461778353565
+"222","firmicutes","weak","level3","Flagellar_motility",2.27748974825665e-12,31.0121094653678
+"223","firmicutes","weak","level3","Flagellum",7.36427102174337e-21,20.3381455340506
+"224","firmicutes","weak","level3","Bacterial_Chemotaxis",4.00848239398955e-07,16.5670634691486
+"225","firmicutes","weak","level3","Sporulation_Cluster_III_A",0.00721615079345719,15.032115834563
+"226","firmicutes","weak","level3","Sporulation_gene_orphans",2.11846645851658e-14,14.2591073896881
+"227","firmicutes","weak","level3","Flagellum_in_Campylobacter",0.102166518624574,13.3013864941879
+"228","firmicutes","weak","level3","Menaquinone_Biosynthesis_via_Futalosine",0.173807913903421,9.97544449429667
+"229","firmicutes","weak","level3","Urea_decomposition",0.000191174405568252,9.29458461406768
+"230","firmicutes","weak","level3","Transcription_initiation,_bacterial_sigma_factors",0.0301884660021258,5.74724528469143
+"231","firmicutes","weak","level3","Nitrogen_fixation",0.0383708274745216,5.3630035600999
+"232","firmicutes","weak","level3","Cysteine_Biosynthesis",0.245182422891784,4.61976770781651
+"233","fusobacteria","weak","level1","Nitrogen Metabolism",3.22956922706076e-05,8.01513636059024
+"234","fusobacteria","weak","level1","Phosphorus Metabolism",0.0372571329778455,3.63982796241137
+"235","fusobacteria","weak","level1","Carbohydrates",5.89285663791664e-11,2.27162004703421
+"236","fusobacteria","weak","level2","Monosaccharides",8.82125083213506e-11,4.45998951064179
+"237","fusobacteria","weak","level2","Aminosugars",0.125187872492827,3.93657341104284
+"238","fusobacteria","weak","level2","Electron donating reactions",0.0523477309053081,3.1213463786066
+"239","fusobacteria","weak","level2","Di- and oligosaccharides",0.0172100956823261,2.33306306296032
+"240","fusobacteria","weak","level2","Folate and pterines",0.198803344515236,2.08519110796407
+"241","fusobacteria","weak","level3","L-Arabinose_utilization",0.0763837081860484,Inf
+"242","fusobacteria","weak","level3","L-ascorbate_utilization_(and_related_gene_clusters)",0.153142906679114,Inf
+"243","fusobacteria","weak","level3","Nitrogen_fixation",0.220366646509039,Inf
+"244","fusobacteria","weak","level3","High_affinity_phosphate_transporter_and_control_of_PHO_regulon",0.0763837081860484,Inf
+"245","fusobacteria","weak","level3","Ammonia_assimilation",0.220366646509039,Inf
+"246","fusobacteria","weak","level3","Nitrate_and_nitrite_ammonification",0.153142906679114,Inf
+"247","fusobacteria","weak","level3","Hydrogenases",0.153142906679114,Inf
+"248","fusobacteria","weak","level3","Colanic_acid_biosynthesis",0.220366646509039,Inf
+"249","fusobacteria","weak","level3","D-allose_utilization",0.220366646509039,Inf
+"250","fusobacteria","weak","level3","D-Sorbitol(D-Glucitol)_and_L-Sorbose_Utilization",0.105563278355751,Inf
+"251","fusobacteria","weak","level3","Inositol_catabolism",0.0230817953710709,18.2794701783724
+"252","fusobacteria","weak","level3","Molybdenum_cofactor_biosynthesis",0.0763837081860484,14.5536769161827
+"253","fusobacteria","weak","level3","Beta-Glucoside_Metabolism",0.153142906679114,12.0992660876013
+"254","fusobacteria","weak","level3","D-Galacturonate_and_D-Glucuronate_Utilization",0.0299711176916148,7.32449313329201
+"255","fusobacteria","weak","level3","Maltose_and_Maltodextrin_Utilization",0.191516362923185,3.65088233600694
+"256","planctomycetes","weak","level1","Secondary Metabolism",0.196892012160035,12.912989248806
+"257","planctomycetes","weak","level1","Metabolism of Aromatic Compounds",0.149378957761146,5.63357227204601
+"258","planctomycetes","weak","level1","Cofactors, Vitamins, Prosthetic Groups, Pigments",0.0625770501753409,3.30142113430301
+"259","planctomycetes","weak","level2","Metabolism of central aromatic intermediates",0.136327339644724,10.7585427172951
+"260","planctomycetes","weak","level2","Aromatic amino acids and derivatives",0.174176452196056,7.15303253132333
+"261","planctomycetes","weak","level2","Tetrapyrroles",0.136327339644724,5.20021086228481
+"262","planctomycetes","weak","level3","Homogentisate_pathway_of_aromatic_compound_degradation",0.0399180084506362,78.4933004926578
+"263","planctomycetes","weak","level3","Aromatic_amino_acid_degradation",0.0728197771005046,39.3878707190664
+"264","planctomycetes","weak","level3","Cobalamin_synthesis",0.0302707555290905,15.2770577870993
+"265","planctomycetes","weak","level3","Coenzyme_B12_biosynthesis",0.0302707555290905,11.2233675755156
+"266","proteobacteria","weak","level1","Potassium metabolism",0.0283246569713869,2.82835281647244
+"267","proteobacteria","weak","level1","Phosphorus Metabolism",0.013008963519909,2.63106184508761
+"268","proteobacteria","weak","level1","Nitrogen Metabolism",0.000188953554486211,2.61299964321379
+"269","proteobacteria","weak","level1","Sulfur Metabolism",0.0965173443463724,1.91224160275668
+"270","proteobacteria","weak","level1","Metabolism of Aromatic Compounds",0.0147885130434826,1.8639926824834
+"271","proteobacteria","weak","level1","Respiration",0.00486319001030901,1.7682144640002
+"272","proteobacteria","weak","level1","Miscellaneous",0.215367404708341,1.5575945379985
+"273","proteobacteria","weak","level1","Carbohydrates",0.150927399618241,1.2038108560972
+"274","proteobacteria","weak","level2","Protein secretion system, Type II",0.00971083965373833,6.85640393385736
+"275","proteobacteria","weak","level2","Polysaccharides",0.0928587513583558,6.804918723254
+"276","proteobacteria","weak","level2","Organic sulfur assimilation",0.00971083965373833,5.45348283606209
+"277","proteobacteria","weak","level2","Histidine Metabolism",0.0601420673806217,4.22294487943756
+"278","proteobacteria","weak","level2","One-carbon Metabolism",0.038009906484413,2.78381800495842
+"279","proteobacteria","weak","level2","CO2 fixation",0.0601420673806217,2.5828276902908
+"280","proteobacteria","weak","level2","Resistance to antibiotics and toxic compounds",0.136886868384272,1.84298553404422
+"281","proteobacteria","weak","level2","Central carbohydrate metabolism",0.202037703293098,1.71354517329581
+"282","proteobacteria","weak","level2","",0.0928587513583558,1.33944560775744
+"283","proteobacteria","weak","level3","Multidrug_Resistance,_Tripartite_Systems_Found_in_Gram_Negative_Bacteria",0.0590621039750994,Inf
+"284","proteobacteria","weak","level3","Terminal_cytochrome_O_ubiquinol_oxidase",0.128588926254749,30.5631860332214
+"285","proteobacteria","weak","level3","Histidine_Degradation",0.000813502237308997,23.9770424003923
+"286","proteobacteria","weak","level3","Alkanesulfonates_Utilization",0.0596794338917674,20.4218414762361
+"287","proteobacteria","weak","level3","Methanogenesis",0.011180344637583,15.3770624110351
+"288","proteobacteria","weak","level3","Benzoate_transport_and_degradation_cluster",1.13872870373284e-05,11.2657064396359
+"289","proteobacteria","weak","level3","Membrane-bound_Ni,_Fe-hydrogenase",0.137439836710858,10.2106823088492
+"290","proteobacteria","weak","level3","Alkanesulfonate_assimilation",0.0175358794522801,8.98680465042992
+"291","proteobacteria","weak","level3","NiFe_hydrogenase_maturation",0.087182702560471,8.52493466327948
+"292","proteobacteria","weak","level3","Nitrogen_fixation",5.44111387558165e-06,8.09272578596239
+"293","proteobacteria","weak","level3","Widespread_colonization_island",0.0181326732343323,6.85640393385736
+"294","proteobacteria","weak","level3","Multidrug_Resistance_Efflux_Pumps",0.236716340124096,4.38821343660121
+"295","proteobacteria","weak","level3","Potassium_homeostasis",0.150913861323471,3.73344229997152
+"296","proteobacteria","weak","level3","Hydrogenases",0.083484053636775,3.67848029904974
+"297","proteobacteria","weak","level3","Formate_hydrogenase",0.13107472244208,3.55898731543702
+"298","verrucomicrobia","weak","level1","Stress Response",0.175390717002583,2.33267916275176

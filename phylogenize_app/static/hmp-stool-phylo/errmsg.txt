@@ -1,0 +1,39 @@
+located abundance file: /home/pbradz/projects/phylogenize/hmp/hmp-16s-dada2-full.tab
+located metadata file: /home/pbradz/projects/phylogenize/hmp/hmp-16s-phylogenize-metadata-full.tab
+Calling BURST with arguments: -r /home/pbradz/R/x86_64-pc-linux-gnu-library/3.6/phylogenize/extdata/16s_renamed.frn -fr -q /home/pbradz/projects/phylogenize/hmp/input_seqs.txt -i 0.985 -o /home/pbradz/projects/phylogenize/hmp/output_assignments.txt
+17 non-singleton environment(s) found
+1 non-singleton dataset(s) found
+0.00000000
+ 0.00000000
+ 0.23036254
+ 0.17219917
+ 0.10425909
+ 0.00000000
+ 0.24501992
+ 0.05555556
+ 0.06666667
+ 0.00000000
+ 0.02686567
+ 0.00000000
+ 0.00000000
+ 0.12048193
+ 0.00000000
+ 0.41935484
+ 0.00000000
+ 0.04761905
+ 0.00000000
+Starting evaluation...
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry
+getting continuous trait ancestry

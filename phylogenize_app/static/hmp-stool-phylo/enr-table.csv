@@ -1,0 +1,222 @@
+"","Phylum","Gene_significance","Subsystem_level","Subsystem","q_value","Enrichment_odds_ratio"
+"1","actinobacteria","strong","level1","Virulence, Disease and Defense",0.117243753664597,2.49184881499208
+"2","actinobacteria","strong","level1","Carbohydrates",0.0461331099621636,1.84813809119816
+"3","actinobacteria","strong","level2","Di- and oligosaccharides",8.77561944140294e-06,5.89085476502226
+"4","actinobacteria","strong","level2","Monosaccharides",0.029904664463703,2.70884727645651
+"5","actinobacteria","strong","level3","D-Tagatose_and_Galactitol_Utilization",0.105227462028432,15.9860994742535
+"6","actinobacteria","strong","level3","Lactose_and_Galactose_Uptake_and_Utilization",0.00176286609527011,11.4602040121658
+"7","bacteroidetes","strong","level1","Phages, Prophages, Transposable elements, Plasmids",0.00450915257049939,4.01916779966175
+"8","bacteroidetes","strong","level1","Cell Wall and Capsule",1.09808793079119e-06,3.14630374145783
+"9","bacteroidetes","strong","level2","Sugar Phosphotransferase Systems, PTS",0.188400453764632,Inf
+"10","bacteroidetes","strong","level2","Phages, Prophages",0.0286318931298114,19.0323944666414
+"11","bacteroidetes","strong","level2","ATP synthases",0.025493437791227,8.20680375487104
+"12","bacteroidetes","strong","level2","Gram-Positive cell wall components",0.188400453764632,4.76719539364446
+"13","bacteroidetes","strong","level2","Gram-Negative cell wall components",0.0168138750636927,3.72011759067424
+"14","bacteroidetes","strong","level2","Capsular and extracellular polysacchrides",0.00300493324462625,3.16703936625745
+"15","bacteroidetes","strong","level3","V-Type_ATP_synthase",0.0811927714293409,23.8640169518707
+"16","bacteroidetes","strong","level3","LOS_core_oligosaccharide_biosynthesis",0.0850600455401619,6.41882403995976
+"17","delta.epsilon.subdivisions","strong","level1","Phages, Prophages, Transposable elements",0.0262749416436002,21.2710778045648
+"18","delta.epsilon.subdivisions","strong","level1","Virulence",0.00461148384268394,4.54388982153136
+"19","delta.epsilon.subdivisions","strong","level1","Sulfur Metabolism",0.00461148384268394,4.33678620983392
+"20","delta.epsilon.subdivisions","strong","level1","Phosphorus Metabolism",0.14402674199694,2.38218799003872
+"21","delta.epsilon.subdivisions","strong","level1","Clustering-based subsystems",0.194559636498174,1.7596716300042
+"22","delta.epsilon.subdivisions","strong","level1","Respiration",0.0835588283549136,1.68910613688272
+"23","delta.epsilon.subdivisions","strong","level2","Type III secretion system, extended",1.31731474800185e-06,32.7955148155279
+"24","delta.epsilon.subdivisions","strong","level2","Bacteriophage structural proteins",0.0702854688966306,21.2710778045648
+"25","delta.epsilon.subdivisions","strong","level2","Organic sulfur assimilation",0.0131354334807183,8.6169397413232
+"26","delta.epsilon.subdivisions","strong","level2","Type III, Type IV, Type VI, ESAT secretion systems",0.0131354334807183,4.54388982153136
+"27","delta.epsilon.subdivisions","strong","level2","Electron donating reactions",0.103521038055981,2.31017853358404
+"28","delta.epsilon.subdivisions","strong","level3","IbrA_and_IbrB:_co-activators_of_prophage_gene_expression",0.211145821650856,Inf
+"29","delta.epsilon.subdivisions","strong","level3","Pyrrolysine",0.029462257883814,Inf
+"30","delta.epsilon.subdivisions","strong","level3","Energy-conserving_hydrogenase_(ferredoxin)",0.00203578628457275,71.5469579303979
+"31","delta.epsilon.subdivisions","strong","level3","L-fucose_utilization_temp",0.0706137430794508,42.5134178169284
+"32","delta.epsilon.subdivisions","strong","level3","Alkanesulfonates_Utilization",0.0706137430794508,42.5134178169284
+"33","delta.epsilon.subdivisions","strong","level3","Type_III_secretion_systems,_extended",7.0790278514118e-06,32.7955148155279
+"34","delta.epsilon.subdivisions","strong","level3","Phage_capsid_proteins",0.151080914450701,21.2710778045648
+"35","delta.epsilon.subdivisions","strong","level3","Na(+)-translocating_NADH-quinone_oxidoreductase_and_rnf-like_group_of_electron_transport_complexes",0.00766395350399735,14.3650987312294
+"36","delta.epsilon.subdivisions","strong","level3","Glycine_reductase,_sarcosine_reductase_and_betaine_reductase",0.221058560353159,14.1876908134036
+"37","delta.epsilon.subdivisions","strong","level3","D-gluconate_and_ketogluconates_metabolism",0.00408390240938981,12.6270134307095
+"38","delta.epsilon.subdivisions","strong","level3","Alkanesulfonate_assimilation",0.152037239716803,9.49582371780382
+"39","delta.epsilon.subdivisions","strong","level3","Carbon_monoxide_induced_hydrogenase",0.0302518327826957,8.6169397413232
+"40","delta.epsilon.subdivisions","strong","level3","Type_4_secretion_and_conjugative_transfer",0.029462257883814,4.54388982153136
+"41","firmicutes","strong","level1","Dormancy and Sporulation",1.35605335128781e-11,8.37347935310746
+"42","firmicutes","strong","level1","Phosphorus Metabolism",0.00621881401894352,5.15451158492387
+"43","firmicutes","strong","level1","Sulfur Metabolism",0.0352253870993339,3.8503024718893
+"44","firmicutes","strong","level1","Iron acquisition and metabolism",0.120407149579932,2.25399955473955
+"45","firmicutes","strong","level2","",0.000545095422395249,2.10581733010455
+"46","firmicutes","strong","level3","High_affinity_phosphate_transporter_and_control_of_PHO_regulon",0.000108941369070912,41.2936345281028
+"47","firmicutes","strong","level3","Sporulation_Cluster_III_A",0.000155009150157788,33.031705292522
+"48","firmicutes","strong","level3","Sporulation_gene_orphans",1.2707710625557e-18,28.0510368658123
+"49","firmicutes","strong","level3","Thioredoxin-disulfide_reductase",0.162883744174024,16.2478393577773
+"50","firmicutes","strong","level3","Cysteine_Biosynthesis",0.00535992600251906,12.6998278269655
+"51","firmicutes","strong","level3","Transcription_initiation,_bacterial_sigma_factors",0.0886703150872183,8.04610992403804
+"52","firmicutes","strong","level3","Phosphate_metabolism",0.0280368841242502,6.66550012434388
+"53","firmicutes","strong","level3","Heme,_hemin_uptake_and_utilization_systems_in_GramPositives",0.143240286625979,4.01976478644425
+"54","fusobacteria","strong","level1","Carbohydrates",0.135119744167255,2.74439113607977
+"55","proteobacteria","strong","level1","Phages, Prophages, Transposable elements",0.141398542016066,11.655832186133
+"56","proteobacteria","strong","level1","Virulence",1.95803189207279e-08,9.47888327136856
+"57","proteobacteria","strong","level1","Membrane Transport",1.36724718646153e-09,4.88387584258783
+"58","proteobacteria","strong","level1","Iron acquisition and metabolism",0.141398542016066,2.29184265558294
+"59","proteobacteria","strong","level2","Protein and nucleoprotein secretion system, Type IV",8.82608170828556e-20,17.0141730393142
+"60","proteobacteria","strong","level2","Type III, Type IV, Type VI, ESAT secretion systems",6.98364708172629e-08,9.47888327136856
+"61","proteobacteria","strong","level3","Type_4_conjugative_transfer_system,_IncI1_type",2.15309571896421e-32,97.4549861392421
+"62","proteobacteria","strong","level3","Tetrathionate_respiration",0.0867622757089722,30.80071847772
+"63","proteobacteria","strong","level3","Type_4_secretion_and_conjugative_transfer",3.75289445980619e-07,9.47888327136856
+"64","actinobacteria","med","level1","Phages, Prophages, Transposable elements",0.047511740479616,27.9754917862369
+"65","actinobacteria","med","level1","Virulence, Disease and Defense",0.0486833458191622,2.45560444959973
+"66","actinobacteria","med","level1","Carbohydrates",0.00113639946408732,2.12474134693521
+"67","actinobacteria","med","level2","Bacteriophage structural proteins",0.24655808971093,27.9754917862369
+"68","actinobacteria","med","level2","Di- and oligosaccharides",2.21531914308203e-07,6.41277735673458
+"69","actinobacteria","med","level2","Monosaccharides",0.0343763674662124,2.52257006817618
+"70","actinobacteria","med","level3","Lacto-N-Biose_I_and_Galacto-N-Biose_Metabolic_Pathway",0.234782641714314,16.9102694456813
+"71","actinobacteria","med","level3","D-Tagatose_and_Galactitol_Utilization",0.11906336934442,14.1875110498466
+"72","actinobacteria","med","level3","Lactose_and_Galactose_Uptake_and_Utilization",0.000355120962192003,12.0057172564816
+"73","actinobacteria","med","level3","Beta-Glucoside_Metabolism",0.11906336934442,8.92057514556878
+"74","actinobacteria","med","level3","L-Arabinose_utilization",0.234782641714314,6.78999554575943
+"75","bacteroidetes","med","level1","Phages, Prophages, Transposable elements, Plasmids",5.01114234733051e-05,5.25714446651273
+"76","bacteroidetes","med","level1","Cell Wall and Capsule",3.45875369312488e-06,2.85960240854445
+"77","bacteroidetes","med","level1","Potassium metabolism",0.185027002223087,2.81992240363329
+"78","bacteroidetes","med","level2","Sugar Phosphotransferase Systems, PTS",0.168390537311678,Inf
+"79","bacteroidetes","med","level2","Phages, Prophages",0.0417969987698147,15.9513346457553
+"80","bacteroidetes","med","level2","Sodium Ion-Coupled Energetics",0.115865863669855,7.97375219864147
+"81","bacteroidetes","med","level2","ATP synthases",0.0417969987698147,6.87084752173312
+"82","bacteroidetes","med","level2","Transposable elements",0.00692317250379223,5.78163125404975
+"83","bacteroidetes","med","level2","Gram-Positive cell wall components",0.0709252425583703,5.34038406787879
+"84","bacteroidetes","med","level2","Gram-Negative cell wall components",0.0147528092204789,3.45328095512797
+"85","bacteroidetes","med","level2","Capsular and extracellular polysacchrides",0.00692317250379223,2.79564675218804
+"86","bacteroidetes","med","level3","V-Type_ATP_synthase",0.0867080159535518,19.9944648583392
+"87","bacteroidetes","med","level3","Conjugative_transposon,_Bacteroidales",0.0182681413521511,7.36526724278307
+"88","bacteroidetes","med","level3","LOS_core_oligosaccharide_biosynthesis",0.166840019998231,5.36724501595523
+"89","delta.epsilon.subdivisions","med","level1","Phages, Prophages, Transposable elements",0.0226614375098475,19.0670015929576
+"90","delta.epsilon.subdivisions","med","level1","Virulence",0.0044915474352257,4.63207965145324
+"91","delta.epsilon.subdivisions","med","level1","Sulfur Metabolism",0.00797555122390874,3.87331076739981
+"92","delta.epsilon.subdivisions","med","level1","Potassium metabolism",0.199431194689905,2.8282083889317
+"93","delta.epsilon.subdivisions","med","level1","Phosphorus Metabolism",0.0932470305952095,2.50701119011454
+"94","delta.epsilon.subdivisions","med","level1","Respiration",0.0226614375098475,1.82119886398441
+"95","delta.epsilon.subdivisions","med","level1","Clustering-based subsystems",0.225768316149585,1.72721135904472
+"96","delta.epsilon.subdivisions","med","level2","Type III secretion system, extended",3.2140885929346e-06,29.3222342379677
+"97","delta.epsilon.subdivisions","med","level2","Bacteriophage structural proteins",0.0940400519086237,19.0670015929576
+"98","delta.epsilon.subdivisions","med","level2","Organic sulfur assimilation",0.0226584259994895,7.71548842345458
+"99","delta.epsilon.subdivisions","med","level2","Type III, Type IV, Type VI, ESAT secretion systems",0.00800992625948583,4.63207965145324
+"100","delta.epsilon.subdivisions","med","level2","Electron donating reactions",0.0984939553448728,2.20881375401781
+"101","delta.epsilon.subdivisions","med","level3","IbrA_and_IbrB:_co-activators_of_prophage_gene_expression",0.238304609094027,Inf
+"102","delta.epsilon.subdivisions","med","level3","Pyrrolysine",0.0376800213972082,Inf
+"103","delta.epsilon.subdivisions","med","level3","Energy-conserving_hydrogenase_(ferredoxin)",0.00335554578596169,64.1058192876779
+"104","delta.epsilon.subdivisions","med","level3","L-fucose_utilization_temp",0.0950018376990905,38.1319480343532
+"105","delta.epsilon.subdivisions","med","level3","Alkanesulfonates_Utilization",0.0950018376990905,38.1319480343532
+"106","delta.epsilon.subdivisions","med","level3","Type_III_secretion_systems,_extended",1.72719714106299e-05,29.3222342379677
+"107","delta.epsilon.subdivisions","med","level3","Phage_capsid_proteins",0.183765606958228,19.0670015929576
+"108","delta.epsilon.subdivisions","med","level3","Na(+)-translocating_NADH-quinone_oxidoreductase_and_rnf-like_group_of_electron_transport_complexes",0.0135562201519897,12.8687435397676
+"109","delta.epsilon.subdivisions","med","level3","D-gluconate_and_ketogluconates_metabolism",0.00789743626713291,11.3026542515426
+"110","delta.epsilon.subdivisions","med","level3","Alkanesulfonate_assimilation",0.201486990544135,8.5109459795518
+"111","delta.epsilon.subdivisions","med","level3","Carbon_monoxide_induced_hydrogenase",0.0521839584100393,7.71548842345458
+"112","delta.epsilon.subdivisions","med","level3","Biogenesis_of_c-type_cytochromes",0.137613244790096,5.50555183943748
+"113","delta.epsilon.subdivisions","med","level3","Type_4_secretion_and_conjugative_transfer",0.0172175985016985,4.63207965145324
+"114","firmicutes","med","level1","Dormancy and Sporulation",8.92186892740677e-13,8.26841929673094
+"115","firmicutes","med","level1","Phosphorus Metabolism",0.017290836785517,4.3604219758196
+"116","firmicutes","med","level1","Sulfur Metabolism",0.0702874733466669,3.26002734317309
+"117","firmicutes","med","level1","Iron acquisition and metabolism",0.238859880969403,1.90135563621309
+"118","firmicutes","med","level2","",0.000588800557747843,1.98467158551252
+"119","firmicutes","med","level3","Sporulation_Cluster_III_A",1.74743228233168e-05,41.0740990928062
+"120","firmicutes","med","level3","High_affinity_phosphate_transporter_and_control_of_PHO_regulon",0.000181544137137197,34.9982715416713
+"121","firmicutes","med","level3","Sporulation_gene_orphans",2.46404510890342e-21,30.6075757531482
+"122","firmicutes","med","level3","Cysteine_Biosynthesis",0.000998848467825521,13.6763786712072
+"123","firmicutes","med","level3","Transcription_initiation,_bacterial_sigma_factors",0.151872691808441,6.82500922078036
+"124","firmicutes","med","level3","Phosphate_metabolism",0.0718350894501482,5.64449044094681
+"125","firmicutes","med","level3","Anaerobic_respiratory_reductases",0.0990755517163022,5.11241485666356
+"126","fusobacteria","med","level1","Carbohydrates",0.0261783930375901,3.10855396204306
+"127","fusobacteria","med","level2","Di- and oligosaccharides",0.0160215907949662,6.45221485686523
+"128","proteobacteria","med","level1","Phages, Prophages, Transposable elements",0.188796000414777,9.90648403133834
+"129","proteobacteria","med","level1","Virulence",2.04873520161336e-08,8.63764997820303
+"130","proteobacteria","med","level1","Membrane Transport",5.54170130794355e-09,4.31911163988715
+"131","proteobacteria","med","level2","Protein and nucleoprotein secretion system, Type IV",5.60660626315564e-19,14.7309190860992
+"132","proteobacteria","med","level2","Type III, Type IV, Type VI, ESAT secretion systems",7.30715555242099e-08,8.63764997820303
+"133","proteobacteria","med","level3","Type_4_conjugative_transfer_system,_IncI1_type",2.60323818398763e-32,90.0035362973876
+"134","proteobacteria","med","level3","Tetrathionate_respiration",0.137426862210157,26.1466076255189
+"135","proteobacteria","med","level3","Type_4_secretion_and_conjugative_transfer",3.92674246975894e-07,8.63764997820303
+"136","actinobacteria","weak","level1","Phages, Prophages, Transposable elements",0.00762294034941215,71.8680659065289
+"137","actinobacteria","weak","level1","Potassium metabolism",0.206673379414734,3.42315022037165
+"138","actinobacteria","weak","level1","Virulence, Disease and Defense",0.0517000139642335,2.52333578122202
+"139","actinobacteria","weak","level1","Membrane Transport",0.144966599191757,1.90258330476494
+"140","actinobacteria","weak","level1","Carbohydrates",0.0228811791496604,1.73516886034497
+"141","actinobacteria","weak","level1","Cell Wall and Capsule",0.23179613415635,1.70999518187282
+"142","actinobacteria","weak","level2","Bacteriophage structural proteins",0.0135942436231183,71.8680659065289
+"143","actinobacteria","weak","level2","Di- and oligosaccharides",3.22047183136253e-06,5.35604892377071
+"144","actinobacteria","weak","level2","Monosaccharides",0.175975874205549,2.10662077125643
+"145","actinobacteria","weak","level3","Phage_capsid_proteins",0.0487021188990221,71.8680659065289
+"146","actinobacteria","weak","level3","D-Tagatose_and_Galactitol_Utilization",0.142199922912731,12.0802554030632
+"147","actinobacteria","weak","level3","Lactose_and_Galactose_Uptake_and_Utilization",0.00127878770518215,10.1685706725335
+"148","actinobacteria","weak","level3","Beta-Glucoside_Metabolism",0.142199922912731,7.58837189140085
+"149","actinobacteria","weak","level3","ECF_class_transporters",0.0479372580243927,5.30335163535467
+"150","bacteroidetes","weak","level1","Phages, Prophages, Transposable elements, Plasmids",0.00110070227718316,3.95947215552181
+"151","bacteroidetes","weak","level1","Cell Wall and Capsule",5.64318899491247e-06,2.63159478234013
+"152","bacteroidetes","weak","level2","Sugar Phosphotransferase Systems, PTS",0.217034637049229,Inf
+"153","bacteroidetes","weak","level2","ATP synthases",0.00100987510348706,13.7908301919404
+"154","bacteroidetes","weak","level2","Phages, Prophages",0.0738907427283027,12.1169185758596
+"155","bacteroidetes","weak","level2","Sodium Ion-Coupled Energetics",0.210927880440714,6.05647287356283
+"156","bacteroidetes","weak","level2","Transposable elements",0.0251277229601933,4.37322546134485
+"157","bacteroidetes","weak","level2","Gram-Positive cell wall components",0.173605068993105,4.05052025912935
+"158","bacteroidetes","weak","level2","Gram-Negative cell wall components",0.00477114236033556,3.50754073551513
+"159","bacteroidetes","weak","level2","Capsular and extracellular polysacchrides",0.00477114236033556,2.64192483838778
+"160","bacteroidetes","weak","level3","V-Type_ATP_synthase",0.000659256059939556,Inf
+"161","bacteroidetes","weak","level3","LOS_core_oligosaccharide_biosynthesis",0.0434828467226941,6.13042678883015
+"162","bacteroidetes","weak","level3","Conjugative_transposon,_Bacteroidales",0.048388434897288,5.57131378990947
+"163","delta.epsilon.subdivisions","weak","level1","Phages, Prophages, Transposable elements",0.00461207100114818,40.6081417154114
+"164","delta.epsilon.subdivisions","weak","level1","Sulfur Metabolism",6.45044969603983e-05,5.24071914691768
+"165","delta.epsilon.subdivisions","weak","level1","Virulence",0.00637542281017222,3.65638092573689
+"166","delta.epsilon.subdivisions","weak","level1","Phosphorus Metabolism",0.00637542281017222,3.34712009231131
+"167","delta.epsilon.subdivisions","weak","level1","Respiration",0.00959933576382278,1.78256600464002
+"168","delta.epsilon.subdivisions","weak","level2","Bacteriophage structural proteins",0.0164497199040952,40.6081417154114
+"169","delta.epsilon.subdivisions","weak","level2","Type III secretion system, extended",2.02961743319927e-05,23.1971785215667
+"170","delta.epsilon.subdivisions","weak","level2","Organic sulfur assimilation",0.0445084401645781,6.11714596385857
+"171","delta.epsilon.subdivisions","weak","level2","Type III, Type IV, Type VI, ESAT secretion systems",0.0331492791841076,3.65638092573689
+"172","delta.epsilon.subdivisions","weak","level2","Electron donating reactions",0.0445084401645781,2.23396497375007
+"173","delta.epsilon.subdivisions","weak","level3","Pyrrolysine",0.0530171521052912,Inf
+"174","delta.epsilon.subdivisions","weak","level3","Energy-conserving_hydrogenase_(ferredoxin)",0.00473397646437818,50.8498923825515
+"175","delta.epsilon.subdivisions","weak","level3","Sulfate_reduction-associated_complexes",0.00473397646437818,50.8498923825515
+"176","delta.epsilon.subdivisions","weak","level3","Phage_capsid_proteins",0.0252565792920019,40.6081417154114
+"177","delta.epsilon.subdivisions","weak","level3","L-fucose_utilization_temp",0.12171448631437,30.3208254103796
+"178","delta.epsilon.subdivisions","weak","level3","Alkanesulfonates_Utilization",0.12171448631437,30.3208254103796
+"179","delta.epsilon.subdivisions","weak","level3","Alkylphosphonate_utilization",0.000154967209793538,27.3960083634977
+"180","delta.epsilon.subdivisions","weak","level3","Type_III_secretion_systems,_extended",0.000109068226550428,23.1971785215667
+"181","delta.epsilon.subdivisions","weak","level3","Na(+)-translocating_NADH-quinone_oxidoreductase_and_rnf-like_group_of_electron_transport_complexes",0.0252565792920019,10.204333012433
+"182","delta.epsilon.subdivisions","weak","level3","D-gluconate_and_ketogluconates_metabolism",0.0183041012244121,8.95462313222031
+"183","delta.epsilon.subdivisions","weak","level3","Carbon_monoxide_induced_hydrogenase",0.100784384244909,6.11714596385857
+"184","delta.epsilon.subdivisions","weak","level3","Ethanolamine_utilization",0.100784384244909,5.10915603858569
+"185","delta.epsilon.subdivisions","weak","level3","Type_4_secretion_and_conjugative_transfer",0.0593795499403796,3.65638092573689
+"186","firmicutes","weak","level1","Phages, Prophages, Transposable elements",0.211750024076747,6.64450440281122
+"187","firmicutes","weak","level1","Dormancy and Sporulation",3.82844562884701e-11,6.40934119841863
+"188","firmicutes","weak","level1","Phosphorus Metabolism",0.00739594460099694,4.14238159170301
+"189","firmicutes","weak","level1","Sulfur Metabolism",0.209135172500742,2.3470923592632
+"190","firmicutes","weak","level1","Cofactors, Vitamins, Prosthetic Groups, Pigments",0.211750024076747,1.51510756681117
+"191","firmicutes","weak","level2","Coenzyme A",0.176159595210188,6.68611854698224
+"192","firmicutes","weak","level2","Folate and pterines",0.152707418101643,3.13643341062225
+"193","firmicutes","weak","level2","",0.00192532364285405,1.76850487436101
+"194","firmicutes","weak","level3","Sporulation_Cluster_III_A",4.16049401988249e-06,45.1791257760258
+"195","firmicutes","weak","level3","Sporulation_gene_orphans",1.36132424011354e-20,25.5911514142349
+"196","firmicutes","weak","level3","High_affinity_phosphate_transporter_and_control_of_PHO_regulon",0.00108482233572877,25.2565372963119
+"197","firmicutes","weak","level3","Transport_of_Molybdenum",0.0260166339032108,22.3118928601896
+"198","firmicutes","weak","level3","Streptococcus_pneumoniae_Vancomycin_Tolerance_Locus",0.185828754243092,16.6657593222503
+"199","firmicutes","weak","level3","Cysteine_Biosynthesis",0.00730510872200173,9.85283190133848
+"200","firmicutes","weak","level3","Molybdenum_cofactor_biosynthesis",0.0122145155402649,8.44345948323256
+"201","firmicutes","weak","level3","Phosphate_metabolism",0.0129685645317913,5.6561373961336
+"202","firmicutes","weak","level3","Bacterial_Cell_Division",0.182314464521,5.04192023056591
+"203","firmicutes","weak","level3","Anaerobic_respiratory_reductases",0.0952620633315701,4.3594861469322
+"204","fusobacteria","weak","level1","Potassium metabolism",0.112492708216617,9.42984759193963
+"205","fusobacteria","weak","level1","Iron acquisition and metabolism",0.00561908437313148,7.27808757139481
+"206","fusobacteria","weak","level1","Carbohydrates",0.125769536073198,2.03738196364251
+"207","fusobacteria","weak","level2","Siderophores",0.195488365702162,55.509744198555
+"208","fusobacteria","weak","level2","Di- and oligosaccharides",0.069504897738969,4.46214563043397
+"209","fusobacteria","weak","level3","Heme,_hemin_uptake_and_utilization_systems_in_GramPositives",0.0108598295616436,24.4155431574432
+"210","proteobacteria","weak","level1","Phages, Prophages, Transposable elements",0.244665921901104,7.85050865623028
+"211","proteobacteria","weak","level1","Virulence",5.32792431823711e-07,6.70302245000882
+"212","proteobacteria","weak","level1","Membrane Transport",1.13624314869631e-11,4.482423176948
+"213","proteobacteria","weak","level2","Protein and nucleoprotein secretion system, Type IV",2.5975430176037e-18,12.4057142072369
+"214","proteobacteria","weak","level2","Type III, Type IV, Type VI, ESAT secretion systems",1.9002930068379e-06,6.70302245000882
+"215","proteobacteria","weak","level3","Type_4_conjugative_transfer_system,_IncI1_type",3.75210598217065e-33,87.6611906042366
+"216","proteobacteria","weak","level3","ABC_transporter_of_unknown_substrate_X",0.019573690236954,82.5359939749544
+"217","proteobacteria","weak","level3","Transport_of_Manganese",0.0182648298651439,27.740694822779
+"218","proteobacteria","weak","level3","HMG_CoA_Synthesis",0.019573690236954,22.1957388947248
+"219","proteobacteria","weak","level3","Tetrathionate_respiration",0.12553861048119,20.7035841850812
+"220","proteobacteria","weak","level3","Transport_of_Iron",0.12553861048119,10.0868797123414
+"221","proteobacteria","weak","level3","Type_4_secretion_and_conjugative_transfer",1.02118549432878e-05,6.70302245000882
