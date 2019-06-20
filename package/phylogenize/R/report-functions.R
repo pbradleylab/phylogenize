@@ -1117,12 +1117,15 @@ single.cluster.plot <- function(gene.presence,
 #' @param report_input Optionally override which notebook to knit (useful for
 #'     testing).
 #' @param do_cache Turn on or off Rmarkdown's caching.
+#' @param reset_after Reset global options to package defaults after running?
 #' @param ... Parameters to override defaults.
 #' @export
 render.report <- function(output_file='report_output.html',
                           report_input='phylogenize-report.Rmd',
                           do_cache=TRUE,
+                          reset_after=TRUE,
                           ...) {
+    prev.options <- pz.options()
     do.call(pz.options, list(...))
     pz.options(working_dir=normalizePath(getwd()))
     pz.options(in_dir=normalizePath(pz.options("in_dir")))
@@ -1136,17 +1139,23 @@ render.report <- function(output_file='report_output.html',
     file.copy(system.file("rmd",
                           report_input,
                           package="phylogenize"),
-              pz.options("out_dir"))
-    rmarkdown::render(file.path(pz.options("out_dir"),
-                               report_input),
-                      output_file=basename(output_file),
-                      output_dir=pz.options("out_dir"),
-                      output_options=list(
-                          cache.path=pz.options("out_dir"),
-                          cache=do_cache
-                      ),
-                      intermediates_dir=pz.options("out_dir"),
-                      knit_root_dir=pz.options("out_dir"))
+              pz.options("out_dir"),
+              overwrite=TRUE)
+    r <- rmarkdown::render(file.path(pz.options("out_dir"),
+                                     report_input),
+                           output_file=basename(output_file),
+                           output_dir=pz.options("out_dir"),
+                           output_options=list(
+                               cache.path=pz.options("out_dir"),
+                               cache=do_cache
+                           ),
+                           intermediates_dir=pz.options("out_dir"),
+                           knit_root_dir=pz.options("out_dir"))
+    if (reset_after) {
+        do.call(pz.options, prev.options)
+        set_data_internal()
+    }
+    r
 }
 
 #' Make a pretty enrichment table.
