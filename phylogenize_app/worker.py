@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import os, sys, shutil
 import uuid
@@ -88,7 +88,7 @@ while True:
              'db_version="{db_version}", '
              'abundance_file="{abundance_file}", '
              'metadata_file="{metadata_file}", '
-             'separate_metadata="{separate_metadata}"',
+             'separate_metadata={separate_metadata}, '
              'burst_cutoff="{burst_cutoff}", '
              'burst_dir="{burst_dir}", '
              'in_dir="{input_dir}", '
@@ -100,7 +100,6 @@ while True:
              'dset_column="{dset_column}", '
              'env_column="{env_column}", '
              'sample_column="{sample_column}", '
-             'burst_cutoff={burst_cutoff}, '
              'assume_below_LOD={assume_below_lod_R}, '
              'single_dset={single_dset_R}, '
              'minimum={minimum}, '
@@ -125,7 +124,7 @@ while True:
         dset_column=jobdict["dset_column"],
         env_column=jobdict["env_column"],
         sample_column=jobdict["sample_column"],
-        burst_cutoff=jobdict["burst_cutoff"],
+        burst_cutoff=format(jobdict["burst_cutoff"]),
         assume_below_lod_R="TRUE",
         single_dset_R=jobdict["single_dset"],
         minimum=jobdict["minimum"]

@@ -342,7 +342,7 @@ def create_app(config=None):
 
     # Upload the BIOM or tabular files
     if uploaded_biom:
-      allowed_files.save(request.files['biomfile'],
+      allowed_files.save(request.files['abundances'],
         folder = IDir,
         name = "data.biom")
     else:
