@@ -457,17 +457,23 @@
             quantities into something approximately normally-distributed
             (both).</p>
 
-        <p>Note: it is possible with low numbers of samples that no microbes
+        <p><b>Note</b>: it is possible with low numbers of samples that no microbes
             will be specific to a given environment, in which case
             <em>phylogenize</em> will return an error because there is not enough
             signal to compute specificity.</p>
 
-        <p>Note: while you do not have to rarefy your data (i.e., resample to
+        <p><b>Note</b>: while you do not have to rarefy your data (i.e., resample to
             the same read depth), you should make sure that read depth does not
             systematically differ across environments. If it does, then
             rarefying may be a good idea because some microbes will simply
             appear more by chance in deeper-sequenced data, and if read depth is
             correlated with environment, you may get spurious associations.</p>
+
+        <p><b>Note:</b> in order to be considered, each environment and/or
+            dataset must have at least two samples associated with it. This is
+            because it doesn't really make sense to calculate prevalence based on a
+            single presence/absence value (and because specificity, in turn,
+            depends partly on calculating prevalence in each environment).</p>
 
         <h2 id="choosing-an-environment">Choosing an environment</h2>
 

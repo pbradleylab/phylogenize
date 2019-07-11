@@ -5,7 +5,8 @@
 \title{Run *phylogenize* start to finish.}
 \usage{
 render.report(output_file = "report_output.html",
-  report_input = "phylogenize-report.Rmd", do_cache = TRUE, ...)
+  report_input = "phylogenize-report.Rmd", do_cache = TRUE,
+  reset_after = TRUE, ...)
 }
 \arguments{
 \item{output_file}{Path giving what to name the resulting HTML file.}
@@ -14,6 +15,8 @@ render.report(output_file = "report_output.html",
 testing).}
 
 \item{do_cache}{Turn on or off Rmarkdown's caching.}
+
+\item{reset_after}{Reset global options to package defaults after running?}
 
 \item{...}{Parameters to override defaults.}
 }

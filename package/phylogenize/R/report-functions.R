@@ -240,7 +240,19 @@ sanity.check.abundance <- function(abd.mtx, ...) {
 #' @export
 remove.allzero.abundances <- function(abd.mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    nz.cols <- which(Matrix::colSums(abd.mtx) > 0)
+    cs <- Matrix::colSums(abd.mtx)
+    nz.cols <- which(cs > 0)
+    z.col.logical <- (cs == 0)
+    if (sum(z.col.logical) > 0) {
+        pz.warning(paste0("Dropping ", sum(z.col.logical),
+                          " column(s), since no mapped taxa had observations"))
+        if (!is.null(names(z.col.logical))) {
+            pz.warning("Columns dropped: ")
+            for (n in names(which(z.col.logical))) {
+                pz.warning(n)
+            }
+        }
+    }
     if (length(nz.cols) < 2) {
         pz.error("Too few columns with at least one non-zero entry")
     }
@@ -334,7 +346,25 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     })
     names(env.number) <- all.envs
     names(dset.number) <- all.dsets
+    singleton.envs <- names(which(env.number == 1))
+    if (length(singleton.envs) > 0) {
+        pz.warning(paste0("Warning: each environment requires at least two samples."))
+        pz.warning("Dropped the following environment(s) from the analysis: ")
+        for (s in singleton.envs) {
+            pz.warning(s)
+        }
+    }
     nonsingleton.envs <- names(which(env.number > 1))
+    if ((length(nonsingleton.envs) < 2) &&
+        (opts('which_phenotype') == 'specificity')) {
+        pz.error(paste0("In order to calculate specificity, there must be at least",
+                        " two environments with two samples each."))
+    }
+    if ((length(nonsingleton.envs) < 1) &&
+        (opts('which_phenotype') == 'prevalence')) {
+        pz.error(paste0("In order to calculate prevalence, there must be at least",
+                        " one environment with two samples."))
+    }
     nonsingleton.dsets <- names(which(dset.number > 1))
     pz.message(paste0(length(nonsingleton.envs),
                       " non-singleton environment(s) found"))

@@ -11,7 +11,7 @@ alt.multi.enrich(results, mappings, dirxn = 1, qcuts = c(strong = 0.05,
 \arguments{
 \item{results}{A tidyverse tbl of results with at least the following
 columns: "phylum", "gene", "effect.size", and "q.value" (if only
-"p.value" is present, first apply function \code{result.qvs}).}
+"p.value" is present, first apply function \code{tbl.result.qvs}).}
 
 \item{mappings}{List of data.frames giving gene-to-gene-set mappings.}
 
