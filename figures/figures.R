@@ -4,12 +4,39 @@ library(cowplot)
 library(furrr)
 library(phylogenize)
 library(hexbin)
+library(curl)
 
 source("figure-functions.R")
 
 plan(multiprocess, workers=6)
 hmp_dir <- normalizePath(file.path("..", "hmp"))
 emp_dir <- normalizePath(file.path("..", "emp"))
+
+if (!file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab"))) {
+    if (file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab.xz"))) {
+        message("unzipping HMP 16S data")
+        system2(paste0("xz -d ",
+                       file.path(hmp_dir, "hmp-16s-dada2-full.tab.xz")))
+    } else {
+        stop("HMP 16S files not found")
+    }
+}
+
+if (!file.exists(file.path(hmp_dir, "hmp-shotgun-bodysite.tab"))) {
+    if (file.exists(file.path(hmp_dir, "hmp-shotgun-bodysite.tab.xz"))) {
+        message("unzipping HMP shotgun data")
+        system2(paste0("xz -d ",
+                       file.path(hmp_dir, "hmp-shotgun-bodysite.tab.xz")))
+    } else {
+        stop("HMP shotgun files not found")
+    }
+}
+
+if (!file.exists(file.path(emp_dir, "emp_deblur_orig_metadata.biom"))) {
+    message("downloading EMP data from Figshare")
+    curl_download("https://ndownloader.figshare.com/files/17348873",
+                  file.path(emp_dir, "emp_deblur_orig_metadata.biom"))
+}
 
 perform_associations <- strsplit(
     "hmp16s hmp16s-linear hmpshotgun emp emp-linear",
