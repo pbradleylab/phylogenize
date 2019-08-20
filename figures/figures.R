@@ -11,12 +11,15 @@ source("figure-functions.R")
 plan(multiprocess, workers=6)
 hmp_dir <- normalizePath(file.path("..", "hmp"))
 emp_dir <- normalizePath(file.path("..", "emp"))
+NCL <- 8
+BURST_DIR <- path.expand("~/bin/")
 
 if (!file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab"))) {
     if (file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab.xz"))) {
         message("unzipping HMP 16S data")
-        system2(paste0("xz -d ",
-                       file.path(hmp_dir, "hmp-16s-dada2-full.tab.xz")))
+        system2("xz", paste0("-d ",
+                       file.path(hmp_dir, "hmp-16s-dada2-full.tab.xz")),
+                     "-k")
     } else {
         stop("HMP 16S files not found")
     }
@@ -25,8 +28,9 @@ if (!file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab"))) {
 if (!file.exists(file.path(hmp_dir, "hmp-shotgun-bodysite.tab"))) {
     if (file.exists(file.path(hmp_dir, "hmp-shotgun-bodysite.tab.xz"))) {
         message("unzipping HMP shotgun data")
-        system2(paste0("xz -d ",
-                       file.path(hmp_dir, "hmp-shotgun-bodysite.tab.xz")))
+        system2("xz", paste0("-d ",
+                       file.path(hmp_dir, "hmp-shotgun-bodysite.tab.xz")),
+                     "-k")
     } else {
         stop("HMP shotgun files not found")
     }
@@ -55,8 +59,8 @@ if ("hmp16s" %in% perform_associations) {
                      metadata_file="hmp-16s-phylogenize-metadata-full.tab",
                      data_dir=system.file(package="phylogenize", "extdata"),
                      input_format="tabular",
-                     burst_dir="/home/pbradz/bin/",
-                     ncl=10,
+                     burst_dir=BURST_DIR,
+                     ncl=NCL,
                      meas_err=TRUE,
                      pryr=FALSE)
 }
@@ -75,8 +79,8 @@ if ("hmp16s-linear" %in% perform_associations) {
                      metadata_file="hmp-16s-phylogenize-metadata-full.tab",
                      data_dir=system.file(package="phylogenize", "extdata"),
                      input_format="tabular",
-                     burst_dir="/home/pbradz/bin/",
-                     ncl=1,
+                     burst_dir=BURST_DIR,
+                     ncl=NCL,
                      linearize=TRUE,
                      pryr=FALSE)
 }
@@ -94,8 +98,8 @@ if ("hmpshotgun" %in% perform_associations) {
                      metadata_file="hmp-shotgun-bodysite-metadata.tab",
                      data_dir=system.file(package="phylogenize", "extdata"),
                      input_format="tabular",
-                     burst_dir="/home/pbradz/bin/",
-                     ncl=10,
+                     burst_dir=BURST_DIR,
+                     ncl=NCL,
                      meas_err=TRUE,
                      pryr=FALSE)
 }
@@ -115,9 +119,9 @@ if ("emp" %in% perform_associations) {
                      metadata_file = "",
                      biom_file = "emp_deblur_orig_metadata.biom",
                      input_format = "biom",
-                     burst_dir = "/home/pbradz/bin/",
+                     burst_dir=BURST_DIR,
                      meas_err=TRUE,
-                     ncl = 10,
+                     ncl=NCL,
                      use_rmd_params = FALSE)
 }
 
@@ -136,9 +140,9 @@ if ("emp-linear" %in% perform_associations) {
                      metadata_file = "",
                      biom_file = "emp_deblur_orig_metadata.biom",
                      input_format = "biom",
-                     burst_dir = "/home/pbradz/bin/",
+                     burst_dir=BURST_DIR,
                      meas_err=TRUE,
-                     ncl = 10,
+                     ncl=NCL,
                      linearize = TRUE,
                      use_rmd_params = FALSE)
 }
@@ -310,7 +314,7 @@ rhizo_cmp_enr <- left_join(rhizo_phylo_enr, rhizo_linear_enr,
                                      1)) %>%
     mutate(enr.overlap.phylo=map_chr(enr.overlap.phylo, ~ paste0(.x, collapse=","))) %>%
     mutate(enr.overlap.linear=map_chr(enr.overlap.linear, ~ paste0(.x, collapse=","))) %>%
-    mutate(nitrogen = factor(grepl("[Nn]itrogen", term))
+    mutate(nitrogen = factor(grepl("[Nn]itrogen", term)))
 
 pdf(height=4.33, width=8.66, file="rhizo-compare-new.pdf")
 ggplot(rhizo_cmp_enr %>% filter(cutoff=="strong"),
