@@ -15,7 +15,8 @@ emp_dir <- normalizePath(file.path("..", "emp"))
 if (!file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab"))) {
     if (file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab.xz"))) {
         message("unzipping HMP 16S data")
-        system2(paste0("xz -d ",
+        system2("xz",
+                paste0("-d ",
                        file.path(hmp_dir, "hmp-16s-dada2-full.tab.xz")))
     } else {
         stop("HMP 16S files not found")
@@ -397,3 +398,60 @@ rhizo_sig_alpha_lvp %>%
     geom_point(aes(group=1, y=fit), lwd=3) +
     stat_summary(fun.y="mean", aes(group=1, y=fit), lwd=1.5, geom="line")
 dev.off()
+
+
+## Make reduced dataset
+
+assn <- read_tsv(file.path(hmp_dir, "output_assignments.txt"),
+                 col_names=c("row", "match", "pctid", "len", "mismatch",
+                             "gap", "startpos", "endpos", "starttgt", "endtgt",
+                             "eval", "bitscore")) %>%
+    mutate(midas_id = map_chr(match, ~ strsplit(.x, " ")[[1]][3]))
+
+assn <- left_join(assn,
+                  pz.db$taxonomy %>% select(cluster, phylum) %>% distinct,
+                  by=c("midas_id"="cluster"))
+
+bac_assn <- assn %>%
+    nest(-row) %>%
+    filter(map_lgl(data, ~ all(.$phylum == "Bacteroidetes"))) %>%
+    unnest
+
+bac_rows <- map_int(bac_assn$row, ~ gsub("Row", "", .x) %>% as.integer)
+
+hmp_16s <- read_tsv(file.path(hmp_dir, "hmp-16s-dada2-full.tab"))
+hmp_16s_metadata <- read_tsv(file.path(hmp_dir, "hmp-16s-phylogenize-metadata-full.tab"))
+
+retain_cols <- hmp_16s_metadata %>%
+    filter(env %in% c("Stool", "Saliva", "Hard palate", "Tongue dorsum",
+                      "Supragingival plaque", "Subgingival plaque",
+                      "Buccal mucosa")) %>%
+    select(sample) %>%
+    deframe %>%
+    intersect(., colnames(hmp_16s))
+
+small_hmp <- hmp_16s[bac_rows, c("rowname", retain_cols)]
+                                        # remove zero-counts
+small_hmp <- small_hmp[-which(rowSums(small_hmp[, -1]) == 0), ]
+small_hmp <- small_hmp[, -(1+which(colSums(small_hmp[, -1]) == 0))]
+write_tsv(small_hmp, file.path(hmp_dir, "hmp-16s-dada2-bacteroidetes.tab"))
+
+## This is how you would analyze the smaller dataset
+if (FALSE) {
+  phylogenize::render.report(
+                  output_file=file.path(hmp_dir, "16S-bacteroidetes-results.html"),
+                  in_dir=hmp_dir,
+                  out_dir=file.path(hmp_dir, "16S-bacteroidetes-output"),
+                  type="16S",
+                  db_version="midas_v1.2",
+                  which_phenotype="specificity",
+                  which_envir="Stool",
+                  abundance_file="hmp-16s-dada2-bacteroidetes.tab",
+                  metadata_file="hmp-16s-phylogenize-metadata-full.tab",
+                  data_dir=system.file(package="phylogenize", "extdata"),
+                  input_format="tabular",
+                  burst_dir="/home/pbradz/bin/",
+                  ncl=1,
+                  linearize=FALSE,
+                  pryr=FALSE)
+}
