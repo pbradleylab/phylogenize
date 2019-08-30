@@ -5,6 +5,7 @@ library(furrr)
 library(phylogenize)
 library(hexbin)
 library(curl)
+library(nlme)
 
 source("figure-functions.R")
 
@@ -13,6 +14,12 @@ hmp_dir <- normalizePath(file.path("..", "hmp"))
 emp_dir <- normalizePath(file.path("..", "emp"))
 NCL <- 8
 BURST_DIR <- path.expand("~/bin/")
+
+# uncomment to actually run associations (time consuming)
+perform_associations <- strsplit(
+#    "hmp16s hmp16s-linear hmpshotgun emp emp-linear",
+    "",
+    " ")[[1]]
 
 if (!file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab"))) {
     if (file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab.xz"))) {
@@ -41,10 +48,6 @@ if (!file.exists(file.path(emp_dir, "emp_deblur_orig_metadata.biom"))) {
     curl_download("https://ndownloader.figshare.com/files/17348873",
                   file.path(emp_dir, "emp_deblur_orig_metadata.biom"))
 }
-
-perform_associations <- strsplit(
-    "hmp16s hmp16s-linear hmpshotgun emp emp-linear",
-    " ")[[1]]
 
 if ("hmp16s" %in% perform_associations) {
     phylogenize::render.report(
@@ -278,6 +281,10 @@ rhizo_linear_results <- read_csv(file.path(emp_dir,
                                  col_types="cccdddd") %>% select(-X1) %>%
     process_data
 
+rhizo_cmp_results <- full_join(rhizo_phylo_results, rhizo_linear_results, 
+  by = c("phylum", "gene"),
+  suffix = c(".phylo", ".linear"))
+
 rhizo_best_phyla <- rhizo_phylo_results %>%
     filter(!is.na(effect.size)) %>%
     group_by(phylum) %>%
@@ -349,10 +356,6 @@ write_tsv(rhizo_cmp_enr %>% filter(cutoff=="strong") %>%
                  conditional.phylo, conditional.linear,
                  enr.estimate.phylo, enr.estimate.linear),
           "phylo_linear_both.tsv")
-
-rhizo_cmp_results <- full_join(rhizo_phylo_results, rhizo_linear_results,
-                               by = c("phylum", "gene"),
-                               suffix = c(".phylo", ".linear"))
 
 rhizo_cmp_sig_alpha <- rhizo_cmp_results %>%
     filter(q.value.phylo <= 0.05 | q.value.linear <= 0.05) %>%
