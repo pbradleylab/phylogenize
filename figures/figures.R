@@ -350,6 +350,10 @@ write_tsv(rhizo_cmp_enr %>% filter(cutoff=="strong") %>%
                  enr.estimate.phylo, enr.estimate.linear),
           "phylo_linear_both.tsv")
 
+rhizo_cmp_results <- full_join(rhizo_phylo_results, rhizo_linear_results,
+                               by = c("phylum", "gene"),
+                               suffix = c(".phylo", ".linear"))
+
 rhizo_cmp_sig_alpha <- rhizo_cmp_results %>%
     filter(q.value.phylo <= 0.05 | q.value.linear <= 0.05) %>%
     mutate(alpha = future_map2_dbl(phylum,
@@ -372,26 +376,32 @@ rhizo_sig_alpha_lvp <- rhizo_cmp2_sig_alpha %>%
     mutate(where_signif = ifelse(where_signif=='3_linear', TRUE, FALSE)) %>%
     mutate(log_alpha = log(alpha))
 
-alpha_lme <- lme(log_alpha ~ where_signif,
-                 rhizo_sig_alpha_lvp,
-                 random = ~ where_signif | phylum,
-                 control=lmeControl(opt = "optim"))
-alpha_coef <- coefficients(summary(alpha_lme))
-intercept_errbar <- qt(0.975, df=alpha_coef["(Intercept)", "DF"]) *
-    alpha_coef["(Intercept)", "Std.Error"]
-intercept_value <- alpha_coef["(Intercept)", "Value"]
-print("Intercept CI:")
-print(c(exp(intercept_value - intercept_errbar),
-        exp(intercept_value + intercept_errbar)))
-signif_errbar <- qt(0.975, df=alpha_coef["where_signifTRUE", "DF"]) *
-    alpha_coef["where_signifTRUE", "Std.Error"]
-print("where_signif CI:")
-print(c(exp(intercept_value + alpha_coef["where_signifTRUE", "Value"] - signif_errbar),
-        exp(intercept_value + alpha_coef["where_signifTRUE", "Value"] + signif_errbar)))
-print(summary(alpha_lme))
-pdf("lme-fit-new.pdf", useDingbats=FALSE)
+
+## Make contrasts, relative to the mean
+
+phyl_factor <- rhizo_sig_alpha_lvp$phylum %>% as.factor %>% relevel("firmicutes")
+rhizo_sig_alpha_lvp$phylum <- phyl_factor
+nphyla <- length(levels(phyl_factor))
+phyl_L <- vapply(2:nphyla, function(x) {
+    col <- rep(-1/nphyla, nphyla)
+    col[x] <- col[x] + 1
+    col
+}, rep(1, nphyla)) %>% t
+rownames(phyl_L) <- paste0(levels(phyl_factor)[2:nphyla],
+                                   ".vs.mean")
+colnames(phyl_L) <- levels(phyl_factor)
+phyl_L <- rbind(grande = 1/nphyla, phyl_L)
+phyl_C <- solve(phyl_L)
+
+test_lm <- lm(log_alpha ~ where_signif * phylum,
+              data = rhizo_sig_alpha_lvp,
+              contrasts=list(phylum = phyl_C[, -1],
+                             where_signif = cbind(c(-1, 1))))
+print(summary(test_lm))
+
+pdf("lm-fit-new.pdf", useDingbats=FALSE)
 rhizo_sig_alpha_lvp %>%
-    mutate(fit=predict(alpha_lme)) %>%
+    mutate(fit=predict(test_lm)) %>%
     nest(-phylum, -where_signif, -fit) %>%
     select(-data) %>%
     bind_rows(rhizo_sig_alpha_lvp, .) %>%
