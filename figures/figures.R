@@ -335,7 +335,7 @@ ggplot(rhizo_cmp_enr %>% filter(cutoff=="strong"),
     geom_vline(xintercept=1, col="gray") +
     geom_point(aes(size=nitrogen), alpha=0.3) +
     facet_wrap(~phylum) +
-    scale_size(range=c(2,8))
+    scale_size_manual(values=c(2,8))
 dev.off()
 
 write_tsv(rhizo_cmp_enr %>% filter(cutoff=="strong") %>%
