@@ -9,6 +9,8 @@ library(nlme)
 
 source("figure-functions.R")
 
+
+
 plan(multiprocess, workers=6)
 hmp_dir <- normalizePath(file.path("..", "hmp"))
 emp_dir <- normalizePath(file.path("..", "emp"))
@@ -253,7 +255,8 @@ ggplot(genes_signif,
               x=-5, y=4, aes(label=label), hjust=0) +
     geom_hline(yintercept=0, lty=2, col="gray") +
     geom_vline(xintercept=0, lty=2, col="gray") +
-    theme(legend.position=c(1,0), legend.justification=c(1,0))
+    theme_cowplot(font_size=12) + 
+    theme(legend.position=c(1,0), legend.justification=c(1,0)) 
 dev.off()
 
 
@@ -335,7 +338,9 @@ ggplot(rhizo_cmp_enr %>% filter(cutoff=="strong"),
     geom_vline(xintercept=1, col="gray") +
     geom_point(aes(size=nitrogen), alpha=0.3) +
     facet_wrap(~phylum) +
-    scale_size_manual(values=c(2,8))
+    scale_size_manual(values=c(2,8)) +
+    theme_cowplot(font_size=12) +
+    theme(legend.position = "none") 
 dev.off()
 
 write_tsv(rhizo_cmp_enr %>% filter(cutoff=="strong") %>%
@@ -356,6 +361,14 @@ write_tsv(rhizo_cmp_enr %>% filter(cutoff=="strong") %>%
                  conditional.phylo, conditional.linear,
                  enr.estimate.phylo, enr.estimate.linear),
           "phylo_linear_both.tsv")
+
+
+write_tsv(rhizo_cmp_enr %>% filter(cutoff=="strong") %>%
+          filter(conditional.phylo <= 0.25 | conditional.linear <= 0.25) %>%
+          select(phylum, termset, term,
+            conditional.phylo, conditional.linear,
+            enr.estimate.phylo, enr.estimate.linear),
+  "phylo_linear_all_enr.tsv")
 
 rhizo_cmp_sig_alpha <- rhizo_cmp_results %>%
     filter(q.value.phylo <= 0.05 | q.value.linear <= 0.05) %>%
