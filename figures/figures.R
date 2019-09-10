@@ -464,6 +464,9 @@ small_hmp <- hmp_16s[bac_rows, c("rowname", retain_cols)]
 small_hmp <- small_hmp[-which(rowSums(small_hmp[, -1]) == 0), ]
 small_hmp <- small_hmp[, -(1+which(colSums(small_hmp[, -1]) == 0))]
 write_tsv(small_hmp, file.path(hmp_dir, "hmp-16s-dada2-bacteroidetes.tab"))
+write_tsv(hmp_16s_metadata %>%
+          filter(sample %in% colnames(small_hmp)),
+          file.path(hmp_dir, "hmp-16s-metadata-bacteroidetes.tab"))
 
 ## This is how you would analyze the smaller dataset
 if (FALSE) {
