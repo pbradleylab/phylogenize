@@ -479,7 +479,7 @@ if (FALSE) {
                   which_phenotype="specificity",
                   which_envir="Stool",
                   abundance_file="hmp-16s-dada2-bacteroidetes.tab",
-                  metadata_file="hmp-16s-phylogenize-metadata-full.tab",
+                  metadata_file="hmp-16s-metadata-bacteroidetes.tab",
                   data_dir=system.file(package="phylogenize", "extdata"),
                   input_format="tabular",
                   burst_dir="/home/pbradz/bin/",
