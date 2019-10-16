@@ -74,6 +74,12 @@ devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
 phylogenize::install.data.figshare()    # nb: this may take a while to download
 ```
 
+Note: if you are having trouble with the `install_bitbucket` command on Windows or within the QIIME2 VM on Windows, you can try instead [downloading](https://bitbucket.org/pbradz/phylogenize/downloads/) the repository and unzipping it, then running:
+```
+devtools::install(pkg="[...]/package/phylogenize")
+```
+... where `[...]` should be replaced with the path where you unzipped the repository. Then run `install.data.figshare()` as above.
+
 Finally, install the plugin. From the UNIX command line (i.e., not in R):
 
 ```
