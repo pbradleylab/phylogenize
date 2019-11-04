@@ -209,6 +209,8 @@ This indicates that the BURST binary couldn't be found. Check that you have the 
 
 ### I get an error stating "Error in plotted.pheno.trees[[pn]] : subscript out of bounds".
 
+Update (11/4/2019): in the latest version of *phylogenize* you should get a more informative error message; please file a bug if this still happens!
+
 This means that you have too few taxa mapped to MIDAS IDs in every phylum *phylogenize* tests. "Too few" here is defined by the options `treemin` (minimum taxa per phylum as an absolute number, default: 5) and `pctmin` (minimum taxa per phylum as a fraction of all taxa in that phylum, default: 0.01, range: 0 to 1.0). You can try lowering the cutoffs, but they are in place because with so few observations, even if you were to get gene hits with *phylogenize*, the results probably would not be that meaningful.
 
 This situation can happen if you, for example, are using a "testing" dataset with very few ASVs, if your read depth was extremely low and few ASVs were detected, or if you are sequencing a community where almost nothing maps to the MIDAS database. If you are using a testing dataset, using the full dataset should solve the problem (if you really want to have something fast to run, you could try only keeping ASVs that map to a single phylum). Assuming you started with lots of ASVs, taking a look at the intermediate BURST output file `output_assignments.txt` should tell you how many of them were successfully mapped to MIDAS IDs: if there are only a few entries with a percent identity above 98.5\% (default), lack of reference genomes is likely your problem.
