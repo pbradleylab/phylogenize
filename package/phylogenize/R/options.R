@@ -100,12 +100,12 @@ PZ_OPTIONS <- options_manager(
 #'   \item{burst_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using BURST. Default: 0.985}
 #'   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: TRUE}
 #'   \item{min_fx}{Positive double. Effects that are significantly equivalent to this effect size will be excluded from significant positive hits. If zero, the equivalence test will be skipped. Default: 0}
+#'   \item{treemin}{Integer. A phylum must have at least this many representatives in order to be processed. Default: 5}
+#'   \item{pctmin}{Float. A phylum must have at least this percent of observed representatives in order to be processed. Default: 0.01}
 #' }
 #'
 #' @section Graphing:
 #' \describe{
-#'   \item{treemin}{Integer. A phylum must have at least this many representatives in order to be graphed in the report. Default: 5}
-#'   \item{pctmin}{Integer. A phylum must have at least this percent of observed representatives in order to be graphed in the report. Default: 0.01}
 #'   \item{skip_graphs}{Boolean. If TRUE, skip making graphs in the report, which can be time- and memory-consuming. Default: FALSE}
 #'   \item{prev_color_low}{String. When graphing prevalence on a tree, this color is the lowest value. Default: "black"}
 #'   \item{prev_color_high}{String. When graphing prevalence on a tree, this color is the highest value. Default: "orange2"}

@@ -195,6 +195,18 @@ Next, you will need to start the server as follows:
 
 The application should then be accessible from http://localhost:5000.
 
+## FAQ
+
+### I get an error stating "BURST failed with error code 127".
+
+This indicates that the BURST binary couldn't be found. Check that you have the correct binary for your operating system and architecture, that it is installed to wherever `burst_dir` is set to point, and that you can run the BURST binary by itself.
+
+### I get an error stating "Error in plotted.pheno.trees[[pn]] : subscript out of bounds".
+
+This means that you have too few taxa mapped to MIDAS IDs in every phylum *phylogenize* tests. "Too few" here is defined by the options `treemin` (minimum taxa per phylum as an absolute number, default: 5) and `pctmin` (minimum taxa per phylum as a fraction of all taxa in that phylum, default: 0.01, range: 0 to 1.0). You can try lowering the cutoffs, but they are in place because with so few observations, even if you were to get gene hits with *phylogenize*, the results probably would not be that meaningful.
+
+This situation can happen if you, for example, are using a "testing" dataset with very few ASVs, if your read depth was extremely low and few ASVs were detected, or if you are sequencing a community where almost nothing maps to the MIDAS database. If you are using a testing dataset, using the full dataset should solve the problem (if you really want to have something fast to run, you could try only keeping ASVs that map to a single phylum). Assuming you started with lots of ASVs, taking a look at the intermediate BURST output file `output_assignments.txt` should tell you how many of them were successfully mapped to MIDAS IDs: if there are only a few entries with a percent identity above 98.5\% (default), lack of reference genomes is likely your problem.
+
 ## Acknowledgements
 
  * Project lead and repository maintainer: [Patrick H. Bradley](http://docpollard.org/people/patrick-j-h-bradley/)
@@ -204,7 +216,7 @@ The application should then be accessible from http://localhost:5000.
  * Funding: 
      - National Science Foundation (DMS-106[]9303, DMS-156[]3159)
      - Gordon & Betty Moore Foundation (#3300)
-   
+
 ## Contact
 
 If you have questions or comments, please contact [support@phylogenize.org]. If *phylogenize* is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!

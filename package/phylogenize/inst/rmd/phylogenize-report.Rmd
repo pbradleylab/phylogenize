@@ -111,7 +111,7 @@ pz.message("Starting evaluation...")
 
 # Settings
 
-This report was generated automatically by [phylogenize](https://phylogenize.org/) (Bradley and Pollard, submitted: https://phylogenize.org), with the following parameters:
+This report was generated automatically by [phylogenize](https://phylogenize.org/) (Bradley and Pollard, 2019: https://phylogenize.org), with the following parameters:
 
 - Type of input data: "`r pz.options('type')`"
 - Phenotype calculated: "`r pz.options('which_phenotype')`"

@@ -680,15 +680,33 @@ adjust.db <- function(pz.db, abd.meta, ...) {
         intersect(tr$tip.label, taxa.observed)
     })
     tL <- vapply(taxa.per.tree, length, 1L)
-    if (all(tL < 2)) {
+    if (all(tL < opts('treemin'))) {
         pz.error("Too few taxa found. Was the right database used?")
     }
     passed.min <- nw(tL >= opts('treemin'))
     totalL <- vapply(pz.db$trees, function(tr) { length(tr$tip.label) }, 1L)
     pct.obs <- mapply(function(x, y) x / y, tL, totalL)
-    pz.message(format(pct.obs))
     passed.pct <- nw(pct.obs >= opts('pctmin'))
+    pz.message("Determining which phyla to test...")
+    for (tn in 1:length(pz.db$trees)) {
+        pz.message(paste0(names(pz.db$trees)[tn],
+                          " (pct): ", pct.obs[tn],
+                          "; (number): ", tL[tn],
+                          "; ", ifelse((pct.obs[tn] >= opts('pctmin') &&
+                                        tL[tn] >= opts('treemin')),
+                                       yes="kept",
+                                       no="dropped")
+                          ))
+    }
     saved.phyla <- intersect(passed.min, passed.pct)
+    if (length(saved.phyla) == 0) {
+        pz.error(paste0("All trees had less than ",
+                        opts('pctmin'),
+                        " percent of taxa observed. Either a very small ASV ",
+                        "table was provided, read depth was very shallow, ",
+                        "the right database was not selected or very few ASVs ",
+                        "mapped to entries in the database."))
+    }
     pz.db$trees <- pz.db$trees[saved.phyla]
     pz.db$taxa <- lapply(pz.db$trees, function(x) x$tip.label)
     pz.db$nphyla <- length(pz.db$trees)
@@ -924,7 +942,11 @@ plot.phenotype.trees <- function(phenotype,
                  })
     })
     names(plotted.pheno.trees) <- names(trees)
-    plotted.pheno.trees[vapply(plotted.pheno.trees, is.list, TRUE)]
+    plotted.pheno.trees <- plotted.pheno.trees[vapply(plotted.pheno.trees, is.list, TRUE)]
+    if (length(plotted.pheno.trees) == 0) {
+        pz.warning("No trees were plotted: too few taxa for any phylum?")
+    }
+    plotted.pheno.trees
 }
 
 #' Plot distributions of a phenotype across phyla.
@@ -987,6 +1009,15 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                                          label='prevalence',
                                          stroke.scale=0.3,
                                          units='%') {
+    if (is.null(plotted.pheno.trees)) {
+        pz.message("warning: no trees found")
+        return(NULL)
+    }
+    if (length(plotted.pheno.trees) == 0) {
+        pz.message("warning: no trees found")
+        return(NULL)
+    }
+    pl <- length(plotted.pheno.trees)
     for (pn in 1:length(plotted.pheno.trees)) {
         p <- plotted.pheno.trees[[pn]]
         rp <- p$rphy
