@@ -63,7 +63,11 @@
 	<h4 style="background-color: #FFFFCC;">News</h4>
 	<ul>
       <li>
+          11/4/2019: <i>phylogenize</i> now does a better job of informing the user which phyla are dropped and why, and will throw a more informative error if all phyla are dropped (because the ASV table was very small or because very little mapped to the database).
+			</li>
+			<li>
           7/10/2019: <i>phylogenize</i> will now warn the user when it is dropping samples from the analysis. This can happen either because those samples were singletons (at least two samples per environment are necessary), or because (in 16S data) nothing mapped to our database in that sample.
+			</li>
 			<li>
 				7/2/2019: Fixed a bug with the web form that was causing an error when a BIOM file was submitted.
 			</li>
