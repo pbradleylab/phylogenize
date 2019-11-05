@@ -305,7 +305,8 @@ def create_app(config=None):
 
   @app.before_request
   def check_maintenance():
-    if os.path.exists("maintenance"):
+    if os.path.exists(os.path.join(app.config['APPLICATION_ROOT'],
+      "maintenance")):
       return app.send_static_file('maintenance.html')
 
   def process_form(form=None, request=None):
