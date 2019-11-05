@@ -303,6 +303,11 @@ def create_app(config=None):
     prf = os.path.join(os.path.join(direc, "output"), "phylogenize-report_files")
     return(send_from_directory(prf, subfile))
 
+  @app.before_request
+  def check_maintenance():
+    if os.path.exists("maintenance"):
+      return app.send_static_file('maintenance.html')
+
   def process_form(form=None, request=None):
 
     upload_folder = os.path.join(app.config['APPLICATION_ROOT'],
