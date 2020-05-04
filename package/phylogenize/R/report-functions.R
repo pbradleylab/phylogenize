@@ -393,17 +393,17 @@ harmonize.abd.meta <- function(abd.meta, ...) {
 
 #--- Process 16S data---#
 
-#' Prepare input file for BURST analysis.
+#' Prepare input file for alignment
 #'
 #' \code{prepare.burst.input} outputs a FASTA file of the sequences in the input
-#' 16S data for analysis using BURST.
+#' 16S data for analysis using BURST or vsearch.
 #'
 #' Some particularly relevant global options are:
 #' \describe{
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #'   input files).}
 #'   \item{burst_infile}{String. File name of the sequences written to disk and
-#'   then read into BURST.}
+#'   then read into BURST/vsearch.}
 #' }
 #'
 #' @param mtx A presence/absence or abundance matrix, with row names equal to
@@ -458,6 +458,8 @@ prepare.burst.input <- function(mtx, ...) {
 #' then read back into \emph{phylogenize}.}
 #'   \item{burst_dir}{String. Path where the binary of BURST is found.}
 #'   \item{burst_bin}{String. File name of the binary of BURST.}
+#'   \item{burst_cutoff}{Float. Between 0.95 and 1.00; percent identity minimum
+#'   for alignment results.}
 #'   \item{burst_16sfile}{String. Path to the 16S FASTA database that maps back
 #' to MIDAS species.}
 #'   \item{data_dir}{String. Path to directory containing the data files
@@ -469,6 +471,7 @@ prepare.burst.input <- function(mtx, ...) {
 run.burst <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     binary = basename(opts('burst_bin'))
+    pid = opts('burst_cutoff')
     if (binary %in% c("burst12", "burst15")) {
       burst_args = c("-r",
                      file.path(opts('data_dir'),
@@ -478,7 +481,7 @@ run.burst <- function(...) {
                      file.path(opts('in_dir'),
                                opts('burst_infile')),
                      "-i",
-                     "0.985",
+                     pid,
                      "-o",
                      file.path(opts('in_dir'),
                                opts('burst_outfile')))
@@ -490,10 +493,11 @@ run.burst <- function(...) {
         "--strand both",
         "--blast6out",
         file.path(opts('in_dir'), opts('burst_outfile')),
-        "--id 0.985")
+        "--id",
+        pid)
     } else {
-      pz.warning("Aligner not recognized, calling as old version of BURST")
-      pz.warning("Make sure your database contains reverse complements")
+      pz.warning(paste0("Aligner not recognized, calling as old version of ",
+         "BURST that does not support reverse complements")
       burst_args = c("-r",
                      file.path(opts('data_dir'),
                                opts('burst_16sfile')),
@@ -501,7 +505,7 @@ run.burst <- function(...) {
                      file.path(opts('in_dir'),
                                opts('burst_infile')),
                      "-i",
-                     "0.985",
+                     pid,
                      "-o",
                      file.path(opts('in_dir'),
                                opts('burst_outfile')))
@@ -1312,7 +1316,8 @@ is.dna <- function(seq) {
 #' @param figshare_url Optional: override the URL from which to obtain the data.
 #' @export
 install.data.figshare <- function(data_path=NULL,
-                                  figshare_url="https://ndownloader.figshare.com/files/15013790?private_link=122ea0030cf11c65e32b") {
+                                  figshare_url="https://ndownloader.figshare.com/files/22528244?private_link=450beecc8ae29c044978") {
+# Old version:                    figshare_url="https://ndownloader.figshare.com/files/15013790?private_link=122ea0030cf11c65e32b") {
     if (is.null(data_path)) {
         data_path = tempfile()
         curl::curl_download(figshare_url, data_path)
