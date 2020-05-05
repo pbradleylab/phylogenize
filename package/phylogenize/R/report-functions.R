@@ -497,7 +497,7 @@ run.burst <- function(...) {
         pid)
     } else {
       pz.warning(paste0("Aligner not recognized, calling as old version of ",
-         "BURST that does not support reverse complements")
+         "BURST that does not support reverse complements"))
       burst_args = c("-r",
                      file.path(opts('data_dir'),
                                opts('burst_16sfile')),
@@ -1316,7 +1316,7 @@ is.dna <- function(seq) {
 #' @param figshare_url Optional: override the URL from which to obtain the data.
 #' @export
 install.data.figshare <- function(data_path=NULL,
-                                  figshare_url="https://ndownloader.figshare.com/files/22528244?private_link=450beecc8ae29c044978") {
+                                  figshare_url="https://ndownloader.figshare.com/files/22528736?private_link=450beecc8ae29c044978") {
 # Old version:                    figshare_url="https://ndownloader.figshare.com/files/15013790?private_link=122ea0030cf11c65e32b") {
     if (is.null(data_path)) {
         data_path = tempfile()
