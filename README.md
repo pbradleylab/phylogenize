@@ -1,6 +1,6 @@
 [TOC]
 
-# phylogenize (v0.92 beta)
+# phylogenize (v0.94 beta)
 
 *phylogenize* is a tool that allows users to link microbial genes to environments, accounting for phylogeny. More specifically, given community composition data, *phylogenize* links genes in microbial genomes to either microbial prevalence in, or specificity for, a given environment, while also taking into account an important potential confounder: the phylogenetic relationships between microbes. *phylogenize* comes with [web](https://www.phylogenize.org), QIIME 2, and R interfaces.
 
@@ -12,11 +12,13 @@ The "core" of *phylogenize* is an R package, so to run *phylogenize* locally, yo
 
 ### Installing BURST
 
-BURST is needed for all 16S analyses using *phylogenize*. BURST is a high-speed pairwise aligner that *phylogenize* uses to map 16S amplicon sequence variants back to a database of genomes.
+(Update: 5/4/2020) Either BURST or, as of phylogenize 0.94, vsearch is needed for all 16S analyses using *phylogenize*. BURST is a high-speed pairwise aligner that *phylogenize* uses to map 16S amplicon sequence variants back to a database of genomes.
 
-You can download the binaries from the [BURST Github repository](github.com/knights-lab/BURST). By default *phylogenize* expects these binaries to be copied into the directory `/usr/local/bin`, but you can override this (see below).
+You can download the binaries from the [BURST Github repository](github.com/knights-lab/BURST) or the [vsearch repository](https://github.com/torognes/vsearch). By default *phylogenize* expects these binaries to be copied into the directory `/usr/local/bin`, but you can override this (see below).
 
-**Note for Mac**: Binaries for the latest version of BURST are available only on request, but *phylogenize* should work with an [earlier version of BURST](https://github.com/knights-lab/BURST/releases/tag/v0.99.4a) as long as the binary is renamed `burst12` and copied to `/usr/local/bin` or your preferred path (again, see below for how to override this).
+**Note for Mac** (Update: 5/4/2020): On a Mac, using vsearch may be more straightforward than using BURST. Mac binaries for the latest version of BURST are available only on request, but *phylogenize* should work with an [earlier version of BURST](https://github.com/knights-lab/BURST/releases/tag/v0.99.4a) as long as the binary is renamed `burst12` and copied to `/usr/local/bin` or your preferred path (again, see below for how to override this). If that version of BURST still doesn't work, follow the instructions for older computers.
+
+**Note for older computers** (Update: 5/4/2020): Some of the optimizations that BURST uses are only available on newer architectures. You may be able to run an older version of BURST called [EMBALMER](https://github.com/knights-lab/BURST/releases): pick a version tagged as "buzzard," which means it is compiled to be slower but compatible with more machines. If you use such a version of BURST, instead of renaming it, specify the original name by setting `burst_bin` when calling *phylogenize* (see below). This way, *phylogenize* won't use command-line options that only work in later BURST releases.
 
 ### Installing *phylogenize* package for use with R or the web interface on a local machine
 
@@ -152,7 +154,8 @@ The main function in *phylogenize* is `render.report`. The parameters that you a
 | db_version | "midas_v1.2" | String. Which version of the MIDAS database to use ("midas_v1.2" or "midas_v1.0"). |
 | which_phenotype | "prevalence" | String. Which phenotype to calculate ("prevalence" or "specificity"). |
 | which_envir | "Stool" | String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. |
-| burst_dir | "/usr/local/bin" | String. Path to the BURST binaries. |
+| burst_dir | "/usr/local/bin" | String. Path to the BURST or vsearch binaries. |
+| burst_bin | "burst12" | String. Name of the BURST or vsearch binary. |
 
 Compared to some R packages, passing options to *phylogenize* works a little differently under the hood. Instead of having its own parameters, `render.report` and other *phylogenize* functions look for global options that can either be set using the function `pz.options` or overridden as extra arguments. This allows you to set parameters once and then work with the *phylogenize* functions without retyping them, and therefore makes the code easier to read. To see the full list of parameters that can be overridden, see `?pz.options`.
 
@@ -203,11 +206,15 @@ The application should then be accessible from http://localhost:5000.
 
 ## FAQ
 
-### I get an error stating "BURST failed with error code 127".
+### I get an error stating `BURST failed with error code 127`.
 
 This indicates that the BURST binary couldn't be found. Check that you have the correct binary for your operating system and architecture, that it is installed to wherever `burst_dir` is set to point, and that you can run the BURST binary by itself.
 
-### I get an error stating "Error in plotted.pheno.trees[[pn]] : subscript out of bounds".
+### I get a different BURST error.
+
+Update (5/4/2020): This often means that BURST is not compatible with your hardware or operating system. First, make sure you have the right version for your operating system (OS X, Linux, or Windows). If you do, try following the instructions for older computers above. As an alternative, as of phylogenize 0.94 you can now use vsearch instead of BURST: you may have more luck going that route.
+
+### I get an error stating `Error in plotted.pheno.trees[[pn]] : subscript out of bounds`.
 
 Update (11/4/2019): in the latest version of *phylogenize* you should get a more informative error message; please file a bug if this still happens!
 
