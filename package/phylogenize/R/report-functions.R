@@ -734,8 +734,8 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     pz.message("Determining which phyla to test...")
     for (tn in 1:length(pz.db$trees)) {
         pz.message(paste0(names(pz.db$trees)[tn],
-                          " (pct): ", pct.obs[tn],
-                          "; (number): ", tL[tn],
+                          " (pct): ", format(pct.obs[tn] * 100, digits=2),
+                          "%; (number): ", tL[tn],
                           "; ", ifelse((pct.obs[tn] >= opts('pctmin') &&
                                         tL[tn] >= opts('treemin')),
                                        yes="kept",
@@ -745,8 +745,8 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     saved.phyla <- intersect(passed.min, passed.pct)
     if (length(saved.phyla) == 0) {
         pz.error(paste0("All trees had less than ",
-                        opts('pctmin'),
-                        " percent of taxa observed. Either a very small ASV ",
+                        format(opts('pctmin') * 100, digits=2),
+                        "% of taxa observed. Either a very small ASV ",
                         "table was provided, read depth was very shallow, ",
                         "the right database was not selected or very few ASVs ",
                         "mapped to entries in the database."))
