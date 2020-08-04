@@ -52,7 +52,7 @@ phylogenize::install.data.figshare()
 
 QIIME 2 runs in a conda environment, meaning it has its own installation of R and related packages. To run *phylogenize* with QIIME 2, you will need to install *phylogenize* within the QIIME 2 conda environment, then install the [q2-phylogenize plugin](https://bitbucket.org/pbradz/q2-phylogenize). The instructions are similar for installing in any other conda environment, except of course you won't need the plugin.
 
-First, switch to the correct environment. For QIIME 2, this is accomplished with `source activate qiime2-2019.4` (see [here](https://docs.qiime2.org/2019.4/install/native/#activate-the-conda-environment)).
+First, switch to the correct environment. For QIIME 2, this is accomplished with `source activate qiime2-2019.4` (see [here](https://docs.qiime2.org/2019.4/install/native/#activate-the-conda-environment)). Note that you may need to replace "2019.4" with the most recent version of QIIME2, e.g., "2020.6".
 
 Installing *phylogenize* within conda is a little tricky. You will need to manually install a few libraries and packages that are either not included, or difficult to install from source. From the UNIX command line:
 
@@ -65,7 +65,7 @@ conda install -c r r-git2r
 conda install -c r r-shiny
 ```
 
-Next, run R within the same environment and install the *phylogenize* library. However, you will probably need to work around a [known issue in conda](https://github.com/r-lib/devtools/issues/1722) before calling `devtools::install_bitbucket`. The following should work (from within R):
+Next, run R within the same environment and install the *phylogenize* library. However, you will probably need to work around a [known issue in conda](https://github.com/r-lib/devtools/issues/1722) before calling `devtools::install_bitbucket`. The following should work (from within R). ***Note (added 8/4/2020)***: On recent versions of OS X, you will probably need to change "/bin/tar" to "/usr/bin/tar" when calling Sys.setenv:
 
 ```
 options(unzip="internal")
@@ -76,7 +76,9 @@ devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
 phylogenize::install.data.figshare()    # nb: this may take a while to download
 ```
 
-Note: if you are having trouble with the `install_bitbucket` command on Windows or within the QIIME2 VM on Windows, you can try instead [downloading](https://bitbucket.org/pbradz/phylogenize/downloads/) the repository and unzipping it, then running:
+Note (updated 8/4/2020): If you get an error message about the package "mnormt" not being available for R 3.5.1, try installing a specific version with the command `remotes::install_version("mnormt", "1.5-5")`. Then retry the above commands starting from the `devtools::install_bitbucket` line.
+
+Note: If you are having trouble with the `install_bitbucket` command on Windows or within the QIIME2 VM on Windows, you can try instead [downloading](https://bitbucket.org/pbradz/phylogenize/downloads/) the repository and unzipping it, then running:
 ```
 devtools::install(pkg="[...]/package/phylogenize")
 ```
