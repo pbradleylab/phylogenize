@@ -87,7 +87,7 @@ devtools::install(pkg="[...]/package/phylogenize")
 Finally, install the plugin. From the UNIX command line (i.e., not in R):
 
 ```
-git clone bitbucket.org/pbradz/q2-phylogenize
+git clone https://bitbucket.org/pbradz/q2-phylogenize
 cd q2-phylogenize
 python setup.py build
 python setup.py install
