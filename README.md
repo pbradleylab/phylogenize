@@ -224,6 +224,13 @@ This means that you have too few taxa mapped to MIDAS IDs in every phylum *phylo
 
 This situation can happen if you, for example, are using a "testing" dataset with very few ASVs, if your read depth was extremely low and few ASVs were detected, or if you are sequencing a community where almost nothing maps to the MIDAS database. If you are using a testing dataset, using the full dataset should solve the problem (if you really want to have something fast to run, you could try only keeping ASVs that map to a single phylum). Assuming you started with lots of ASVs, taking a look at the intermediate BURST output file `output_assignments.txt` should tell you how many of them were successfully mapped to MIDAS IDs: if there are only a few entries with a percent identity above 98.5\% (default), lack of reference genomes is likely your problem.
 
+## When I try to install phylogenize in conda, it spins on "solving environment" for hours without finishing.
+
+There are a couple of things to try:
+ * If your conda/QIIME2 installation is not brand new, try removing your existing installation and installing miniconda3 again from scratch. This has helped me before, possibly because there was stuff installed in the 'base' conda environment that was conflicting with requirements for phylogenize.
+ * Try using the [mamba](https://github.com/TheSnakePit/mamba) environment solver, instead of the one built into conda.
+ * Try using [strict channel priority](https://www.anaconda.com/blog/understanding-and-improving-condas-performance).
+
 ## Acknowledgements
 
  * Project lead and repository maintainer: [Patrick H. Bradley](http://docpollard.org/people/patrick-j-h-bradley/)
