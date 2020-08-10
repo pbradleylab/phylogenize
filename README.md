@@ -65,26 +65,38 @@ conda install -c r r-git2r
 conda install -c r r-shiny
 ```
 
-Next, run R within the same environment and install the *phylogenize* library. However, you will probably need to work around a [known issue in conda](https://github.com/r-lib/devtools/issues/1722) before calling `devtools::install_bitbucket`. The following should work (from within R). ***Note (added 8/4/2020)***: On recent versions of OS X, you will probably need to change "/bin/tar" to "/usr/bin/tar" when calling Sys.setenv:
+Next, run R within the same environment and install the *phylogenize* library. However, you will probably need to work around a [known issue in conda](https://github.com/r-lib/devtools/issues/1722) before calling `devtools::install_bitbucket`. The following should work (from within R).
+
+*Note (added 8/4/2020)*: On recent versions of OS X, you will probably need to change "/bin/tar" to "/usr/bin/tar" when calling `Sys.setenv` in this code block.
 
 ```
 options(unzip="internal")
 Sys.setenv(TAR="/bin/tar")   # replace with path to tar in your installation, if necessary
+```
+
+These options only stick around for your current session, so re-run them if you quit and come back to the installation process. You shouldn't need to run them once phylogenize is installed, though.
+
+Next try:
+
+```
 install.packages("BiocManager")
 BiocManager::install(c("qvalue","biomformat","ggtree"))
 devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
 phylogenize::install.data.figshare()    # nb: this may take a while to download
 ```
 
-Note (updated 8/4/2020): If you get an error message about the package "mnormt" not being available for R 3.5.1, try installing a specific version with the command `remotes::install_version("mnormt", "1.5-5")`. Then retry the above commands starting from the `devtools::install_bitbucket` line.
+*Note* (updated 8/4/2020): If you get an error message about the package "mnormt" not being available for R 3.5.1, try installing a specific version with the command `remotes::install_version("mnormt", "1.5-5")`. Then retry the above commands starting from the `devtools::install_bitbucket` line.
 
-Note: If you are having trouble with the `install_bitbucket` command on Windows or within the QIIME2 VM on Windows, you can try instead [downloading](https://bitbucket.org/pbradz/phylogenize/downloads/) the repository and unzipping it, then running:
+*Note* (updated 8/10/2020): If you get errors installing the package "igraph" that relate to "-lgomp", first install libgomp from the command line (outside of R, but in your QIIME2 environment) with `conda install libgomp`. Because of some quirks in where conda expects libraries to be, you may then also need to manually put the `libgomp` library in your QIIME2 environment. You can do that with a soft-link, e.g., `ln -s ~/miniconda3/lib/libgomp.so ~/miniconda3/envs/qiime2-2020.6/x86_64-conda-linux-gnu/lib/`. Substitute your anaconda directory for "~/miniconda3" and your QIIME2 environment name for "qiime2-2020.6" as needed.
+
+*Note*: If you are having trouble with the `install_bitbucket` command on Windows or within the QIIME2 VM on Windows, you can try instead [downloading](https://bitbucket.org/pbradz/phylogenize/downloads/) the repository and unzipping it, then running:
+
 ```
 devtools::install(pkg="[...]/package/phylogenize")
 ```
 ... where `[...]` should be replaced with the path where you unzipped the repository. Then run `install.data.figshare()` as above.
 
-Finally, install the plugin. From the UNIX command line (i.e., not in R):
+Finally, install the plugin. From the UNIX command line (i.e., not in R -- you can use the command `quit()` or press Ctrl+D to leave the R environment; don't worry about "saving" since the packages will remain installed):
 
 ```
 git clone https://bitbucket.org/pbradz/q2-phylogenize
@@ -134,6 +146,8 @@ phylogenize::install.data.figshare()
 ```
 
 ## Running *phylogenize*
+
+Congratulations! *phylogenize* should now be installed.
 
 ### Running *phylogenize* using the R interface
 
@@ -224,7 +238,7 @@ This means that you have too few taxa mapped to MIDAS IDs in every phylum *phylo
 
 This situation can happen if you, for example, are using a "testing" dataset with very few ASVs, if your read depth was extremely low and few ASVs were detected, or if you are sequencing a community where almost nothing maps to the MIDAS database. If you are using a testing dataset, using the full dataset should solve the problem (if you really want to have something fast to run, you could try only keeping ASVs that map to a single phylum). Assuming you started with lots of ASVs, taking a look at the intermediate BURST output file `output_assignments.txt` should tell you how many of them were successfully mapped to MIDAS IDs: if there are only a few entries with a percent identity above 98.5\% (default), lack of reference genomes is likely your problem.
 
-## When I try to install phylogenize in conda, it spins on "solving environment" for hours without finishing.
+### When I try to install phylogenize in conda, it spins on "solving environment" for hours without finishing.
 
 There are a couple of things to try:
  * If your conda/QIIME2 installation is not brand new, try removing your existing installation and installing miniconda3 again from scratch. This has helped me before, possibly because there was stuff installed in the 'base' conda environment that was conflicting with requirements for phylogenize.
