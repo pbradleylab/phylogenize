@@ -85,7 +85,7 @@ devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
 phylogenize::install.data.figshare()    # nb: this may take a while to download
 ```
 
-*Note* (updated 8/4/2020): If you get an error message about the package "mnormt" not being available for R 3.5.1, try installing a specific version with the command `remotes::install_version("mnormt", "1.5-5")`. Then retry the above commands starting from the `devtools::install_bitbucket` line.
+*Note* (updated 8/4/2020): If you get an error message about the package "mnormt" and/or "phylolm" not being available for R 3.5.1, try installing a specific version with the command `remotes::install_version("mnormt", "1.5-5"); remotes::install_version("phylolm", "2.6")`. Then retry the above commands starting from the `devtools::install_bitbucket` line.
 
 *Note* (updated 8/10/2020): If you get errors installing the package "igraph" that relate to "-lgomp", first install libgomp from the command line (outside of R, but in your QIIME2 environment) with `conda install libgomp`. Because of some quirks in where conda expects libraries to be, you may then also need to manually put the `libgomp` library in your QIIME2 environment. You can do that with a soft-link, e.g., `ln -s ~/miniconda3/lib/libgomp.so ~/miniconda3/envs/qiime2-2020.6/x86_64-conda-linux-gnu/lib/`. Substitute your anaconda directory for "~/miniconda3" and your QIIME2 environment name for "qiime2-2020.6" as needed.
 
