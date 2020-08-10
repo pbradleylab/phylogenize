@@ -10,7 +10,7 @@ The method is described fully in [Bradley, Nayfach, and Pollard (2018)](http://j
 
 The "core" of *phylogenize* is an R package, so to run *phylogenize* locally, you will need to first install that package from this repository. There are separate instructions depending on whether you are installing *phylogenize* for use 1. with R or the web interface on a local machine, 2. with QIIME 2 or in a conda environment, or 3. on AWS.
 
-### Installing BURST
+### Installing BURST and/or vsearch
 
 (Update: 5/4/2020) Either BURST or, as of phylogenize 0.94, vsearch is needed for all 16S analyses using *phylogenize*. BURST is a high-speed pairwise aligner that *phylogenize* uses to map 16S amplicon sequence variants back to a database of genomes.
 
