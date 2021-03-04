@@ -1075,6 +1075,7 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
             ggtree::geom_tiplab() +
             ggplot2::xlim(xlim[1], xlim[2])
         fn <- knitr::fig_path('svg', number = pn)
+        plotly
         tryCatch(
             hack.tree.labels(new.tr,
                              fn,
@@ -1088,6 +1089,73 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                 non.interactive.plot(new.tr, fn)
             })
     }
+}
+
+# IN PROGRESS
+plotly.labeled.phenotype.trees <- function(plotted.pheno.trees,
+                                           phenotype,
+                                           label='prevalence',
+                                           stroke.scale=0.3,
+                                           units='%') {
+    if (is.null(plotted.pheno.trees)) {
+        pz.message("warning: no trees found")
+        return(NULL)
+    }
+    if (length(plotted.pheno.trees) == 0) {
+        pz.message("warning: no trees found")
+        return(NULL)
+    }
+    pl <- length(plotted.pheno.trees)
+    for (pn in 1:length(plotted.pheno.trees)) {
+        p <- plotted.pheno.trees[[pn]]
+        rp <- p$rphy
+        tr <- p$tree
+        rp2 <- rp
+        # pad tip labels so the additional stuff doesn't get cut off when
+        # calculating x limits
+        # rp2$tip.label <- paste0(rp2$tip.label, " (phenotype = ...", units, ")")
+        # xlim <- plot(rp2, plot=FALSE, no.margin=TRUE)$x.lim
+        tr_data <- filter(tr$data, isTip) %>%
+            left_join()
+            mutate(label=paste(
+
+                   ))
+        new.tr <- tr +
+            ggtree::geom_tiplab() +
+            ggplot2::xlim(xlim[1], xlim[2])
+        fn <- knitr::fig_path('svg', number = pn)
+        plotly
+        tryCatch(
+            hack.tree.labels(new.tr,
+                             fn,
+                             stroke.scale=stroke.scale,
+                             pheno=phenotype,
+                             units=units,
+                             pheno.name=label),
+            error = function(e) {
+                pz.message(e)
+                # Fall back to non-interactive
+                non.interactive.plot(new.tr, fn)
+            })
+    }
+    tip_data <- filter(p$data, isTip) %>%
+        mutate(label=paste(
+                   protein_type,
+                   class,
+                   family,
+                   species,
+                   label,
+                   sep="::"
+               ))
+    gp <- (p + geom_point(data=tip_data,
+                          aes(x=x, y=y, color=clade,
+                              shape=protein_type, label=label),
+                          size=3) +
+           scale_shape_manual(values=c(15, 2)) +
+           scale_color_manual(values=clade_cols)) %>% ggplotly
+    if (!is.null(path)) {
+        htmlwidgets::saveWidget(gp, path)
+    } else {gp}
 }
 
 #' Make a hybrid tree-heatmap plot showing the taxon distribution of significant
