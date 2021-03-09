@@ -1,4 +1,4 @@
-sample	env	subject	bodysite	dataset
+sampleid	env	subject	bodysite	dataset
 Anterior.nares__103092734	Anterior nares	103092734	Anterior nares	HMP
 L_Antecubital.fossa__103092734	L_Antecubital fossa	103092734	L_Antecubital fossa	HMP
 R_Antecubital.fossa__103092734	R_Antecubital fossa	103092734	R_Antecubital fossa	HMP
