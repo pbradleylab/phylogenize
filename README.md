@@ -57,12 +57,7 @@ First, switch to the correct environment. For QIIME 2, this is accomplished with
 Installing *phylogenize* within conda is a little tricky. You will need to manually install a few libraries and packages that are either not included, or difficult to install from source. From the UNIX command line:
 
 ```
-conda install libcurl
-conda install r-devtools
-conda install -c bioconda bioconductor-rhdf5lib
-conda install -c conda-forge r-magick
-conda install -c r r-git2r
-conda install -c r r-shiny
+conda install -c conda-forge -c bioconda -c r libcurl r-devtools bioconductor-rhdf5lib r-magick r-git2r r-shiny
 ```
 
 Next, run R within the same environment and install the *phylogenize* library. However, you will probably need to work around a [known issue in conda](https://github.com/r-lib/devtools/issues/1722) before calling `devtools::install_bitbucket`. The following should work (from within R).
