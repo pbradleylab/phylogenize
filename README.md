@@ -77,6 +77,7 @@ Next try:
 ```
 install.packages("BiocManager")
 BiocManager::install(c("qvalue","biomformat","ggtree"))
+Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS="true")
 devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
 phylogenize::install.data.figshare()    # nb: this may take a while to download
 ```
