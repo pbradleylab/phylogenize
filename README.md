@@ -28,6 +28,7 @@ Because *phylogenize* is an analysis and visualization pipeline, it has more dep
 install.packages("BiocManager")
 BiocManager::install(c("qvalue","biomformat","ggtree"))
 install.packages("devtools")
+Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS="true")
 devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
 ~~~~
 
