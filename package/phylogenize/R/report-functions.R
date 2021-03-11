@@ -369,7 +369,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
         }
     } else {
       # Must be correlation
-      n_present <- sum(abd.meta$metadata[[opts('env_column')]])
+      n_present <- sum(!is.na(as.numeric(abd.meta$metadata[[opts('env_column')]])))
       if (n_present < 3) pz.error("In order to calculate correlation, there must be at least 3 non-missing values.")
     }
 

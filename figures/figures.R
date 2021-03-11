@@ -9,8 +9,6 @@ library(nlme)
 
 source("figure-functions.R")
 
-
-
 plan(multiprocess, workers=6)
 hmp_dir <- normalizePath(file.path("..", "hmp"))
 emp_dir <- normalizePath(file.path("..", "emp"))
