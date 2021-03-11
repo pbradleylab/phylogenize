@@ -39,3 +39,67 @@ lipid_pa_logctr <- lipid_pa_floored %>% log2 %>% mean_ctr_mtx
 lipid_logctr <- rbind(lipid_pg_logctr, lipid_pa_logctr)
 
 lipid_svd <- svd(lipid_logctr)
+
+manifest <- read_tsv("DRP006201/manifest.tsv") %>%
+  select(`sample-id`:AvgSpotLen) %>%
+  mutate(`sample` = map_chr(`sample-id`, ~ {
+    gsub("2w-", "", .x) %>%
+      gsub("(.*)(\\d)$", "\\1_\\2", .) %>%
+      gsub("H", "High", .) %>%
+      gsub("L", "Low", .) %>%
+      gsub("Vanc", "Van", .) %>%
+      gsub("C", "Control", .) %>%
+      gsub("X", "Abx", .) %>%
+      gsub("-", "_", .)
+  }))
+
+lipid_logctr_t <- as_tibble(t(lipid_logctr),
+                            rownames="sample")
+
+lipid_pc_mtx <- lipid_svd$v
+colnames(lipid_pc_mtx) <- paste0("PC_", 1:ncol(lipid_pc_mtx))
+rownames(lipid_pc_mtx) <- colnames(lipid_logctr)
+
+lipid_pcs <- lipid_pc_mtx %>% as_tibble(rownames="sample")
+
+metadata <- left_join(manifest, lipid_logctr_t) %>% left_join(., lipid_pcs)
+write_tsv(metadata, "lipidomics_metadata.tsv")
+
+metadata_justpcs <- left_join(manifest, lipid_pcs)
+write_tsv(metadata_justpcs, "lipidomics_metadata_pcs.tsv")
+
+
+# HMP TEST
+md_hmp <- read_tsv("../hmp/hmp-16s-phylogenize-metadata-full.tab") %>%
+  mutate(corr_trait = map_dbl(env, ~ {
+    if (.x %in% c("Buccal mucosa", "Palatine Tonsils", "Subgingival plaque", "Supragingival plaque", "Throat",
+                  "Tongue dorsum", "Attached/Keratinized gingiva", "Saliva", "Hard palate")) { return(0.5) }
+    if (.x == "Stool") return(1)
+    return(0)
+  } ))
+write_tsv(md_hmp, "../hmp/test-hmp-md-silly.tab")
+bs <- read_tsv("../hmp/hmp-shotgun-bodysite.tab")
+colnames(bs) <- gsub("\\.\\.", "__", colnames(bs))
+write_tsv(bs, "../hmp/shotgun-renamed.tab")
+
+
+    phylogenize::render.report(
+                     output_file=file.path(hmp_dir, "shotgun-corr-results-phylo.html"),
+                     in_dir=hmp_dir,
+                     out_dir=file.path(hmp_dir, "shotgun-corr-output"),
+                     linearize=FALSE,
+                     type="midas",
+                     sample_column="sampleid",
+                     db_version="midas_v1.0",
+                     which_phenotype="correlation",
+                     which_envir="Stool",
+                     env_column="corr_trait",
+                     abundance_file="shotgun-renamed.tab",
+                     metadata_file="test-hmp-md-silly.tab",
+                     burst_bin="vsearch",
+                     data_dir=system.file(package="phylogenize", "extdata"),
+                     input_format="tabular",
+                     burst_dir=BURST_DIR,
+                     ncl=NCL,
+                     meas_err=TRUE,
+                     pryr=FALSE)

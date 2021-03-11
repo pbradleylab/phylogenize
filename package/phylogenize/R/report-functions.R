@@ -72,7 +72,8 @@ read.abd.metadata <- function(...) {
 #'     sample columns corresponding to those in the global options (see
 #'     \?pz.options).
 #' @return A data frame of metadata, with environment and
-#'     dataset columns converted to factors.
+#'     dataset columns converted to factors, *unless* calculating correlation
+#'     in which case environment column will be cast as numeric.
 #' @export
 check.process.metadata <- function(metadata, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -95,7 +96,9 @@ check.process.metadata <- function(metadata, ...) {
             pz.error(paste0("sample column not found: ", opts('sample_column')))
         }
     }
-    metadata[[opts('env_column')]] <- as.factor(metadata[[opts('env_column')]])
+    if (!(opts('which_phenotype') == "correlation")) {
+        metadata[[opts('env_column')]] <- as.factor(metadata[[opts('env_column')]])
+    }
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
     return(metadata)
 }
@@ -336,43 +339,55 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     abd.meta$metadata <- abd.meta$metadata[
                             abd.meta$metadata[[opts('sample_column')]] %in%
                             samples.present, ]
-    all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
+
+    if (opts('which_phenotype') %in% c("specificity", "prevalence")) {
+        all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
+        env.number <- sapply(all.envs, function(e) {
+            sum(abd.meta$metadata[[opts('env_column')]] == e)
+        })
+        names(env.number) <- all.envs
+        singleton.envs <- names(which(env.number == 1))
+        if (length(singleton.envs) > 0) {
+            pz.warning(paste0("Warning: each environment requires at least two samples."))
+            pz.warning("Dropped the following environment(s) from the analysis: ")
+            for (s in singleton.envs) {
+                pz.warning(s)
+            }
+        }
+        nonsingleton.envs <- names(which(env.number > 1))
+        pz.message(paste0(length(nonsingleton.envs),
+                        " non-singleton environment(s) found"))
+        if ((length(nonsingleton.envs) < 2) &&
+            (opts('which_phenotype') == 'specificity')) {
+            pz.error(paste0("In order to calculate specificity, there must be at least",
+                            " two environments with two samples each."))
+        }
+        if ((length(nonsingleton.envs) < 1) &&
+            (opts('which_phenotype') == 'prevalence')) {
+            pz.error(paste0("In order to calculate prevalence, there must be at least",
+                            " one environment with two samples."))
+        }
+    } else {
+      # Must be correlation
+      n_present <- sum(abd.meta$metadata[[opts('env_column')]])
+      if (n_present < 3) pz.error("In order to calculate correlation, there must be at least 3 non-missing values.")
+    }
+
     all.dsets <- unique(abd.meta$metadata[[opts('dset_column')]])
-    env.number <- sapply(all.envs, function(e) {
-        sum(abd.meta$metadata[[opts('env_column')]] == e)
-    })
     dset.number <- sapply(all.dsets, function(d) {
         sum(abd.meta$metadata[[opts('dset_column')]] == d)
     })
-    names(env.number) <- all.envs
     names(dset.number) <- all.dsets
-    singleton.envs <- names(which(env.number == 1))
-    if (length(singleton.envs) > 0) {
-        pz.warning(paste0("Warning: each environment requires at least two samples."))
-        pz.warning("Dropped the following environment(s) from the analysis: ")
-        for (s in singleton.envs) {
-            pz.warning(s)
-        }
-    }
-    nonsingleton.envs <- names(which(env.number > 1))
-    if ((length(nonsingleton.envs) < 2) &&
-        (opts('which_phenotype') == 'specificity')) {
-        pz.error(paste0("In order to calculate specificity, there must be at least",
-                        " two environments with two samples each."))
-    }
-    if ((length(nonsingleton.envs) < 1) &&
-        (opts('which_phenotype') == 'prevalence')) {
-        pz.error(paste0("In order to calculate prevalence, there must be at least",
-                        " one environment with two samples."))
-    }
     nonsingleton.dsets <- names(which(dset.number > 1))
-    pz.message(paste0(length(nonsingleton.envs),
-                      " non-singleton environment(s) found"))
     pz.message(paste0(length(nonsingleton.dsets),
                       " non-singleton dataset(s) found"))
-    wrows <- which(
+    if (opts('which_phenotype') != "correlation") {
+      wrows <- which(
       (abd.meta$metadata[[opts('env_column')]] %in% nonsingleton.envs) &
       (abd.meta$metadata[[opts('dset_column')]] %in% nonsingleton.dsets))
+    } else {
+      wrows <- which(abd.meta$metadata[[opts('dset_column')]] %in% nonsingleton.dsets)
+    }
     if (length(wrows) < 2) {
         pz.error(paste0("Too few rows found in metadata matrix after ",
                         "dropping singletons and matching with abundance ",
@@ -836,7 +851,7 @@ clean.pheno <- function(phenotype, pz.db) {
 #' Some particularly relevant global options are:
 #' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
-#'   or "specificity").}
+#'   or "specificity" or "correlation").}
 #'   \item{prev_color_low}{String. When graphing prevalence on a tree, this
 #'   color is the lowest value.} \item{prev_color_high}{String. When graphing
 #'   prevalence on a tree, this color is the highest value.}
@@ -862,7 +877,7 @@ get.pheno.plotting.scales <- function(phenotype, trees, phenoP=NULL, ...) {
                                              trees,
                                              phenoP,
                                              ...)
-    } else if (opts('which_phenotype') == 'specificity') {
+    } else if (opts('which_phenotype') %in% c('specificity', 'correlation')) {
         get.pheno.plotting.scales.specificity(phenotype,
                                               trees,
                                               phenoP,
@@ -1075,7 +1090,6 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
             ggtree::geom_tiplab() +
             ggplot2::xlim(xlim[1], xlim[2])
         fn <- knitr::fig_path('svg', number = pn)
-        plotly
         tryCatch(
             hack.tree.labels(new.tr,
                              fn,
@@ -1250,12 +1264,12 @@ single.cluster.plot <- function(gene.presence,
                          disp=plotted.tree$disp)
     p <- ggtree::ggtree(tree, ladderize = TRUE) %<+%
         col.df +
-        ggtree::geom_tippoint(ggplot2::aes(color=disp, shape = '.'))
+        ggtree::geom_tippoint(ggplot2::aes(color=disp, shape='.'))
     if (opts('which_phenotype') == "prevalence") {
         p <- p + ggplot2::scale_color_gradient(
                               low=plotted.tree$cols["low.col"],
                               high=plotted.tree$cols["high.col"])
-    } else if (opts('which_phenotype') == "specificity") {
+    } else if (opts('which_phenotype') %in% c("specificity", "correlation")) {
         p <- p + ggplot2::scale_color_gradient2(
                               low=plotted.tree$cols["low.col"],
                               mid=plotted.tree$cols["mid.col"],
@@ -1271,11 +1285,11 @@ single.cluster.plot <- function(gene.presence,
         sig.ord <- sig.ord[order(sig.ord[, 3]), , drop=FALSE]
     }
     tmp <- ggtree::facet_plot(p,
-                              paste0('heatmap: ', phylum),
-                              sig.ord,
-                              ggplot2::geom_tile,
-                              ggplot2::aes(x = as.numeric(as.factor(gene)),
-                                           fill = as.numeric(as.factor(value)))) +
+                              panel=paste0('heatmap: ', phylum),
+                              data=sig.ord,
+                              geom=ggplot2::geom_tile,
+                              mapping=ggplot2::aes(x = as.numeric(as.factor(gene)),
+                                                   fill = as.numeric(as.factor(value)))) +
         ggplot2::scale_fill_gradient(low = opts('gene_color_absent'),
                                      high = opts('gene_color_present'),
                                      na.value = opts('gene_color_absent'))

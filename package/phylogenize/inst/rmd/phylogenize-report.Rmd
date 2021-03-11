@@ -160,7 +160,10 @@ if (pz.options('which_phenotype') == "prevalence") {
                                       mapped.observed)
   pz.db$taxa <- lapply(pz.db$trees, function(x) x$tip.label)
   pz.db$nphyla <- length(pz.db$trees)
-} else if (which_phenotype == "provided") {
+} else if (pz.options("which_phenotype") == "correlation") {
+  phenotype <- correl.clr(abd.meta)
+  phenoP <- 0
+} else if (pz.options("which_phenotype") == "provided") {
   pz.error("providing your own phenotype not implemented yet")
 } else {
   pz.error(paste0("don't know how to calculate the phenotype ",
@@ -318,7 +321,7 @@ have particularly extreme phenotypes.
 
 check.pryr()
 
-cluster.plots <- mapply(do.clust.plot,
+cluster.plots <- mapply(do.clust.plot, 
                         pz.db$gene.presence[phy.with.sigs],
                         pos.sig.thresh[phy.with.sigs],
                         pz.db$trees[phy.with.sigs],

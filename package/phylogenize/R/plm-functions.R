@@ -698,6 +698,61 @@ prev.addw <- function(abd.meta,
     return(logit(addw))
 }
 
+
+### calculate correlation
+
+#' Master function to calculate taxon-to-phenotype correlations, using clr-transformed abundances.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{env_column}{String. Name of column in metadata file containing (in this case) the
+#'   correlation variable.}
+#'   \item{dset_column}{String. Name of column in metadata file containing the
+#'   dataset annotations.}
+#'   \item{sample_column}{String. Name of column in metadata file containing the
+#'   sample names.}
+#' }
+#'
+#' @param abd.meta A list giving an abundance matrix and metadata.
+#' @return An estimate of taxon abundance correlations with a phenotype.
+#' @export
+correl.clr <- function(abd.meta,
+                      ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    R <- opts('env_column')
+    S <- opts('sample_column')
+    D <- opts('dset_column')
+    if (!(R %in% colnames(abd.meta$metadata))) {
+      stop(paste0("column ", R, " not found in metadata"))
+    }
+    R.rows <- !is.na(abd.meta$metadata[[R]])
+    dsets <- unique(abd.meta$metadata[R.rows, D, drop=TRUE])
+    if (length(dsets) > 1) {
+        warning("datasets are ignored when calculating correlation")
+    }
+    clr_mtx <- clr(abd.meta$mtx)
+    clr_cols <- colnames(clr_mtx)
+    R_cols <- abd.meta$metadata[R.rows, S] %>% unlist %>% as.character
+    R_values <- abd.meta$metadata[[R]][R.rows] %>% as.numeric
+    names(R_values) <- R_cols
+    keep_cols <- intersect(clr_cols, R_cols)
+    clr_mtx <- clr_mtx[, keep_cols]
+    trait <- R_values[keep_cols]
+    if (sd(trait) == 0) { stop("Trait has a constant value; can't take correlation") }
+    if (all(trait %in% c(0, 1))) { warning("Trait looks binary; are you sure you want to take correlation?") }
+    corr_values <- apply(clr_mtx, 1, function(x) cor(x, trait))
+    # take care of any perfect correlations before taking fisher transform
+    corr_values[corr_values == 1] <- (max(corr_values[corr_values < 1]) + 1) / 2
+    corr_values[corr_values == -1] <- (min(corr_values[corr_values > 1]) + -1) / 2
+    return(atanh(corr_values))
+}
+
+#' Function to take the clr transform of a matrix.
+#' @param pc Pseudocount to add to all values (default 0.5).
+clr <- function(mtx, pc = 0.5) {
+  apply(mtx + pc, 2, function(x) log(x) - mean(log(x)))
+}
+
 #' Master function to calculate environmental specificity scores.
 #'
 #' Some particularly relevant global options are:
