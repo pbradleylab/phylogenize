@@ -674,6 +674,14 @@ import.pz.db <- function(...) {
             gp.file <- "test-gene-presence-binary.rds"
             tr.file <- "test-trees.rds"
             tax.file <- "test-taxonomy.csv"
+        } else if (opts('db_version') == "midas2_uhgg") {
+            gp.file <- "midas2-uhgg-gene-presence-binary.rds"
+            tr.file <- "midas2-uhgg-trees.rds"
+            tax.file <- "midas2-uhgg-taxonomy.csv"
+        } else if (opts('db_version') == "midas2_uhgg_fam") {
+            gp.file <- "midas2-uhgg-family-gene-presence-binary.rds"
+            tr.file <- "midas2-uhgg-family-trees.rds"
+            tax.file <- "midas2-uhgg-family-taxonomy.csv"
         } else {
             pz.error(paste0("Unknown database version ", opts('db_version')))
         }
@@ -694,9 +702,15 @@ import.pz.db <- function(...) {
     taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),
                                                        tax.file)),
                            stringsAsFactors = FALSE)[,-1]
-    gene.to.fxn <- data.table::fread(file.path(opts('data_dir'),
-                                               "family.functions"),
-                         header = F)
+    if ((opts('type') == 'midas') && (opts('db_version') == "midas2_uhgg")) {
+        gene.to.fxn <- data.table::fread(file.path(opts('data_dir'),
+                                                   "midas2-uhgg.functions"),
+                                         header = F, sep='\t')
+    } else {
+        gene.to.fxn <- data.table::fread(file.path(opts('data_dir'),
+                                                   "family.functions"),
+                                         header = F)
+    }
     # process
     phyla <- intersect(names(trees), names(gene.presence))
     colnames(gene.to.fxn) <- c("gene", "function")
