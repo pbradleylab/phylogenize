@@ -682,6 +682,10 @@ import.pz.db <- function(...) {
             gp.file <- "midas2-uhgg-family-gene-presence-binary.rds"
             tr.file <- "midas2-uhgg-family-trees.rds"
             tax.file <- "midas2-uhgg-family-taxonomy.csv"
+        } else if (opts('db_version') == "custom") { # use together with data_dir
+            gp.file <- "custom-gene-presence.rds"
+            tr.file <- "custom-trees.rds"
+            tax.file <- "custom-taxonomy.csv"
         } else {
             pz.error(paste0("Unknown database version ", opts('db_version')))
         }
