@@ -34,7 +34,7 @@ devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
 
 (Note that you need to tell R to look in a specific subdirectory of this repository -- i.e., `package/phylogenize` -- and not the root.)
 
-***Important note***: If you are using R >= 3.6.0, you will need to install the latest development versions of `phytools` and `treeio`, which have an important [bug fix](https://github.com/liamrevell/phytools/issues/47) (thanks to Liam Revell and Guangchuang Yu for fixing this so quickly):
+***Note***: This should not be necessary with modern versions of R (newer than 4.0), but if you are encountering errors with phytools::fastAnc, there is an important [bug fix](https://github.com/liamrevell/phytools/issues/47) (thanks to Liam Revell and Guangchuang Yu for fixing this so quickly):
 
 ```
 devtools::install_github("liamrevell/phytools")
