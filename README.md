@@ -1,69 +1,56 @@
-[TOC]
-
 # phylogenize (v0.94 beta)
 
 *phylogenize* is a tool that allows users to link microbial genes to environments, accounting for phylogeny. More specifically, given community composition data, *phylogenize* links genes in microbial genomes to either microbial prevalence in, or specificity for, a given environment, while also taking into account an important potential confounder: the phylogenetic relationships between microbes. *phylogenize* comes with [web](https://www.phylogenize.org), QIIME 2, and R interfaces.
 
 The method is described fully in [Bradley, Nayfach, and Pollard (2018)](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006242).
 
-## Installing the *phylogenize* package and its dependencies
+## Installing Phylogenize
+The easiest way to install all the dependencies needed is by using mamba or conda. We recommend using mamba's maintained [miniforge](https://github.com/conda-forge/miniforge). Miniforge is available for MacOS, Linux, and Windows. For all future examples, unless otherwise stated, we are assuming you are using Linux. 
 
-The "core" of *phylogenize* is an R package, so to run *phylogenize* locally, you will need to first install that package from this repository. There are separate instructions depending on whether you are installing *phylogenize* for use 1. with R or the web interface on a local machine, 2. with QIIME 2 or in a conda environment, or 3. on AWS.
+To install miniforge, run `wget -c https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh` and then `bash Miniforge3-Linux-x86_64.sh`. You'll need to run through the prompts and then give it a download location if the default is not to your liking. Finally, you can let mamba initialize itself if you want mamba to always be in your "base" when you open the terminal. Otherwise, if you say `no` then you will have to manually source the executable for mamba which can be done similarly as `source /your/path/to/miniforge3/bin/activate`.
 
-### Installing BURST and/or vsearch
+Now you are ready to start installing the dependencies.
 
-(Update: 5/4/2020) Either BURST or, as of phylogenize 0.94, vsearch is needed for all 16S analyses using *phylogenize*. BURST is a high-speed pairwise aligner that *phylogenize* uses to map 16S amplicon sequence variants back to a database of genomes.
+Important::: We have replaced the BURST package with Vsearch. If you are having issues with BURST, please switch over to vsearch! 
 
-You can download the binaries from the [BURST Github repository](github.com/knights-lab/BURST) or the [vsearch repository](https://github.com/torognes/vsearch). By default *phylogenize* expects these binaries to be copied into the directory `/usr/local/bin`, but you can override this (see below).
+### Locally - Command line and Rstudio (MacOS/Linux)
+Please note, we assume in these instructions you are working off of base-r and NOT Rstudio. We describe at the bottom of this section how to use Rstudio while still installing the dependencies with mamba.
 
-**Note for Mac** (Update: 5/4/2020): On a Mac, using vsearch may be more straightforward than using BURST. Mac binaries for the latest version of BURST are available only on request, but *phylogenize* should work with an [earlier version of BURST](https://github.com/knights-lab/BURST/releases/tag/v0.99.4a) as long as the binary is renamed `burst12` and copied to `/usr/local/bin` or your preferred path (again, see below for how to override this). If that version of BURST still doesn't work, follow the instructions for older computers.
-
-**Note for older computers** (Update: 5/4/2020): Some of the optimizations that BURST uses are only available on newer architectures. You may be able to run an older version of BURST called [EMBALMER](https://github.com/knights-lab/BURST/releases): pick a version tagged as "buzzard," which means it is compiled to be slower but compatible with more machines. If you use such a version of BURST, instead of renaming it, specify the original name by setting `burst_bin` when calling *phylogenize* (see below). This way, *phylogenize* won't use command-line options that only work in later BURST releases.
-
-### Installing *phylogenize* package for use with R or the web interface on a local machine
-
-Because *phylogenize* is an analysis and visualization pipeline, it has more dependencies than the average package, so this will require a little patience. `devtools` is capable of tracking down most of these dependencies automatically, but there are a few packages from BioConductor that it will not be able to find. It's a good idea to install those first:
-
-~~~~
-install.packages("BiocManager")
-BiocManager::install(c("qvalue","biomformat","ggtree"))
-install.packages("devtools")
-Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS="true")
-devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
-~~~~
-
-(Note that you need to tell R to look in a specific subdirectory of this repository -- i.e., `package/phylogenize` -- and not the root.)
-
-***Note***: This should not be necessary with modern versions of R (newer than 4.0), but if you are encountering errors with phytools::fastAnc, there is an important [bug fix](https://github.com/liamrevell/phytools/issues/47) (thanks to Liam Revell and Guangchuang Yu for fixing this so quickly):
-
+#### Install with mamba - configuration file
+You can make a conda evnironment using the supplied yaml file and not worry about installing any dependencies. Run `mamba env create -f environment.yml
+` and then `mamba activate phylogenize`. Open base-r (look below for how to use Rstudio) and then type `devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')` followed by `library("phylogenize")` and then `phylogenize::install.data.figshare()`.
+   
+#### Install with mamba - no configuration file
+1. Make sure you have R installed. You can verify if you type `R --version`. If you don't you can get the latest version [here](https://www.r-project.org/) or install it using mamba [here](https://anaconda.org/r/r).
+   
+   *P.S use this website to look for any packages you need to install. Conda is the older version of mamba and the commands are the same. For R the command is like so `mamba install -c r r`*
+2. Create a new environment in mamba by running `mamba create -n phylogenize`
+3. Activate your new environment with `mamba activate phylogenize`
+4. Install the dependencies with the bioconda and conda-forge channels as shown below
 ```
-devtools::install_github("liamrevell/phytools")
-devtools::install_github("GuangchuangYu/treeio")
+mamba install -y -c bioconda \
+	bioconductor-qvalue \
+	bioconductor-ggtree \
+	bioconductor-biomformat \
+	vsearch
 ```
-
-Finally, you will need to download and install the data files that *phylogenize* needs to run. That has been automated so that all you should need to do is run the following function:
-
 ```
-library(phylogenize)
-phylogenize::install.data.figshare()
+mamba install -y -c conda-forge \
+	r-devtools \
+	r-ragg \
+	r-phylolm \
+	r-phangorn	
 ```
+5. Now you can install Phylogenize by running either `R -e "devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')"` or by opening an R session and then running `devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')`.
+6. Run `library("phylogenize")` in your R session.
+7. Then download the necessary databases with `phylogenize::install.data.figshare()`
+##### Locally - Rstudio
+After creating a `phylogenize` environment in mamba, to install and use Rstudio run `mamba install -c r rstudio`. Then you can activate it by typing `rstudio`. This will launch an Rstudio IDE. There, if you haven't already, you can run `devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')` followed by `library("phylogenize")` and then `phylogenize::install.data.figshare()`.
 
+### QIIME 2
+QIIME 2 runs in a conda environment, meaning it has its own installation of R and related packages. To run Phylogenize with QIIME 2, you will need to install Phylogenize within the QIIME 2 conda environment, then install the [q2-phylogenize plugin](https://bitbucket.org/pbradz/q2-phylogenize). The instructions are similar for installing in any other conda environment, except you won't need the plugin.
 
-### Installing *phylogenize* package for use with QIIME 2 or in another conda environment
-
-QIIME 2 runs in a conda environment, meaning it has its own installation of R and related packages. To run *phylogenize* with QIIME 2, you will need to install *phylogenize* within the QIIME 2 conda environment, then install the [q2-phylogenize plugin](https://bitbucket.org/pbradz/q2-phylogenize). The instructions are similar for installing in any other conda environment, except of course you won't need the plugin.
-
-First, switch to the correct environment. For QIIME 2, this is accomplished with `source activate qiime2-2019.4` (see [here](https://docs.qiime2.org/2019.4/install/native/#activate-the-conda-environment)). Note that you may need to replace "2019.4" with the most recent version of QIIME2, e.g., "2020.6".
-
-Installing *phylogenize* within conda is a little tricky. You will need to manually install a few libraries and packages that are either not included, or difficult to install from source. From the UNIX command line:
-
-```
-conda install -c conda-forge -c bioconda -c r libcurl r-devtools bioconductor-rhdf5lib r-magick r-git2r r-shiny
-```
-
-Next, run R within the same environment and install the *phylogenize* library. However, you will probably need to work around a [known issue in conda](https://github.com/r-lib/devtools/issues/1722) before calling `devtools::install_bitbucket`. The following should work (from within R).
-
-*Note (added 8/4/2020)*: On recent versions of OS X, you will probably need to change "/bin/tar" to "/usr/bin/tar" when calling `Sys.setenv` in this code block.
+1. First, switch to the correct environment. For QIIME 2, this is accomplished with `source activate qiime2-2019.4` (see [here](https://docs.qiime2.org/2019.4/install/native/#activate-the-conda-environment)). Note that you may need to replace "2019.4" with the most recent version of QIIME2, e.g., "2020.6".
 
 ```
 options(unzip="internal")
@@ -243,6 +230,9 @@ There are a couple of things to try:
  * If your conda/QIIME2 installation is not brand new, try removing your existing installation and installing miniconda3 again from scratch. This has helped me before, possibly because there was stuff installed in the 'base' conda environment that was conflicting with requirements for phylogenize.
  * Try using the [mamba](https://github.com/TheSnakePit/mamba) environment solver, instead of the one built into conda.
  * Try using [strict channel priority](https://www.anaconda.com/blog/understanding-and-improving-condas-performance).
+
+### I'm getting an error with phytools::fastAnc
+First check you R version and make sure it is newer than 4.0. If that doesn't work there is an important [bug fix](https://github.com/liamrevell/phytools/issues/47) (thanks to Liam Revell and Guangchuang Yu for fixing this so quickly) you should make sure you are using.
 
 ## Acknowledgements
 
