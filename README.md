@@ -104,24 +104,6 @@ sudo apt show zlib1g
 sudo apt install fontconfig
 ```
 
-### Special instructions for Mac users
-
-If you see the error `Fontconfig error: unable to match font pattern`, you may need to install or reinstall some packages using [Homebrew](https://brew.sh/). From the command line, after installing Homebrew:
-
-```
-brew update
-brew upgrade
-brew reinstall cairo
-```
-
-Then, open R and in a fresh session, run:
-
-```
-devtools::install_github("davidgohel/gdtools") 
-devtools::install_github("davidgohel/rvg")
-devtools::install_github("davidgohel/ggiraph")
-```
-
 ### Re-installing *phylogenize* after an upgrade
 
 To **reinstall** *phylogenize*, the following should be all that's necessary:
