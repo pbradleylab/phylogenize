@@ -180,16 +180,15 @@ Here is an example invocation of `render.report`:
 library(phylogenize)
 render.report(
     output_file="16S-results.html",
-    in_dir=hmp_dir,
+    in_dir="/home/kananen13/workspace/bradleyLab/tools/phylogenize/phylogenize/hmp/",
     out_dir=file.path("hmp", "16S-results"),
-    type="16S",
-    db_version="midas_v1.2",
+    type="midas",
+    db_version="midas_v1.0",
     which_phenotype="prevalence",
     which_envir="Stool",
-    abundance_file="hmp-16s-dada2-full.tab",
-    metadata_file="hmp-16s-phylogenize-metadata-full.tab",
+    abundance_file="hmp-shotgun-bodysite.tab",
+    metadata_file="hmp-shotgun-bodysite-metadata.tab", 
     input_format="tabular",
-    burst_dir="/home/pbradz/bin/",
     ncl=10)
 ~~~~
 

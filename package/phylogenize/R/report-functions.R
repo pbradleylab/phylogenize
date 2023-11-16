@@ -1335,8 +1335,7 @@ render.report <- function(output_file='report_output.html',
     pz.options(working_dir=normalizePath(getwd()))
     pz.options(in_dir=normalizePath(pz.options("in_dir")))
     pz.options(out_dir=normalizePath(pz.options("out_dir")))
-    pz.options(burst_dir=normalizePath(pz.options("burst_dir")))
-    dir.create(pz.options("out_dir"))
+    if (!dir.exists(pz.options('out_dir'))) {dir.create(pz.options('out_dir'))}
     p <- pz.options()
     for (n in names(p)) {
         message(paste0(n, ": ", p[[n]]))

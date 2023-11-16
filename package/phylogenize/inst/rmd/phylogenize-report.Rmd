@@ -386,7 +386,7 @@ Enrichment tables:
 options(knitr.table.format = "html")
 check.pryr()
 if (!is.null(pretty.enr.tbl)) {
-  print(output.enr.table(pretty.enr.tbl))
+  cat(output.enr.table(pretty.enr.tbl))
   check.pryr()
   if (nrow(enrichment.tbl) > 0) {
     enr.overlap <- select(enrichment.tbl,
