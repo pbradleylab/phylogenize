@@ -4,7 +4,7 @@
 
 The method is described fully in [Bradley, Nayfach, and Pollard (2018)](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006242).
 
-## Installing Phylogenize
+## Installing phylogenize
 The easiest way to install all the dependencies needed is by using mamba or conda. We recommend using mamba's maintained [miniforge](https://github.com/conda-forge/miniforge). Miniforge is available for MacOS, Linux, and Windows. For all future examples, unless otherwise stated, we are assuming you are using Linux. 
 
 To install miniforge, run `wget -c https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh` and then `bash Miniforge3-Linux-x86_64.sh`. You'll need to run through the prompts and then give it a download location if the default is not to your liking. Finally, you can let mamba initialize itself if you want mamba to always be in your "base" when you open the terminal. Otherwise, if you say `no` then you will have to manually source the executable for mamba which can be done similarly as `source /your/path/to/miniforge3/bin/activate`.
@@ -41,14 +41,14 @@ mamba install -y -c conda-forge \
 	r-phylolm \
 	r-phangorn	
 ```
-5. Now you can install Phylogenize by running either `R -e "devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')"` or by opening an R session and then running `devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')`.
+5. Now you can install phylogenize by running either `R -e "devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')"` or by opening an R session and then running `devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')`.
 6. Run `library("phylogenize")` in your R session.
 7. Then download the necessary databases with `phylogenize::install.data.figshare()`
 ##### Locally - Rstudio
 After creating a `phylogenize` environment in mamba, to install and use Rstudio run `mamba install -c r rstudio`. Then you can activate it by typing `rstudio`. This will launch an Rstudio IDE. There, if you haven't already, you can run `devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')` followed by `library("phylogenize")` and then `phylogenize::install.data.figshare()`.
 
 ### QIIME 2
-QIIME 2 runs in a conda environment, meaning it has its own installation of R and related packages. To run Phylogenize with QIIME 2, you will need to install Phylogenize within the QIIME 2 conda environment, then install the [q2-phylogenize plugin](https://bitbucket.org/pbradz/q2-phylogenize). The instructions are similar for installing in any other conda environment, except you won't need the plugin.
+QIIME 2 runs in a conda environment, meaning it has its own installation of R and related packages. To run phylogenize with QIIME 2, you will need to install phylogenize within the QIIME 2 conda environment, then install the [q2-phylogenize plugin](https://bitbucket.org/pbradz/q2-phylogenize). The instructions are similar for installing in any other conda environment, except you won't need the plugin.
 
 1. First, switch to the correct environment. For QIIME 2, this is accomplished with `source activate qiime2-2019.4` (see [here](https://docs.qiime2.org/2019.4/install/native/#activate-the-conda-environment)). Note that you may need to replace "2019.4" with the most recent version of QIIME2, e.g., "2020.6".
 
@@ -69,7 +69,7 @@ devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
 phylogenize::install.data.figshare()    # nb: this may take a while to download
 ```
 
-To avoid causing problems elsewhere in QIIME2, I recommend *not* updating any other packages if prompted.
+To avoid causing problems elsewhere in QIIME2, we recommend *not* updating any other packages if prompted.
 
 *Note* (updated 8/4/2020): If you get an error message about the package "mnormt" and/or "phylolm" not being available for R 3.5.1, try installing a specific version with the command `remotes::install_version("mnormt", "1.5-5"); remotes::install_version("phylolm", "2.6")`. Then retry the above commands starting from the `devtools::install_bitbucket` line.
 
