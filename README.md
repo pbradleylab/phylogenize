@@ -138,8 +138,6 @@ The main function in *phylogenize* is `render.report`. The parameters that you a
 | db_version | "midas_v1.2" | String. Which version of the MIDAS database to use ("midas_v1.2" or "midas_v1.0"). |
 | which_phenotype | "prevalence" | String. Which phenotype to calculate ("prevalence" or "specificity"). |
 | which_envir | "Stool" | String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. |
-| burst_dir | "/usr/local/bin" | String. Path to the BURST or vsearch binaries. |
-| burst_bin | "burst12" | String. Name of the BURST or vsearch binary. |
 
 Compared to some R packages, passing options to *phylogenize* works a little differently under the hood. Instead of having its own parameters, `render.report` and other *phylogenize* functions look for global options that can either be set using the function `pz.options` or overridden as extra arguments. This allows you to set parameters once and then work with the *phylogenize* functions without retyping them, and therefore makes the code easier to read. To see the full list of parameters that can be overridden, see `?pz.options`.
 
@@ -163,7 +161,7 @@ render.report(
 
 This invocation will generate a report under "./hmp/16S-results" called "16S-results.html".
 
-Note that for now it is necessary to call `phylogenize::set_data_internal()` if you don't explicitly load the package with `library(phylogenize)`; that function is automatically triggered when the package is loaded with `library()`. If you get an error `ERROR: invalid input file.` after BURST is invoked, this is probably the reason why.
+Note that for now it is necessary to call `phylogenize::set_data_internal()` if you don't explicitly load the package with `library(phylogenize)`; that function is automatically triggered when the package is loaded with `library()`.
 
 
 ### Running *phylogenize* locally with the web interface
