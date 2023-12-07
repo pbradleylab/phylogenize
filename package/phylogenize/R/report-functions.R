@@ -488,7 +488,7 @@ run.vsearch <- function(...) {
     binary = basename(opts('vsearch_bin'))
     pid = opts('vsearch_cutoff')
     if (binary %in% c("vsearch")) {
-      burst_args = c("-r",
+      vsearch_args = c("-r",
                      file.path(opts('data_dir'),
                                opts('vsearch_16sfile')),
                      "-fr",
@@ -501,7 +501,7 @@ run.vsearch <- function(...) {
                      file.path(opts('in_dir'),
                                opts('vsearch_outfile')))
     } else if (binary == "vsearch") {
-      burst_args = c("--usearch_global",
+      vsearch_args = c("--usearch_global",
         file.path(opts('in_dir'), opts('vsearch_infile')),
         "--db",
         file.path(opts('data_dir'), opts('vsearch_16sfile')),
@@ -513,7 +513,7 @@ run.vsearch <- function(...) {
     } else {
       pz.warning(paste0("Aligner not recognized, calling as old version of ",
          "vsearch that does not support reverse complements"))
-      burst_args = c("-r",
+      vsearch_args = c("-r",
                      file.path(opts('data_dir'),
                                opts('vsearch_16sfile')),
                      "-q",
@@ -527,9 +527,9 @@ run.vsearch <- function(...) {
 
     }
     pz.message(paste0("Calling aligner ", binary, " with arguments: ",
-                      paste(burst_args, sep=" ", collapse=" ")))
+                      paste(vsearch_args, sep=" ", collapse=" ")))
     r <- system2(file.path(opts('burst_dir'), opts('vsearch_bin')),
-                 args = burst_args)
+                 args = vsearch_args)
     if (r != 0) {
         pz.error(paste0("Aligner failed with error code ", r))
     }
