@@ -417,7 +417,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
 #' \describe{
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #'   input files).}
-#'   \item{burst_infile}{String. File name of the sequences written to disk and
+#'   \item{vsearch_infile}{String. File name of the sequences written to disk and
 #'   then read into vsearch/vsearch.}
 #' }
 #'
@@ -447,7 +447,7 @@ prepare.vsearch.input <- function(mtx, ...) {
     seqinr::write.fasta(as.list(asvs),
                         asvnames,
                         file.out=file.path(opts('in_dir'),
-                                           opts('burst_infile')),
+                                           opts('vsearch_infile')),
                         nbchar=99999,
                         as.string=TRUE)
     return(TRUE)
@@ -467,7 +467,7 @@ prepare.vsearch.input <- function(mtx, ...) {
 #' \describe{
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #' input files).}
-#'   \item{burst_infile}{String. File name of the sequences to be read into
+#'   \item{vsearch_infile}{String. File name of the sequences to be read into
 #' vsearch.}
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output which is
 #' then read back into \emph{phylogenize}.}
@@ -494,7 +494,7 @@ run.burst <- function(...) {
                      "-fr",
                      "-q",
                      file.path(opts('in_dir'),
-                               opts('burst_infile')),
+                               opts('vsearch_infile')),
                      "-i",
                      pid,
                      "-o",
@@ -502,7 +502,7 @@ run.burst <- function(...) {
                                opts('vsearch_outfile')))
     } else if (binary == "vsearch") {
       burst_args = c("--usearch_global",
-        file.path(opts('in_dir'), opts('burst_infile')),
+        file.path(opts('in_dir'), opts('vsearch_infile')),
         "--db",
         file.path(opts('data_dir'), opts('vsearch_16sfile')),
         "--strand both",
@@ -518,7 +518,7 @@ run.burst <- function(...) {
                                opts('vsearch_16sfile')),
                      "-q",
                      file.path(opts('in_dir'),
-                               opts('burst_infile')),
+                               opts('vsearch_infile')),
                      "-i",
                      pid,
                      "-o",
@@ -615,7 +615,7 @@ sum.nonunique.vsearch <- function(burst, mtx, ...) {
 #' \describe{
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #'   input files).}
-#'   \item{burst_infile}{String. File name of the sequences written to disk and
+#'   \item{vsearch_infile}{String. File name of the sequences written to disk and
 #'   then read into vsearch.}
 #' }
 #'

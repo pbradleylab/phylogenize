@@ -21,7 +21,7 @@ Some particularly relevant global options are:
 \describe{
   \item{in_dir}{String. Path to input directory (i.e., where to look for
 input files).}
-  \item{burst_infile}{String. File name of the sequences to be read into
+  \item{vsearch_infile}{String. File name of the sequences to be read into
 vsearch.}
   \item{vsearch_outfile}{String. File name where vsearch writes output which is
 then read back into \emph{phylogenize}.}
