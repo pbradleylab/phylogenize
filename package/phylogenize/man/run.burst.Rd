@@ -27,7 +27,7 @@ vsearch.}
 then read back into \emph{phylogenize}.}
   \item{burst_dir}{String. Path where the binary of vsearch is found.}
   \item{burst_bin}{String. File name of the binary of vsearch.}
-  \item{burst_16sfile}{String. Path to the 16S FASTA database that maps back
+  \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back
 to MIDAS species.}
   \item{data_dir}{String. Path to directory containing the data files
 required to perform a \emph{phylogenize} analysis. }

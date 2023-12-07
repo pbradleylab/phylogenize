@@ -475,7 +475,7 @@ prepare.burst.input <- function(mtx, ...) {
 #'   \item{burst_bin}{String. File name of the binary of vsearch.}
 #'   \item{burst_cutoff}{Float. Between 0.95 and 1.00; percent identity minimum
 #'   for alignment results.}
-#'   \item{burst_16sfile}{String. Path to the 16S FASTA database that maps back
+#'   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back
 #' to MIDAS species.}
 #'   \item{data_dir}{String. Path to directory containing the data files
 #' required to perform a \emph{phylogenize} analysis. }
@@ -490,7 +490,7 @@ run.burst <- function(...) {
     if (binary %in% c("burst12", "burst15")) {
       burst_args = c("-r",
                      file.path(opts('data_dir'),
-                               opts('burst_16sfile')),
+                               opts('vsearch_16sfile')),
                      "-fr",
                      "-q",
                      file.path(opts('in_dir'),
@@ -504,7 +504,7 @@ run.burst <- function(...) {
       burst_args = c("--usearch_global",
         file.path(opts('in_dir'), opts('burst_infile')),
         "--db",
-        file.path(opts('data_dir'), opts('burst_16sfile')),
+        file.path(opts('data_dir'), opts('vsearch_16sfile')),
         "--strand both",
         "--blast6out",
         file.path(opts('in_dir'), opts('burst_outfile')),
@@ -515,7 +515,7 @@ run.burst <- function(...) {
          "vsearch that does not support reverse complements"))
       burst_args = c("-r",
                      file.path(opts('data_dir'),
-                               opts('burst_16sfile')),
+                               opts('vsearch_16sfile')),
                      "-q",
                      file.path(opts('in_dir'),
                                opts('burst_infile')),

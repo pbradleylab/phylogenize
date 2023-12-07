@@ -512,7 +512,7 @@ write.test.biom <- function(abd.meta,
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis. Here, this is where the
 #'   16S database is located.}
-#'   \item{burst_16sfile}{String. Filename of the 16S FASTA database that maps
+#'   \item{vsearch_16sfile}{String. Filename of the 16S FASTA database that maps
 #'   back to MIDAS species.}
 #' }
 #'
@@ -531,7 +531,7 @@ random.species.from.file <- function(n.taxa,
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     species.list <- seqinr::read.fasta(
                                 file.path(opts('data_dir'),
-                                          opts('burst_16sfile')),
+                                          opts('vsearch_16sfile')),
                                 seqtype='DNA',
                                 as.string=TRUE)
     species.map <- sample(1:length(species.list), n.taxa, replace=FALSE)
