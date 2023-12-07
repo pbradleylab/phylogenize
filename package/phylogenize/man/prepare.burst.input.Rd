@@ -2,7 +2,7 @@
 % Please edit documentation in R/report-functions.R
 \name{prepare.burst.input}
 \alias{prepare.burst.input}
-\title{Prepare input file for BURST analysis.}
+\title{Prepare input file for vsearch analysis.}
 \usage{
 prepare.burst.input(mtx, ...)
 }
@@ -12,7 +12,7 @@ amplicon sequence variant DNA sequences.}
 }
 \description{
 \code{prepare.burst.input} outputs a FASTA file of the sequences in the input
-16S data for analysis using BURST.
+16S data for analysis using vsearch.
 }
 \details{
 Some particularly relevant global options are:
@@ -20,6 +20,6 @@ Some particularly relevant global options are:
   \item{in_dir}{String. Path to input directory (i.e., where to look for
   input files).}
   \item{burst_infile}{String. File name of the sequences written to disk and
-  then read into BURST.}
+  then read into vsearch.}
 }
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/report-functions.R
 \name{sum.nonunique.burst}
 \alias{sum.nonunique.burst}
-\title{Sum non-unique rows after BURST mapping.}
+\title{Sum non-unique rows after vsearch mapping.}
 \usage{
 \method{sum}{nonunique.burst}(burst, mtx, ...)
 }
@@ -16,7 +16,7 @@ amplicon sequence variant DNA sequences.}
 A new matrix with MIDAS IDs as rows.
 }
 \description{
-\code{sum.nonunique.burst} takes BURST results and an abundance or
+\code{sum.nonunique.burst} takes vsearch results and an abundance or
 presence/absence matrix, drops any rows that mapped to multiple MIDAS IDs
 (i.e. that couldn't confidently be assigned to a MIDAS species),
 then sums any rows that mapped to the same MIDAS ID.

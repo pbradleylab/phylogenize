@@ -47,7 +47,7 @@ test_that("tabular import matches original table", {
                  test.abd.meta$metadata[[pz.options('dset_column')]])
 })
 
-# These BURST assignments should be unique because they have been clustered at
+# These vsearch assignments should be unique because they have been clustered at
 # 90 percent similarity with any duplicate species removed
 
 test.abd.meta.16s <- generate.fake.abd.meta(n.samples=100,

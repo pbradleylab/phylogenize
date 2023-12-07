@@ -2,7 +2,7 @@
 % Please edit documentation in R/report-functions.R
 \name{process.16s}
 \alias{process.16s}
-\title{Map denoised 16S sequence variants to MIDAS IDs using BURST.}
+\title{Map denoised 16S sequence variants to MIDAS IDs using vsearch.}
 \usage{
 process.16s(abd.meta, ...)
 }
@@ -15,7 +15,7 @@ none
 }
 \description{
 \code{process.16s} is a wrapper for other functions that: output sequence
-variants to a file; map them using BURST against a reference database of 16S
+variants to a file; map them using vsearch against a reference database of 16S
 sequences; then return a list of abundance and metadata values where the rows
 of the abundance matrix are now MIDAS IDs.
 }
@@ -25,6 +25,6 @@ Some particularly relevant global options are:
   \item{in_dir}{String. Path to input directory (i.e., where to look for
   input files).}
   \item{burst_infile}{String. File name of the sequences written to disk and
-  then read into BURST.}
+  then read into vsearch.}
 }
 }
