@@ -473,7 +473,7 @@ prepare.burst.input <- function(mtx, ...) {
 #' then read back into \emph{phylogenize}.}
 #'   \item{burst_dir}{String. Path where the binary of vsearch is found.}
 #'   \item{burst_bin}{String. File name of the binary of vsearch.}
-#'   \item{burst_cutoff}{Float. Between 0.95 and 1.00; percent identity minimum
+#'   \item{vsearch_cutoff}{Float. Between 0.95 and 1.00; percent identity minimum
 #'   for alignment results.}
 #'   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back
 #' to MIDAS species.}
@@ -486,7 +486,7 @@ prepare.burst.input <- function(mtx, ...) {
 run.burst <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     binary = basename(opts('burst_bin'))
-    pid = opts('burst_cutoff')
+    pid = opts('vsearch_cutoff')
     if (binary %in% c("burst12", "burst15")) {
       burst_args = c("-r",
                      file.path(opts('data_dir'),

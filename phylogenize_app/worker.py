@@ -89,7 +89,7 @@ while True:
              'abundance_file="{abundance_file}", '
              'metadata_file="{metadata_file}", '
              'separate_metadata={separate_metadata}, '
-             'burst_cutoff="{burst_cutoff}", '
+             'vsearch_cutoff="{vsearch_cutoff}", '
              'burst_dir="{burst_dir}", '
              'in_dir="{input_dir}", '
              'out_dir="{output_dir}", '
@@ -124,7 +124,7 @@ while True:
         dset_column=jobdict["dset_column"],
         env_column=jobdict["env_column"],
         sample_column=jobdict["sample_column"],
-        burst_cutoff=format(jobdict["burst_cutoff"]),
+        vsearch_cutoff=format(jobdict["vsearch_cutoff"]),
         assume_below_lod_R="TRUE",
         single_dset_R=jobdict["single_dset"],
         minimum=jobdict["minimum"]
