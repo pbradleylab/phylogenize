@@ -4,10 +4,10 @@
 \alias{sum.nonunique.vsearch}
 \title{Sum non-unique rows after vsearch mapping.}
 \usage{
-\method{sum}{nonunique.burst}(burst, mtx, ...)
+\method{sum}{nonunique.vsearch}(vsearch, mtx, ...)
 }
 \arguments{
-\item{burst}{A list obtained by running \code{get.vsearch.results}.}
+\item{vsearch}{A list obtained by running \code{get.vsearch.results}.}
 
 \item{mtx}{A presence/absence or abundance matrix, with row names equal to
 amplicon sequence variant DNA sequences.}

@@ -67,7 +67,7 @@ test.abd.meta.16s <- generate.fake.abd.meta(n.samples=100,
                                                       sep='_'),
                                             tag.length=200)
 
-test_that("burst mapping works appropriately", {
+test_that("vsearch mapping works appropriately", {
     processed.test.16s <- process.16s(abd.meta=test.abd.meta.16s,
                                       data_dir=system.file(package="phylogenize",
                                                            'data'),

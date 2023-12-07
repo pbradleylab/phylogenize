@@ -584,16 +584,16 @@ get.vsearch.results <- function(...) {
 #'   package="phylogenize")}.}
 #' }
 #'
-#' @param burst A list obtained by running \code{get.vsearch.results}.
+#' @param vsearch A list obtained by running \code{get.vsearch.results}.
 #' @param mtx A presence/absence or abundance matrix, with row names equal to
 #'     amplicon sequence variant DNA sequences.
 #' @return A new matrix with MIDAS IDs as rows.
 #' @export sum.nonunique.vsearch
-sum.nonunique.vsearch <- function(burst, mtx, ...) {
+sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    uniq.hits <- which(count.each(burst$hits) < 2)
-    rh <- burst$hits[uniq.hits]
-    rt <- burst$targets[uniq.hits]
+    uniq.hits <- which(count.each(vsearch$hits) < 2)
+    rh <- vsearch$hits[uniq.hits]
+    rt <- vsearch$targets[uniq.hits]
     subset.abd <- mtx[rh, , drop=FALSE]
     urt <- unique(rt)
     summed.uniq <- sapply(urt, function(r) {
@@ -630,8 +630,8 @@ process.16s <- function(abd.meta, ...) {
     }
     prepare.vsearch.input(abd.meta$mtx, ...)
     run.vsearch(...)
-    burst <- get.vsearch.results(...)
-    summed.uniq <- sum.nonunique.vsearch(burst, abd.meta$mtx, ...)
+    vsearch <- get.vsearch.results(...)
+    summed.uniq <- sum.nonunique.vsearch(vsearch, abd.meta$mtx, ...)
     csu <- colSums(summed.uniq)
     abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],
                           2,
