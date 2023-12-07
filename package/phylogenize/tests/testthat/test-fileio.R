@@ -47,7 +47,7 @@ test_that("tabular import matches original table", {
                  test.abd.meta$metadata[[pz.options('dset_column')]])
 })
 
-# These BURST assignments should be unique because they have been clustered at
+# These vsearch assignments should be unique because they have been clustered at
 # 90 percent similarity with any duplicate species removed
 
 test.abd.meta.16s <- generate.fake.abd.meta(n.samples=100,
@@ -61,18 +61,18 @@ test.abd.meta.16s <- generate.fake.abd.meta(n.samples=100,
                                             dset.frac.affected=0.1,
                                             make.16s=TRUE,
                                             data_dir='../../data',
-                                            burst_16sfile=
+                                            vsearch_16sfile=
                                                 paste('16s_centroids',
                                                       '90_filt500_nodups.fa',
                                                       sep='_'),
                                             tag.length=200)
 
-test_that("burst mapping works appropriately", {
+test_that("vsearch mapping works appropriately", {
     processed.test.16s <- process.16s(abd.meta=test.abd.meta.16s,
                                       data_dir=system.file(package="phylogenize",
                                                            'data'),
-                                      burst_dir='/home/pbradz/bin/',
-                                      burst_16sfile=
+                                      vsearch_dir='/home/pbradz/bin/',
+                                      vsearch_16sfile=
                                           '16s_centroids_90_filt500_nodups.fa')
     expect_equal(processed.test.16s$n,
                  test.abd.meta.16s$n)

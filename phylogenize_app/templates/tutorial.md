@@ -46,7 +46,7 @@ Shotgun data should be processed with [MIDAS](https://github.com/snayfach/MIDAS)
 
 16S data should be processed using a denoising algorithm. Two common options are [Deblur](https://github.com/biocore/deblur) and [DADA2](https://benjjneb.github.io/dada2/). Both of these algorithms will result in abundances for "amplicon sequence variants" (ASVs), which correspond to the distinct DNA sequences that are obtained by denoising.
 
-*phylogenize* works by mapping these ASVs back to [MIDAS](https://www.github.com/snayfach/MIDAS) genome clusters using the fast aligner [BURST](https://github.com/knights-lab/BURST). The default threshold for matching a genome cluster is 98.5% sequence identity, since we found that this gives a reasonable sensitivity-specificity threshold. Ambiguous matches are discarded, and reads/abundances mapping to the same genome cluster are summed together. (In practice, though, we have never actually seen ambiguous matches.)
+*phylogenize* works by mapping these ASVs back to [MIDAS](https://www.github.com/snayfach/MIDAS) genome clusters using the fast aligner [vsearch](https://github.com/torognes/vsearch). The default threshold for matching a genome cluster is 98.5% sequence identity, since we found that this gives a reasonable sensitivity-specificity threshold. Ambiguous matches are discarded, and reads/abundances mapping to the same genome cluster are summed together. (In practice, though, we have never actually seen ambiguous matches.)
 
 ## Gathering your data and metadata
 

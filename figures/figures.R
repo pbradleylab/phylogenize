@@ -13,7 +13,7 @@ plan(multiprocess, workers=6)
 hmp_dir <- normalizePath(file.path("..", "hmp"))
 emp_dir <- normalizePath(file.path("..", "emp"))
 NCL <- 8
-BURST_DIR <- path.expand("~/bin/")
+VSEARCH_DIR <- path.expand("~/bin/")
 
 # uncomment to actually run associations (time consuming)
 perform_associations <- strsplit(
@@ -62,7 +62,7 @@ if ("hmp16s" %in% perform_associations) {
                      metadata_file="hmp-16s-phylogenize-metadata-full.tab",
                      data_dir=system.file(package="phylogenize", "extdata"),
                      input_format="tabular",
-                     burst_dir=BURST_DIR,
+                     vsearch_dir=VSEARCH_DIR,
                      ncl=NCL,
                      meas_err=TRUE,
                      pryr=FALSE)
@@ -82,7 +82,7 @@ if ("hmp16s-linear" %in% perform_associations) {
                      metadata_file="hmp-16s-phylogenize-metadata-full.tab",
                      data_dir=system.file(package="phylogenize", "extdata"),
                      input_format="tabular",
-                     burst_dir=BURST_DIR,
+                     vsearch_dir=VSEARCH_DIR,
                      ncl=NCL,
                      linearize=TRUE,
                      pryr=FALSE)
@@ -101,7 +101,7 @@ if ("hmpshotgun" %in% perform_associations) {
                      metadata_file="hmp-shotgun-bodysite-metadata.tab",
                      data_dir=system.file(package="phylogenize", "extdata"),
                      input_format="tabular",
-                     burst_dir=BURST_DIR,
+                     vsearch_dir=VSEARCH_DIR,
                      ncl=NCL,
                      meas_err=TRUE,
                      pryr=FALSE)
@@ -122,7 +122,7 @@ if ("emp" %in% perform_associations) {
                      metadata_file = "",
                      biom_file = "emp_deblur_orig_metadata.biom",
                      input_format = "biom",
-                     burst_dir=BURST_DIR,
+                     vsearch_dir=VSEARCH_DIR,
                      meas_err=TRUE,
                      ncl=NCL,
                      use_rmd_params = FALSE)
@@ -143,7 +143,7 @@ if ("emp-linear" %in% perform_associations) {
                      metadata_file = "",
                      biom_file = "emp_deblur_orig_metadata.biom",
                      input_format = "biom",
-                     burst_dir=BURST_DIR,
+                     vsearch_dir=VSEARCH_DIR,
                      meas_err=TRUE,
                      ncl=NCL,
                      linearize = TRUE,
@@ -480,7 +480,7 @@ if (FALSE) {
                   metadata_file="hmp-16s-metadata-bacteroidetes.tab",
                   data_dir=system.file(package="phylogenize", "extdata"),
                   input_format="tabular",
-                  burst_dir="/home/pbradz/bin/",
+                  vsearch_dir="/home/user/bin/",
                   ncl=1,
                   linearize=FALSE,
                   pryr=FALSE)

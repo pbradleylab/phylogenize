@@ -1,6 +1,6 @@
 located abundance file: /home/pbradz/projects/phylogenize/hmp/hmp-16s-dada2-full.tab
 located metadata file: /home/pbradz/projects/phylogenize/hmp/hmp-16s-phylogenize-metadata-full.tab
-Calling BURST with arguments: -r /home/pbradz/R/x86_64-pc-linux-gnu-library/3.6/phylogenize/extdata/16s_renamed.frn -fr -q /home/pbradz/projects/phylogenize/hmp/input_seqs.txt -i 0.985 -o /home/pbradz/projects/phylogenize/hmp/output_assignments.txt
+Calling vsearch with arguments: -r /home/pbradz/R/x86_64-pc-linux-gnu-library/3.6/phylogenize/extdata/16s_renamed.frn -fr -q /home/pbradz/projects/phylogenize/hmp/input_seqs.txt -i 0.985 -o /home/pbradz/projects/phylogenize/hmp/output_assignments.txt
 17 non-singleton environment(s) found
 1 non-singleton dataset(s) found
 0.00000000

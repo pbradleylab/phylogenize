@@ -25,7 +25,7 @@ Some global options that may be helpful include:
   \item{data_dir}{String. Path to directory containing the data files
   required to perform a \emph{phylogenize} analysis. Here, this is where the
   16S database is located.}
-  \item{burst_16sfile}{String. Filename of the 16S FASTA database that maps
+  \item{vsearch_16sfile}{String. Filename of the 16S FASTA database that maps
   back to MIDAS species.}
 }
 }

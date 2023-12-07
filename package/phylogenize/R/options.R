@@ -25,7 +25,7 @@ PZ_OPTIONS <- options_manager(
   pctmin=0.025,
   assume_below_LOD=TRUE,
   skip_graphs=FALSE,
-  burst_dir="/usr/local/bin",
+  vsearch_dir="/usr/local/bin",
   linearize=FALSE,
   pryr=FALSE,
   prev_color_low='black',
@@ -38,11 +38,11 @@ PZ_OPTIONS <- options_manager(
   separate_process=TRUE,
   biom_dir='/usr/local/bin/',
   error_to_file=TRUE,
-  burst_16sfile="16s_renamed.frn",
-  burst_infile="input_seqs.txt",
-  burst_outfile="output_assignments.txt",
-  burst_cutoff=0.985,
-  burst_bin='burst12',
+  vsearch_16sfile="16s_renamed.frn",
+  vsearch_infile="input_seqs.txt",
+  vsearch_outfile="output_assignments.txt",
+  vsearch_cutoff=0.985,
+  vsearch_bin='vsearch',
   use_rmd_params=FALSE,
   devel=FALSE,
   devel_pkgdir='package/phylogenize',
@@ -75,11 +75,11 @@ PZ_OPTIONS <- options_manager(
 #'   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message output to an error message file? Default: FALSE}
 #'   \item{biom_dir}{String. Path to BIOM executables. Only used during testing. Default: "/usr/local/bin/"}
-#'   \item{burst_dir}{String. Path where the binary of the aligner is found. Default: "/usr/local/bin/"}
-#'   \item{burst_bin}{String. File name of the binary of the aligner. Default: "burst12"}
-#'   \item{burst_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_renamed.frn"}
-#'   \item{burst_infile}{String. File name of the sequences written to disk and then read into the aligner. Default: "input_seqs.txt"}
-#'   \item{burst_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
+#'   \item{vsearch_dir}{String. Path where the binary of the aligner is found. Default: "/usr/local/bin/"}
+#'   \item{vsearch_bin}{String. File name of the binary of the aligner. Default: "vsearch"}
+#'   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_renamed.frn"}
+#'   \item{vsearch_infile}{String. File name of the sequences written to disk and then read into the aligner. Default: "input_seqs.txt"}
+#'   \item{vsearch_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
 #' }
 #'
 #' @section Computing phenotypes:
@@ -97,7 +97,7 @@ PZ_OPTIONS <- options_manager(
 #'   \item{minimum}{Integer. A particular gene must be observed, and also absent, at least this many times to be reported as a significant positive association with the phenotype. Default: 3}
 #'   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
 #'   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
-#'   \item{burst_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using BURST. Default: 0.985}
+#'   \item{vsearch_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using vsearch. Default: 0.985}
 #'   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: TRUE}
 #'   \item{min_fx}{Positive double. Effects that are significantly equivalent to this effect size will be excluded from significant positive hits. If zero, the equivalence test will be skipped. Default: 0}
 #'   \item{treemin}{Integer. A phylum must have at least this many representatives in order to be processed. Default: 5}
