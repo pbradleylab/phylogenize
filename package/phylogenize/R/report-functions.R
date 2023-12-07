@@ -538,7 +538,7 @@ run.burst <- function(...) {
 
 #' Read in results from BURST.
 #'
-#' \code{get.burst.results} reads and parses the output of BURST to get the
+#' \code{get.vsearch.results} reads and parses the output of BURST to get the
 #' best-hit MIDAS species identifier for any 16S hit. Note that the reference
 #' 16S FASTA database file must describe entries in the format: ">gene;;
 #' species_or_genus_ID;;MIDAS_ID". Only MIDAS_ID is used so the contents of
@@ -555,7 +555,7 @@ run.burst <- function(...) {
 #' @return List containing a vector of hits, a vector of MIDAS ID targets, and a
 #'     data frame of the assignments as they came out of BURST.
 #' @export
-get.burst.results <- function(...) {
+get.vsearch.results <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     # map to MIDAS IDs using Burst
     assignments <- data.frame(
@@ -584,7 +584,7 @@ get.burst.results <- function(...) {
 #'   package="phylogenize")}.}
 #' }
 #'
-#' @param burst A list obtained by running \code{get.burst.results}.
+#' @param burst A list obtained by running \code{get.vsearch.results}.
 #' @param mtx A presence/absence or abundance matrix, with row names equal to
 #'     amplicon sequence variant DNA sequences.
 #' @return A new matrix with MIDAS IDs as rows.
@@ -630,7 +630,7 @@ process.16s <- function(abd.meta, ...) {
     }
     prepare.burst.input(abd.meta$mtx, ...)
     run.burst(...)
-    burst <- get.burst.results(...)
+    burst <- get.vsearch.results(...)
     summed.uniq <- sum.nonunique.burst(burst, abd.meta$mtx, ...)
     csu <- colSums(summed.uniq)
     abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],

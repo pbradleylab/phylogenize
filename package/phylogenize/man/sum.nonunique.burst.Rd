@@ -7,7 +7,7 @@
 \method{sum}{nonunique.burst}(burst, mtx, ...)
 }
 \arguments{
-\item{burst}{A list obtained by running \code{get.burst.results}.}
+\item{burst}{A list obtained by running \code{get.vsearch.results}.}
 
 \item{mtx}{A presence/absence or abundance matrix, with row names equal to
 amplicon sequence variant DNA sequences.}
