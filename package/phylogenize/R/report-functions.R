@@ -471,7 +471,7 @@ prepare.vsearch.input <- function(mtx, ...) {
 #' vsearch.}
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output which is
 #' then read back into \emph{phylogenize}.}
-#'   \item{burst_dir}{String. Path where the binary of vsearch is found.}
+#'   \item{vsearch_dir}{String. Path where the binary of vsearch is found.}
 #'   \item{vsearch_bin}{String. File name of the binary of vsearch.}
 #'   \item{vsearch_cutoff}{Float. Between 0.95 and 1.00; percent identity minimum
 #'   for alignment results.}
@@ -528,7 +528,7 @@ run.vsearch <- function(...) {
     }
     pz.message(paste0("Calling aligner ", binary, " with arguments: ",
                       paste(vsearch_args, sep=" ", collapse=" ")))
-    r <- system2(file.path(opts('burst_dir'), opts('vsearch_bin')),
+    r <- system2(file.path(opts('vsearch_dir'), opts('vsearch_bin')),
                  args = vsearch_args)
     if (r != 0) {
         pz.error(paste0("Aligner failed with error code ", r))

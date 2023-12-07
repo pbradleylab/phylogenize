@@ -29,7 +29,7 @@ params:
   treemin: 5
   assume_below_LOD: TRUE
   skip_graphs: FALSE
-  burst_dir: "./bin"
+  vsearch_dir: "./bin"
   linearize: FALSE
   pryr: TRUE
   use_rmd_params: TRUE

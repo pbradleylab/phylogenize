@@ -25,7 +25,7 @@ PZ_OPTIONS <- options_manager(
   pctmin=0.025,
   assume_below_LOD=TRUE,
   skip_graphs=FALSE,
-  burst_dir="/usr/local/bin",
+  vsearch_dir="/usr/local/bin",
   linearize=FALSE,
   pryr=FALSE,
   prev_color_low='black',
@@ -75,7 +75,7 @@ PZ_OPTIONS <- options_manager(
 #'   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message output to an error message file? Default: FALSE}
 #'   \item{biom_dir}{String. Path to BIOM executables. Only used during testing. Default: "/usr/local/bin/"}
-#'   \item{burst_dir}{String. Path where the binary of the aligner is found. Default: "/usr/local/bin/"}
+#'   \item{vsearch_dir}{String. Path where the binary of the aligner is found. Default: "/usr/local/bin/"}
 #'   \item{vsearch_bin}{String. File name of the binary of the aligner. Default: "vsearch"}
 #'   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_renamed.frn"}
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk and then read into the aligner. Default: "input_seqs.txt"}

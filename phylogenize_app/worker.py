@@ -90,7 +90,7 @@ while True:
              'metadata_file="{metadata_file}", '
              'separate_metadata={separate_metadata}, '
              'vsearch_cutoff="{vsearch_cutoff}", '
-             'burst_dir="{burst_dir}", '
+             'vsearch_dir="{vsearch_dir}", '
              'in_dir="{input_dir}", '
              'out_dir="{output_dir}", '
              'ncl={ncl}, '
@@ -110,7 +110,7 @@ while True:
         output_file="index.html",
         input_dir=jobdict["input_dir"],
         output_dir=jobdict["output_dir"],
-        burst_dir=jobdict["burst_dir"],
+        vsearch_dir=jobdict["vsearch_dir"],
         ncl=1,
         separate_metadata=jobdict["separate_metadata"],
         db_version=jobdict["db_version"],

@@ -71,7 +71,7 @@ test_that("burst mapping works appropriately", {
     processed.test.16s <- process.16s(abd.meta=test.abd.meta.16s,
                                       data_dir=system.file(package="phylogenize",
                                                            'data'),
-                                      burst_dir='/home/pbradz/bin/',
+                                      vsearch_dir='/home/pbradz/bin/',
                                       vsearch_16sfile=
                                           '16s_centroids_90_filt500_nodups.fa')
     expect_equal(processed.test.16s$n,

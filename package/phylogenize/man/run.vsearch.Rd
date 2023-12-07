@@ -25,7 +25,7 @@ input files).}
 vsearch.}
   \item{vsearch_outfile}{String. File name where vsearch writes output which is
 then read back into \emph{phylogenize}.}
-  \item{burst_dir}{String. Path where the binary of vsearch is found.}
+  \item{vsearch_dir}{String. Path where the binary of vsearch is found.}
   \item{vsearch_bin}{String. File name of the binary of vsearch.}
   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back
 to MIDAS species.}
