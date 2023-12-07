@@ -469,7 +469,7 @@ prepare.vsearch.input <- function(mtx, ...) {
 #' input files).}
 #'   \item{burst_infile}{String. File name of the sequences to be read into
 #' vsearch.}
-#'   \item{burst_outfile}{String. File name where vsearch writes output which is
+#'   \item{vsearch_outfile}{String. File name where vsearch writes output which is
 #' then read back into \emph{phylogenize}.}
 #'   \item{burst_dir}{String. Path where the binary of vsearch is found.}
 #'   \item{burst_bin}{String. File name of the binary of vsearch.}
@@ -499,7 +499,7 @@ run.burst <- function(...) {
                      pid,
                      "-o",
                      file.path(opts('in_dir'),
-                               opts('burst_outfile')))
+                               opts('vsearch_outfile')))
     } else if (binary == "vsearch") {
       burst_args = c("--usearch_global",
         file.path(opts('in_dir'), opts('burst_infile')),
@@ -507,7 +507,7 @@ run.burst <- function(...) {
         file.path(opts('data_dir'), opts('vsearch_16sfile')),
         "--strand both",
         "--blast6out",
-        file.path(opts('in_dir'), opts('burst_outfile')),
+        file.path(opts('in_dir'), opts('vsearch_outfile')),
         "--id",
         pid)
     } else {
@@ -523,7 +523,7 @@ run.burst <- function(...) {
                      pid,
                      "-o",
                      file.path(opts('in_dir'),
-                               opts('burst_outfile')))
+                               opts('vsearch_outfile')))
 
     }
     pz.message(paste0("Calling aligner ", binary, " with arguments: ",
@@ -548,7 +548,7 @@ run.burst <- function(...) {
 #' \describe{
 #'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #'   input files).}
-#'   \item{burst_outfile}{String. File name where vsearch writes output which is
+#'   \item{vsearch_outfile}{String. File name where vsearch writes output which is
 #'   then read back into \emph{phylogenize}.}
 #' }
 #'
@@ -559,7 +559,7 @@ get.vsearch.results <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     # map to MIDAS IDs using Burst
     assignments <- data.frame(
-        data.table::fread(file.path(opts('in_dir'), opts('burst_outfile'))))
+        data.table::fread(file.path(opts('in_dir'), opts('vsearch_outfile'))))
     row.hits <- as.numeric(gsub("Row", "", assignments[, 1]))
     row.targets <- sapply(assignments[, 2],
                           function(x) strsplit(x, ";;")[[1]][3])

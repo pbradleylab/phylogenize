@@ -22,7 +22,7 @@ Some particularly relevant global options are:
 \describe{
   \item{in_dir}{String. Path to input directory (i.e., where to look for
   input files).}
-  \item{burst_outfile}{String. File name where vsearch writes output which is
+  \item{vsearch_outfile}{String. File name where vsearch writes output which is
   then read back into \emph{phylogenize}.}
 }
 }

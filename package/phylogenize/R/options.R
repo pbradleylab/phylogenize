@@ -40,7 +40,7 @@ PZ_OPTIONS <- options_manager(
   error_to_file=TRUE,
   vsearch_16sfile="16s_renamed.frn",
   burst_infile="input_seqs.txt",
-  burst_outfile="output_assignments.txt",
+  vsearch_outfile="output_assignments.txt",
   vsearch_cutoff=0.985,
   burst_bin='vsearch',
   use_rmd_params=FALSE,
@@ -79,7 +79,7 @@ PZ_OPTIONS <- options_manager(
 #'   \item{burst_bin}{String. File name of the binary of the aligner. Default: "vsearch"}
 #'   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_renamed.frn"}
 #'   \item{burst_infile}{String. File name of the sequences written to disk and then read into the aligner. Default: "input_seqs.txt"}
-#'   \item{burst_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
+#'   \item{vsearch_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
 #' }
 #'
 #' @section Computing phenotypes:

@@ -23,7 +23,7 @@ Some particularly relevant global options are:
 input files).}
   \item{burst_infile}{String. File name of the sequences to be read into
 vsearch.}
-  \item{burst_outfile}{String. File name where vsearch writes output which is
+  \item{vsearch_outfile}{String. File name where vsearch writes output which is
 then read back into \emph{phylogenize}.}
   \item{burst_dir}{String. Path where the binary of vsearch is found.}
   \item{burst_bin}{String. File name of the binary of vsearch.}
