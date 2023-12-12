@@ -40,7 +40,7 @@ Imports:
     pbapply,
     gtools,
     svglite,
-    pryr,
+    lobstr,
     testthat,
     ezknitr
 Suggests: 

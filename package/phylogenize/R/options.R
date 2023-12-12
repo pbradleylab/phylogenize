@@ -6,9 +6,9 @@ PZ_OPTIONS <- options_manager(
   out_dir="output",
   in_dir=".",
   data_dir="./data",
-  abundance_file="test-abundance.tab",
-  metadata_file="test-metadata.tab",
-  biom_file="test.biom",
+  abundance_file="tests/data/test-abundance.tab",
+  metadata_file="tests/data/test-metadata.tab",
+  biom_file="tests/data/test.biom",
   input_format="tabular",
   separate_metadata=FALSE,
   env_column="env",
@@ -27,7 +27,7 @@ PZ_OPTIONS <- options_manager(
   skip_graphs=FALSE,
   vsearch_dir="/usr/local/bin",
   linearize=FALSE,
-  pryr=FALSE,
+  check_mem_usage=FALSE,
   prev_color_low='black',
   prev_color_high='orange2',
   spec_color_low='slateblue',
@@ -118,7 +118,7 @@ PZ_OPTIONS <- options_manager(
 #'
 #' @section Memory management:
 #' \describe{
-#'   \item{pryr}{Boolean. If TRUE, report memory usage when generating the report. Default: FALSE}
+#'   \item{check_mem_usage}{Boolean. If TRUE, report memory usage when generating the report. Default: FALSE}
 #'   \item{separate_process}{Boolean. When displaying clustered top gene associations alongside a tree colored by phenotype, this flag indicates whether to use a separate subprocess. This allows memory used by clustering to be released back to the operating system immediately. Default: TRUE}
 #' }
 #'
