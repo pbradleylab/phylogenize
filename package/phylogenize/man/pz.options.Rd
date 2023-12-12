@@ -23,9 +23,9 @@ These options are global because they affect how most of the functions in
   \item{in_dir}{String. Path to input directory (i.e., where to look for input files). Default: "."}
   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: "./data", but on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
   \item{working_dir}{String. Path to directory where relative paths should originate from. Default: \code{"."}}
-  \item{abundance_file}{String. Name of abundance tabular file. Default: "test-abundance.tab"}
-  \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
-  \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
+  \item{abundance_file}{String. Name of abundance tabular file. Default: "tests/data/test-abundance.tab"}
+  \item{metadata_file}{String. Name of metadata tabular file. Default: "tests/data/test-metadata.tab"}
+  \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "tests/data/test.biom"}
   \item{separate_metadata}{Boolean. For BIOM data, is there a separate tabular abundance table? Default: FALSE}
   \item{input_format}{String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). Default: "tabular"}
   \item{phenotype_file}{String. Name of input file for optional pre-calculated phenotype. Default: ""}
@@ -81,7 +81,7 @@ These options are global because they affect how most of the functions in
 \section{Memory management}{
 
 \describe{
-  \item{pryr}{Boolean. If TRUE, report memory usage when generating the report. Default: FALSE}
+  \item{check_mem_usage}{Boolean. If TRUE, report memory usage when generating the report. Default: FALSE}
   \item{separate_process}{Boolean. When displaying clustered top gene associations alongside a tree colored by phenotype, this flag indicates whether to use a separate subprocess. This allows memory used by clustering to be released back to the operating system immediately. Default: TRUE}
 }
 }

@@ -15,11 +15,11 @@ test.abd.meta <- generate.fake.abd.meta(n.samples=100,
 
 test_that("biom import matches original table", {
     write.test.biom(test.abd.meta,
-                    biom_file='test.biom',
+                    biom_file='tests/data/test.biom',
                     in_dir=tempdir(),
                     overwrite=TRUE)
     compare.abd.meta <- read.abd.metadata(input_format='biom',
-                                          biom_file='test.biom',
+                                          biom_file='tests/data/test.biom',
                                           in_dir=tempdir())
     expect_equal(compare.abd.meta$mtx,
                  test.abd.meta$mtx)
