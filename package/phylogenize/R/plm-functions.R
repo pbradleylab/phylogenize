@@ -868,35 +868,29 @@ calc.ess <- function(abd.meta,
 #' @export
 pz.error <- function(errtext, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    if (opts('error_to_file')) {
-        tryCatch({
-          cat(paste0(errtext, "\n"),
-              file = file.path(opts('out_dir'), "errmsg.txt"),
-              append = TRUE)
-          }, error=function(e) NULL)
-        }
+    tryCatch({
+        cat(paste0(errtext, "\n"),
+        file = file.path(opts('out_dir'), "errmsg.txt"),
+        append = TRUE)
+    }, error=function(e) NULL)
     stop(errtext)
 }
 
-#' Report a message and optionally log it in errmsg.txt.
+#' Report a message and a log it in errmsg.txt.
 #'
 #' Some particularly relevant global options are:
-#' \describe{
-#'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
-#'   output to an error message file?}
+#' \describe{ Output an error log and prints message.
 #'}
 #'
 #' @param errtext String: message text.
 #' @export
 pz.message <- function(msgtext, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    if (opts('error_to_file')) {
-        tryCatch({
-            cat(paste0(msgtext, '\n'),
-                file = file.path(opts('out_dir'), "errmsg.txt"),
-                append = TRUE)
-        }, error=function(e) NULL)
-    }
+    tryCatch({
+        cat(paste0(msgtext, '\n'),
+            file = file.path(opts('out_dir'), "errmsg.txt"),
+            append = TRUE)
+    }, error=function(e) NULL)
     message(msgtext)
 }
 
@@ -912,13 +906,11 @@ pz.message <- function(msgtext, ...) {
 #' @export
 pz.warning <- function(msgtext, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    if (opts('error_to_file')) {
-        tryCatch({
-            cat(paste0(msgtext, '\n'),
-                file = file.path(opts('out_dir'), "errmsg.txt"),
-                append = TRUE)
-        }, error=function(e) NULL)
-    }
+    tryCatch({
+        cat(paste0(msgtext, '\n'),
+            file = file.path(opts('out_dir'), "errmsg.txt"),
+            append = TRUE)
+    }, error=function(e) NULL)
     warning(msgtext)
 }
 

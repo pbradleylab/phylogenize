@@ -2,6 +2,16 @@
 
 # helper functions
 
+#' Collect the file names needed to be read into an opject
+#' \code{collect.files} collects the names of the internal dbs.
+#' 
+#' @return A list containing three database files - taxonomy, tree, and presence-binary
+#'     \code{dblist}
+#' @export
+collect.files <- function(gp, tr, tax) {
+    return(c(gp, tr, tax))
+}
+
 #' Test whether a value is between two other values (non-inclusive).
 #'
 #' @param x Value(s) to test (numeric vector).

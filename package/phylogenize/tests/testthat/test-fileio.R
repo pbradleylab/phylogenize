@@ -13,6 +13,7 @@ test.abd.meta <- generate.fake.abd.meta(n.samples=100,
                                         env.frac.affected=0.3,
                                         dset.frac.affected=0.1)
 
+print(test.abd.meta)
 test_that("biom import matches original table", {
     write.test.biom(test.abd.meta,
                     biom_file='tests/data/test.biom',

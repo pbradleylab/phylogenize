@@ -12,7 +12,7 @@ make_qvs <- function(tbl,
         nest %>%
         mutate(data=map(data, function(x) {
             mutate(x,
-                   !!(.qv) := phylogenize:::qvals(!!(.pv), error_to_file=FALSE))
+                   !!(.qv) := phylogenize:::qvals(!!(.pv), error_to_file=TRUE))
         })) %>%
         unnest
 }
@@ -30,7 +30,6 @@ process_data <- function(tbl) {
 }
 
 get_alpha <- function(phylum, gene, db=pz.db, lab=8) {
-                                        #    attr(p, "class") <- "phylo"
     p <- db$trees[[phylum]]
     tips <- intersect(colnames(db$gene.presence[[phylum]]),
                       p$tip.label)
@@ -45,5 +44,5 @@ get_alpha <- function(phylum, gene, db=pz.db, lab=8) {
 
 ap_tree <- function(x) {
     attr(x, "class") <- "phylo"
-    x
+    return(x)
 }

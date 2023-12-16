@@ -31,15 +31,14 @@ params:
   skip_graphs: FALSE
   vsearch_dir: "./bin"
   linearize: FALSE
-  check_mem_usage: TRUE
   use_rmd_params: TRUE
-  error_to_file: TRUE
 ---
 
 ```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=TRUE}
 
 library(phylogenize)
 library(Matrix)
+library(feather)
 
 cache.d <- file.path(pz.options('out_dir'), 'cache')
 dir.create(pz.options('out_dir'))
@@ -52,10 +51,6 @@ if (pz.options('use_rmd_params')) {
 
 if (is.null(pz.options('relative_out_dir'))) {
   pz.options(relative_out_dir=pz.options('out_dir'))
-}
-
-check.mem_usage <- function(x) {
-	if (pz.options('check_mem_usage')) message(lobstr::cst(obj_size(x)))
 }
 
 # Note that params give defaults for the web tool, while PZ_OPTIONS gives
@@ -85,10 +80,6 @@ if (!pz.options('skip_graphs')) {
     })
 }
 
-# Only load lobstr to track memory usage if debugging
-if (pz.options('check_mem_usage')) { library(lobstr) }
-if (pz.options('check_mem_usage')) message(lobstr::mem_used() / 1e6)
-
 dir.create(pz.options('out_dir'))
 
 # Read in user-supplied
@@ -104,7 +95,6 @@ if (pz.options('assume_below_LOD')) {
 
 # Make back into a binary sparse matrix to save memory
 gc()
-check.mem_usage()
 pz.message("Starting evaluation...")
 
 ```
@@ -186,7 +176,6 @@ write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
 
 # be a little parsimonious with memory here
 rm(abd.meta); gc()
-check.mem_usage()
 ```
 
 # Phenotype mapped across trees {.tabset}
@@ -200,8 +189,6 @@ if (!pz.options('skip_graphs')) {
                                  100*logistic(phenotype),
                                  label=pz.options('which_phenotype'))
 }
-
-check.mem_usage()
 ```
 
 ## Only mapped/observed taxa {.tabset}
@@ -240,8 +227,6 @@ if (!pz.options('skip_graphs')) {
     rmd.message <- "(no phyla had more than one tip)"
   }
 }
-
-check.mem_usage()
 ```
 
 `r rmd.message`
@@ -303,7 +288,6 @@ rm(pos.sig.thresh.descs)
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
           results.matrix)
 rm(results.matrix)
-check.mem_usage()
 ```
 
 # Gene association heat maps
@@ -318,9 +302,6 @@ have particularly extreme phenotypes.
 
 ```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=TRUE}
 
-
-check.mem_usage()
-
 cluster.plots <- mapply(do.clust.plot, 
                         pz.db$gene.presence[phy.with.sigs],
                         pos.sig.thresh[phy.with.sigs],
@@ -331,8 +312,6 @@ cluster.plots <- mapply(do.clust.plot,
 
 rm(cluster.plots)
 rm(plotted.pheno.trees)
-check.mem_usage()
-
 ```
 
 # Enrichment analysis
@@ -373,10 +352,7 @@ if (!is.null(enrichment.tbl)) {
             Phylum,
             Subsystem_level,
             desc(Enrichment_odds_ratio))
-
-  check.mem_usage()
   write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
-  check.mem_usage()
 }
 
 ```
@@ -384,10 +360,8 @@ Enrichment tables:
 
 ```{r enrichment_display, echo=FALSE, results='asis'}
 options(knitr.table.format = "html")
-check.mem_usage()
 if (!is.null(pretty.enr.tbl)) {
   cat(output.enr.table(pretty.enr.tbl))
-  check.mem_usage()
   if (nrow(enrichment.tbl) > 0) {
     enr.overlap <- select(enrichment.tbl,
                           phylum,
@@ -402,7 +376,6 @@ if (!is.null(pretty.enr.tbl)) {
                    mutate(effectsize=map2_dbl(phylum,
                                               gene,
                                               ~results[[.x]][1, .y]))
-    check.mem_usage()
     write.csv(file=file.path(pz.options('out_dir'),
                              "enr-overlaps.csv"),
               enr.overlap)
@@ -414,7 +387,6 @@ if (!is.null(pretty.enr.tbl)) {
                       termset,
                       term,
                       desc(effectsize)))
-    check.mem_usage()
     rm(enr.overlap)
     rm(enrichments)
   }

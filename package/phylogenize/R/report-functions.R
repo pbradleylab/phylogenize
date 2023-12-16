@@ -34,9 +34,11 @@ read.abd.metadata <- function(...) {
         pz.error("Environment, dataset, and sample columns must all be different")
     }
     if (opts('input_format') == "tabular") {
+        print("hit")
         abd.meta <- read.abd.metadata.tabular(...)
     } else if (opts('input_format') == "biom") {
-        abd.meta <- read.abd.metadata.biom(...)
+        print("hit")
+        abd.meta <- read.abd.metadata.biom(...) 
     } else {
         pz.error(paste0("Invalid input format: ", opts('input_format')))
     }
@@ -639,7 +641,9 @@ process.16s <- function(abd.meta, ...) {
     abd.meta
 }
 
+
 #--- Import data necessary for analyses ---#
+
 
 #' Import the data necessary for *phylogenize* analysis.
 #'
@@ -663,45 +667,42 @@ import.pz.db <- function(...) {
     # parse
     if (opts('type') == "midas") {
         if (opts('db_version') == "midas_v1.0") {
-            gp.file <- "MIDAS-gene-presence-binary-1.0.rds"
-            tr.file <- "MIDAS_1.0-trees.rds"
-            tax.file <- "MIDAS_1.0-taxonomy.csv"
+            file.list <- collect.files("MIDAS-gene-presence-binary-1.0.rds", "MIDAS_1.0-trees.rds", "MIDAS_1.0-taxonomy.csv")
         } else if (opts('db_version') == "midas_v1.2") {
-            gp.file <- "MIDAS-gene-presence-binary-1.2.rds"
-            tr.file <- "MIDAS_1.2-trees.rds"
-            tax.file <- "MIDAS_1.2-taxonomy.csv"
+            file.list <- collect.files("MIDAS-gene-presence-binary-1.2.rds", "MIDAS_1.2-trees.rds", "MIDAS_1.2-taxonomy.csv")
         } else if (opts('db_version') == "test") {
-            gp.file <- "test-gene-presence-binary.rds"
-            tr.file <- "test-trees.rds"
-            tax.file <- "test-taxonomy.csv"
+            file.list <- collect.files("test-gene-presence-binary.rds", "test-trees.rds", "test-taxonomy.csv")
         } else if (opts('db_version') == "midas2_uhgg") {
-            gp.file <- "midas2-uhgg-gene-presence-binary.rds"
-            tr.file <- "midas2-uhgg-trees.rds"
-            tax.file <- "midas2-uhgg-taxonomy.csv"
+            file.list <- collect.files("midas2-uhgg-gene-presence-binary.rds", "midas2-uhgg-trees.rds", "midas2-uhgg-taxonomy.csv")
         } else if (opts('db_version') == "midas2_uhgg_fam") {
-            gp.file <- "midas2-uhgg-family-gene-presence-binary.rds"
-            tr.file <- "midas2-uhgg-family-trees.rds"
-            tax.file <- "midas2-uhgg-family-taxonomy.csv"
+            file.list <- collect.files("midas2-uhgg-family-gene-presence-binary.rds", "midas2-uhgg-family-trees.rds", "midas2-uhgg-family-taxonomy.csv")
         } else if (opts('db_version') == "custom") { # use together with data_dir
-            gp.file <- "custom-gene-presence.rds"
-            tr.file <- "custom-trees.rds"
-            tax.file <- "custom-taxonomy.csv"
+            file.list <- collect.files("custom-gene-presence.rds","custom-trees.rds", "custom-taxonomy.csv")
         } else {
             pz.error(paste0("Unknown database version ", opts('db_version')))
         }
     } else if (opts('type') == "16S") {
-        gp.file <- "MIDAS-gene-presence-binary-1.2.rds"
-        tr.file <- "MIDAS_1.2-trees.rds"
-        tax.file <- "MIDAS_1.2-taxonomy.csv"
+        file.list <- collect.files("MIDAS-gene-presence-binary-1.2.rds", "MIDAS_1.2-trees.rds", "MIDAS_1.2-taxonomy.csv")
     } else if (opts('type') == "16S-test") {
-        gp.file <- "test-gene-presence-binary.rds"
-        tr.file <- "test-trees.rds"
-        tax.file <- "test-taxonomy.csv"
+        file.list <- collect.files("test-gene-presence-binary.rds","test-trees.rds","test-taxonomy.csv")
+    } else if (opts('type') == "gtdb") {
+        
     } else {
         pz.error(paste0("Unknown data type ", opts('type')))
     }
-    # read
-    gene.presence <- readRDS(file.path(opts('data_dir'), gp.file))
+
+    gp.file <- file.list[1]
+    tr.file <- file.list[2]
+    tax.file <- file.list[3]
+
+    # Read in the files.
+    # if (endswith(gp.file, ".mds")){
+    #     gene.presence <- readRDS(file.path(opts('data_dir'), gp.file))
+    # } else if (endswith(gp.file, ".feather")) {
+    #     gene.presence <- feather::read_feather(file.path(opts('data_dir'), gp.file))
+    # }
+    # print(gene.presence)
+    # gene.presence <- readRDS(file.path(opts('data_dir'), gp.file))
     trees <- readRDS(file.path(opts('data_dir'), tr.file))
     taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),
                                                        tax.file)),
@@ -1314,7 +1315,7 @@ single.cluster.plot <- function(gene.presence,
     tmp
 }
 
-#--- Report generation ---#
+# #--- Report generation ---#
 
 #' Run *phylogenize* start to finish.
 #'
@@ -1415,7 +1416,7 @@ is.dna <- function(seq) {
 #' @param figshare_url Optional: override the URL from which to obtain the data.
 #' @export
 install.data.figshare <- function(data_path=NULL,
-                                  figshare_url="https://ndownloader.figshare.com/files/43599432?private_link=987aeecdfebd2da02302") {
+                                  figshare_url="https://ndownloader.figshare.com/files/43692576?private_link=987aeecdfebd2da02302") {
     if (is.null(data_path)) {
         data_path = tempfile()
         curl::curl_download(figshare_url, data_path)

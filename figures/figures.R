@@ -3,7 +3,6 @@ library(tidyverse)
 library(cowplot)
 library(furrr)
 library(phylogenize)
-library(hexbin)
 library(curl)
 library(nlme)
 
