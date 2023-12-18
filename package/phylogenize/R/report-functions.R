@@ -702,7 +702,7 @@ import.pz.db <- function(...) {
     #     gene.presence <- feather::read_feather(file.path(opts('data_dir'), gp.file))
     # }
     # print(gene.presence)
-    # gene.presence <- readRDS(file.path(opts('data_dir'), gp.file))
+    gene.presence <- readRDS(file.path(opts('data_dir'), gp.file))
     trees <- readRDS(file.path(opts('data_dir'), tr.file))
     taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),
                                                        tax.file)),

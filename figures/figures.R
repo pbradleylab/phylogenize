@@ -14,11 +14,9 @@ emp_dir <- normalizePath(file.path("..", "emp"))
 NCL <- 8
 VSEARCH_DIR <- path.expand("~/bin/")
 
-# uncomment to actually run associations (time consuming)
-perform_associations <- strsplit(
+# uncomment and place inside functionto actually run associations (time-consuming)
 #    "hmp16s hmp16s-linear hmpshotgun emp emp-linear",
-    "",
-    " ")[[1]]
+perform_associations <- strsplit("", " ")[[1]]
 
 if (!file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab"))) {
     if (file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab.xz"))) {
@@ -48,105 +46,98 @@ if (!file.exists(file.path(emp_dir, "emp_deblur_orig_metadata.biom"))) {
                   file.path(emp_dir, "emp_deblur_orig_metadata.biom"))
 }
 
-if ("hmp16s" %in% perform_associations) {
-    phylogenize::render.report(
-                     output_file=file.path(hmp_dir, "16S-results.html"),
-                     in_dir=hmp_dir,
-                     out_dir=file.path(hmp_dir, "16S-results"),
-                     type="16S",
-                     db_version="midas_v1.2",
-                     which_phenotype="prevalence",
-                     which_envir="Stool",
-                     abundance_file="hmp-16s-dada2-full.tab",
-                     metadata_file="hmp-16s-phylogenize-metadata-full.tab",
-                     data_dir=system.file(package="phylogenize", "extdata"),
-                     input_format="tabular",
-                     vsearch_dir=VSEARCH_DIR,
-                     ncl=NCL,
-                     meas_err=TRUE,
-                     pryr=FALSE)
-}
+# Consolidate common arguments
+common_args <- list(
+  data_dir = system.file(package = "phylogenize", "extdata"),
+  vsearch_dir = VSEARCH_DIR,
+  ncl = NCL,
+  pryr = FALSE
+)
 
+# Loop through associations
+association_types <- c(
+  "hmp16s",
+  "hmp16s-linear",
+  "hmpshotgun",
+  "emp",
+  "emp-linear"
+)
 
-if ("hmp16s-linear" %in% perform_associations) {
-    phylogenize::render.report(
-                     output_file=file.path(hmp_dir, "16S-linear-results.html"),
-                     in_dir=hmp_dir,
-                     out_dir=file.path(hmp_dir, "16S-linear-output"),
-                     type="16S",
-                     db_version="midas_v1.2",
-                     which_phenotype="prevalence",
-                     which_envir="Stool",
-                     abundance_file="hmp-16s-dada2-full.tab",
-                     metadata_file="hmp-16s-phylogenize-metadata-full.tab",
-                     data_dir=system.file(package="phylogenize", "extdata"),
-                     input_format="tabular",
-                     vsearch_dir=VSEARCH_DIR,
-                     ncl=NCL,
-                     linearize=TRUE,
-                     pryr=FALSE)
-}
+for (assoc_type in association_types) {
+  if (assoc_type %in% perform_associations) {
+    assoc_args <- switch(
+      assoc_type,
+      hmp16s = list(
+        output_file = file.path(hmp_dir, "16S-results.html"),
+        out_dir = file.path(hmp_dir, "16S-results"),
+        type = "16S",
+        db_version = "midas_v1.2",
+        which_phenotype = "prevalence",
+        which_envir = "Stool",
+        abundance_file = "hmp-16s-dada2-full.tab",
+        metadata_file = "hmp-16s-phylogenize-metadata-full.tab",
+        input_format = "tabular",
+        meas_err = TRUE
+      ),
+      hmp16s-linear = list(
+        output_file = file.path(hmp_dir, "16S-linear-results.html"),
+        out_dir = file.path(hmp_dir, "16S-linear-output"),
+        type = "16S",
+        db_version = "midas_v1.2",
+        which_phenotype = "prevalence",
+        which_envir = "Stool",
+        abundance_file = "hmp-16s-dada2-full.tab",
+        metadata_file = "hmp-16s-phylogenize-metadata-full.tab",
+        input_format = "tabular",
+        linearize = TRUE,
+        meas_err = TRUE
+      ),
+      hmpshotgun = list(
+        output_file = file.path(hmp_dir, "shotgun-results.html"),
+        out_dir = file.path(hmp_dir, "shotgun-output"),
+        type = "midas",
+        db_version = "midas_v1.0",
+        which_phenotype = "prevalence",
+        which_envir = "Stool",
+        abundance_file = "hmp-shotgun-bodysite.tab",
+        metadata_file = "hmp-shotgun-bodysite-metadata.tab",
+        input_format = "tabular",
+        meas_err = TRUE
+      ),
+      emp = list(
+        output_file = file.path(emp_dir, "emp-plant-rhizosphere.html"),
+        out_dir = file.path(emp_dir, "plant-rhizosphere-phylo"),
+        in_dir = emp_dir,
+        type = "16S",
+        db_version = "midas_v1.2",
+        which_phenotype = "specificity",
+        single_dset = TRUE,
+        which_envir = "Plant rhizosphere",
+        env_column = "empo_3",
+        biom_file = "emp_deblur_orig_metadata.biom",
+        input_format = "biom",
+        meas_err = TRUE
+      ),
+      emp-linear = list(
+        output_file = file.path(emp_dir, "emp-plant-rhizosphere-linear.html"),
+        out_dir = file.path(emp_dir, "plant-rhizosphere-linear"),
+        in_dir = emp_dir,
+        type = "16S",
+        db_version = "midas_v1.2",
+        which_phenotype = "specificity",
+        single_dset = TRUE,
+        which_envir = "Plant rhizosphere",
+        env_column = "empo_3",
+        biom_file = "emp_deblur_orig_metadata.biom",
+        input_format = "biom",
+        linearize = TRUE,
+        meas_err = TRUE
+      )
+    )
 
-if ("hmpshotgun" %in% perform_associations) {
-    phylogenize::render.report(
-                     output_file=file.path(hmp_dir, "shotgun-results.html"),
-                     in_dir=hmp_dir,
-                     out_dir=file.path(hmp_dir, "shotgun-output"),
-                     type="midas",
-                     db_version="midas_v1.0",
-                     which_phenotype="prevalence",
-                     which_envir="Stool",
-                     abundance_file="hmp-shotgun-bodysite.tab",
-                     metadata_file="hmp-shotgun-bodysite-metadata.tab",
-                     data_dir=system.file(package="phylogenize", "extdata"),
-                     input_format="tabular",
-                     vsearch_dir=VSEARCH_DIR,
-                     ncl=NCL,
-                     meas_err=TRUE,
-                     pryr=FALSE)
-}
-
-if ("emp" %in% perform_associations) {
-   phylogenize::render.report(
-                     output_file=file.path(emp_dir, "emp-plant-rhizosphere.html"),
-                     out_dir = file.path(emp_dir, "plant-rhizosphere-phylo"),
-                     in_dir = emp_dir,
-                     type = "16S",
-                     db_version = "midas_v1.2",
-                     which_phenotype = "specificity",
-                     single_dset = TRUE,
-                     which_envir = "Plant rhizosphere",
-                     env_column = "empo_3",
-                     abundance_file = "",
-                     metadata_file = "",
-                     biom_file = "emp_deblur_orig_metadata.biom",
-                     input_format = "biom",
-                     vsearch_dir=VSEARCH_DIR,
-                     meas_err=TRUE,
-                     ncl=NCL,
-                     use_rmd_params = FALSE)
-}
-
-if ("emp-linear" %in% perform_associations) {
-    phylogenize::render.report(
-                     output_file=file.path(emp_dir, "emp-plant-rhizosphere-linear.html"),
-                     out_dir = file.path(emp_dir, "plant-rhizosphere-linear"),
-                     in_dir = emp_dir,
-                     type = "16S",
-                     db_version = "midas_v1.2",
-                     which_phenotype = "specificity",
-                     single_dset = TRUE,
-                     which_envir = "Plant rhizosphere",
-                     env_column = "empo_3",
-                     abundance_file = "",
-                     metadata_file = "",
-                     biom_file = "emp_deblur_orig_metadata.biom",
-                     input_format = "biom",
-                     vsearch_dir=VSEARCH_DIR,
-                     meas_err=TRUE,
-                     ncl=NCL,
-                     linearize = TRUE,
-                     use_rmd_params = FALSE)
+    assoc_args <- c(assoc_args, common_args)
+    phylogenize::render.report(do.call("c", assoc_args))
+  }
 }
 
 ## Compare phenotypes (prevalence)
