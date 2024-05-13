@@ -1,6 +1,12 @@
 [TOC]
 
-# phylogenize (v0.94 beta)
+# Note
+
+The *phylogenize* website (https://phylogenize.org) is currently down while we finish building Phylogenize2. In the meantime, you can still use the QIIME plugin and R packages for *phylogenize* v1.
+
+To be notified when Phylogenize 2 has its first public pre-release, you can sign up here: [https://lists.osu.edu/mailman/listinfo/phylogenize2-announce]. Thanks for your patience!
+
+# phylogenize v1
 
 *phylogenize* is a tool that allows users to link microbial genes to environments, accounting for phylogeny. More specifically, given community composition data, *phylogenize* links genes in microbial genomes to either microbial prevalence in, or specificity for, a given environment, while also taking into account an important potential confounder: the phylogenetic relationships between microbes. *phylogenize* comes with [web](https://www.phylogenize.org), QIIME 2, and R interfaces.
 
