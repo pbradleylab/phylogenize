@@ -9,167 +9,54 @@ library(nlme)
 
 source("figure-functions.R")
 
-plan(multiprocess, workers=6)
+furrr::plan(multiprocess, workers=6)
 hmp_dir <- normalizePath(file.path("..", "hmp"))
 emp_dir <- normalizePath(file.path("..", "emp"))
 NCL <- 8
 VSEARCH_DIR <- path.expand("~/bin/")
 
-# uncomment to actually run associations (time consuming)
-perform_associations <- strsplit(
-#    "hmp16s hmp16s-linear hmpshotgun emp emp-linear",
-    "",
-    " ")[[1]]
+# Add 'hmp16s hmp16s-linear hmpshotgun emp emp-linear' to actually run
+# associations (time consuming)
+perform_associations <- strsplit(""," ")[[1]]
 
-if (!file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab"))) {
-    if (file.exists(file.path(hmp_dir, "hmp-16s-dada2-full.tab.xz"))) {
-        message("unzipping HMP 16S data")
-        system2("xz", paste0("-d ",
-                       file.path(hmp_dir, "hmp-16s-dada2-full.tab.xz")),
-                     "-k")
-    } else {
-        stop("HMP 16S files not found")
-    }
-}
+# Unzip 16S or shotgun data if necessary
+unzip_file(hmp_dir, "hmp-16s-dada2-full.tab"))
+unzip_file(hmp_dir, "hmp-shotgun-bodysite.tab"))
 
-if (!file.exists(file.path(hmp_dir, "hmp-shotgun-bodysite.tab"))) {
-    if (file.exists(file.path(hmp_dir, "hmp-shotgun-bodysite.tab.xz"))) {
-        message("unzipping HMP shotgun data")
-        system2("xz", paste0("-d ",
-                       file.path(hmp_dir, "hmp-shotgun-bodysite.tab.xz")),
-                     "-k")
-    } else {
-        stop("HMP shotgun files not found")
-    }
-}
-
+# Download EMP data from Figshare
 if (!file.exists(file.path(emp_dir, "emp_deblur_orig_metadata.biom"))) {
     message("downloading EMP data from Figshare")
     curl_download("https://ndownloader.figshare.com/files/17348873",
                   file.path(emp_dir, "emp_deblur_orig_metadata.biom"))
 }
 
-if ("hmp16s" %in% perform_associations) {
-    phylogenize::render.report(
-                     output_file=file.path(hmp_dir, "16S-results.html"),
-                     in_dir=hmp_dir,
-                     out_dir=file.path(hmp_dir, "16S-results"),
-                     type="16S",
-                     db_version="midas_v1.2",
-                     which_phenotype="prevalence",
-                     which_envir="Stool",
-                     abundance_file="hmp-16s-dada2-full.tab",
-                     metadata_file="hmp-16s-phylogenize-metadata-full.tab",
-                     data_dir=system.file(package="phylogenize", "extdata"),
-                     input_format="tabular",
-                     vsearch_dir=VSEARCH_DIR,
-                     ncl=NCL,
-                     meas_err=TRUE,
-                     pryr=FALSE)
-}
-
-
-if ("hmp16s-linear" %in% perform_associations) {
-    phylogenize::render.report(
-                     output_file=file.path(hmp_dir, "16S-linear-results.html"),
-                     in_dir=hmp_dir,
-                     out_dir=file.path(hmp_dir, "16S-linear-output"),
-                     type="16S",
-                     db_version="midas_v1.2",
-                     which_phenotype="prevalence",
-                     which_envir="Stool",
-                     abundance_file="hmp-16s-dada2-full.tab",
-                     metadata_file="hmp-16s-phylogenize-metadata-full.tab",
-                     data_dir=system.file(package="phylogenize", "extdata"),
-                     input_format="tabular",
-                     vsearch_dir=VSEARCH_DIR,
-                     ncl=NCL,
-                     linearize=TRUE,
-                     pryr=FALSE)
-}
-
-if ("hmpshotgun" %in% perform_associations) {
-    phylogenize::render.report(
-                     output_file=file.path(hmp_dir, "shotgun-results.html"),
-                     in_dir=hmp_dir,
-                     out_dir=file.path(hmp_dir, "shotgun-output"),
-                     type="midas",
-                     db_version="midas_v1.0",
-                     which_phenotype="prevalence",
-                     which_envir="Stool",
-                     abundance_file="hmp-shotgun-bodysite.tab",
-                     metadata_file="hmp-shotgun-bodysite-metadata.tab",
-                     data_dir=system.file(package="phylogenize", "extdata"),
-                     input_format="tabular",
-                     vsearch_dir=VSEARCH_DIR,
-                     ncl=NCL,
-                     meas_err=TRUE,
-                     pryr=FALSE)
-}
-
-if ("emp" %in% perform_associations) {
-   phylogenize::render.report(
-                     output_file=file.path(emp_dir, "emp-plant-rhizosphere.html"),
-                     out_dir = file.path(emp_dir, "plant-rhizosphere-phylo"),
-                     in_dir = emp_dir,
-                     type = "16S",
-                     db_version = "midas_v1.2",
-                     which_phenotype = "specificity",
-                     single_dset = TRUE,
-                     which_envir = "Plant rhizosphere",
-                     env_column = "empo_3",
-                     abundance_file = "",
-                     metadata_file = "",
-                     biom_file = "emp_deblur_orig_metadata.biom",
-                     input_format = "biom",
-                     vsearch_dir=VSEARCH_DIR,
-                     meas_err=TRUE,
-                     ncl=NCL,
-                     use_rmd_params = FALSE)
-}
-
-if ("emp-linear" %in% perform_associations) {
-    phylogenize::render.report(
-                     output_file=file.path(emp_dir, "emp-plant-rhizosphere-linear.html"),
-                     out_dir = file.path(emp_dir, "plant-rhizosphere-linear"),
-                     in_dir = emp_dir,
-                     type = "16S",
-                     db_version = "midas_v1.2",
-                     which_phenotype = "specificity",
-                     single_dset = TRUE,
-                     which_envir = "Plant rhizosphere",
-                     env_column = "empo_3",
-                     abundance_file = "",
-                     metadata_file = "",
-                     biom_file = "emp_deblur_orig_metadata.biom",
-                     input_format = "biom",
-                     vsearch_dir=VSEARCH_DIR,
-                     meas_err=TRUE,
-                     ncl=NCL,
-                     linearize = TRUE,
-                     use_rmd_params = FALSE)
+# For each association type, reder a report. Here we render a report
+# for "hmp16s", "hmp16s-linear", "hmpshotgun", "emp" or "emp-linear".
+# Any other reports should be added to the if else logic here.
+for (association_type in perform_associations) {
+    generate_report(association_type) %>% do.call(phylogenize::render.report, .)
 }
 
 ## Compare phenotypes (prevalence)
 ## Compare effect sizes and significance by phylum (for top 4 phyla)
-
 pz.db <- import.pz.db(db_version="midas_v1.2")
 pz.db.0 <- import.pz.db(db_version="midas_v1.0")
 
-
 tax <- mutate(pz.db$taxonomy,
-              id=map_chr(cluster, ~ last_elem(strsplit(.x, "_")[[1]]))) %>%
-    as_tibble %>%
-    select(taxon_id, kingdom, phylum,class,order,family,genus,species,cluster,id)
+                id=map_chr(cluster, ~ last_elem(strsplit(.x, "_")[[1]]))) %>% 
+                as_tibble %>%
+                select(taxon_id,kingdom,phylum,class,order,
+                        family,genus,species,cluster,id)
 
 shotgun_pheno <- read_tsv(file.path(hmp_dir, "shotgun-output", "phenotype.tab"),
-                          col_names=c("id", "pheno_sh"),
-                          col_types=c("cd"), skip=1)
+                            col_names=c("id", "pheno_sh"),
+                            col_types=c("cd"), skip=1)
 sixteen_pheno <- read_tsv(file.path(hmp_dir, "16S-results", "phenotype.tab"),
-                          col_names=c("id", "pheno_16"), skip=1)
+                            col_names=c("id", "pheno_16"), skip=1)
 sixteen_rn <- mutate(sixteen_pheno,
-                     id=map_chr(strsplit(id, "_"),
+                        id=map_chr(strsplit(id, "_"),
                                 function(x) x[length(x)]))
+
 pheno_cmp <- full_join(sixteen_rn, shotgun_pheno, by="id")
 pheno_mg <- left_join(pheno_cmp, select(tax, phylum, id), by="id") %>% distinct
 
@@ -177,9 +64,9 @@ per_phylum_cor <- pheno_mg %>%
     group_by(phylum) %>%
     summarize(cor=cor(pheno_16, pheno_sh, use="pairwise.complete.obs")) %>%
     filter(!is.na(cor))
-
 detected_phy <- per_phylum_cor$phylum
 
+# Plot the phenotypes
 ggplot(pheno_mg %>%
        filter(phylum %in% detected_phy),
        aes(x=pheno_sh, y=pheno_16)) +

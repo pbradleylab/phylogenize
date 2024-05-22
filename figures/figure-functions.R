@@ -11,7 +11,7 @@ make_qvs <- function(tbl, .nestby = "phylum", .pvcol = "p.value", .qvcol = "q.va
     tbl %>%
         group_by({{ .nestby }}) %>%
         nest() %>%
-        mutate(data = map(data, ~ mutate(., {{ .qvcol }} := phylogenize:::qvals({{ .pvcol }}, error_to_file = FALSE)))) %>%
+        mutate(data = map(data, ~ mutate(.,{{ .qvcol }} := phylogenize:::qvals({{ .pvcol }}, error_to_file = FALSE)))) %>%
         unnest()
 }
 
@@ -72,4 +72,83 @@ get_alpha <- function(phylum, gene, db=pz.db, lab=8) {
 ap_tree <- function(x) {
     attr(x, "class") <- "phylo"
     x
+}
+
+# Unzip 16S or shotgun data if necessary
+unzip_file <- function(path, name) {
+    if (!file.exists(file.path(path, name))) {
+        if (file.exists(file.path(path,name))) {
+            message(paste("unzipping data: ", name))
+            system2("xz", paste0("-d ",
+                        file.path(path, paste0(name".xz"))),
+                        "-k")
+        } else {
+            stop(paste(name, "file not found")
+        }
+    }
+}
+
+# Makes a phylogenize rendered report for various associations. Note, this does
+# not contain all of the options in the program but those that are used for 
+# this report rendering as done in figures.R
+generate_report <- function(association_type, output_file_suffix = NULL, linearize = FALSE) {
+    # Initialize variables used by majority associations
+    out_dir_suffix = NULL; abundance_file = ""; metadata_file = ""
+    db_version = "midas_v1.2"
+    # Add in linear variables suffix and if should be linear
+    if (association_type == "hmp16s-linear" || association_type == "emp-linear") {
+        output_file_suffix="-linear"
+        linearize = TRUE
+    } else if (association_type == "hmpshotgun") {
+        db_version = "midas_v1.0"
+    }
+
+    param_table <- list(
+        "hmp16s" = list(
+            abundance_file = "hmp-16s-dada2-full.tab",
+            metadata_file = "hmp-16s-phylogenize-metadata-full.tab"),
+        "hmp16s-linear" = list(
+            abundance_file = "hmp-16s-dada2-full.tab",
+            metadata_file = "hmp-16s-phylogenize-metadata-full.tab"),
+        "hmpshotgun" = list(
+            abundance_file = "hmp-shotgun-bodysite.tab",
+            metadata_file = "hmp-shotgun-bodysite-metadata.tab"))
+
+    output_file <- switch(association_type,
+                            paste0(file.path(hmp_dir, "16S-results"), output_file_suffix, ".html"),
+                            paste0(file.path(hmp_dir, "16S-linear-results"), output_file_suffix, ".html"),
+                            paste0(file.path(hmp_dir, "shotgun-results"), output_file_suffix, ".html"),
+                            paste0(file.path(emp_dir, "emp-plant-rhizosphere"), output_file_suffix, ".html"),
+                            paste0(file.path(emp_dir, "emp-plant-rhizosphere-linear"), output_file_suffix, ".html"))
+
+    out_dir <- switch(association_type,
+                        file.path(hmp_dir, "16S-results", output_file_suffix),
+                        file.path(hmp_dir, "16S-linear-output", output_file_suffix),
+                        file.path(hmp_dir, "shotgun-output", output_file_suffix),
+                        file.path(emp_dir, "plant-rhizosphere-phylo", output_file_suffix),
+                        file.path(emp_dir, "plant-rhizosphere-linear", output_file_suffix))
+
+    params <- c(
+        output_file = output_file,
+        out_dir = out_dir,
+        in_dir = ifelse(association_type %in% c("hmp16s", "hmp16s-linear", "hmpshotgun"), hmp_dir, emp_dir),
+        type = ifelse(association_type %in% c("hmp16s", "hmp16s-linear"), "16S", "midas"),
+        db_version = db_version,
+        which_phenotype = ifelse(association_type %in% c("hmp16s", "hmp16s-linear", "hmpshotgun"), "prevalence", "specificity"),
+        which_envir = ifelse(association_type %in% c("hmp16s", "hmp16s-linear", "hmpshotgun"), "Stool", "Plant rhizosphere"),
+        abundance_file = ifelse(association_type %in% c("hmp16s", "hmp16s-linear", "hmpshotgun"), param_table[[association_type]]$abundance_file, abundance_file),
+        metadata_file = ifelse(association_type %in% c("hmp16s", "hmp16s-linear", "hmpshotgun"), param_table[[association_type]]$metadata_file, metadata_file),
+        data_dir = system.file(package="phylogenize", "extdata"),
+        input_format = "tabular",
+        vsearch_dir = VSEARCH_DIR,
+        ncl = NCL,
+        meas_err = TRUE,
+        pryr = FALSE,
+        linearize = linearize,
+        single_dset = association_type %in% c("emp", "emp-linear"),
+        env_column = ifelse(association_type %in% c("emp", "emp-linear"),"empo_3",NA),
+        biom_file = ifelse(association_type %in% c("emp", "emp-linear"),"emp_deblur_orig_metadata.biom",NA),
+        use_rmd_params = FALSE
+    )
+    return(params)
 }
