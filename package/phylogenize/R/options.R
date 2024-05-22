@@ -1,5 +1,55 @@
-# Options
+# Define a function to create PZ_OPTIONS
+options_manager <- function(type, db_version, out_dir, in_dir, data_dir, abundance_file, metadata_file, 
+                                biom_file, vsearch_16sfile, vsearch_infile) {
+    # Check if 'type' is valid
+    valid_types <- c("midas", "16S")
+    if (!type %in% valid_types) {
+        stop("Invalid value for 'type'. It should be either 'midas' for shotgun or '16S' for amplicon.")
+    }
+    # Check if 'db_version' is valid
+    valid_db_versions <- c("midas_v1.0", "midas_v1.2", "gtdb_v214", "uhgp")
+    if (!db_version %in% valid_db_versions) {
+        stop("Invalid value for 'db_version'. It should be either 'midas_v1.0','midas_v1.2','gtdb_v214','uhgp'.")
+    }
+    # Check if the output directory exists and if not create it. Do not overwrite it
+    if (!dir.exists(out_dir)) {
+        dir.create(out_dir, recursive = TRUE)
+    }
+    # Check if the output directory exists
+    if (!dir.exists(in_dir)) {
+        stop("The directory used by 'in_dir' does not exist. Please check your permissions and that the path is correct")
+    }
+    # Check if the data directory exists
+    if (!dir.exists(data_dir)) {
+        stop("The directory used by 'data_dir' does not exist. Please check your permissions and that the path is correct")
+    }
+    # Check if 'abundance_file' exists
+    if (!file.exists(abundance_file)) {
+        stop("The abundance file specified does not exist.")
+    }
+    # Check if 'metadata_file' exists
+    if (!file.exists(metadata_file)) {
+        stop("The metadata file specified does not exist.")
+    }
+    # Check if 'metadata_file' exists
+    if (!file.exists(biom_file)) {
+        stop("The biom file specified does not exist.")
+    }
+    # Check if 'vsearch_16sfile' exists
+    if (!file.exists(vsearch_16sfile)) {
+        stop("The vsearch 16s file specified does not exist.")
+    }
+    # Check if 'vsearch_infile' exists
+    if (!file.exists(vsearch_infile)) {
+        stop("The vsearch input file specified does not exist.")
+    }
+    return(TRUE)
+}
 
+# Check that the inputs are valid. Note, this section coudl be expanded
+options_manager(type, db_version, out_dir, in_dir, data_dir, abundance_file, metadata_file, 
+                    biom_file, vsearch_16sfile, vsearch_infile)
+# Options given by user
 PZ_OPTIONS <- options_manager(
   ncl=1,
   type="midas",
