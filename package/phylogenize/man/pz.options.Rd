@@ -49,7 +49,7 @@ These options are global because they affect how most of the functions in
   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
   \item{sample_column}{String. Name of column in metadata file containing the sample IDs. Default: "sample_id"}
   \item{single_dset}{Boolean. If true, will assume that all samples come from a single dataset called \code{dset1} no matter what, if anything, is in \code{dset_column}. Default: FALSE}
-  \item{db_version}{String. Which version of the MIDAS database to use ("midas_v1.2" or "midas_v1.0"). Default: "midas_v1.2"}
+  \item{db_version}{String. Which version of the MIDAS database to use ("midas_v1.2" "midas_v1.0", "gtdb_v214", "uhgp"). Default: "midas_v1.2"}
   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence" or "specificity"). Default: "prevalence"}
   \item{which_envir}{String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. Default: "Stool"}
   \item{prior_type}{String. What type of prior to use ("uninformative" or "file"). Default: "uninformative"}

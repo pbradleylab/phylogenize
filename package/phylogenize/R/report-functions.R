@@ -650,7 +650,7 @@ process.16s <- function(abd.meta, ...) {
 #'   \item{type}{String. Type of data to use, either "midas" (shotgun) or "16S"
 #'   (amplicon).}
 #'   \item{db_version}{String. Which version of the MIDAS database to use
-#'   ("midas_v1.2" or "midas_v1.0").}
+#'   ("midas_v1.2", "midas_v1.0", "gtdb_v214", "uhgp").}
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis.}
 #' }
