@@ -1,5 +1,5 @@
 # Does a quick sanity check to make sure that the repository is set up correctly
-options_manager_check <- function(type, db_version, in_dir, abundance_file, metadata_file, biom_file) {
+options_manager_check <- function(type, db_version, in_dir) {
     # Check if 'type' is valid
     valid_types <- c("midas", "16S")
     if (!type[[1]] %in% valid_types) {
@@ -13,18 +13,6 @@ options_manager_check <- function(type, db_version, in_dir, abundance_file, meta
     # Check if the output directory exists
     if (!dir.exists(in_dir[[1]])) {
         stop("The directory used by 'in_dir' does not exist. Please check your permissions and that the path is correct")
-    }
-    # Check if 'abundance_file' exists
-    if (!file.exists(abundance_file[[1]])) {
-        warning("The abundance file specified does not exist.")
-    }
-    # Check if 'metadata_file' exists
-    if (!file.exists(metadata_file[[1]])) {
-        warning("The metadata file specified does not exist.")
-    }
-    # Check if 'metadata_file' exists
-    if (!file.exists(biom_file[[1]])) {
-        warning("The biom file specified does not exist.")
     }
     return(TRUE)
 }
@@ -81,13 +69,12 @@ default_params <- list(
     meas_err=TRUE,min_fx=0
 )
 
-# Check that the inputs are valid. Note, this section coudl be expanded
-if (options_manager_check(default_params["type"], default_params["db_version"], default_params["in_dir"],
-                            default_params["abundance_file"], default_params["metadata_file"], default_params["biom_file"])) {
-                                message("Passed options checks")
-} else {
-    error("There was a problem with one or more of your inputs. Please see previous error messages")
-}
+# # Check that the inputs are valid. Note, this section coudl be expanded
+# if (options_manager_check(default_params["type"], default_params["db_version"],
+#                             default_params["in_dir"], default_params["abundance_file"])
+# } else {
+#     error("There was a problem with one or more of your inputs. Please see previous error messages")
+# }
 
 # Options given by user
 PZ_OPTIONS <- options_manager(

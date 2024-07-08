@@ -12,7 +12,7 @@ RUN mamba install -y -c conda-forge \
 	r-phylolm \
 	r-phangorn
 
-RUN R -e "devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')"
-#RUN R -e "devtools::install_github('pbradleylab/phylogenize')"
+#RUN R -e "devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')"
+RUN R -e "devtools::install_github('pbradleylab/phylogenize')"
 
 CMD ["/bin/bash"]
