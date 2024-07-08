@@ -23,7 +23,8 @@ Depends:
     grDevices,
     functional,
     future,
-    furrr
+    furrr,
+    sparklyr
 Imports:
     data.table,
     parallel,
@@ -42,6 +43,7 @@ Imports:
     svglite,
     lobstr,
     testthat,
-    ezknitr
+    ezknitr,
+    sparklyr
 Suggests: 
 RoxygenNote: 6.1.1.9000

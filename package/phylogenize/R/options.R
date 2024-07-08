@@ -1,106 +1,146 @@
-# Define a function to create PZ_OPTIONS
-options_manager <- function(type, db_version, out_dir, in_dir, data_dir, abundance_file, metadata_file, 
-                                biom_file, vsearch_16sfile, vsearch_infile) {
+# Does a quick sanity check to make sure that the repository is set up correctly
+options_manager_check <- function(type, db_version, in_dir, abundance_file, metadata_file, biom_file) {
     # Check if 'type' is valid
     valid_types <- c("midas", "16S")
-    if (!type %in% valid_types) {
+    if (!type[[1]] %in% valid_types) {
         stop("Invalid value for 'type'. It should be either 'midas' for shotgun or '16S' for amplicon.")
     }
     # Check if 'db_version' is valid
-    valid_db_versions <- c("midas_v1.0", "midas_v1.2", "gtdb_v214", "uhgp")
-    if (!db_version %in% valid_db_versions) {
-        stop("Invalid value for 'db_version'. It should be either 'midas_v1.0','midas_v1.2','gtdb_v214','uhgp'.")
-    }
-    # Check if the output directory exists and if not create it. Do not overwrite it
-    if (!dir.exists(out_dir)) {
-        dir.create(out_dir, recursive = TRUE)
+    valid_db_versions <- c("midas_v1.0", "midas_v1.2", "gtdb_v214", "midas2_uhgg_fam")
+    if (!db_version[[1]] %in% valid_db_versions) {
+        stop("Invalid value for 'db_version'. It should be either 'midas_v1.0','midas_v1.2','gtdb_v214','midas2_uhgg_fam'.")
     }
     # Check if the output directory exists
-    if (!dir.exists(in_dir)) {
+    if (!dir.exists(in_dir[[1]])) {
         stop("The directory used by 'in_dir' does not exist. Please check your permissions and that the path is correct")
     }
-    # Check if the data directory exists
-    if (!dir.exists(data_dir)) {
-        stop("The directory used by 'data_dir' does not exist. Please check your permissions and that the path is correct")
-    }
     # Check if 'abundance_file' exists
-    if (!file.exists(abundance_file)) {
-        stop("The abundance file specified does not exist.")
+    if (!file.exists(abundance_file[[1]])) {
+        warning("The abundance file specified does not exist.")
     }
     # Check if 'metadata_file' exists
-    if (!file.exists(metadata_file)) {
-        stop("The metadata file specified does not exist.")
+    if (!file.exists(metadata_file[[1]])) {
+        warning("The metadata file specified does not exist.")
     }
     # Check if 'metadata_file' exists
-    if (!file.exists(biom_file)) {
-        stop("The biom file specified does not exist.")
-    }
-    # Check if 'vsearch_16sfile' exists
-    if (!file.exists(vsearch_16sfile)) {
-        stop("The vsearch 16s file specified does not exist.")
-    }
-    # Check if 'vsearch_infile' exists
-    if (!file.exists(vsearch_infile)) {
-        stop("The vsearch input file specified does not exist.")
+    if (!file.exists(biom_file[[1]])) {
+        warning("The biom file specified does not exist.")
     }
     return(TRUE)
 }
 
+# Set the default parameters
+default_params <- list(
+    ncl=1,type="midas",
+    out_dir="./output",
+    in_dir=".",
+    data_dir="./data",
+    abundance_file="hmp-shotgun-bodysite.tab",
+    metadata_file="hmp-shotgun-bodysite-metadata.tab",
+    biom_file="test.biom",
+    input_format="tabular",
+    separate_metadata=FALSE,
+    env_column="env",
+    dset_column="dataset",
+    sample_column="sample",
+    phenotype_file="",
+    db_version="midas_v1.2",
+    which_phenotype="prevalence",
+    which_envir="Stool",
+    prior_type="uninformative",
+    prior_file="",
+    minimum=3,
+    treemin=5,
+    pctmin=0.025,
+    assume_below_LOD=TRUE,
+    skip_graphs=FALSE,
+    vsearch_dir="/usr/local/bin",
+    linearize=FALSE,
+    check_mem_usage=FALSE,
+    prev_color_low='black',
+    prev_color_high='orange2',
+    spec_color_low='slateblue',
+    spec_color_mid='gray50',
+    spec_color_high='tomato',
+    gene_color_absent='black',
+    gene_color_present='slateblue2',
+    separate_process=TRUE,
+    biom_dir='/usr/local/bin/',
+    error_to_file=TRUE,
+    vsearch_16sfile="16s_renamed.frn",
+    vsearch_infile="input_seqs.txt",
+    vsearch_outfile="output_assignments.txt",
+    vsearch_cutoff=0.985,
+    vsearch_bin='vsearch',
+    use_rmd_params=FALSE,
+    devel=FALSE,
+    devel_pkgdir='package/phylogenize',
+    relative_out_dir=NULL,
+    single_dset=FALSE,
+    working_dir='.',
+    meas_err=TRUE,min_fx=0
+)
+
 # Check that the inputs are valid. Note, this section coudl be expanded
-options_manager(type, db_version, out_dir, in_dir, data_dir, abundance_file, metadata_file, 
-                    biom_file, vsearch_16sfile, vsearch_infile)
+if (options_manager_check(default_params["type"], default_params["db_version"], default_params["in_dir"],
+                            default_params["abundance_file"], default_params["metadata_file"], default_params["biom_file"])) {
+                                message("Passed options checks")
+} else {
+    error("There was a problem with one or more of your inputs. Please see previous error messages")
+}
+
 # Options given by user
 PZ_OPTIONS <- options_manager(
-  ncl=1,
-  type="midas",
-  out_dir="output",
-  in_dir=".",
-  data_dir="./data",
-  abundance_file="tests/data/test-abundance.tab",
-  metadata_file="tests/data/test-metadata.tab",
-  biom_file="tests/data/test.biom",
-  input_format="tabular",
-  separate_metadata=FALSE,
-  env_column="env",
-  dset_column="dataset",
-  sample_column="sample",
-  phenotype_file="",
-  db_version="midas_v1.2",
-  which_phenotype="prevalence",
-  which_envir="Stool",
-  prior_type="uninformative",
-  prior_file="",
-  minimum=3,
-  treemin=5,
-  pctmin=0.025,
-  assume_below_LOD=TRUE,
-  skip_graphs=FALSE,
-  vsearch_dir="/usr/local/bin",
-  linearize=FALSE,
-  check_mem_usage=FALSE,
-  prev_color_low='black',
-  prev_color_high='orange2',
-  spec_color_low='slateblue',
-  spec_color_mid='gray50',
-  spec_color_high='tomato',
-  gene_color_absent='black',
-  gene_color_present='slateblue2',
-  separate_process=TRUE,
-  biom_dir='/usr/local/bin/',
-  error_to_file=TRUE,
-  vsearch_16sfile="16s_renamed.frn",
-  vsearch_infile="input_seqs.txt",
-  vsearch_outfile="output_assignments.txt",
-  vsearch_cutoff=0.985,
-  vsearch_bin='vsearch',
-  use_rmd_params=FALSE,
-  devel=FALSE,
-  devel_pkgdir='package/phylogenize',
-  relative_out_dir=NULL,
-  single_dset=FALSE,
-  working_dir='.',
-  meas_err=TRUE,
-  min_fx=0
+  ncl = default_params["ncl"][[1]],
+  type = default_params["type"][[1]],
+  out_dir = default_params["out_dir"][[1]],
+  in_dir = default_params["in_dir"][[1]],
+  data_dir = default_params["data_dir"][[1]],
+  abundance_file = default_params["abundance_file"][[1]],
+  metadata_file = default_params["metadata_file"][[1]],
+  biom_file = default_params["biom_file"][[1]],
+  input_format = default_params["input_format"][[1]],
+  separate_metadata = default_params["separate_metadata"][[1]],
+  env_column = default_params["env_column"][[1]],
+  dset_column = default_params["dset_column"][[1]],
+  sample_column = default_params["sample_column"][[1]],
+  phenotype_file = default_params["phenotype_file"][[1]],
+  db_version = default_params["db_version"][[1]],
+  which_phenotype = default_params["which_phenotype"][[1]],
+  which_envir = default_params["which_envir"][[1]],
+  prior_type = default_params["prior_type"][[1]],
+  prior_file = default_params["prior_file"][[1]],
+  minimum = default_params["minimum"][[1]],
+  treemin = default_params["treemin"][[1]],
+  pctmin = default_params["pctmin"][[1]],
+  assume_below_LOD = default_params["assume_below_LOD"][[1]],
+  skip_graphs = default_params["skip_graphs"][[1]],
+  vsearch_dir = default_params["vsearch_dir"][[1]],
+  linearize = default_params["linearize"][[1]],
+  check_mem_usage = default_params["check_mem_usage"][[1]],
+  prev_color_low = default_params["prev_color_low"][[1]],
+  prev_color_high = default_params["prev_color_high"][[1]],
+  spec_color_low = default_params["spec_color_low"][[1]],
+  spec_color_mid = default_params["spec_color_mid"][[1]],
+  spec_color_high = default_params["spec_color_high"][[1]],
+  gene_color_absent = default_params["gene_color_absent"][[1]],
+  gene_color_present = default_params["gene_color_present"][[1]],
+  separate_process = default_params["separate_process"][[1]],
+  biom_dir = default_params["biom_dir"][[1]],
+  error_to_file = default_params["error_to_file"][[1]],
+  vsearch_16sfile = default_params["vsearch_16sfile"][[1]],
+  vsearch_infile = default_params["vsearch_infile"][[1]],
+  vsearch_outfile = default_params["vsearch_outfile"][[1]],
+  vsearch_cutoff = default_params["vsearch_cutoff"][[1]],
+  vsearch_bin = default_params["vsearch_bin"][[1]],
+  use_rmd_params = default_params["use_rmd_params"][[1]],
+  devel = default_params["devel"][[1]],
+  devel_pkgdir = default_params["devel_pkgdir"][[1]],
+  relative_out_dir = default_params["relative_out_dir"][[1]],
+  single_dset = default_params["single_dset"][[1]],
+  working_dir = default_params["working_dir"][[1]],
+  meas_err = default_params["meas_err"][[1]],
+  min_fx = default_params["min_fx"][[1]]
 )
 
 #' Set and get options for phylogenize.
@@ -140,7 +180,7 @@ PZ_OPTIONS <- options_manager(
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
 #'   \item{sample_column}{String. Name of column in metadata file containing the sample IDs. Default: "sample_id"}
 #'   \item{single_dset}{Boolean. If true, will assume that all samples come from a single dataset called \code{dset1} no matter what, if anything, is in \code{dset_column}. Default: FALSE}
-#'   \item{db_version}{String. Which version of the MIDAS database to use ("midas_v1.2", "midas_v1.0", "gtdb_v214", "uhgp"). Default: "midas_v1.2"}
+#'   \item{db_version}{String. Which version of the MIDAS database to use ("midas_v1.2", "midas_v1.0", "gtdb_v214", "midas2_uhgg_fam"). Default: "midas_v1.2"}
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence" or "specificity"). Default: "prevalence"}
 #'   \item{which_envir}{String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. Default: "Stool"}
 #'   \item{prior_type}{String. What type of prior to use ("uninformative" or "file"). Default: "uninformative"}

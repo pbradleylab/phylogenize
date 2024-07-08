@@ -1,0 +1,2463 @@
+sampleid	env	subject	bodysite	dataset
+Anterior.nares__103092734	Anterior nares	103092734	Anterior nares	HMP
+L_Antecubital.fossa__103092734	L_Antecubital fossa	103092734	L_Antecubital fossa	HMP
+R_Antecubital.fossa__103092734	R_Antecubital fossa	103092734	R_Antecubital fossa	HMP
+Buccal.mucosa__132902142	Buccal mucosa	132902142	Buccal mucosa	HMP
+Palatine.Tonsils__132902142	Palatine Tonsils	132902142	Palatine Tonsils	HMP
+R_Antecubital.fossa__132902142	R_Antecubital fossa	132902142	R_Antecubital fossa	HMP
+Retroauricular.crease__132902142	Retroauricular crease	132902142	Retroauricular crease	HMP
+Stool__132902142	Stool	132902142	Stool	HMP
+Subgingival.plaque__132902142	Subgingival plaque	132902142	Subgingival plaque	HMP
+Supragingival.plaque__132902142	Supragingival plaque	132902142	Supragingival plaque	HMP
+Throat__132902142	Throat	132902142	Throat	HMP
+Tongue.dorsum__132902142	Tongue dorsum	132902142	Tongue dorsum	HMP
+Anterior.nares__147406386	Anterior nares	147406386	Anterior nares	HMP
+Attached.Keratinized.gingiva__147406386	Attached/Keratinized gingiva	147406386	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__147406386	Buccal mucosa	147406386	Buccal mucosa	HMP
+Hard.palate__147406386	Hard palate	147406386	Hard palate	HMP
+L_Antecubital.fossa__147406386	L_Antecubital fossa	147406386	L_Antecubital fossa	HMP
+Palatine.Tonsils__147406386	Palatine Tonsils	147406386	Palatine Tonsils	HMP
+R_Antecubital.fossa__147406386	R_Antecubital fossa	147406386	R_Antecubital fossa	HMP
+Retroauricular.crease__147406386	Retroauricular crease	147406386	Retroauricular crease	HMP
+Saliva__147406386	Saliva	147406386	Saliva	HMP
+Subgingival.plaque__147406386	Subgingival plaque	147406386	Subgingival plaque	HMP
+Supragingival.plaque__147406386	Supragingival plaque	147406386	Supragingival plaque	HMP
+Throat__147406386	Throat	147406386	Throat	HMP
+Tongue.dorsum__147406386	Tongue dorsum	147406386	Tongue dorsum	HMP
+Anterior.nares__158013734	Anterior nares	158013734	Anterior nares	HMP
+Attached.Keratinized.gingiva__158013734	Attached/Keratinized gingiva	158013734	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158013734	Buccal mucosa	158013734	Buccal mucosa	HMP
+Hard.palate__158013734	Hard palate	158013734	Hard palate	HMP
+L_Antecubital.fossa__158013734	L_Antecubital fossa	158013734	L_Antecubital fossa	HMP
+Mid.vagina__158013734	Mid vagina	158013734	Mid vagina	HMP
+Palatine.Tonsils__158013734	Palatine Tonsils	158013734	Palatine Tonsils	HMP
+Posterior.fornix__158013734	Posterior fornix	158013734	Posterior fornix	HMP
+R_Antecubital.fossa__158013734	R_Antecubital fossa	158013734	R_Antecubital fossa	HMP
+Retroauricular.crease__158013734	Retroauricular crease	158013734	Retroauricular crease	HMP
+Saliva__158013734	Saliva	158013734	Saliva	HMP
+Stool__158013734	Stool	158013734	Stool	HMP
+Subgingival.plaque__158013734	Subgingival plaque	158013734	Subgingival plaque	HMP
+Supragingival.plaque__158013734	Supragingival plaque	158013734	Supragingival plaque	HMP
+Throat__158013734	Throat	158013734	Throat	HMP
+Tongue.dorsum__158013734	Tongue dorsum	158013734	Tongue dorsum	HMP
+Vaginal.introitus__158013734	Vaginal introitus	158013734	Vaginal introitus	HMP
+Anterior.nares__158114885	Anterior nares	158114885	Anterior nares	HMP
+Attached.Keratinized.gingiva__158114885	Attached/Keratinized gingiva	158114885	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158114885	Buccal mucosa	158114885	Buccal mucosa	HMP
+Hard.palate__158114885	Hard palate	158114885	Hard palate	HMP
+L_Antecubital.fossa__158114885	L_Antecubital fossa	158114885	L_Antecubital fossa	HMP
+Mid.vagina__158114885	Mid vagina	158114885	Mid vagina	HMP
+Palatine.Tonsils__158114885	Palatine Tonsils	158114885	Palatine Tonsils	HMP
+Posterior.fornix__158114885	Posterior fornix	158114885	Posterior fornix	HMP
+R_Antecubital.fossa__158114885	R_Antecubital fossa	158114885	R_Antecubital fossa	HMP
+Retroauricular.crease__158114885	Retroauricular crease	158114885	Retroauricular crease	HMP
+Saliva__158114885	Saliva	158114885	Saliva	HMP
+Stool__158114885	Stool	158114885	Stool	HMP
+Subgingival.plaque__158114885	Subgingival plaque	158114885	Subgingival plaque	HMP
+Supragingival.plaque__158114885	Supragingival plaque	158114885	Supragingival plaque	HMP
+Throat__158114885	Throat	158114885	Throat	HMP
+Tongue.dorsum__158114885	Tongue dorsum	158114885	Tongue dorsum	HMP
+Vaginal.introitus__158114885	Vaginal introitus	158114885	Vaginal introitus	HMP
+Anterior.nares__158155345	Anterior nares	158155345	Anterior nares	HMP
+Attached.Keratinized.gingiva__158155345	Attached/Keratinized gingiva	158155345	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158155345	Buccal mucosa	158155345	Buccal mucosa	HMP
+Hard.palate__158155345	Hard palate	158155345	Hard palate	HMP
+L_Antecubital.fossa__158155345	L_Antecubital fossa	158155345	L_Antecubital fossa	HMP
+Palatine.Tonsils__158155345	Palatine Tonsils	158155345	Palatine Tonsils	HMP
+R_Antecubital.fossa__158155345	R_Antecubital fossa	158155345	R_Antecubital fossa	HMP
+Retroauricular.crease__158155345	Retroauricular crease	158155345	Retroauricular crease	HMP
+Saliva__158155345	Saliva	158155345	Saliva	HMP
+Stool__158155345	Stool	158155345	Stool	HMP
+Subgingival.plaque__158155345	Subgingival plaque	158155345	Subgingival plaque	HMP
+Supragingival.plaque__158155345	Supragingival plaque	158155345	Supragingival plaque	HMP
+Throat__158155345	Throat	158155345	Throat	HMP
+Tongue.dorsum__158155345	Tongue dorsum	158155345	Tongue dorsum	HMP
+Anterior.nares__158216035	Anterior nares	158216035	Anterior nares	HMP
+Attached.Keratinized.gingiva__158216035	Attached/Keratinized gingiva	158216035	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158216035	Buccal mucosa	158216035	Buccal mucosa	HMP
+Hard.palate__158216035	Hard palate	158216035	Hard palate	HMP
+L_Antecubital.fossa__158216035	L_Antecubital fossa	158216035	L_Antecubital fossa	HMP
+Palatine.Tonsils__158216035	Palatine Tonsils	158216035	Palatine Tonsils	HMP
+R_Antecubital.fossa__158216035	R_Antecubital fossa	158216035	R_Antecubital fossa	HMP
+Retroauricular.crease__158216035	Retroauricular crease	158216035	Retroauricular crease	HMP
+Saliva__158216035	Saliva	158216035	Saliva	HMP
+Stool__158216035	Stool	158216035	Stool	HMP
+Subgingival.plaque__158216035	Subgingival plaque	158216035	Subgingival plaque	HMP
+Supragingival.plaque__158216035	Supragingival plaque	158216035	Supragingival plaque	HMP
+Throat__158216035	Throat	158216035	Throat	HMP
+Tongue.dorsum__158216035	Tongue dorsum	158216035	Tongue dorsum	HMP
+Anterior.nares__158236265	Anterior nares	158236265	Anterior nares	HMP
+Attached.Keratinized.gingiva__158236265	Attached/Keratinized gingiva	158236265	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158236265	Buccal mucosa	158236265	Buccal mucosa	HMP
+Hard.palate__158236265	Hard palate	158236265	Hard palate	HMP
+L_Antecubital.fossa__158236265	L_Antecubital fossa	158236265	L_Antecubital fossa	HMP
+Mid.vagina__158236265	Mid vagina	158236265	Mid vagina	HMP
+Palatine.Tonsils__158236265	Palatine Tonsils	158236265	Palatine Tonsils	HMP
+Posterior.fornix__158236265	Posterior fornix	158236265	Posterior fornix	HMP
+R_Antecubital.fossa__158236265	R_Antecubital fossa	158236265	R_Antecubital fossa	HMP
+Retroauricular.crease__158236265	Retroauricular crease	158236265	Retroauricular crease	HMP
+Saliva__158236265	Saliva	158236265	Saliva	HMP
+Stool__158236265	Stool	158236265	Stool	HMP
+Subgingival.plaque__158236265	Subgingival plaque	158236265	Subgingival plaque	HMP
+Supragingival.plaque__158236265	Supragingival plaque	158236265	Supragingival plaque	HMP
+Throat__158236265	Throat	158236265	Throat	HMP
+Tongue.dorsum__158236265	Tongue dorsum	158236265	Tongue dorsum	HMP
+Vaginal.introitus__158236265	Vaginal introitus	158236265	Vaginal introitus	HMP
+Anterior.nares__158256496	Anterior nares	158256496	Anterior nares	HMP
+Attached.Keratinized.gingiva__158256496	Attached/Keratinized gingiva	158256496	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158256496	Buccal mucosa	158256496	Buccal mucosa	HMP
+Hard.palate__158256496	Hard palate	158256496	Hard palate	HMP
+L_Antecubital.fossa__158256496	L_Antecubital fossa	158256496	L_Antecubital fossa	HMP
+Mid.vagina__158256496	Mid vagina	158256496	Mid vagina	HMP
+Palatine.Tonsils__158256496	Palatine Tonsils	158256496	Palatine Tonsils	HMP
+Posterior.fornix__158256496	Posterior fornix	158256496	Posterior fornix	HMP
+Retroauricular.crease__158256496	Retroauricular crease	158256496	Retroauricular crease	HMP
+Saliva__158256496	Saliva	158256496	Saliva	HMP
+Stool__158256496	Stool	158256496	Stool	HMP
+Subgingival.plaque__158256496	Subgingival plaque	158256496	Subgingival plaque	HMP
+Supragingival.plaque__158256496	Supragingival plaque	158256496	Supragingival plaque	HMP
+Throat__158256496	Throat	158256496	Throat	HMP
+Tongue.dorsum__158256496	Tongue dorsum	158256496	Tongue dorsum	HMP
+Vaginal.introitus__158256496	Vaginal introitus	158256496	Vaginal introitus	HMP
+Anterior.nares__158276726	Anterior nares	158276726	Anterior nares	HMP
+Attached.Keratinized.gingiva__158276726	Attached/Keratinized gingiva	158276726	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158276726	Buccal mucosa	158276726	Buccal mucosa	HMP
+Hard.palate__158276726	Hard palate	158276726	Hard palate	HMP
+L_Antecubital.fossa__158276726	L_Antecubital fossa	158276726	L_Antecubital fossa	HMP
+Mid.vagina__158276726	Mid vagina	158276726	Mid vagina	HMP
+Palatine.Tonsils__158276726	Palatine Tonsils	158276726	Palatine Tonsils	HMP
+Posterior.fornix__158276726	Posterior fornix	158276726	Posterior fornix	HMP
+R_Antecubital.fossa__158276726	R_Antecubital fossa	158276726	R_Antecubital fossa	HMP
+Retroauricular.crease__158276726	Retroauricular crease	158276726	Retroauricular crease	HMP
+Saliva__158276726	Saliva	158276726	Saliva	HMP
+Stool__158276726	Stool	158276726	Stool	HMP
+Subgingival.plaque__158276726	Subgingival plaque	158276726	Subgingival plaque	HMP
+Supragingival.plaque__158276726	Supragingival plaque	158276726	Supragingival plaque	HMP
+Throat__158276726	Throat	158276726	Throat	HMP
+Tongue.dorsum__158276726	Tongue dorsum	158276726	Tongue dorsum	HMP
+Vaginal.introitus__158276726	Vaginal introitus	158276726	Vaginal introitus	HMP
+Anterior.nares__158337416	Anterior nares	158337416	Anterior nares	HMP
+Attached.Keratinized.gingiva__158337416	Attached/Keratinized gingiva	158337416	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158337416	Buccal mucosa	158337416	Buccal mucosa	HMP
+Hard.palate__158337416	Hard palate	158337416	Hard palate	HMP
+L_Antecubital.fossa__158337416	L_Antecubital fossa	158337416	L_Antecubital fossa	HMP
+Mid.vagina__158337416	Mid vagina	158337416	Mid vagina	HMP
+Palatine.Tonsils__158337416	Palatine Tonsils	158337416	Palatine Tonsils	HMP
+Posterior.fornix__158337416	Posterior fornix	158337416	Posterior fornix	HMP
+R_Antecubital.fossa__158337416	R_Antecubital fossa	158337416	R_Antecubital fossa	HMP
+Retroauricular.crease__158337416	Retroauricular crease	158337416	Retroauricular crease	HMP
+Saliva__158337416	Saliva	158337416	Saliva	HMP
+Stool__158337416	Stool	158337416	Stool	HMP
+Subgingival.plaque__158337416	Subgingival plaque	158337416	Subgingival plaque	HMP
+Supragingival.plaque__158337416	Supragingival plaque	158337416	Supragingival plaque	HMP
+Throat__158337416	Throat	158337416	Throat	HMP
+Tongue.dorsum__158337416	Tongue dorsum	158337416	Tongue dorsum	HMP
+Vaginal.introitus__158337416	Vaginal introitus	158337416	Vaginal introitus	HMP
+Anterior.nares__158357646	Anterior nares	158357646	Anterior nares	HMP
+Attached.Keratinized.gingiva__158357646	Attached/Keratinized gingiva	158357646	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158357646	Buccal mucosa	158357646	Buccal mucosa	HMP
+Hard.palate__158357646	Hard palate	158357646	Hard palate	HMP
+Palatine.Tonsils__158357646	Palatine Tonsils	158357646	Palatine Tonsils	HMP
+Retroauricular.crease__158357646	Retroauricular crease	158357646	Retroauricular crease	HMP
+Saliva__158357646	Saliva	158357646	Saliva	HMP
+Stool__158357646	Stool	158357646	Stool	HMP
+Subgingival.plaque__158357646	Subgingival plaque	158357646	Subgingival plaque	HMP
+Supragingival.plaque__158357646	Supragingival plaque	158357646	Supragingival plaque	HMP
+Throat__158357646	Throat	158357646	Throat	HMP
+Tongue.dorsum__158357646	Tongue dorsum	158357646	Tongue dorsum	HMP
+Anterior.nares__158398106	Anterior nares	158398106	Anterior nares	HMP
+Attached.Keratinized.gingiva__158398106	Attached/Keratinized gingiva	158398106	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158398106	Buccal mucosa	158398106	Buccal mucosa	HMP
+Hard.palate__158398106	Hard palate	158398106	Hard palate	HMP
+L_Antecubital.fossa__158398106	L_Antecubital fossa	158398106	L_Antecubital fossa	HMP
+Palatine.Tonsils__158398106	Palatine Tonsils	158398106	Palatine Tonsils	HMP
+R_Antecubital.fossa__158398106	R_Antecubital fossa	158398106	R_Antecubital fossa	HMP
+Retroauricular.crease__158398106	Retroauricular crease	158398106	Retroauricular crease	HMP
+Saliva__158398106	Saliva	158398106	Saliva	HMP
+Stool__158398106	Stool	158398106	Stool	HMP
+Subgingival.plaque__158398106	Subgingival plaque	158398106	Subgingival plaque	HMP
+Supragingival.plaque__158398106	Supragingival plaque	158398106	Supragingival plaque	HMP
+Throat__158398106	Throat	158398106	Throat	HMP
+Tongue.dorsum__158398106	Tongue dorsum	158398106	Tongue dorsum	HMP
+Anterior.nares__158418336	Anterior nares	158418336	Anterior nares	HMP
+Attached.Keratinized.gingiva__158418336	Attached/Keratinized gingiva	158418336	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158418336	Buccal mucosa	158418336	Buccal mucosa	HMP
+Hard.palate__158418336	Hard palate	158418336	Hard palate	HMP
+L_Antecubital.fossa__158418336	L_Antecubital fossa	158418336	L_Antecubital fossa	HMP
+Palatine.Tonsils__158418336	Palatine Tonsils	158418336	Palatine Tonsils	HMP
+R_Antecubital.fossa__158418336	R_Antecubital fossa	158418336	R_Antecubital fossa	HMP
+Retroauricular.crease__158418336	Retroauricular crease	158418336	Retroauricular crease	HMP
+Saliva__158418336	Saliva	158418336	Saliva	HMP
+Stool__158418336	Stool	158418336	Stool	HMP
+Subgingival.plaque__158418336	Subgingival plaque	158418336	Subgingival plaque	HMP
+Supragingival.plaque__158418336	Supragingival plaque	158418336	Supragingival plaque	HMP
+Throat__158418336	Throat	158418336	Throat	HMP
+Tongue.dorsum__158418336	Tongue dorsum	158418336	Tongue dorsum	HMP
+Anterior.nares__158438567	Anterior nares	158438567	Anterior nares	HMP
+Attached.Keratinized.gingiva__158438567	Attached/Keratinized gingiva	158438567	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158438567	Buccal mucosa	158438567	Buccal mucosa	HMP
+Hard.palate__158438567	Hard palate	158438567	Hard palate	HMP
+L_Antecubital.fossa__158438567	L_Antecubital fossa	158438567	L_Antecubital fossa	HMP
+Palatine.Tonsils__158438567	Palatine Tonsils	158438567	Palatine Tonsils	HMP
+R_Antecubital.fossa__158438567	R_Antecubital fossa	158438567	R_Antecubital fossa	HMP
+Retroauricular.crease__158438567	Retroauricular crease	158438567	Retroauricular crease	HMP
+Saliva__158438567	Saliva	158438567	Saliva	HMP
+Stool__158438567	Stool	158438567	Stool	HMP
+Subgingival.plaque__158438567	Subgingival plaque	158438567	Subgingival plaque	HMP
+Supragingival.plaque__158438567	Supragingival plaque	158438567	Supragingival plaque	HMP
+Throat__158438567	Throat	158438567	Throat	HMP
+Tongue.dorsum__158438567	Tongue dorsum	158438567	Tongue dorsum	HMP
+Anterior.nares__158458797	Anterior nares	158458797	Anterior nares	HMP
+Attached.Keratinized.gingiva__158458797	Attached/Keratinized gingiva	158458797	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158458797	Buccal mucosa	158458797	Buccal mucosa	HMP
+Hard.palate__158458797	Hard palate	158458797	Hard palate	HMP
+L_Antecubital.fossa__158458797	L_Antecubital fossa	158458797	L_Antecubital fossa	HMP
+Mid.vagina__158458797	Mid vagina	158458797	Mid vagina	HMP
+Palatine.Tonsils__158458797	Palatine Tonsils	158458797	Palatine Tonsils	HMP
+Posterior.fornix__158458797	Posterior fornix	158458797	Posterior fornix	HMP
+R_Antecubital.fossa__158458797	R_Antecubital fossa	158458797	R_Antecubital fossa	HMP
+Retroauricular.crease__158458797	Retroauricular crease	158458797	Retroauricular crease	HMP
+Saliva__158458797	Saliva	158458797	Saliva	HMP
+Stool__158458797	Stool	158458797	Stool	HMP
+Subgingival.plaque__158458797	Subgingival plaque	158458797	Subgingival plaque	HMP
+Supragingival.plaque__158458797	Supragingival plaque	158458797	Supragingival plaque	HMP
+Throat__158458797	Throat	158458797	Throat	HMP
+Tongue.dorsum__158458797	Tongue dorsum	158458797	Tongue dorsum	HMP
+Vaginal.introitus__158458797	Vaginal introitus	158458797	Vaginal introitus	HMP
+Anterior.nares__158479027	Anterior nares	158479027	Anterior nares	HMP
+Attached.Keratinized.gingiva__158479027	Attached/Keratinized gingiva	158479027	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158479027	Buccal mucosa	158479027	Buccal mucosa	HMP
+Hard.palate__158479027	Hard palate	158479027	Hard palate	HMP
+L_Antecubital.fossa__158479027	L_Antecubital fossa	158479027	L_Antecubital fossa	HMP
+Palatine.Tonsils__158479027	Palatine Tonsils	158479027	Palatine Tonsils	HMP
+Retroauricular.crease__158479027	Retroauricular crease	158479027	Retroauricular crease	HMP
+Saliva__158479027	Saliva	158479027	Saliva	HMP
+Stool__158479027	Stool	158479027	Stool	HMP
+Subgingival.plaque__158479027	Subgingival plaque	158479027	Subgingival plaque	HMP
+Supragingival.plaque__158479027	Supragingival plaque	158479027	Supragingival plaque	HMP
+Throat__158479027	Throat	158479027	Throat	HMP
+Tongue.dorsum__158479027	Tongue dorsum	158479027	Tongue dorsum	HMP
+Anterior.nares__158499257	Anterior nares	158499257	Anterior nares	HMP
+Attached.Keratinized.gingiva__158499257	Attached/Keratinized gingiva	158499257	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158499257	Buccal mucosa	158499257	Buccal mucosa	HMP
+Hard.palate__158499257	Hard palate	158499257	Hard palate	HMP
+L_Antecubital.fossa__158499257	L_Antecubital fossa	158499257	L_Antecubital fossa	HMP
+Palatine.Tonsils__158499257	Palatine Tonsils	158499257	Palatine Tonsils	HMP
+R_Antecubital.fossa__158499257	R_Antecubital fossa	158499257	R_Antecubital fossa	HMP
+Retroauricular.crease__158499257	Retroauricular crease	158499257	Retroauricular crease	HMP
+Saliva__158499257	Saliva	158499257	Saliva	HMP
+Stool__158499257	Stool	158499257	Stool	HMP
+Subgingival.plaque__158499257	Subgingival plaque	158499257	Subgingival plaque	HMP
+Supragingival.plaque__158499257	Supragingival plaque	158499257	Supragingival plaque	HMP
+Throat__158499257	Throat	158499257	Throat	HMP
+Tongue.dorsum__158499257	Tongue dorsum	158499257	Tongue dorsum	HMP
+Anterior.nares__158721788	Anterior nares	158721788	Anterior nares	HMP
+Attached.Keratinized.gingiva__158721788	Attached/Keratinized gingiva	158721788	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158721788	Buccal mucosa	158721788	Buccal mucosa	HMP
+Hard.palate__158721788	Hard palate	158721788	Hard palate	HMP
+L_Antecubital.fossa__158721788	L_Antecubital fossa	158721788	L_Antecubital fossa	HMP
+R_Antecubital.fossa__158721788	R_Antecubital fossa	158721788	R_Antecubital fossa	HMP
+Retroauricular.crease__158721788	Retroauricular crease	158721788	Retroauricular crease	HMP
+Saliva__158721788	Saliva	158721788	Saliva	HMP
+Stool__158721788	Stool	158721788	Stool	HMP
+Subgingival.plaque__158721788	Subgingival plaque	158721788	Subgingival plaque	HMP
+Supragingival.plaque__158721788	Supragingival plaque	158721788	Supragingival plaque	HMP
+Throat__158721788	Throat	158721788	Throat	HMP
+Tongue.dorsum__158721788	Tongue dorsum	158721788	Tongue dorsum	HMP
+Anterior.nares__158742018	Anterior nares	158742018	Anterior nares	HMP
+Attached.Keratinized.gingiva__158742018	Attached/Keratinized gingiva	158742018	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158742018	Buccal mucosa	158742018	Buccal mucosa	HMP
+Hard.palate__158742018	Hard palate	158742018	Hard palate	HMP
+L_Antecubital.fossa__158742018	L_Antecubital fossa	158742018	L_Antecubital fossa	HMP
+Mid.vagina__158742018	Mid vagina	158742018	Mid vagina	HMP
+Palatine.Tonsils__158742018	Palatine Tonsils	158742018	Palatine Tonsils	HMP
+Posterior.fornix__158742018	Posterior fornix	158742018	Posterior fornix	HMP
+R_Antecubital.fossa__158742018	R_Antecubital fossa	158742018	R_Antecubital fossa	HMP
+Retroauricular.crease__158742018	Retroauricular crease	158742018	Retroauricular crease	HMP
+Saliva__158742018	Saliva	158742018	Saliva	HMP
+Stool__158742018	Stool	158742018	Stool	HMP
+Subgingival.plaque__158742018	Subgingival plaque	158742018	Subgingival plaque	HMP
+Supragingival.plaque__158742018	Supragingival plaque	158742018	Supragingival plaque	HMP
+Throat__158742018	Throat	158742018	Throat	HMP
+Tongue.dorsum__158742018	Tongue dorsum	158742018	Tongue dorsum	HMP
+Vaginal.introitus__158742018	Vaginal introitus	158742018	Vaginal introitus	HMP
+Anterior.nares__158802708	Anterior nares	158802708	Anterior nares	HMP
+Attached.Keratinized.gingiva__158802708	Attached/Keratinized gingiva	158802708	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158802708	Buccal mucosa	158802708	Buccal mucosa	HMP
+Hard.palate__158802708	Hard palate	158802708	Hard palate	HMP
+L_Antecubital.fossa__158802708	L_Antecubital fossa	158802708	L_Antecubital fossa	HMP
+Palatine.Tonsils__158802708	Palatine Tonsils	158802708	Palatine Tonsils	HMP
+R_Antecubital.fossa__158802708	R_Antecubital fossa	158802708	R_Antecubital fossa	HMP
+Retroauricular.crease__158802708	Retroauricular crease	158802708	Retroauricular crease	HMP
+Saliva__158802708	Saliva	158802708	Saliva	HMP
+Stool__158802708	Stool	158802708	Stool	HMP
+Subgingival.plaque__158802708	Subgingival plaque	158802708	Subgingival plaque	HMP
+Supragingival.plaque__158802708	Supragingival plaque	158802708	Supragingival plaque	HMP
+Throat__158802708	Throat	158802708	Throat	HMP
+Tongue.dorsum__158802708	Tongue dorsum	158802708	Tongue dorsum	HMP
+Anterior.nares__158822939	Anterior nares	158822939	Anterior nares	HMP
+Attached.Keratinized.gingiva__158822939	Attached/Keratinized gingiva	158822939	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158822939	Buccal mucosa	158822939	Buccal mucosa	HMP
+Hard.palate__158822939	Hard palate	158822939	Hard palate	HMP
+L_Antecubital.fossa__158822939	L_Antecubital fossa	158822939	L_Antecubital fossa	HMP
+Palatine.Tonsils__158822939	Palatine Tonsils	158822939	Palatine Tonsils	HMP
+R_Antecubital.fossa__158822939	R_Antecubital fossa	158822939	R_Antecubital fossa	HMP
+Retroauricular.crease__158822939	Retroauricular crease	158822939	Retroauricular crease	HMP
+Saliva__158822939	Saliva	158822939	Saliva	HMP
+Stool__158822939	Stool	158822939	Stool	HMP
+Subgingival.plaque__158822939	Subgingival plaque	158822939	Subgingival plaque	HMP
+Supragingival.plaque__158822939	Supragingival plaque	158822939	Supragingival plaque	HMP
+Tongue.dorsum__158822939	Tongue dorsum	158822939	Tongue dorsum	HMP
+Anterior.nares__158883629	Anterior nares	158883629	Anterior nares	HMP
+Attached.Keratinized.gingiva__158883629	Attached/Keratinized gingiva	158883629	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158883629	Buccal mucosa	158883629	Buccal mucosa	HMP
+Hard.palate__158883629	Hard palate	158883629	Hard palate	HMP
+L_Antecubital.fossa__158883629	L_Antecubital fossa	158883629	L_Antecubital fossa	HMP
+Mid.vagina__158883629	Mid vagina	158883629	Mid vagina	HMP
+Palatine.Tonsils__158883629	Palatine Tonsils	158883629	Palatine Tonsils	HMP
+Posterior.fornix__158883629	Posterior fornix	158883629	Posterior fornix	HMP
+R_Antecubital.fossa__158883629	R_Antecubital fossa	158883629	R_Antecubital fossa	HMP
+Retroauricular.crease__158883629	Retroauricular crease	158883629	Retroauricular crease	HMP
+Saliva__158883629	Saliva	158883629	Saliva	HMP
+Stool__158883629	Stool	158883629	Stool	HMP
+Subgingival.plaque__158883629	Subgingival plaque	158883629	Subgingival plaque	HMP
+Supragingival.plaque__158883629	Supragingival plaque	158883629	Supragingival plaque	HMP
+Throat__158883629	Throat	158883629	Throat	HMP
+Tongue.dorsum__158883629	Tongue dorsum	158883629	Tongue dorsum	HMP
+Vaginal.introitus__158883629	Vaginal introitus	158883629	Vaginal introitus	HMP
+Anterior.nares__158924089	Anterior nares	158924089	Anterior nares	HMP
+Attached.Keratinized.gingiva__158924089	Attached/Keratinized gingiva	158924089	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158924089	Buccal mucosa	158924089	Buccal mucosa	HMP
+Hard.palate__158924089	Hard palate	158924089	Hard palate	HMP
+L_Antecubital.fossa__158924089	L_Antecubital fossa	158924089	L_Antecubital fossa	HMP
+Palatine.Tonsils__158924089	Palatine Tonsils	158924089	Palatine Tonsils	HMP
+R_Antecubital.fossa__158924089	R_Antecubital fossa	158924089	R_Antecubital fossa	HMP
+Retroauricular.crease__158924089	Retroauricular crease	158924089	Retroauricular crease	HMP
+Saliva__158924089	Saliva	158924089	Saliva	HMP
+Stool__158924089	Stool	158924089	Stool	HMP
+Subgingival.plaque__158924089	Subgingival plaque	158924089	Subgingival plaque	HMP
+Supragingival.plaque__158924089	Supragingival plaque	158924089	Supragingival plaque	HMP
+Throat__158924089	Throat	158924089	Throat	HMP
+Tongue.dorsum__158924089	Tongue dorsum	158924089	Tongue dorsum	HMP
+Anterior.nares__158944319	Anterior nares	158944319	Anterior nares	HMP
+Attached.Keratinized.gingiva__158944319	Attached/Keratinized gingiva	158944319	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158944319	Buccal mucosa	158944319	Buccal mucosa	HMP
+Hard.palate__158944319	Hard palate	158944319	Hard palate	HMP
+L_Antecubital.fossa__158944319	L_Antecubital fossa	158944319	L_Antecubital fossa	HMP
+Mid.vagina__158944319	Mid vagina	158944319	Mid vagina	HMP
+Palatine.Tonsils__158944319	Palatine Tonsils	158944319	Palatine Tonsils	HMP
+Posterior.fornix__158944319	Posterior fornix	158944319	Posterior fornix	HMP
+R_Antecubital.fossa__158944319	R_Antecubital fossa	158944319	R_Antecubital fossa	HMP
+Retroauricular.crease__158944319	Retroauricular crease	158944319	Retroauricular crease	HMP
+Saliva__158944319	Saliva	158944319	Saliva	HMP
+Stool__158944319	Stool	158944319	Stool	HMP
+Subgingival.plaque__158944319	Subgingival plaque	158944319	Subgingival plaque	HMP
+Supragingival.plaque__158944319	Supragingival plaque	158944319	Supragingival plaque	HMP
+Throat__158944319	Throat	158944319	Throat	HMP
+Tongue.dorsum__158944319	Tongue dorsum	158944319	Tongue dorsum	HMP
+Vaginal.introitus__158944319	Vaginal introitus	158944319	Vaginal introitus	HMP
+Anterior.nares__158964549	Anterior nares	158964549	Anterior nares	HMP
+Attached.Keratinized.gingiva__158964549	Attached/Keratinized gingiva	158964549	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158964549	Buccal mucosa	158964549	Buccal mucosa	HMP
+Hard.palate__158964549	Hard palate	158964549	Hard palate	HMP
+L_Antecubital.fossa__158964549	L_Antecubital fossa	158964549	L_Antecubital fossa	HMP
+Palatine.Tonsils__158964549	Palatine Tonsils	158964549	Palatine Tonsils	HMP
+R_Antecubital.fossa__158964549	R_Antecubital fossa	158964549	R_Antecubital fossa	HMP
+Retroauricular.crease__158964549	Retroauricular crease	158964549	Retroauricular crease	HMP
+Saliva__158964549	Saliva	158964549	Saliva	HMP
+Stool__158964549	Stool	158964549	Stool	HMP
+Subgingival.plaque__158964549	Subgingival plaque	158964549	Subgingival plaque	HMP
+Supragingival.plaque__158964549	Supragingival plaque	158964549	Supragingival plaque	HMP
+Throat__158964549	Throat	158964549	Throat	HMP
+Tongue.dorsum__158964549	Tongue dorsum	158964549	Tongue dorsum	HMP
+Anterior.nares__158984779	Anterior nares	158984779	Anterior nares	HMP
+Attached.Keratinized.gingiva__158984779	Attached/Keratinized gingiva	158984779	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__158984779	Buccal mucosa	158984779	Buccal mucosa	HMP
+Hard.palate__158984779	Hard palate	158984779	Hard palate	HMP
+L_Antecubital.fossa__158984779	L_Antecubital fossa	158984779	L_Antecubital fossa	HMP
+Mid.vagina__158984779	Mid vagina	158984779	Mid vagina	HMP
+Palatine.Tonsils__158984779	Palatine Tonsils	158984779	Palatine Tonsils	HMP
+Posterior.fornix__158984779	Posterior fornix	158984779	Posterior fornix	HMP
+R_Antecubital.fossa__158984779	R_Antecubital fossa	158984779	R_Antecubital fossa	HMP
+Retroauricular.crease__158984779	Retroauricular crease	158984779	Retroauricular crease	HMP
+Saliva__158984779	Saliva	158984779	Saliva	HMP
+Subgingival.plaque__158984779	Subgingival plaque	158984779	Subgingival plaque	HMP
+Supragingival.plaque__158984779	Supragingival plaque	158984779	Supragingival plaque	HMP
+Throat__158984779	Throat	158984779	Throat	HMP
+Tongue.dorsum__158984779	Tongue dorsum	158984779	Tongue dorsum	HMP
+Vaginal.introitus__158984779	Vaginal introitus	158984779	Vaginal introitus	HMP
+Anterior.nares__159005010	Anterior nares	159005010	Anterior nares	HMP
+Attached.Keratinized.gingiva__159005010	Attached/Keratinized gingiva	159005010	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159005010	Buccal mucosa	159005010	Buccal mucosa	HMP
+Hard.palate__159005010	Hard palate	159005010	Hard palate	HMP
+L_Antecubital.fossa__159005010	L_Antecubital fossa	159005010	L_Antecubital fossa	HMP
+Mid.vagina__159005010	Mid vagina	159005010	Mid vagina	HMP
+Palatine.Tonsils__159005010	Palatine Tonsils	159005010	Palatine Tonsils	HMP
+Posterior.fornix__159005010	Posterior fornix	159005010	Posterior fornix	HMP
+R_Antecubital.fossa__159005010	R_Antecubital fossa	159005010	R_Antecubital fossa	HMP
+Retroauricular.crease__159005010	Retroauricular crease	159005010	Retroauricular crease	HMP
+Saliva__159005010	Saliva	159005010	Saliva	HMP
+Stool__159005010	Stool	159005010	Stool	HMP
+Subgingival.plaque__159005010	Subgingival plaque	159005010	Subgingival plaque	HMP
+Supragingival.plaque__159005010	Supragingival plaque	159005010	Supragingival plaque	HMP
+Throat__159005010	Throat	159005010	Throat	HMP
+Tongue.dorsum__159005010	Tongue dorsum	159005010	Tongue dorsum	HMP
+Vaginal.introitus__159005010	Vaginal introitus	159005010	Vaginal introitus	HMP
+Anterior.nares__159085930	Anterior nares	159085930	Anterior nares	HMP
+Attached.Keratinized.gingiva__159085930	Attached/Keratinized gingiva	159085930	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159085930	Buccal mucosa	159085930	Buccal mucosa	HMP
+Hard.palate__159085930	Hard palate	159085930	Hard palate	HMP
+L_Antecubital.fossa__159085930	L_Antecubital fossa	159085930	L_Antecubital fossa	HMP
+Mid.vagina__159085930	Mid vagina	159085930	Mid vagina	HMP
+Palatine.Tonsils__159085930	Palatine Tonsils	159085930	Palatine Tonsils	HMP
+Posterior.fornix__159085930	Posterior fornix	159085930	Posterior fornix	HMP
+R_Antecubital.fossa__159085930	R_Antecubital fossa	159085930	R_Antecubital fossa	HMP
+Retroauricular.crease__159085930	Retroauricular crease	159085930	Retroauricular crease	HMP
+Saliva__159085930	Saliva	159085930	Saliva	HMP
+Stool__159085930	Stool	159085930	Stool	HMP
+Subgingival.plaque__159085930	Subgingival plaque	159085930	Subgingival plaque	HMP
+Supragingival.plaque__159085930	Supragingival plaque	159085930	Supragingival plaque	HMP
+Throat__159085930	Throat	159085930	Throat	HMP
+Tongue.dorsum__159085930	Tongue dorsum	159085930	Tongue dorsum	HMP
+Vaginal.introitus__159085930	Vaginal introitus	159085930	Vaginal introitus	HMP
+Anterior.nares__159146620	Anterior nares	159146620	Anterior nares	HMP
+Attached.Keratinized.gingiva__159146620	Attached/Keratinized gingiva	159146620	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159146620	Buccal mucosa	159146620	Buccal mucosa	HMP
+Hard.palate__159146620	Hard palate	159146620	Hard palate	HMP
+L_Antecubital.fossa__159146620	L_Antecubital fossa	159146620	L_Antecubital fossa	HMP
+Palatine.Tonsils__159146620	Palatine Tonsils	159146620	Palatine Tonsils	HMP
+R_Antecubital.fossa__159146620	R_Antecubital fossa	159146620	R_Antecubital fossa	HMP
+Retroauricular.crease__159146620	Retroauricular crease	159146620	Retroauricular crease	HMP
+Saliva__159146620	Saliva	159146620	Saliva	HMP
+Stool__159146620	Stool	159146620	Stool	HMP
+Subgingival.plaque__159146620	Subgingival plaque	159146620	Subgingival plaque	HMP
+Supragingival.plaque__159146620	Supragingival plaque	159146620	Supragingival plaque	HMP
+Throat__159146620	Throat	159146620	Throat	HMP
+Tongue.dorsum__159146620	Tongue dorsum	159146620	Tongue dorsum	HMP
+Anterior.nares__159166850	Anterior nares	159166850	Anterior nares	HMP
+Attached.Keratinized.gingiva__159166850	Attached/Keratinized gingiva	159166850	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159166850	Buccal mucosa	159166850	Buccal mucosa	HMP
+Hard.palate__159166850	Hard palate	159166850	Hard palate	HMP
+L_Antecubital.fossa__159166850	L_Antecubital fossa	159166850	L_Antecubital fossa	HMP
+Palatine.Tonsils__159166850	Palatine Tonsils	159166850	Palatine Tonsils	HMP
+R_Antecubital.fossa__159166850	R_Antecubital fossa	159166850	R_Antecubital fossa	HMP
+Retroauricular.crease__159166850	Retroauricular crease	159166850	Retroauricular crease	HMP
+Saliva__159166850	Saliva	159166850	Saliva	HMP
+Stool__159166850	Stool	159166850	Stool	HMP
+Subgingival.plaque__159166850	Subgingival plaque	159166850	Subgingival plaque	HMP
+Supragingival.plaque__159166850	Supragingival plaque	159166850	Supragingival plaque	HMP
+Throat__159166850	Throat	159166850	Throat	HMP
+Tongue.dorsum__159166850	Tongue dorsum	159166850	Tongue dorsum	HMP
+Anterior.nares__159207311	Anterior nares	159207311	Anterior nares	HMP
+Attached.Keratinized.gingiva__159207311	Attached/Keratinized gingiva	159207311	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159207311	Buccal mucosa	159207311	Buccal mucosa	HMP
+Hard.palate__159207311	Hard palate	159207311	Hard palate	HMP
+L_Antecubital.fossa__159207311	L_Antecubital fossa	159207311	L_Antecubital fossa	HMP
+Palatine.Tonsils__159207311	Palatine Tonsils	159207311	Palatine Tonsils	HMP
+R_Antecubital.fossa__159207311	R_Antecubital fossa	159207311	R_Antecubital fossa	HMP
+Retroauricular.crease__159207311	Retroauricular crease	159207311	Retroauricular crease	HMP
+Saliva__159207311	Saliva	159207311	Saliva	HMP
+Stool__159207311	Stool	159207311	Stool	HMP
+Subgingival.plaque__159207311	Subgingival plaque	159207311	Subgingival plaque	HMP
+Supragingival.plaque__159207311	Supragingival plaque	159207311	Supragingival plaque	HMP
+Throat__159207311	Throat	159207311	Throat	HMP
+Tongue.dorsum__159207311	Tongue dorsum	159207311	Tongue dorsum	HMP
+Anterior.nares__159227541	Anterior nares	159227541	Anterior nares	HMP
+Attached.Keratinized.gingiva__159227541	Attached/Keratinized gingiva	159227541	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159227541	Buccal mucosa	159227541	Buccal mucosa	HMP
+Hard.palate__159227541	Hard palate	159227541	Hard palate	HMP
+L_Antecubital.fossa__159227541	L_Antecubital fossa	159227541	L_Antecubital fossa	HMP
+Mid.vagina__159227541	Mid vagina	159227541	Mid vagina	HMP
+Palatine.Tonsils__159227541	Palatine Tonsils	159227541	Palatine Tonsils	HMP
+Posterior.fornix__159227541	Posterior fornix	159227541	Posterior fornix	HMP
+R_Antecubital.fossa__159227541	R_Antecubital fossa	159227541	R_Antecubital fossa	HMP
+Retroauricular.crease__159227541	Retroauricular crease	159227541	Retroauricular crease	HMP
+Saliva__159227541	Saliva	159227541	Saliva	HMP
+Stool__159227541	Stool	159227541	Stool	HMP
+Subgingival.plaque__159227541	Subgingival plaque	159227541	Subgingival plaque	HMP
+Supragingival.plaque__159227541	Supragingival plaque	159227541	Supragingival plaque	HMP
+Throat__159227541	Throat	159227541	Throat	HMP
+Tongue.dorsum__159227541	Tongue dorsum	159227541	Tongue dorsum	HMP
+Vaginal.introitus__159227541	Vaginal introitus	159227541	Vaginal introitus	HMP
+Anterior.nares__159247771	Anterior nares	159247771	Anterior nares	HMP
+Attached.Keratinized.gingiva__159247771	Attached/Keratinized gingiva	159247771	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159247771	Buccal mucosa	159247771	Buccal mucosa	HMP
+Hard.palate__159247771	Hard palate	159247771	Hard palate	HMP
+L_Antecubital.fossa__159247771	L_Antecubital fossa	159247771	L_Antecubital fossa	HMP
+Mid.vagina__159247771	Mid vagina	159247771	Mid vagina	HMP
+Palatine.Tonsils__159247771	Palatine Tonsils	159247771	Palatine Tonsils	HMP
+Posterior.fornix__159247771	Posterior fornix	159247771	Posterior fornix	HMP
+R_Antecubital.fossa__159247771	R_Antecubital fossa	159247771	R_Antecubital fossa	HMP
+Retroauricular.crease__159247771	Retroauricular crease	159247771	Retroauricular crease	HMP
+Saliva__159247771	Saliva	159247771	Saliva	HMP
+Stool__159247771	Stool	159247771	Stool	HMP
+Subgingival.plaque__159247771	Subgingival plaque	159247771	Subgingival plaque	HMP
+Supragingival.plaque__159247771	Supragingival plaque	159247771	Supragingival plaque	HMP
+Throat__159247771	Throat	159247771	Throat	HMP
+Tongue.dorsum__159247771	Tongue dorsum	159247771	Tongue dorsum	HMP
+Vaginal.introitus__159247771	Vaginal introitus	159247771	Vaginal introitus	HMP
+Anterior.nares__159268001	Anterior nares	159268001	Anterior nares	HMP
+Attached.Keratinized.gingiva__159268001	Attached/Keratinized gingiva	159268001	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159268001	Buccal mucosa	159268001	Buccal mucosa	HMP
+Hard.palate__159268001	Hard palate	159268001	Hard palate	HMP
+L_Antecubital.fossa__159268001	L_Antecubital fossa	159268001	L_Antecubital fossa	HMP
+Palatine.Tonsils__159268001	Palatine Tonsils	159268001	Palatine Tonsils	HMP
+R_Antecubital.fossa__159268001	R_Antecubital fossa	159268001	R_Antecubital fossa	HMP
+Retroauricular.crease__159268001	Retroauricular crease	159268001	Retroauricular crease	HMP
+Saliva__159268001	Saliva	159268001	Saliva	HMP
+Stool__159268001	Stool	159268001	Stool	HMP
+Subgingival.plaque__159268001	Subgingival plaque	159268001	Subgingival plaque	HMP
+Supragingival.plaque__159268001	Supragingival plaque	159268001	Supragingival plaque	HMP
+Throat__159268001	Throat	159268001	Throat	HMP
+Tongue.dorsum__159268001	Tongue dorsum	159268001	Tongue dorsum	HMP
+Anterior.nares__159288231	Anterior nares	159288231	Anterior nares	HMP
+Attached.Keratinized.gingiva__159288231	Attached/Keratinized gingiva	159288231	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159288231	Buccal mucosa	159288231	Buccal mucosa	HMP
+Hard.palate__159288231	Hard palate	159288231	Hard palate	HMP
+L_Antecubital.fossa__159288231	L_Antecubital fossa	159288231	L_Antecubital fossa	HMP
+Palatine.Tonsils__159288231	Palatine Tonsils	159288231	Palatine Tonsils	HMP
+R_Antecubital.fossa__159288231	R_Antecubital fossa	159288231	R_Antecubital fossa	HMP
+Retroauricular.crease__159288231	Retroauricular crease	159288231	Retroauricular crease	HMP
+Saliva__159288231	Saliva	159288231	Saliva	HMP
+Stool__159288231	Stool	159288231	Stool	HMP
+Subgingival.plaque__159288231	Subgingival plaque	159288231	Subgingival plaque	HMP
+Supragingival.plaque__159288231	Supragingival plaque	159288231	Supragingival plaque	HMP
+Throat__159288231	Throat	159288231	Throat	HMP
+Tongue.dorsum__159288231	Tongue dorsum	159288231	Tongue dorsum	HMP
+Anterior.nares__159308461	Anterior nares	159308461	Anterior nares	HMP
+Attached.Keratinized.gingiva__159308461	Attached/Keratinized gingiva	159308461	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159308461	Buccal mucosa	159308461	Buccal mucosa	HMP
+Hard.palate__159308461	Hard palate	159308461	Hard palate	HMP
+L_Antecubital.fossa__159308461	L_Antecubital fossa	159308461	L_Antecubital fossa	HMP
+Palatine.Tonsils__159308461	Palatine Tonsils	159308461	Palatine Tonsils	HMP
+R_Antecubital.fossa__159308461	R_Antecubital fossa	159308461	R_Antecubital fossa	HMP
+Retroauricular.crease__159308461	Retroauricular crease	159308461	Retroauricular crease	HMP
+Saliva__159308461	Saliva	159308461	Saliva	HMP
+Stool__159308461	Stool	159308461	Stool	HMP
+Subgingival.plaque__159308461	Subgingival plaque	159308461	Subgingival plaque	HMP
+Supragingival.plaque__159308461	Supragingival plaque	159308461	Supragingival plaque	HMP
+Throat__159308461	Throat	159308461	Throat	HMP
+Tongue.dorsum__159308461	Tongue dorsum	159308461	Tongue dorsum	HMP
+Anterior.nares__159328691	Anterior nares	159328691	Anterior nares	HMP
+Attached.Keratinized.gingiva__159328691	Attached/Keratinized gingiva	159328691	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159328691	Buccal mucosa	159328691	Buccal mucosa	HMP
+Hard.palate__159328691	Hard palate	159328691	Hard palate	HMP
+Palatine.Tonsils__159328691	Palatine Tonsils	159328691	Palatine Tonsils	HMP
+Saliva__159328691	Saliva	159328691	Saliva	HMP
+Stool__159328691	Stool	159328691	Stool	HMP
+Subgingival.plaque__159328691	Subgingival plaque	159328691	Subgingival plaque	HMP
+Supragingival.plaque__159328691	Supragingival plaque	159328691	Supragingival plaque	HMP
+Throat__159328691	Throat	159328691	Throat	HMP
+Tongue.dorsum__159328691	Tongue dorsum	159328691	Tongue dorsum	HMP
+Anterior.nares__159369152	Anterior nares	159369152	Anterior nares	HMP
+Attached.Keratinized.gingiva__159369152	Attached/Keratinized gingiva	159369152	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159369152	Buccal mucosa	159369152	Buccal mucosa	HMP
+Hard.palate__159369152	Hard palate	159369152	Hard palate	HMP
+L_Antecubital.fossa__159369152	L_Antecubital fossa	159369152	L_Antecubital fossa	HMP
+Palatine.Tonsils__159369152	Palatine Tonsils	159369152	Palatine Tonsils	HMP
+R_Antecubital.fossa__159369152	R_Antecubital fossa	159369152	R_Antecubital fossa	HMP
+Retroauricular.crease__159369152	Retroauricular crease	159369152	Retroauricular crease	HMP
+Saliva__159369152	Saliva	159369152	Saliva	HMP
+Stool__159369152	Stool	159369152	Stool	HMP
+Subgingival.plaque__159369152	Subgingival plaque	159369152	Subgingival plaque	HMP
+Supragingival.plaque__159369152	Supragingival plaque	159369152	Supragingival plaque	HMP
+Throat__159369152	Throat	159369152	Throat	HMP
+Tongue.dorsum__159369152	Tongue dorsum	159369152	Tongue dorsum	HMP
+Anterior.nares__159389382	Anterior nares	159389382	Anterior nares	HMP
+Attached.Keratinized.gingiva__159389382	Attached/Keratinized gingiva	159389382	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159389382	Buccal mucosa	159389382	Buccal mucosa	HMP
+Hard.palate__159389382	Hard palate	159389382	Hard palate	HMP
+L_Antecubital.fossa__159389382	L_Antecubital fossa	159389382	L_Antecubital fossa	HMP
+Palatine.Tonsils__159389382	Palatine Tonsils	159389382	Palatine Tonsils	HMP
+R_Antecubital.fossa__159389382	R_Antecubital fossa	159389382	R_Antecubital fossa	HMP
+Retroauricular.crease__159389382	Retroauricular crease	159389382	Retroauricular crease	HMP
+Saliva__159389382	Saliva	159389382	Saliva	HMP
+Stool__159389382	Stool	159389382	Stool	HMP
+Subgingival.plaque__159389382	Subgingival plaque	159389382	Subgingival plaque	HMP
+Supragingival.plaque__159389382	Supragingival plaque	159389382	Supragingival plaque	HMP
+Throat__159389382	Throat	159389382	Throat	HMP
+Tongue.dorsum__159389382	Tongue dorsum	159389382	Tongue dorsum	HMP
+Anterior.nares__159429842	Anterior nares	159429842	Anterior nares	HMP
+Attached.Keratinized.gingiva__159429842	Attached/Keratinized gingiva	159429842	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159429842	Buccal mucosa	159429842	Buccal mucosa	HMP
+Hard.palate__159429842	Hard palate	159429842	Hard palate	HMP
+L_Antecubital.fossa__159429842	L_Antecubital fossa	159429842	L_Antecubital fossa	HMP
+Palatine.Tonsils__159429842	Palatine Tonsils	159429842	Palatine Tonsils	HMP
+R_Antecubital.fossa__159429842	R_Antecubital fossa	159429842	R_Antecubital fossa	HMP
+Retroauricular.crease__159429842	Retroauricular crease	159429842	Retroauricular crease	HMP
+Saliva__159429842	Saliva	159429842	Saliva	HMP
+Stool__159429842	Stool	159429842	Stool	HMP
+Subgingival.plaque__159429842	Subgingival plaque	159429842	Subgingival plaque	HMP
+Supragingival.plaque__159429842	Supragingival plaque	159429842	Supragingival plaque	HMP
+Throat__159429842	Throat	159429842	Throat	HMP
+Tongue.dorsum__159429842	Tongue dorsum	159429842	Tongue dorsum	HMP
+Anterior.nares__159450072	Anterior nares	159450072	Anterior nares	HMP
+Attached.Keratinized.gingiva__159450072	Attached/Keratinized gingiva	159450072	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159450072	Buccal mucosa	159450072	Buccal mucosa	HMP
+Hard.palate__159450072	Hard palate	159450072	Hard palate	HMP
+L_Antecubital.fossa__159450072	L_Antecubital fossa	159450072	L_Antecubital fossa	HMP
+Palatine.Tonsils__159450072	Palatine Tonsils	159450072	Palatine Tonsils	HMP
+R_Antecubital.fossa__159450072	R_Antecubital fossa	159450072	R_Antecubital fossa	HMP
+Retroauricular.crease__159450072	Retroauricular crease	159450072	Retroauricular crease	HMP
+Saliva__159450072	Saliva	159450072	Saliva	HMP
+Stool__159450072	Stool	159450072	Stool	HMP
+Subgingival.plaque__159450072	Subgingival plaque	159450072	Subgingival plaque	HMP
+Supragingival.plaque__159450072	Supragingival plaque	159450072	Supragingival plaque	HMP
+Throat__159450072	Throat	159450072	Throat	HMP
+Tongue.dorsum__159450072	Tongue dorsum	159450072	Tongue dorsum	HMP
+Anterior.nares__159470302	Anterior nares	159470302	Anterior nares	HMP
+Attached.Keratinized.gingiva__159470302	Attached/Keratinized gingiva	159470302	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159470302	Buccal mucosa	159470302	Buccal mucosa	HMP
+Hard.palate__159470302	Hard palate	159470302	Hard palate	HMP
+L_Antecubital.fossa__159470302	L_Antecubital fossa	159470302	L_Antecubital fossa	HMP
+Mid.vagina__159470302	Mid vagina	159470302	Mid vagina	HMP
+Palatine.Tonsils__159470302	Palatine Tonsils	159470302	Palatine Tonsils	HMP
+Posterior.fornix__159470302	Posterior fornix	159470302	Posterior fornix	HMP
+R_Antecubital.fossa__159470302	R_Antecubital fossa	159470302	R_Antecubital fossa	HMP
+Retroauricular.crease__159470302	Retroauricular crease	159470302	Retroauricular crease	HMP
+Saliva__159470302	Saliva	159470302	Saliva	HMP
+Stool__159470302	Stool	159470302	Stool	HMP
+Subgingival.plaque__159470302	Subgingival plaque	159470302	Subgingival plaque	HMP
+Supragingival.plaque__159470302	Supragingival plaque	159470302	Supragingival plaque	HMP
+Throat__159470302	Throat	159470302	Throat	HMP
+Tongue.dorsum__159470302	Tongue dorsum	159470302	Tongue dorsum	HMP
+Vaginal.introitus__159470302	Vaginal introitus	159470302	Vaginal introitus	HMP
+Anterior.nares__159490532	Anterior nares	159490532	Anterior nares	HMP
+Attached.Keratinized.gingiva__159490532	Attached/Keratinized gingiva	159490532	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159490532	Buccal mucosa	159490532	Buccal mucosa	HMP
+Hard.palate__159490532	Hard palate	159490532	Hard palate	HMP
+L_Antecubital.fossa__159490532	L_Antecubital fossa	159490532	L_Antecubital fossa	HMP
+Palatine.Tonsils__159490532	Palatine Tonsils	159490532	Palatine Tonsils	HMP
+R_Antecubital.fossa__159490532	R_Antecubital fossa	159490532	R_Antecubital fossa	HMP
+Retroauricular.crease__159490532	Retroauricular crease	159490532	Retroauricular crease	HMP
+Saliva__159490532	Saliva	159490532	Saliva	HMP
+Stool__159490532	Stool	159490532	Stool	HMP
+Subgingival.plaque__159490532	Subgingival plaque	159490532	Subgingival plaque	HMP
+Supragingival.plaque__159490532	Supragingival plaque	159490532	Supragingival plaque	HMP
+Throat__159490532	Throat	159490532	Throat	HMP
+Tongue.dorsum__159490532	Tongue dorsum	159490532	Tongue dorsum	HMP
+Anterior.nares__159510762	Anterior nares	159510762	Anterior nares	HMP
+Attached.Keratinized.gingiva__159510762	Attached/Keratinized gingiva	159510762	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159510762	Buccal mucosa	159510762	Buccal mucosa	HMP
+Hard.palate__159510762	Hard palate	159510762	Hard palate	HMP
+L_Antecubital.fossa__159510762	L_Antecubital fossa	159510762	L_Antecubital fossa	HMP
+Palatine.Tonsils__159510762	Palatine Tonsils	159510762	Palatine Tonsils	HMP
+R_Antecubital.fossa__159510762	R_Antecubital fossa	159510762	R_Antecubital fossa	HMP
+Retroauricular.crease__159510762	Retroauricular crease	159510762	Retroauricular crease	HMP
+Saliva__159510762	Saliva	159510762	Saliva	HMP
+Stool__159510762	Stool	159510762	Stool	HMP
+Subgingival.plaque__159510762	Subgingival plaque	159510762	Subgingival plaque	HMP
+Supragingival.plaque__159510762	Supragingival plaque	159510762	Supragingival plaque	HMP
+Throat__159510762	Throat	159510762	Throat	HMP
+Tongue.dorsum__159510762	Tongue dorsum	159510762	Tongue dorsum	HMP
+Anterior.nares__159551223	Anterior nares	159551223	Anterior nares	HMP
+Attached.Keratinized.gingiva__159551223	Attached/Keratinized gingiva	159551223	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159551223	Buccal mucosa	159551223	Buccal mucosa	HMP
+Hard.palate__159551223	Hard palate	159551223	Hard palate	HMP
+L_Antecubital.fossa__159551223	L_Antecubital fossa	159551223	L_Antecubital fossa	HMP
+Palatine.Tonsils__159551223	Palatine Tonsils	159551223	Palatine Tonsils	HMP
+R_Antecubital.fossa__159551223	R_Antecubital fossa	159551223	R_Antecubital fossa	HMP
+Retroauricular.crease__159551223	Retroauricular crease	159551223	Retroauricular crease	HMP
+Saliva__159551223	Saliva	159551223	Saliva	HMP
+Stool__159551223	Stool	159551223	Stool	HMP
+Subgingival.plaque__159551223	Subgingival plaque	159551223	Subgingival plaque	HMP
+Supragingival.plaque__159551223	Supragingival plaque	159551223	Supragingival plaque	HMP
+Throat__159551223	Throat	159551223	Throat	HMP
+Tongue.dorsum__159551223	Tongue dorsum	159551223	Tongue dorsum	HMP
+Anterior.nares__159571453	Anterior nares	159571453	Anterior nares	HMP
+Attached.Keratinized.gingiva__159571453	Attached/Keratinized gingiva	159571453	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159571453	Buccal mucosa	159571453	Buccal mucosa	HMP
+Hard.palate__159571453	Hard palate	159571453	Hard palate	HMP
+L_Antecubital.fossa__159571453	L_Antecubital fossa	159571453	L_Antecubital fossa	HMP
+Palatine.Tonsils__159571453	Palatine Tonsils	159571453	Palatine Tonsils	HMP
+R_Antecubital.fossa__159571453	R_Antecubital fossa	159571453	R_Antecubital fossa	HMP
+Retroauricular.crease__159571453	Retroauricular crease	159571453	Retroauricular crease	HMP
+Saliva__159571453	Saliva	159571453	Saliva	HMP
+Stool__159571453	Stool	159571453	Stool	HMP
+Subgingival.plaque__159571453	Subgingival plaque	159571453	Subgingival plaque	HMP
+Supragingival.plaque__159571453	Supragingival plaque	159571453	Supragingival plaque	HMP
+Throat__159571453	Throat	159571453	Throat	HMP
+Tongue.dorsum__159571453	Tongue dorsum	159571453	Tongue dorsum	HMP
+Anterior.nares__159591683	Anterior nares	159591683	Anterior nares	HMP
+Attached.Keratinized.gingiva__159591683	Attached/Keratinized gingiva	159591683	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159591683	Buccal mucosa	159591683	Buccal mucosa	HMP
+Hard.palate__159591683	Hard palate	159591683	Hard palate	HMP
+L_Antecubital.fossa__159591683	L_Antecubital fossa	159591683	L_Antecubital fossa	HMP
+Palatine.Tonsils__159591683	Palatine Tonsils	159591683	Palatine Tonsils	HMP
+R_Antecubital.fossa__159591683	R_Antecubital fossa	159591683	R_Antecubital fossa	HMP
+Retroauricular.crease__159591683	Retroauricular crease	159591683	Retroauricular crease	HMP
+Saliva__159591683	Saliva	159591683	Saliva	HMP
+Stool__159591683	Stool	159591683	Stool	HMP
+Subgingival.plaque__159591683	Subgingival plaque	159591683	Subgingival plaque	HMP
+Supragingival.plaque__159591683	Supragingival plaque	159591683	Supragingival plaque	HMP
+Throat__159591683	Throat	159591683	Throat	HMP
+Tongue.dorsum__159591683	Tongue dorsum	159591683	Tongue dorsum	HMP
+Anterior.nares__159611913	Anterior nares	159611913	Anterior nares	HMP
+Attached.Keratinized.gingiva__159611913	Attached/Keratinized gingiva	159611913	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159611913	Buccal mucosa	159611913	Buccal mucosa	HMP
+Hard.palate__159611913	Hard palate	159611913	Hard palate	HMP
+L_Antecubital.fossa__159611913	L_Antecubital fossa	159611913	L_Antecubital fossa	HMP
+Palatine.Tonsils__159611913	Palatine Tonsils	159611913	Palatine Tonsils	HMP
+R_Antecubital.fossa__159611913	R_Antecubital fossa	159611913	R_Antecubital fossa	HMP
+Retroauricular.crease__159611913	Retroauricular crease	159611913	Retroauricular crease	HMP
+Saliva__159611913	Saliva	159611913	Saliva	HMP
+Stool__159611913	Stool	159611913	Stool	HMP
+Subgingival.plaque__159611913	Subgingival plaque	159611913	Subgingival plaque	HMP
+Supragingival.plaque__159611913	Supragingival plaque	159611913	Supragingival plaque	HMP
+Throat__159611913	Throat	159611913	Throat	HMP
+Tongue.dorsum__159611913	Tongue dorsum	159611913	Tongue dorsum	HMP
+Anterior.nares__159632143	Anterior nares	159632143	Anterior nares	HMP
+Attached.Keratinized.gingiva__159632143	Attached/Keratinized gingiva	159632143	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159632143	Buccal mucosa	159632143	Buccal mucosa	HMP
+Hard.palate__159632143	Hard palate	159632143	Hard palate	HMP
+L_Antecubital.fossa__159632143	L_Antecubital fossa	159632143	L_Antecubital fossa	HMP
+Palatine.Tonsils__159632143	Palatine Tonsils	159632143	Palatine Tonsils	HMP
+R_Antecubital.fossa__159632143	R_Antecubital fossa	159632143	R_Antecubital fossa	HMP
+Retroauricular.crease__159632143	Retroauricular crease	159632143	Retroauricular crease	HMP
+Saliva__159632143	Saliva	159632143	Saliva	HMP
+Stool__159632143	Stool	159632143	Stool	HMP
+Subgingival.plaque__159632143	Subgingival plaque	159632143	Subgingival plaque	HMP
+Supragingival.plaque__159632143	Supragingival plaque	159632143	Supragingival plaque	HMP
+Throat__159632143	Throat	159632143	Throat	HMP
+Tongue.dorsum__159632143	Tongue dorsum	159632143	Tongue dorsum	HMP
+Anterior.nares__159672603	Anterior nares	159672603	Anterior nares	HMP
+Attached.Keratinized.gingiva__159672603	Attached/Keratinized gingiva	159672603	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159672603	Buccal mucosa	159672603	Buccal mucosa	HMP
+Hard.palate__159672603	Hard palate	159672603	Hard palate	HMP
+L_Antecubital.fossa__159672603	L_Antecubital fossa	159672603	L_Antecubital fossa	HMP
+Palatine.Tonsils__159672603	Palatine Tonsils	159672603	Palatine Tonsils	HMP
+R_Antecubital.fossa__159672603	R_Antecubital fossa	159672603	R_Antecubital fossa	HMP
+Retroauricular.crease__159672603	Retroauricular crease	159672603	Retroauricular crease	HMP
+Saliva__159672603	Saliva	159672603	Saliva	HMP
+Stool__159672603	Stool	159672603	Stool	HMP
+Subgingival.plaque__159672603	Subgingival plaque	159672603	Subgingival plaque	HMP
+Supragingival.plaque__159672603	Supragingival plaque	159672603	Supragingival plaque	HMP
+Throat__159672603	Throat	159672603	Throat	HMP
+Tongue.dorsum__159672603	Tongue dorsum	159672603	Tongue dorsum	HMP
+Anterior.nares__159713063	Anterior nares	159713063	Anterior nares	HMP
+Attached.Keratinized.gingiva__159713063	Attached/Keratinized gingiva	159713063	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159713063	Buccal mucosa	159713063	Buccal mucosa	HMP
+Hard.palate__159713063	Hard palate	159713063	Hard palate	HMP
+L_Antecubital.fossa__159713063	L_Antecubital fossa	159713063	L_Antecubital fossa	HMP
+Mid.vagina__159713063	Mid vagina	159713063	Mid vagina	HMP
+Palatine.Tonsils__159713063	Palatine Tonsils	159713063	Palatine Tonsils	HMP
+Posterior.fornix__159713063	Posterior fornix	159713063	Posterior fornix	HMP
+R_Antecubital.fossa__159713063	R_Antecubital fossa	159713063	R_Antecubital fossa	HMP
+Retroauricular.crease__159713063	Retroauricular crease	159713063	Retroauricular crease	HMP
+Saliva__159713063	Saliva	159713063	Saliva	HMP
+Stool__159713063	Stool	159713063	Stool	HMP
+Subgingival.plaque__159713063	Subgingival plaque	159713063	Subgingival plaque	HMP
+Supragingival.plaque__159713063	Supragingival plaque	159713063	Supragingival plaque	HMP
+Throat__159713063	Throat	159713063	Throat	HMP
+Tongue.dorsum__159713063	Tongue dorsum	159713063	Tongue dorsum	HMP
+Vaginal.introitus__159713063	Vaginal introitus	159713063	Vaginal introitus	HMP
+Anterior.nares__159733294	Anterior nares	159733294	Anterior nares	HMP
+Attached.Keratinized.gingiva__159733294	Attached/Keratinized gingiva	159733294	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159733294	Buccal mucosa	159733294	Buccal mucosa	HMP
+Hard.palate__159733294	Hard palate	159733294	Hard palate	HMP
+L_Antecubital.fossa__159733294	L_Antecubital fossa	159733294	L_Antecubital fossa	HMP
+Mid.vagina__159733294	Mid vagina	159733294	Mid vagina	HMP
+Palatine.Tonsils__159733294	Palatine Tonsils	159733294	Palatine Tonsils	HMP
+Posterior.fornix__159733294	Posterior fornix	159733294	Posterior fornix	HMP
+Retroauricular.crease__159733294	Retroauricular crease	159733294	Retroauricular crease	HMP
+Saliva__159733294	Saliva	159733294	Saliva	HMP
+Stool__159733294	Stool	159733294	Stool	HMP
+Subgingival.plaque__159733294	Subgingival plaque	159733294	Subgingival plaque	HMP
+Supragingival.plaque__159733294	Supragingival plaque	159733294	Supragingival plaque	HMP
+Throat__159733294	Throat	159733294	Throat	HMP
+Tongue.dorsum__159733294	Tongue dorsum	159733294	Tongue dorsum	HMP
+Vaginal.introitus__159733294	Vaginal introitus	159733294	Vaginal introitus	HMP
+Anterior.nares__159753524	Anterior nares	159753524	Anterior nares	HMP
+Attached.Keratinized.gingiva__159753524	Attached/Keratinized gingiva	159753524	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159753524	Buccal mucosa	159753524	Buccal mucosa	HMP
+Hard.palate__159753524	Hard palate	159753524	Hard palate	HMP
+L_Antecubital.fossa__159753524	L_Antecubital fossa	159753524	L_Antecubital fossa	HMP
+Mid.vagina__159753524	Mid vagina	159753524	Mid vagina	HMP
+Palatine.Tonsils__159753524	Palatine Tonsils	159753524	Palatine Tonsils	HMP
+Posterior.fornix__159753524	Posterior fornix	159753524	Posterior fornix	HMP
+R_Antecubital.fossa__159753524	R_Antecubital fossa	159753524	R_Antecubital fossa	HMP
+Retroauricular.crease__159753524	Retroauricular crease	159753524	Retroauricular crease	HMP
+Saliva__159753524	Saliva	159753524	Saliva	HMP
+Stool__159753524	Stool	159753524	Stool	HMP
+Subgingival.plaque__159753524	Subgingival plaque	159753524	Subgingival plaque	HMP
+Supragingival.plaque__159753524	Supragingival plaque	159753524	Supragingival plaque	HMP
+Throat__159753524	Throat	159753524	Throat	HMP
+Tongue.dorsum__159753524	Tongue dorsum	159753524	Tongue dorsum	HMP
+Vaginal.introitus__159753524	Vaginal introitus	159753524	Vaginal introitus	HMP
+Anterior.nares__159814214	Anterior nares	159814214	Anterior nares	HMP
+Attached.Keratinized.gingiva__159814214	Attached/Keratinized gingiva	159814214	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159814214	Buccal mucosa	159814214	Buccal mucosa	HMP
+Hard.palate__159814214	Hard palate	159814214	Hard palate	HMP
+L_Antecubital.fossa__159814214	L_Antecubital fossa	159814214	L_Antecubital fossa	HMP
+Palatine.Tonsils__159814214	Palatine Tonsils	159814214	Palatine Tonsils	HMP
+R_Antecubital.fossa__159814214	R_Antecubital fossa	159814214	R_Antecubital fossa	HMP
+Retroauricular.crease__159814214	Retroauricular crease	159814214	Retroauricular crease	HMP
+Saliva__159814214	Saliva	159814214	Saliva	HMP
+Stool__159814214	Stool	159814214	Stool	HMP
+Subgingival.plaque__159814214	Subgingival plaque	159814214	Subgingival plaque	HMP
+Supragingival.plaque__159814214	Supragingival plaque	159814214	Supragingival plaque	HMP
+Throat__159814214	Throat	159814214	Throat	HMP
+Tongue.dorsum__159814214	Tongue dorsum	159814214	Tongue dorsum	HMP
+Anterior.nares__159915365	Anterior nares	159915365	Anterior nares	HMP
+Attached.Keratinized.gingiva__159915365	Attached/Keratinized gingiva	159915365	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__159915365	Buccal mucosa	159915365	Buccal mucosa	HMP
+Hard.palate__159915365	Hard palate	159915365	Hard palate	HMP
+L_Antecubital.fossa__159915365	L_Antecubital fossa	159915365	L_Antecubital fossa	HMP
+Mid.vagina__159915365	Mid vagina	159915365	Mid vagina	HMP
+Palatine.Tonsils__159915365	Palatine Tonsils	159915365	Palatine Tonsils	HMP
+Posterior.fornix__159915365	Posterior fornix	159915365	Posterior fornix	HMP
+R_Antecubital.fossa__159915365	R_Antecubital fossa	159915365	R_Antecubital fossa	HMP
+Retroauricular.crease__159915365	Retroauricular crease	159915365	Retroauricular crease	HMP
+Saliva__159915365	Saliva	159915365	Saliva	HMP
+Stool__159915365	Stool	159915365	Stool	HMP
+Subgingival.plaque__159915365	Subgingival plaque	159915365	Subgingival plaque	HMP
+Supragingival.plaque__159915365	Supragingival plaque	159915365	Supragingival plaque	HMP
+Throat__159915365	Throat	159915365	Throat	HMP
+Tongue.dorsum__159915365	Tongue dorsum	159915365	Tongue dorsum	HMP
+Vaginal.introitus__159915365	Vaginal introitus	159915365	Vaginal introitus	HMP
+Anterior.nares__160016515	Anterior nares	160016515	Anterior nares	HMP
+Attached.Keratinized.gingiva__160016515	Attached/Keratinized gingiva	160016515	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160016515	Buccal mucosa	160016515	Buccal mucosa	HMP
+Hard.palate__160016515	Hard palate	160016515	Hard palate	HMP
+L_Antecubital.fossa__160016515	L_Antecubital fossa	160016515	L_Antecubital fossa	HMP
+Mid.vagina__160016515	Mid vagina	160016515	Mid vagina	HMP
+Palatine.Tonsils__160016515	Palatine Tonsils	160016515	Palatine Tonsils	HMP
+Posterior.fornix__160016515	Posterior fornix	160016515	Posterior fornix	HMP
+R_Antecubital.fossa__160016515	R_Antecubital fossa	160016515	R_Antecubital fossa	HMP
+Retroauricular.crease__160016515	Retroauricular crease	160016515	Retroauricular crease	HMP
+Saliva__160016515	Saliva	160016515	Saliva	HMP
+Stool__160016515	Stool	160016515	Stool	HMP
+Subgingival.plaque__160016515	Subgingival plaque	160016515	Subgingival plaque	HMP
+Supragingival.plaque__160016515	Supragingival plaque	160016515	Supragingival plaque	HMP
+Throat__160016515	Throat	160016515	Throat	HMP
+Tongue.dorsum__160016515	Tongue dorsum	160016515	Tongue dorsum	HMP
+Vaginal.introitus__160016515	Vaginal introitus	160016515	Vaginal introitus	HMP
+Anterior.nares__160036745	Anterior nares	160036745	Anterior nares	HMP
+Attached.Keratinized.gingiva__160036745	Attached/Keratinized gingiva	160036745	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160036745	Buccal mucosa	160036745	Buccal mucosa	HMP
+Hard.palate__160036745	Hard palate	160036745	Hard palate	HMP
+L_Antecubital.fossa__160036745	L_Antecubital fossa	160036745	L_Antecubital fossa	HMP
+Mid.vagina__160036745	Mid vagina	160036745	Mid vagina	HMP
+Palatine.Tonsils__160036745	Palatine Tonsils	160036745	Palatine Tonsils	HMP
+Posterior.fornix__160036745	Posterior fornix	160036745	Posterior fornix	HMP
+R_Antecubital.fossa__160036745	R_Antecubital fossa	160036745	R_Antecubital fossa	HMP
+Retroauricular.crease__160036745	Retroauricular crease	160036745	Retroauricular crease	HMP
+Saliva__160036745	Saliva	160036745	Saliva	HMP
+Stool__160036745	Stool	160036745	Stool	HMP
+Subgingival.plaque__160036745	Subgingival plaque	160036745	Subgingival plaque	HMP
+Supragingival.plaque__160036745	Supragingival plaque	160036745	Supragingival plaque	HMP
+Throat__160036745	Throat	160036745	Throat	HMP
+Tongue.dorsum__160036745	Tongue dorsum	160036745	Tongue dorsum	HMP
+Vaginal.introitus__160036745	Vaginal introitus	160036745	Vaginal introitus	HMP
+Anterior.nares__160056975	Anterior nares	160056975	Anterior nares	HMP
+Attached.Keratinized.gingiva__160056975	Attached/Keratinized gingiva	160056975	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160056975	Buccal mucosa	160056975	Buccal mucosa	HMP
+Hard.palate__160056975	Hard palate	160056975	Hard palate	HMP
+Palatine.Tonsils__160056975	Palatine Tonsils	160056975	Palatine Tonsils	HMP
+R_Antecubital.fossa__160056975	R_Antecubital fossa	160056975	R_Antecubital fossa	HMP
+Retroauricular.crease__160056975	Retroauricular crease	160056975	Retroauricular crease	HMP
+Saliva__160056975	Saliva	160056975	Saliva	HMP
+Stool__160056975	Stool	160056975	Stool	HMP
+Subgingival.plaque__160056975	Subgingival plaque	160056975	Subgingival plaque	HMP
+Supragingival.plaque__160056975	Supragingival plaque	160056975	Supragingival plaque	HMP
+Throat__160056975	Throat	160056975	Throat	HMP
+Tongue.dorsum__160056975	Tongue dorsum	160056975	Tongue dorsum	HMP
+Anterior.nares__160097436	Anterior nares	160097436	Anterior nares	HMP
+Attached.Keratinized.gingiva__160097436	Attached/Keratinized gingiva	160097436	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160097436	Buccal mucosa	160097436	Buccal mucosa	HMP
+Hard.palate__160097436	Hard palate	160097436	Hard palate	HMP
+L_Antecubital.fossa__160097436	L_Antecubital fossa	160097436	L_Antecubital fossa	HMP
+Palatine.Tonsils__160097436	Palatine Tonsils	160097436	Palatine Tonsils	HMP
+R_Antecubital.fossa__160097436	R_Antecubital fossa	160097436	R_Antecubital fossa	HMP
+Retroauricular.crease__160097436	Retroauricular crease	160097436	Retroauricular crease	HMP
+Saliva__160097436	Saliva	160097436	Saliva	HMP
+Stool__160097436	Stool	160097436	Stool	HMP
+Subgingival.plaque__160097436	Subgingival plaque	160097436	Subgingival plaque	HMP
+Supragingival.plaque__160097436	Supragingival plaque	160097436	Supragingival plaque	HMP
+Throat__160097436	Throat	160097436	Throat	HMP
+Tongue.dorsum__160097436	Tongue dorsum	160097436	Tongue dorsum	HMP
+Anterior.nares__160137896	Anterior nares	160137896	Anterior nares	HMP
+Attached.Keratinized.gingiva__160137896	Attached/Keratinized gingiva	160137896	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160137896	Buccal mucosa	160137896	Buccal mucosa	HMP
+Hard.palate__160137896	Hard palate	160137896	Hard palate	HMP
+L_Antecubital.fossa__160137896	L_Antecubital fossa	160137896	L_Antecubital fossa	HMP
+Mid.vagina__160137896	Mid vagina	160137896	Mid vagina	HMP
+Palatine.Tonsils__160137896	Palatine Tonsils	160137896	Palatine Tonsils	HMP
+Posterior.fornix__160137896	Posterior fornix	160137896	Posterior fornix	HMP
+R_Antecubital.fossa__160137896	R_Antecubital fossa	160137896	R_Antecubital fossa	HMP
+Retroauricular.crease__160137896	Retroauricular crease	160137896	Retroauricular crease	HMP
+Saliva__160137896	Saliva	160137896	Saliva	HMP
+Stool__160137896	Stool	160137896	Stool	HMP
+Subgingival.plaque__160137896	Subgingival plaque	160137896	Subgingival plaque	HMP
+Supragingival.plaque__160137896	Supragingival plaque	160137896	Supragingival plaque	HMP
+Throat__160137896	Throat	160137896	Throat	HMP
+Tongue.dorsum__160137896	Tongue dorsum	160137896	Tongue dorsum	HMP
+Vaginal.introitus__160137896	Vaginal introitus	160137896	Vaginal introitus	HMP
+Anterior.nares__160158126	Anterior nares	160158126	Anterior nares	HMP
+Attached.Keratinized.gingiva__160158126	Attached/Keratinized gingiva	160158126	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160158126	Buccal mucosa	160158126	Buccal mucosa	HMP
+Hard.palate__160158126	Hard palate	160158126	Hard palate	HMP
+L_Antecubital.fossa__160158126	L_Antecubital fossa	160158126	L_Antecubital fossa	HMP
+Palatine.Tonsils__160158126	Palatine Tonsils	160158126	Palatine Tonsils	HMP
+R_Antecubital.fossa__160158126	R_Antecubital fossa	160158126	R_Antecubital fossa	HMP
+Retroauricular.crease__160158126	Retroauricular crease	160158126	Retroauricular crease	HMP
+Saliva__160158126	Saliva	160158126	Saliva	HMP
+Stool__160158126	Stool	160158126	Stool	HMP
+Subgingival.plaque__160158126	Subgingival plaque	160158126	Subgingival plaque	HMP
+Supragingival.plaque__160158126	Supragingival plaque	160158126	Supragingival plaque	HMP
+Throat__160158126	Throat	160158126	Throat	HMP
+Tongue.dorsum__160158126	Tongue dorsum	160158126	Tongue dorsum	HMP
+Anterior.nares__160178356	Anterior nares	160178356	Anterior nares	HMP
+Attached.Keratinized.gingiva__160178356	Attached/Keratinized gingiva	160178356	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160178356	Buccal mucosa	160178356	Buccal mucosa	HMP
+Hard.palate__160178356	Hard palate	160178356	Hard palate	HMP
+L_Antecubital.fossa__160178356	L_Antecubital fossa	160178356	L_Antecubital fossa	HMP
+Palatine.Tonsils__160178356	Palatine Tonsils	160178356	Palatine Tonsils	HMP
+R_Antecubital.fossa__160178356	R_Antecubital fossa	160178356	R_Antecubital fossa	HMP
+Retroauricular.crease__160178356	Retroauricular crease	160178356	Retroauricular crease	HMP
+Saliva__160178356	Saliva	160178356	Saliva	HMP
+Stool__160178356	Stool	160178356	Stool	HMP
+Subgingival.plaque__160178356	Subgingival plaque	160178356	Subgingival plaque	HMP
+Supragingival.plaque__160178356	Supragingival plaque	160178356	Supragingival plaque	HMP
+Throat__160178356	Throat	160178356	Throat	HMP
+Tongue.dorsum__160178356	Tongue dorsum	160178356	Tongue dorsum	HMP
+Anterior.nares__160218816	Anterior nares	160218816	Anterior nares	HMP
+Attached.Keratinized.gingiva__160218816	Attached/Keratinized gingiva	160218816	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160218816	Buccal mucosa	160218816	Buccal mucosa	HMP
+Hard.palate__160218816	Hard palate	160218816	Hard palate	HMP
+L_Antecubital.fossa__160218816	L_Antecubital fossa	160218816	L_Antecubital fossa	HMP
+Palatine.Tonsils__160218816	Palatine Tonsils	160218816	Palatine Tonsils	HMP
+R_Antecubital.fossa__160218816	R_Antecubital fossa	160218816	R_Antecubital fossa	HMP
+Retroauricular.crease__160218816	Retroauricular crease	160218816	Retroauricular crease	HMP
+Saliva__160218816	Saliva	160218816	Saliva	HMP
+Stool__160218816	Stool	160218816	Stool	HMP
+Subgingival.plaque__160218816	Subgingival plaque	160218816	Subgingival plaque	HMP
+Supragingival.plaque__160218816	Supragingival plaque	160218816	Supragingival plaque	HMP
+Throat__160218816	Throat	160218816	Throat	HMP
+Tongue.dorsum__160218816	Tongue dorsum	160218816	Tongue dorsum	HMP
+Anterior.nares__160239046	Anterior nares	160239046	Anterior nares	HMP
+Attached.Keratinized.gingiva__160239046	Attached/Keratinized gingiva	160239046	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160239046	Buccal mucosa	160239046	Buccal mucosa	HMP
+Hard.palate__160239046	Hard palate	160239046	Hard palate	HMP
+L_Antecubital.fossa__160239046	L_Antecubital fossa	160239046	L_Antecubital fossa	HMP
+Palatine.Tonsils__160239046	Palatine Tonsils	160239046	Palatine Tonsils	HMP
+Retroauricular.crease__160239046	Retroauricular crease	160239046	Retroauricular crease	HMP
+Saliva__160239046	Saliva	160239046	Saliva	HMP
+Stool__160239046	Stool	160239046	Stool	HMP
+Subgingival.plaque__160239046	Subgingival plaque	160239046	Subgingival plaque	HMP
+Supragingival.plaque__160239046	Supragingival plaque	160239046	Supragingival plaque	HMP
+Throat__160239046	Throat	160239046	Throat	HMP
+Tongue.dorsum__160239046	Tongue dorsum	160239046	Tongue dorsum	HMP
+Anterior.nares__160259276	Anterior nares	160259276	Anterior nares	HMP
+Attached.Keratinized.gingiva__160259276	Attached/Keratinized gingiva	160259276	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160259276	Buccal mucosa	160259276	Buccal mucosa	HMP
+Hard.palate__160259276	Hard palate	160259276	Hard palate	HMP
+L_Antecubital.fossa__160259276	L_Antecubital fossa	160259276	L_Antecubital fossa	HMP
+Mid.vagina__160259276	Mid vagina	160259276	Mid vagina	HMP
+Palatine.Tonsils__160259276	Palatine Tonsils	160259276	Palatine Tonsils	HMP
+Posterior.fornix__160259276	Posterior fornix	160259276	Posterior fornix	HMP
+R_Antecubital.fossa__160259276	R_Antecubital fossa	160259276	R_Antecubital fossa	HMP
+Retroauricular.crease__160259276	Retroauricular crease	160259276	Retroauricular crease	HMP
+Saliva__160259276	Saliva	160259276	Saliva	HMP
+Stool__160259276	Stool	160259276	Stool	HMP
+Subgingival.plaque__160259276	Subgingival plaque	160259276	Subgingival plaque	HMP
+Supragingival.plaque__160259276	Supragingival plaque	160259276	Supragingival plaque	HMP
+Throat__160259276	Throat	160259276	Throat	HMP
+Tongue.dorsum__160259276	Tongue dorsum	160259276	Tongue dorsum	HMP
+Vaginal.introitus__160259276	Vaginal introitus	160259276	Vaginal introitus	HMP
+Anterior.nares__160319967	Anterior nares	160319967	Anterior nares	HMP
+Attached.Keratinized.gingiva__160319967	Attached/Keratinized gingiva	160319967	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160319967	Buccal mucosa	160319967	Buccal mucosa	HMP
+Hard.palate__160319967	Hard palate	160319967	Hard palate	HMP
+L_Antecubital.fossa__160319967	L_Antecubital fossa	160319967	L_Antecubital fossa	HMP
+Mid.vagina__160319967	Mid vagina	160319967	Mid vagina	HMP
+Palatine.Tonsils__160319967	Palatine Tonsils	160319967	Palatine Tonsils	HMP
+Posterior.fornix__160319967	Posterior fornix	160319967	Posterior fornix	HMP
+R_Antecubital.fossa__160319967	R_Antecubital fossa	160319967	R_Antecubital fossa	HMP
+Retroauricular.crease__160319967	Retroauricular crease	160319967	Retroauricular crease	HMP
+Saliva__160319967	Saliva	160319967	Saliva	HMP
+Stool__160319967	Stool	160319967	Stool	HMP
+Subgingival.plaque__160319967	Subgingival plaque	160319967	Subgingival plaque	HMP
+Supragingival.plaque__160319967	Supragingival plaque	160319967	Supragingival plaque	HMP
+Throat__160319967	Throat	160319967	Throat	HMP
+Tongue.dorsum__160319967	Tongue dorsum	160319967	Tongue dorsum	HMP
+Vaginal.introitus__160319967	Vaginal introitus	160319967	Vaginal introitus	HMP
+Anterior.nares__160340197	Anterior nares	160340197	Anterior nares	HMP
+Attached.Keratinized.gingiva__160340197	Attached/Keratinized gingiva	160340197	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160340197	Buccal mucosa	160340197	Buccal mucosa	HMP
+Hard.palate__160340197	Hard palate	160340197	Hard palate	HMP
+L_Antecubital.fossa__160340197	L_Antecubital fossa	160340197	L_Antecubital fossa	HMP
+Palatine.Tonsils__160340197	Palatine Tonsils	160340197	Palatine Tonsils	HMP
+R_Antecubital.fossa__160340197	R_Antecubital fossa	160340197	R_Antecubital fossa	HMP
+Retroauricular.crease__160340197	Retroauricular crease	160340197	Retroauricular crease	HMP
+Saliva__160340197	Saliva	160340197	Saliva	HMP
+Subgingival.plaque__160340197	Subgingival plaque	160340197	Subgingival plaque	HMP
+Supragingival.plaque__160340197	Supragingival plaque	160340197	Supragingival plaque	HMP
+Throat__160340197	Throat	160340197	Throat	HMP
+Tongue.dorsum__160340197	Tongue dorsum	160340197	Tongue dorsum	HMP
+Anterior.nares__160380657	Anterior nares	160380657	Anterior nares	HMP
+Attached.Keratinized.gingiva__160380657	Attached/Keratinized gingiva	160380657	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160380657	Buccal mucosa	160380657	Buccal mucosa	HMP
+Hard.palate__160380657	Hard palate	160380657	Hard palate	HMP
+L_Antecubital.fossa__160380657	L_Antecubital fossa	160380657	L_Antecubital fossa	HMP
+Palatine.Tonsils__160380657	Palatine Tonsils	160380657	Palatine Tonsils	HMP
+R_Antecubital.fossa__160380657	R_Antecubital fossa	160380657	R_Antecubital fossa	HMP
+Retroauricular.crease__160380657	Retroauricular crease	160380657	Retroauricular crease	HMP
+Saliva__160380657	Saliva	160380657	Saliva	HMP
+Stool__160380657	Stool	160380657	Stool	HMP
+Subgingival.plaque__160380657	Subgingival plaque	160380657	Subgingival plaque	HMP
+Supragingival.plaque__160380657	Supragingival plaque	160380657	Supragingival plaque	HMP
+Throat__160380657	Throat	160380657	Throat	HMP
+Tongue.dorsum__160380657	Tongue dorsum	160380657	Tongue dorsum	HMP
+Anterior.nares__160400887	Anterior nares	160400887	Anterior nares	HMP
+Attached.Keratinized.gingiva__160400887	Attached/Keratinized gingiva	160400887	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160400887	Buccal mucosa	160400887	Buccal mucosa	HMP
+Hard.palate__160400887	Hard palate	160400887	Hard palate	HMP
+L_Antecubital.fossa__160400887	L_Antecubital fossa	160400887	L_Antecubital fossa	HMP
+Palatine.Tonsils__160400887	Palatine Tonsils	160400887	Palatine Tonsils	HMP
+R_Antecubital.fossa__160400887	R_Antecubital fossa	160400887	R_Antecubital fossa	HMP
+Retroauricular.crease__160400887	Retroauricular crease	160400887	Retroauricular crease	HMP
+Saliva__160400887	Saliva	160400887	Saliva	HMP
+Stool__160400887	Stool	160400887	Stool	HMP
+Subgingival.plaque__160400887	Subgingival plaque	160400887	Subgingival plaque	HMP
+Supragingival.plaque__160400887	Supragingival plaque	160400887	Supragingival plaque	HMP
+Throat__160400887	Throat	160400887	Throat	HMP
+Tongue.dorsum__160400887	Tongue dorsum	160400887	Tongue dorsum	HMP
+Anterior.nares__160421117	Anterior nares	160421117	Anterior nares	HMP
+Attached.Keratinized.gingiva__160421117	Attached/Keratinized gingiva	160421117	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160421117	Buccal mucosa	160421117	Buccal mucosa	HMP
+Hard.palate__160421117	Hard palate	160421117	Hard palate	HMP
+L_Antecubital.fossa__160421117	L_Antecubital fossa	160421117	L_Antecubital fossa	HMP
+Palatine.Tonsils__160421117	Palatine Tonsils	160421117	Palatine Tonsils	HMP
+R_Antecubital.fossa__160421117	R_Antecubital fossa	160421117	R_Antecubital fossa	HMP
+Retroauricular.crease__160421117	Retroauricular crease	160421117	Retroauricular crease	HMP
+Saliva__160421117	Saliva	160421117	Saliva	HMP
+Stool__160421117	Stool	160421117	Stool	HMP
+Subgingival.plaque__160421117	Subgingival plaque	160421117	Subgingival plaque	HMP
+Supragingival.plaque__160421117	Supragingival plaque	160421117	Supragingival plaque	HMP
+Throat__160421117	Throat	160421117	Throat	HMP
+Tongue.dorsum__160421117	Tongue dorsum	160421117	Tongue dorsum	HMP
+Anterior.nares__160441347	Anterior nares	160441347	Anterior nares	HMP
+Attached.Keratinized.gingiva__160441347	Attached/Keratinized gingiva	160441347	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160441347	Buccal mucosa	160441347	Buccal mucosa	HMP
+Hard.palate__160441347	Hard palate	160441347	Hard palate	HMP
+L_Antecubital.fossa__160441347	L_Antecubital fossa	160441347	L_Antecubital fossa	HMP
+Palatine.Tonsils__160441347	Palatine Tonsils	160441347	Palatine Tonsils	HMP
+R_Antecubital.fossa__160441347	R_Antecubital fossa	160441347	R_Antecubital fossa	HMP
+Retroauricular.crease__160441347	Retroauricular crease	160441347	Retroauricular crease	HMP
+Saliva__160441347	Saliva	160441347	Saliva	HMP
+Stool__160441347	Stool	160441347	Stool	HMP
+Subgingival.plaque__160441347	Subgingival plaque	160441347	Subgingival plaque	HMP
+Supragingival.plaque__160441347	Supragingival plaque	160441347	Supragingival plaque	HMP
+Throat__160441347	Throat	160441347	Throat	HMP
+Tongue.dorsum__160441347	Tongue dorsum	160441347	Tongue dorsum	HMP
+Anterior.nares__160461578	Anterior nares	160461578	Anterior nares	HMP
+Attached.Keratinized.gingiva__160461578	Attached/Keratinized gingiva	160461578	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160461578	Buccal mucosa	160461578	Buccal mucosa	HMP
+Hard.palate__160461578	Hard palate	160461578	Hard palate	HMP
+L_Antecubital.fossa__160461578	L_Antecubital fossa	160461578	L_Antecubital fossa	HMP
+Palatine.Tonsils__160461578	Palatine Tonsils	160461578	Palatine Tonsils	HMP
+R_Antecubital.fossa__160461578	R_Antecubital fossa	160461578	R_Antecubital fossa	HMP
+Retroauricular.crease__160461578	Retroauricular crease	160461578	Retroauricular crease	HMP
+Saliva__160461578	Saliva	160461578	Saliva	HMP
+Stool__160461578	Stool	160461578	Stool	HMP
+Subgingival.plaque__160461578	Subgingival plaque	160461578	Subgingival plaque	HMP
+Supragingival.plaque__160461578	Supragingival plaque	160461578	Supragingival plaque	HMP
+Throat__160461578	Throat	160461578	Throat	HMP
+Tongue.dorsum__160461578	Tongue dorsum	160461578	Tongue dorsum	HMP
+Anterior.nares__160481808	Anterior nares	160481808	Anterior nares	HMP
+Attached.Keratinized.gingiva__160481808	Attached/Keratinized gingiva	160481808	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160481808	Buccal mucosa	160481808	Buccal mucosa	HMP
+Hard.palate__160481808	Hard palate	160481808	Hard palate	HMP
+L_Antecubital.fossa__160481808	L_Antecubital fossa	160481808	L_Antecubital fossa	HMP
+Palatine.Tonsils__160481808	Palatine Tonsils	160481808	Palatine Tonsils	HMP
+R_Antecubital.fossa__160481808	R_Antecubital fossa	160481808	R_Antecubital fossa	HMP
+Retroauricular.crease__160481808	Retroauricular crease	160481808	Retroauricular crease	HMP
+Saliva__160481808	Saliva	160481808	Saliva	HMP
+Stool__160481808	Stool	160481808	Stool	HMP
+Subgingival.plaque__160481808	Subgingival plaque	160481808	Subgingival plaque	HMP
+Supragingival.plaque__160481808	Supragingival plaque	160481808	Supragingival plaque	HMP
+Throat__160481808	Throat	160481808	Throat	HMP
+Tongue.dorsum__160481808	Tongue dorsum	160481808	Tongue dorsum	HMP
+Anterior.nares__160502038	Anterior nares	160502038	Anterior nares	HMP
+Attached.Keratinized.gingiva__160502038	Attached/Keratinized gingiva	160502038	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160502038	Buccal mucosa	160502038	Buccal mucosa	HMP
+Hard.palate__160502038	Hard palate	160502038	Hard palate	HMP
+L_Antecubital.fossa__160502038	L_Antecubital fossa	160502038	L_Antecubital fossa	HMP
+Mid.vagina__160502038	Mid vagina	160502038	Mid vagina	HMP
+Palatine.Tonsils__160502038	Palatine Tonsils	160502038	Palatine Tonsils	HMP
+Posterior.fornix__160502038	Posterior fornix	160502038	Posterior fornix	HMP
+R_Antecubital.fossa__160502038	R_Antecubital fossa	160502038	R_Antecubital fossa	HMP
+Retroauricular.crease__160502038	Retroauricular crease	160502038	Retroauricular crease	HMP
+Saliva__160502038	Saliva	160502038	Saliva	HMP
+Stool__160502038	Stool	160502038	Stool	HMP
+Subgingival.plaque__160502038	Subgingival plaque	160502038	Subgingival plaque	HMP
+Supragingival.plaque__160502038	Supragingival plaque	160502038	Supragingival plaque	HMP
+Throat__160502038	Throat	160502038	Throat	HMP
+Tongue.dorsum__160502038	Tongue dorsum	160502038	Tongue dorsum	HMP
+Vaginal.introitus__160502038	Vaginal introitus	160502038	Vaginal introitus	HMP
+Anterior.nares__160542498	Anterior nares	160542498	Anterior nares	HMP
+Attached.Keratinized.gingiva__160542498	Attached/Keratinized gingiva	160542498	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160542498	Buccal mucosa	160542498	Buccal mucosa	HMP
+Hard.palate__160542498	Hard palate	160542498	Hard palate	HMP
+L_Antecubital.fossa__160542498	L_Antecubital fossa	160542498	L_Antecubital fossa	HMP
+Palatine.Tonsils__160542498	Palatine Tonsils	160542498	Palatine Tonsils	HMP
+R_Antecubital.fossa__160542498	R_Antecubital fossa	160542498	R_Antecubital fossa	HMP
+Retroauricular.crease__160542498	Retroauricular crease	160542498	Retroauricular crease	HMP
+Saliva__160542498	Saliva	160542498	Saliva	HMP
+Stool__160542498	Stool	160542498	Stool	HMP
+Subgingival.plaque__160542498	Subgingival plaque	160542498	Subgingival plaque	HMP
+Supragingival.plaque__160542498	Supragingival plaque	160542498	Supragingival plaque	HMP
+Throat__160542498	Throat	160542498	Throat	HMP
+Tongue.dorsum__160542498	Tongue dorsum	160542498	Tongue dorsum	HMP
+Anterior.nares__160582958	Anterior nares	160582958	Anterior nares	HMP
+Attached.Keratinized.gingiva__160582958	Attached/Keratinized gingiva	160582958	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160582958	Buccal mucosa	160582958	Buccal mucosa	HMP
+Hard.palate__160582958	Hard palate	160582958	Hard palate	HMP
+L_Antecubital.fossa__160582958	L_Antecubital fossa	160582958	L_Antecubital fossa	HMP
+Mid.vagina__160582958	Mid vagina	160582958	Mid vagina	HMP
+Palatine.Tonsils__160582958	Palatine Tonsils	160582958	Palatine Tonsils	HMP
+Posterior.fornix__160582958	Posterior fornix	160582958	Posterior fornix	HMP
+R_Antecubital.fossa__160582958	R_Antecubital fossa	160582958	R_Antecubital fossa	HMP
+Retroauricular.crease__160582958	Retroauricular crease	160582958	Retroauricular crease	HMP
+Saliva__160582958	Saliva	160582958	Saliva	HMP
+Stool__160582958	Stool	160582958	Stool	HMP
+Subgingival.plaque__160582958	Subgingival plaque	160582958	Subgingival plaque	HMP
+Supragingival.plaque__160582958	Supragingival plaque	160582958	Supragingival plaque	HMP
+Throat__160582958	Throat	160582958	Throat	HMP
+Tongue.dorsum__160582958	Tongue dorsum	160582958	Tongue dorsum	HMP
+Vaginal.introitus__160582958	Vaginal introitus	160582958	Vaginal introitus	HMP
+Anterior.nares__160603188	Anterior nares	160603188	Anterior nares	HMP
+Attached.Keratinized.gingiva__160603188	Attached/Keratinized gingiva	160603188	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160603188	Buccal mucosa	160603188	Buccal mucosa	HMP
+Hard.palate__160603188	Hard palate	160603188	Hard palate	HMP
+L_Antecubital.fossa__160603188	L_Antecubital fossa	160603188	L_Antecubital fossa	HMP
+Palatine.Tonsils__160603188	Palatine Tonsils	160603188	Palatine Tonsils	HMP
+R_Antecubital.fossa__160603188	R_Antecubital fossa	160603188	R_Antecubital fossa	HMP
+Retroauricular.crease__160603188	Retroauricular crease	160603188	Retroauricular crease	HMP
+Saliva__160603188	Saliva	160603188	Saliva	HMP
+Stool__160603188	Stool	160603188	Stool	HMP
+Subgingival.plaque__160603188	Subgingival plaque	160603188	Subgingival plaque	HMP
+Supragingival.plaque__160603188	Supragingival plaque	160603188	Supragingival plaque	HMP
+Throat__160603188	Throat	160603188	Throat	HMP
+Tongue.dorsum__160603188	Tongue dorsum	160603188	Tongue dorsum	HMP
+Anterior.nares__160643649	Anterior nares	160643649	Anterior nares	HMP
+Attached.Keratinized.gingiva__160643649	Attached/Keratinized gingiva	160643649	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160643649	Buccal mucosa	160643649	Buccal mucosa	HMP
+Hard.palate__160643649	Hard palate	160643649	Hard palate	HMP
+L_Antecubital.fossa__160643649	L_Antecubital fossa	160643649	L_Antecubital fossa	HMP
+Mid.vagina__160643649	Mid vagina	160643649	Mid vagina	HMP
+Palatine.Tonsils__160643649	Palatine Tonsils	160643649	Palatine Tonsils	HMP
+Posterior.fornix__160643649	Posterior fornix	160643649	Posterior fornix	HMP
+R_Antecubital.fossa__160643649	R_Antecubital fossa	160643649	R_Antecubital fossa	HMP
+Retroauricular.crease__160643649	Retroauricular crease	160643649	Retroauricular crease	HMP
+Saliva__160643649	Saliva	160643649	Saliva	HMP
+Stool__160643649	Stool	160643649	Stool	HMP
+Subgingival.plaque__160643649	Subgingival plaque	160643649	Subgingival plaque	HMP
+Supragingival.plaque__160643649	Supragingival plaque	160643649	Supragingival plaque	HMP
+Throat__160643649	Throat	160643649	Throat	HMP
+Tongue.dorsum__160643649	Tongue dorsum	160643649	Tongue dorsum	HMP
+Vaginal.introitus__160643649	Vaginal introitus	160643649	Vaginal introitus	HMP
+Anterior.nares__160663879	Anterior nares	160663879	Anterior nares	HMP
+Attached.Keratinized.gingiva__160663879	Attached/Keratinized gingiva	160663879	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160663879	Buccal mucosa	160663879	Buccal mucosa	HMP
+Hard.palate__160663879	Hard palate	160663879	Hard palate	HMP
+L_Antecubital.fossa__160663879	L_Antecubital fossa	160663879	L_Antecubital fossa	HMP
+Palatine.Tonsils__160663879	Palatine Tonsils	160663879	Palatine Tonsils	HMP
+R_Antecubital.fossa__160663879	R_Antecubital fossa	160663879	R_Antecubital fossa	HMP
+Retroauricular.crease__160663879	Retroauricular crease	160663879	Retroauricular crease	HMP
+Saliva__160663879	Saliva	160663879	Saliva	HMP
+Stool__160663879	Stool	160663879	Stool	HMP
+Subgingival.plaque__160663879	Subgingival plaque	160663879	Subgingival plaque	HMP
+Supragingival.plaque__160663879	Supragingival plaque	160663879	Supragingival plaque	HMP
+Throat__160663879	Throat	160663879	Throat	HMP
+Tongue.dorsum__160663879	Tongue dorsum	160663879	Tongue dorsum	HMP
+Anterior.nares__160684109	Anterior nares	160684109	Anterior nares	HMP
+Attached.Keratinized.gingiva__160684109	Attached/Keratinized gingiva	160684109	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160684109	Buccal mucosa	160684109	Buccal mucosa	HMP
+Hard.palate__160684109	Hard palate	160684109	Hard palate	HMP
+L_Antecubital.fossa__160684109	L_Antecubital fossa	160684109	L_Antecubital fossa	HMP
+Palatine.Tonsils__160684109	Palatine Tonsils	160684109	Palatine Tonsils	HMP
+R_Antecubital.fossa__160684109	R_Antecubital fossa	160684109	R_Antecubital fossa	HMP
+Retroauricular.crease__160684109	Retroauricular crease	160684109	Retroauricular crease	HMP
+Saliva__160684109	Saliva	160684109	Saliva	HMP
+Stool__160684109	Stool	160684109	Stool	HMP
+Subgingival.plaque__160684109	Subgingival plaque	160684109	Subgingival plaque	HMP
+Supragingival.plaque__160684109	Supragingival plaque	160684109	Supragingival plaque	HMP
+Throat__160684109	Throat	160684109	Throat	HMP
+Tongue.dorsum__160684109	Tongue dorsum	160684109	Tongue dorsum	HMP
+Anterior.nares__160704339	Anterior nares	160704339	Anterior nares	HMP
+Attached.Keratinized.gingiva__160704339	Attached/Keratinized gingiva	160704339	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160704339	Buccal mucosa	160704339	Buccal mucosa	HMP
+Hard.palate__160704339	Hard palate	160704339	Hard palate	HMP
+L_Antecubital.fossa__160704339	L_Antecubital fossa	160704339	L_Antecubital fossa	HMP
+Mid.vagina__160704339	Mid vagina	160704339	Mid vagina	HMP
+Palatine.Tonsils__160704339	Palatine Tonsils	160704339	Palatine Tonsils	HMP
+Posterior.fornix__160704339	Posterior fornix	160704339	Posterior fornix	HMP
+R_Antecubital.fossa__160704339	R_Antecubital fossa	160704339	R_Antecubital fossa	HMP
+Retroauricular.crease__160704339	Retroauricular crease	160704339	Retroauricular crease	HMP
+Saliva__160704339	Saliva	160704339	Saliva	HMP
+Stool__160704339	Stool	160704339	Stool	HMP
+Subgingival.plaque__160704339	Subgingival plaque	160704339	Subgingival plaque	HMP
+Supragingival.plaque__160704339	Supragingival plaque	160704339	Supragingival plaque	HMP
+Throat__160704339	Throat	160704339	Throat	HMP
+Tongue.dorsum__160704339	Tongue dorsum	160704339	Tongue dorsum	HMP
+Vaginal.introitus__160704339	Vaginal introitus	160704339	Vaginal introitus	HMP
+Anterior.nares__160765029	Anterior nares	160765029	Anterior nares	HMP
+Attached.Keratinized.gingiva__160765029	Attached/Keratinized gingiva	160765029	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160765029	Buccal mucosa	160765029	Buccal mucosa	HMP
+Hard.palate__160765029	Hard palate	160765029	Hard palate	HMP
+L_Antecubital.fossa__160765029	L_Antecubital fossa	160765029	L_Antecubital fossa	HMP
+Palatine.Tonsils__160765029	Palatine Tonsils	160765029	Palatine Tonsils	HMP
+R_Antecubital.fossa__160765029	R_Antecubital fossa	160765029	R_Antecubital fossa	HMP
+Retroauricular.crease__160765029	Retroauricular crease	160765029	Retroauricular crease	HMP
+Saliva__160765029	Saliva	160765029	Saliva	HMP
+Stool__160765029	Stool	160765029	Stool	HMP
+Subgingival.plaque__160765029	Subgingival plaque	160765029	Subgingival plaque	HMP
+Supragingival.plaque__160765029	Supragingival plaque	160765029	Supragingival plaque	HMP
+Throat__160765029	Throat	160765029	Throat	HMP
+Tongue.dorsum__160765029	Tongue dorsum	160765029	Tongue dorsum	HMP
+Anterior.nares__160845950	Anterior nares	160845950	Anterior nares	HMP
+Attached.Keratinized.gingiva__160845950	Attached/Keratinized gingiva	160845950	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__160845950	Buccal mucosa	160845950	Buccal mucosa	HMP
+Hard.palate__160845950	Hard palate	160845950	Hard palate	HMP
+L_Antecubital.fossa__160845950	L_Antecubital fossa	160845950	L_Antecubital fossa	HMP
+Palatine.Tonsils__160845950	Palatine Tonsils	160845950	Palatine Tonsils	HMP
+R_Antecubital.fossa__160845950	R_Antecubital fossa	160845950	R_Antecubital fossa	HMP
+Retroauricular.crease__160845950	Retroauricular crease	160845950	Retroauricular crease	HMP
+Saliva__160845950	Saliva	160845950	Saliva	HMP
+Stool__160845950	Stool	160845950	Stool	HMP
+Subgingival.plaque__160845950	Subgingival plaque	160845950	Subgingival plaque	HMP
+Supragingival.plaque__160845950	Supragingival plaque	160845950	Supragingival plaque	HMP
+Throat__160845950	Throat	160845950	Throat	HMP
+Tongue.dorsum__160845950	Tongue dorsum	160845950	Tongue dorsum	HMP
+Attached.Keratinized.gingiva__178713055	Attached/Keratinized gingiva	178713055	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__178713055	Buccal mucosa	178713055	Buccal mucosa	HMP
+Palatine.Tonsils__178713055	Palatine Tonsils	178713055	Palatine Tonsils	HMP
+Posterior.fornix__178713055	Posterior fornix	178713055	Posterior fornix	HMP
+R_Antecubital.fossa__178713055	R_Antecubital fossa	178713055	R_Antecubital fossa	HMP
+Retroauricular.crease__178713055	Retroauricular crease	178713055	Retroauricular crease	HMP
+Subgingival.plaque__178713055	Subgingival plaque	178713055	Subgingival plaque	HMP
+Supragingival.plaque__178713055	Supragingival plaque	178713055	Supragingival plaque	HMP
+Throat__178713055	Throat	178713055	Throat	HMP
+Tongue.dorsum__178713055	Tongue dorsum	178713055	Tongue dorsum	HMP
+L_Antecubital.fossa__184349034	L_Antecubital fossa	184349034	L_Antecubital fossa	HMP
+Palatine.Tonsils__184349034	Palatine Tonsils	184349034	Palatine Tonsils	HMP
+Retroauricular.crease__184349034	Retroauricular crease	184349034	Retroauricular crease	HMP
+Subgingival.plaque__184349034	Subgingival plaque	184349034	Subgingival plaque	HMP
+Supragingival.plaque__184349034	Supragingival plaque	184349034	Supragingival plaque	HMP
+Anterior.nares__208027353	Anterior nares	208027353	Anterior nares	HMP
+Attached.Keratinized.gingiva__208027353	Attached/Keratinized gingiva	208027353	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__208027353	Buccal mucosa	208027353	Buccal mucosa	HMP
+Hard.palate__208027353	Hard palate	208027353	Hard palate	HMP
+L_Antecubital.fossa__208027353	L_Antecubital fossa	208027353	L_Antecubital fossa	HMP
+Mid.vagina__208027353	Mid vagina	208027353	Mid vagina	HMP
+Palatine.Tonsils__208027353	Palatine Tonsils	208027353	Palatine Tonsils	HMP
+R_Antecubital.fossa__208027353	R_Antecubital fossa	208027353	R_Antecubital fossa	HMP
+Retroauricular.crease__208027353	Retroauricular crease	208027353	Retroauricular crease	HMP
+Saliva__208027353	Saliva	208027353	Saliva	HMP
+Subgingival.plaque__208027353	Subgingival plaque	208027353	Subgingival plaque	HMP
+Supragingival.plaque__208027353	Supragingival plaque	208027353	Supragingival plaque	HMP
+Throat__208027353	Throat	208027353	Throat	HMP
+Tongue.dorsum__208027353	Tongue dorsum	208027353	Tongue dorsum	HMP
+Vaginal.introitus__208027353	Vaginal introitus	208027353	Vaginal introitus	HMP
+Anterior.nares__250593475	Anterior nares	250593475	Anterior nares	HMP
+Attached.Keratinized.gingiva__256789458	Attached/Keratinized gingiva	256789458	Attached/Keratinized gingiva	HMP
+L_Antecubital.fossa__256789458	L_Antecubital fossa	256789458	L_Antecubital fossa	HMP
+Mid.vagina__256789458	Mid vagina	256789458	Mid vagina	HMP
+Palatine.Tonsils__256789458	Palatine Tonsils	256789458	Palatine Tonsils	HMP
+R_Antecubital.fossa__256789458	R_Antecubital fossa	256789458	R_Antecubital fossa	HMP
+Retroauricular.crease__256789458	Retroauricular crease	256789458	Retroauricular crease	HMP
+Supragingival.plaque__256789458	Supragingival plaque	256789458	Supragingival plaque	HMP
+Tongue.dorsum__256789458	Tongue dorsum	256789458	Tongue dorsum	HMP
+Anterior.nares__257905678	Anterior nares	257905678	Anterior nares	HMP
+Attached.Keratinized.gingiva__257905678	Attached/Keratinized gingiva	257905678	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__257905678	Buccal mucosa	257905678	Buccal mucosa	HMP
+Hard.palate__257905678	Hard palate	257905678	Hard palate	HMP
+L_Antecubital.fossa__257905678	L_Antecubital fossa	257905678	L_Antecubital fossa	HMP
+Mid.vagina__257905678	Mid vagina	257905678	Mid vagina	HMP
+Palatine.Tonsils__257905678	Palatine Tonsils	257905678	Palatine Tonsils	HMP
+Posterior.fornix__257905678	Posterior fornix	257905678	Posterior fornix	HMP
+R_Antecubital.fossa__257905678	R_Antecubital fossa	257905678	R_Antecubital fossa	HMP
+Retroauricular.crease__257905678	Retroauricular crease	257905678	Retroauricular crease	HMP
+Saliva__257905678	Saliva	257905678	Saliva	HMP
+Stool__257905678	Stool	257905678	Stool	HMP
+Subgingival.plaque__257905678	Subgingival plaque	257905678	Subgingival plaque	HMP
+Supragingival.plaque__257905678	Supragingival plaque	257905678	Supragingival plaque	HMP
+Throat__257905678	Throat	257905678	Throat	HMP
+Tongue.dorsum__257905678	Tongue dorsum	257905678	Tongue dorsum	HMP
+Vaginal.introitus__257905678	Vaginal introitus	257905678	Vaginal introitus	HMP
+L_Antecubital.fossa__275382046	L_Antecubital fossa	275382046	L_Antecubital fossa	HMP
+Palatine.Tonsils__275382046	Palatine Tonsils	275382046	Palatine Tonsils	HMP
+Retroauricular.crease__275382046	Retroauricular crease	275382046	Retroauricular crease	HMP
+Supragingival.plaque__275382046	Supragingival plaque	275382046	Supragingival plaque	HMP
+Tongue.dorsum__275382046	Tongue dorsum	275382046	Tongue dorsum	HMP
+Anterior.nares__289996019	Anterior nares	289996019	Anterior nares	HMP
+Attached.Keratinized.gingiva__289996019	Attached/Keratinized gingiva	289996019	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__289996019	Buccal mucosa	289996019	Buccal mucosa	HMP
+Hard.palate__289996019	Hard palate	289996019	Hard palate	HMP
+Palatine.Tonsils__289996019	Palatine Tonsils	289996019	Palatine Tonsils	HMP
+Retroauricular.crease__289996019	Retroauricular crease	289996019	Retroauricular crease	HMP
+Saliva__289996019	Saliva	289996019	Saliva	HMP
+Stool__289996019	Stool	289996019	Stool	HMP
+Subgingival.plaque__289996019	Subgingival plaque	289996019	Subgingival plaque	HMP
+Supragingival.plaque__289996019	Supragingival plaque	289996019	Supragingival plaque	HMP
+Throat__289996019	Throat	289996019	Throat	HMP
+Tongue.dorsum__289996019	Tongue dorsum	289996019	Tongue dorsum	HMP
+L_Antecubital.fossa__338793263	L_Antecubital fossa	338793263	L_Antecubital fossa	HMP
+Retroauricular.crease__338793263	Retroauricular crease	338793263	Retroauricular crease	HMP
+Stool__338793263	Stool	338793263	Stool	HMP
+Attached.Keratinized.gingiva__355657046	Attached/Keratinized gingiva	355657046	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__355657046	Buccal mucosa	355657046	Buccal mucosa	HMP
+Hard.palate__355657046	Hard palate	355657046	Hard palate	HMP
+L_Antecubital.fossa__355657046	L_Antecubital fossa	355657046	L_Antecubital fossa	HMP
+Palatine.Tonsils__355657046	Palatine Tonsils	355657046	Palatine Tonsils	HMP
+Retroauricular.crease__355657046	Retroauricular crease	355657046	Retroauricular crease	HMP
+Stool__355657046	Stool	355657046	Stool	HMP
+Supragingival.plaque__355657046	Supragingival plaque	355657046	Supragingival plaque	HMP
+Throat__355657046	Throat	355657046	Throat	HMP
+Tongue.dorsum__355657046	Tongue dorsum	355657046	Tongue dorsum	HMP
+L_Antecubital.fossa__370027359	L_Antecubital fossa	370027359	L_Antecubital fossa	HMP
+R_Antecubital.fossa__370027359	R_Antecubital fossa	370027359	R_Antecubital fossa	HMP
+Retroauricular.crease__370027359	Retroauricular crease	370027359	Retroauricular crease	HMP
+Attached.Keratinized.gingiva__375450439	Attached/Keratinized gingiva	375450439	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__375450439	Buccal mucosa	375450439	Buccal mucosa	HMP
+Hard.palate__375450439	Hard palate	375450439	Hard palate	HMP
+L_Antecubital.fossa__375450439	L_Antecubital fossa	375450439	L_Antecubital fossa	HMP
+Mid.vagina__375450439	Mid vagina	375450439	Mid vagina	HMP
+Palatine.Tonsils__375450439	Palatine Tonsils	375450439	Palatine Tonsils	HMP
+Posterior.fornix__375450439	Posterior fornix	375450439	Posterior fornix	HMP
+R_Antecubital.fossa__375450439	R_Antecubital fossa	375450439	R_Antecubital fossa	HMP
+Retroauricular.crease__375450439	Retroauricular crease	375450439	Retroauricular crease	HMP
+Saliva__375450439	Saliva	375450439	Saliva	HMP
+Stool__375450439	Stool	375450439	Stool	HMP
+Subgingival.plaque__375450439	Subgingival plaque	375450439	Subgingival plaque	HMP
+Supragingival.plaque__375450439	Supragingival plaque	375450439	Supragingival plaque	HMP
+Throat__375450439	Throat	375450439	Throat	HMP
+Tongue.dorsum__375450439	Tongue dorsum	375450439	Tongue dorsum	HMP
+Vaginal.introitus__375450439	Vaginal introitus	375450439	Vaginal introitus	HMP
+L_Antecubital.fossa__404239096	L_Antecubital fossa	404239096	L_Antecubital fossa	HMP
+R_Antecubital.fossa__404239096	R_Antecubital fossa	404239096	R_Antecubital fossa	HMP
+Retroauricular.crease__404239096	Retroauricular crease	404239096	Retroauricular crease	HMP
+Buccal.mucosa__451588811	Buccal mucosa	451588811	Buccal mucosa	HMP
+Hard.palate__451588811	Hard palate	451588811	Hard palate	HMP
+Stool__451588811	Stool	451588811	Stool	HMP
+Anterior.nares__465578759	Anterior nares	465578759	Anterior nares	HMP
+Buccal.mucosa__465578759	Buccal mucosa	465578759	Buccal mucosa	HMP
+Hard.palate__465578759	Hard palate	465578759	Hard palate	HMP
+L_Antecubital.fossa__465578759	L_Antecubital fossa	465578759	L_Antecubital fossa	HMP
+Mid.vagina__465578759	Mid vagina	465578759	Mid vagina	HMP
+Palatine.Tonsils__465578759	Palatine Tonsils	465578759	Palatine Tonsils	HMP
+Posterior.fornix__465578759	Posterior fornix	465578759	Posterior fornix	HMP
+R_Antecubital.fossa__465578759	R_Antecubital fossa	465578759	R_Antecubital fossa	HMP
+Retroauricular.crease__465578759	Retroauricular crease	465578759	Retroauricular crease	HMP
+Subgingival.plaque__465578759	Subgingival plaque	465578759	Subgingival plaque	HMP
+Supragingival.plaque__465578759	Supragingival plaque	465578759	Supragingival plaque	HMP
+Throat__465578759	Throat	465578759	Throat	HMP
+Tongue.dorsum__465578759	Tongue dorsum	465578759	Tongue dorsum	HMP
+Vaginal.introitus__465578759	Vaginal introitus	465578759	Vaginal introitus	HMP
+Attached.Keratinized.gingiva__508703490	Attached/Keratinized gingiva	508703490	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__508703490	Buccal mucosa	508703490	Buccal mucosa	HMP
+Retroauricular.crease__508703490	Retroauricular crease	508703490	Retroauricular crease	HMP
+L_Antecubital.fossa__516889361	L_Antecubital fossa	516889361	L_Antecubital fossa	HMP
+R_Antecubital.fossa__516889361	R_Antecubital fossa	516889361	R_Antecubital fossa	HMP
+Retroauricular.crease__516889361	Retroauricular crease	516889361	Retroauricular crease	HMP
+Stool__516889361	Stool	516889361	Stool	HMP
+Subgingival.plaque__516889361	Subgingival plaque	516889361	Subgingival plaque	HMP
+Tongue.dorsum__516889361	Tongue dorsum	516889361	Tongue dorsum	HMP
+Anterior.nares__517810313	Anterior nares	517810313	Anterior nares	HMP
+Attached.Keratinized.gingiva__517810313	Attached/Keratinized gingiva	517810313	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__517810313	Buccal mucosa	517810313	Buccal mucosa	HMP
+Hard.palate__517810313	Hard palate	517810313	Hard palate	HMP
+L_Antecubital.fossa__517810313	L_Antecubital fossa	517810313	L_Antecubital fossa	HMP
+Palatine.Tonsils__517810313	Palatine Tonsils	517810313	Palatine Tonsils	HMP
+R_Antecubital.fossa__517810313	R_Antecubital fossa	517810313	R_Antecubital fossa	HMP
+Retroauricular.crease__517810313	Retroauricular crease	517810313	Retroauricular crease	HMP
+Saliva__517810313	Saliva	517810313	Saliva	HMP
+Subgingival.plaque__517810313	Subgingival plaque	517810313	Subgingival plaque	HMP
+Supragingival.plaque__517810313	Supragingival plaque	517810313	Supragingival plaque	HMP
+Throat__517810313	Throat	517810313	Throat	HMP
+Tongue.dorsum__517810313	Tongue dorsum	517810313	Tongue dorsum	HMP
+R_Antecubital.fossa__550534656	R_Antecubital fossa	550534656	R_Antecubital fossa	HMP
+Retroauricular.crease__550534656	Retroauricular crease	550534656	Retroauricular crease	HMP
+Stool__550534656	Stool	550534656	Stool	HMP
+Anterior.nares__553359145	Anterior nares	553359145	Anterior nares	HMP
+Attached.Keratinized.gingiva__553359145	Attached/Keratinized gingiva	553359145	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__553359145	Buccal mucosa	553359145	Buccal mucosa	HMP
+Hard.palate__553359145	Hard palate	553359145	Hard palate	HMP
+L_Antecubital.fossa__553359145	L_Antecubital fossa	553359145	L_Antecubital fossa	HMP
+Mid.vagina__553359145	Mid vagina	553359145	Mid vagina	HMP
+Palatine.Tonsils__553359145	Palatine Tonsils	553359145	Palatine Tonsils	HMP
+Posterior.fornix__553359145	Posterior fornix	553359145	Posterior fornix	HMP
+Retroauricular.crease__553359145	Retroauricular crease	553359145	Retroauricular crease	HMP
+Saliva__553359145	Saliva	553359145	Saliva	HMP
+Subgingival.plaque__553359145	Subgingival plaque	553359145	Subgingival plaque	HMP
+Supragingival.plaque__553359145	Supragingival plaque	553359145	Supragingival plaque	HMP
+Tongue.dorsum__553359145	Tongue dorsum	553359145	Tongue dorsum	HMP
+Vaginal.introitus__553359145	Vaginal introitus	553359145	Vaginal introitus	HMP
+Posterior.fornix__561079058	Posterior fornix	561079058	Posterior fornix	HMP
+Stool__561079058	Stool	561079058	Stool	HMP
+Vaginal.introitus__561079058	Vaginal introitus	561079058	Vaginal introitus	HMP
+Anterior.nares__612472597	Anterior nares	612472597	Anterior nares	HMP
+Attached.Keratinized.gingiva__612472597	Attached/Keratinized gingiva	612472597	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__612472597	Buccal mucosa	612472597	Buccal mucosa	HMP
+Hard.palate__612472597	Hard palate	612472597	Hard palate	HMP
+L_Antecubital.fossa__612472597	L_Antecubital fossa	612472597	L_Antecubital fossa	HMP
+Mid.vagina__612472597	Mid vagina	612472597	Mid vagina	HMP
+Palatine.Tonsils__612472597	Palatine Tonsils	612472597	Palatine Tonsils	HMP
+Posterior.fornix__612472597	Posterior fornix	612472597	Posterior fornix	HMP
+Retroauricular.crease__612472597	Retroauricular crease	612472597	Retroauricular crease	HMP
+Saliva__612472597	Saliva	612472597	Saliva	HMP
+Stool__612472597	Stool	612472597	Stool	HMP
+Subgingival.plaque__612472597	Subgingival plaque	612472597	Subgingival plaque	HMP
+Supragingival.plaque__612472597	Supragingival plaque	612472597	Supragingival plaque	HMP
+Throat__612472597	Throat	612472597	Throat	HMP
+Tongue.dorsum__612472597	Tongue dorsum	612472597	Tongue dorsum	HMP
+Vaginal.introitus__612472597	Vaginal introitus	612472597	Vaginal introitus	HMP
+Attached.Keratinized.gingiva__643185023	Attached/Keratinized gingiva	643185023	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__643185023	Buccal mucosa	643185023	Buccal mucosa	HMP
+L_Antecubital.fossa__643185023	L_Antecubital fossa	643185023	L_Antecubital fossa	HMP
+Palatine.Tonsils__643185023	Palatine Tonsils	643185023	Palatine Tonsils	HMP
+Posterior.fornix__643185023	Posterior fornix	643185023	Posterior fornix	HMP
+R_Antecubital.fossa__643185023	R_Antecubital fossa	643185023	R_Antecubital fossa	HMP
+Retroauricular.crease__643185023	Retroauricular crease	643185023	Retroauricular crease	HMP
+Stool__643185023	Stool	643185023	Stool	HMP
+Subgingival.plaque__643185023	Subgingival plaque	643185023	Subgingival plaque	HMP
+Supragingival.plaque__643185023	Supragingival plaque	643185023	Supragingival plaque	HMP
+Tongue.dorsum__643185023	Tongue dorsum	643185023	Tongue dorsum	HMP
+Attached.Keratinized.gingiva__658594300	Attached/Keratinized gingiva	658594300	Attached/Keratinized gingiva	HMP
+L_Antecubital.fossa__658594300	L_Antecubital fossa	658594300	L_Antecubital fossa	HMP
+R_Antecubital.fossa__658594300	R_Antecubital fossa	658594300	R_Antecubital fossa	HMP
+Retroauricular.crease__658594300	Retroauricular crease	658594300	Retroauricular crease	HMP
+Subgingival.plaque__658594300	Subgingival plaque	658594300	Subgingival plaque	HMP
+Supragingival.plaque__658594300	Supragingival plaque	658594300	Supragingival plaque	HMP
+Tongue.dorsum__658594300	Tongue dorsum	658594300	Tongue dorsum	HMP
+Attached.Keratinized.gingiva__663835652	Attached/Keratinized gingiva	663835652	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__663835652	Buccal mucosa	663835652	Buccal mucosa	HMP
+Hard.palate__663835652	Hard palate	663835652	Hard palate	HMP
+L_Antecubital.fossa__663835652	L_Antecubital fossa	663835652	L_Antecubital fossa	HMP
+Mid.vagina__663835652	Mid vagina	663835652	Mid vagina	HMP
+Palatine.Tonsils__663835652	Palatine Tonsils	663835652	Palatine Tonsils	HMP
+Posterior.fornix__663835652	Posterior fornix	663835652	Posterior fornix	HMP
+Saliva__663835652	Saliva	663835652	Saliva	HMP
+Stool__663835652	Stool	663835652	Stool	HMP
+Supragingival.plaque__663835652	Supragingival plaque	663835652	Supragingival plaque	HMP
+Throat__663835652	Throat	663835652	Throat	HMP
+Tongue.dorsum__663835652	Tongue dorsum	663835652	Tongue dorsum	HMP
+Vaginal.introitus__663835652	Vaginal introitus	663835652	Vaginal introitus	HMP
+Anterior.nares__668248235	Anterior nares	668248235	Anterior nares	HMP
+Attached.Keratinized.gingiva__668248235	Attached/Keratinized gingiva	668248235	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__668248235	Buccal mucosa	668248235	Buccal mucosa	HMP
+Hard.palate__668248235	Hard palate	668248235	Hard palate	HMP
+L_Antecubital.fossa__668248235	L_Antecubital fossa	668248235	L_Antecubital fossa	HMP
+Palatine.Tonsils__668248235	Palatine Tonsils	668248235	Palatine Tonsils	HMP
+R_Antecubital.fossa__668248235	R_Antecubital fossa	668248235	R_Antecubital fossa	HMP
+Retroauricular.crease__668248235	Retroauricular crease	668248235	Retroauricular crease	HMP
+Saliva__668248235	Saliva	668248235	Saliva	HMP
+Subgingival.plaque__668248235	Subgingival plaque	668248235	Subgingival plaque	HMP
+Supragingival.plaque__668248235	Supragingival plaque	668248235	Supragingival plaque	HMP
+Throat__668248235	Throat	668248235	Throat	HMP
+Tongue.dorsum__668248235	Tongue dorsum	668248235	Tongue dorsum	HMP
+R_Antecubital.fossa__675950834	R_Antecubital fossa	675950834	R_Antecubital fossa	HMP
+Stool__675950834	Stool	675950834	Stool	HMP
+Anterior.nares__682102541	Anterior nares	682102541	Anterior nares	HMP
+L_Antecubital.fossa__682102541	L_Antecubital fossa	682102541	L_Antecubital fossa	HMP
+R_Antecubital.fossa__682102541	R_Antecubital fossa	682102541	R_Antecubital fossa	HMP
+Retroauricular.crease__682102541	Retroauricular crease	682102541	Retroauricular crease	HMP
+Stool__682102541	Stool	682102541	Stool	HMP
+Anterior.nares__682449369	Anterior nares	682449369	Anterior nares	HMP
+Attached.Keratinized.gingiva__682449369	Attached/Keratinized gingiva	682449369	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__682449369	Buccal mucosa	682449369	Buccal mucosa	HMP
+Hard.palate__682449369	Hard palate	682449369	Hard palate	HMP
+L_Antecubital.fossa__682449369	L_Antecubital fossa	682449369	L_Antecubital fossa	HMP
+Mid.vagina__682449369	Mid vagina	682449369	Mid vagina	HMP
+Palatine.Tonsils__682449369	Palatine Tonsils	682449369	Palatine Tonsils	HMP
+Posterior.fornix__682449369	Posterior fornix	682449369	Posterior fornix	HMP
+R_Antecubital.fossa__682449369	R_Antecubital fossa	682449369	R_Antecubital fossa	HMP
+Retroauricular.crease__682449369	Retroauricular crease	682449369	Retroauricular crease	HMP
+Saliva__682449369	Saliva	682449369	Saliva	HMP
+Stool__682449369	Stool	682449369	Stool	HMP
+Subgingival.plaque__682449369	Subgingival plaque	682449369	Subgingival plaque	HMP
+Supragingival.plaque__682449369	Supragingival plaque	682449369	Supragingival plaque	HMP
+Throat__682449369	Throat	682449369	Throat	HMP
+Tongue.dorsum__682449369	Tongue dorsum	682449369	Tongue dorsum	HMP
+Vaginal.introitus__682449369	Vaginal introitus	682449369	Vaginal introitus	HMP
+Anterior.nares__706846339	Anterior nares	706846339	Anterior nares	HMP
+Mid.vagina__706846339	Mid vagina	706846339	Mid vagina	HMP
+Stool__706846339	Stool	706846339	Stool	HMP
+Attached.Keratinized.gingiva__737052003	Attached/Keratinized gingiva	737052003	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__737052003	Buccal mucosa	737052003	Buccal mucosa	HMP
+Hard.palate__737052003	Hard palate	737052003	Hard palate	HMP
+Mid.vagina__737052003	Mid vagina	737052003	Mid vagina	HMP
+Palatine.Tonsils__737052003	Palatine Tonsils	737052003	Palatine Tonsils	HMP
+Posterior.fornix__737052003	Posterior fornix	737052003	Posterior fornix	HMP
+Saliva__737052003	Saliva	737052003	Saliva	HMP
+Stool__737052003	Stool	737052003	Stool	HMP
+Subgingival.plaque__737052003	Subgingival plaque	737052003	Subgingival plaque	HMP
+Supragingival.plaque__737052003	Supragingival plaque	737052003	Supragingival plaque	HMP
+Throat__737052003	Throat	737052003	Throat	HMP
+Tongue.dorsum__737052003	Tongue dorsum	737052003	Tongue dorsum	HMP
+Vaginal.introitus__737052003	Vaginal introitus	737052003	Vaginal introitus	HMP
+Anterior.nares__739574095	Anterior nares	739574095	Anterior nares	HMP
+L_Antecubital.fossa__739574095	L_Antecubital fossa	739574095	L_Antecubital fossa	HMP
+Mid.vagina__739574095	Mid vagina	739574095	Mid vagina	HMP
+R_Antecubital.fossa__739574095	R_Antecubital fossa	739574095	R_Antecubital fossa	HMP
+Stool__739574095	Stool	739574095	Stool	HMP
+Vaginal.introitus__739574095	Vaginal introitus	739574095	Vaginal introitus	HMP
+Anterior.nares__763395383	Anterior nares	763395383	Anterior nares	HMP
+Attached.Keratinized.gingiva__763395383	Attached/Keratinized gingiva	763395383	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763395383	Buccal mucosa	763395383	Buccal mucosa	HMP
+Hard.palate__763395383	Hard palate	763395383	Hard palate	HMP
+Palatine.Tonsils__763395383	Palatine Tonsils	763395383	Palatine Tonsils	HMP
+Saliva__763395383	Saliva	763395383	Saliva	HMP
+Stool__763395383	Stool	763395383	Stool	HMP
+Subgingival.plaque__763395383	Subgingival plaque	763395383	Subgingival plaque	HMP
+Supragingival.plaque__763395383	Supragingival plaque	763395383	Supragingival plaque	HMP
+Throat__763395383	Throat	763395383	Throat	HMP
+Anterior.nares__763456073	Anterior nares	763456073	Anterior nares	HMP
+Attached.Keratinized.gingiva__763456073	Attached/Keratinized gingiva	763456073	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763456073	Buccal mucosa	763456073	Buccal mucosa	HMP
+Hard.palate__763456073	Hard palate	763456073	Hard palate	HMP
+Mid.vagina__763456073	Mid vagina	763456073	Mid vagina	HMP
+Palatine.Tonsils__763456073	Palatine Tonsils	763456073	Palatine Tonsils	HMP
+Posterior.fornix__763456073	Posterior fornix	763456073	Posterior fornix	HMP
+Retroauricular.crease__763456073	Retroauricular crease	763456073	Retroauricular crease	HMP
+Saliva__763456073	Saliva	763456073	Saliva	HMP
+Stool__763456073	Stool	763456073	Stool	HMP
+Subgingival.plaque__763456073	Subgingival plaque	763456073	Subgingival plaque	HMP
+Supragingival.plaque__763456073	Supragingival plaque	763456073	Supragingival plaque	HMP
+Throat__763456073	Throat	763456073	Throat	HMP
+Tongue.dorsum__763456073	Tongue dorsum	763456073	Tongue dorsum	HMP
+Vaginal.introitus__763456073	Vaginal introitus	763456073	Vaginal introitus	HMP
+Anterior.nares__763476303	Anterior nares	763476303	Anterior nares	HMP
+Attached.Keratinized.gingiva__763476303	Attached/Keratinized gingiva	763476303	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763476303	Buccal mucosa	763476303	Buccal mucosa	HMP
+Hard.palate__763476303	Hard palate	763476303	Hard palate	HMP
+L_Antecubital.fossa__763476303	L_Antecubital fossa	763476303	L_Antecubital fossa	HMP
+Palatine.Tonsils__763476303	Palatine Tonsils	763476303	Palatine Tonsils	HMP
+R_Antecubital.fossa__763476303	R_Antecubital fossa	763476303	R_Antecubital fossa	HMP
+Retroauricular.crease__763476303	Retroauricular crease	763476303	Retroauricular crease	HMP
+Saliva__763476303	Saliva	763476303	Saliva	HMP
+Stool__763476303	Stool	763476303	Stool	HMP
+Subgingival.plaque__763476303	Subgingival plaque	763476303	Subgingival plaque	HMP
+Supragingival.plaque__763476303	Supragingival plaque	763476303	Supragingival plaque	HMP
+Throat__763476303	Throat	763476303	Throat	HMP
+Tongue.dorsum__763476303	Tongue dorsum	763476303	Tongue dorsum	HMP
+Anterior.nares__763516763	Anterior nares	763516763	Anterior nares	HMP
+Attached.Keratinized.gingiva__763516763	Attached/Keratinized gingiva	763516763	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763516763	Buccal mucosa	763516763	Buccal mucosa	HMP
+Hard.palate__763516763	Hard palate	763516763	Hard palate	HMP
+L_Antecubital.fossa__763516763	L_Antecubital fossa	763516763	L_Antecubital fossa	HMP
+Palatine.Tonsils__763516763	Palatine Tonsils	763516763	Palatine Tonsils	HMP
+R_Antecubital.fossa__763516763	R_Antecubital fossa	763516763	R_Antecubital fossa	HMP
+Retroauricular.crease__763516763	Retroauricular crease	763516763	Retroauricular crease	HMP
+Saliva__763516763	Saliva	763516763	Saliva	HMP
+Stool__763516763	Stool	763516763	Stool	HMP
+Subgingival.plaque__763516763	Subgingival plaque	763516763	Subgingival plaque	HMP
+Supragingival.plaque__763516763	Supragingival plaque	763516763	Supragingival plaque	HMP
+Throat__763516763	Throat	763516763	Throat	HMP
+Tongue.dorsum__763516763	Tongue dorsum	763516763	Tongue dorsum	HMP
+Anterior.nares__763536994	Anterior nares	763536994	Anterior nares	HMP
+Attached.Keratinized.gingiva__763536994	Attached/Keratinized gingiva	763536994	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763536994	Buccal mucosa	763536994	Buccal mucosa	HMP
+Hard.palate__763536994	Hard palate	763536994	Hard palate	HMP
+L_Antecubital.fossa__763536994	L_Antecubital fossa	763536994	L_Antecubital fossa	HMP
+Palatine.Tonsils__763536994	Palatine Tonsils	763536994	Palatine Tonsils	HMP
+R_Antecubital.fossa__763536994	R_Antecubital fossa	763536994	R_Antecubital fossa	HMP
+Retroauricular.crease__763536994	Retroauricular crease	763536994	Retroauricular crease	HMP
+Saliva__763536994	Saliva	763536994	Saliva	HMP
+Stool__763536994	Stool	763536994	Stool	HMP
+Subgingival.plaque__763536994	Subgingival plaque	763536994	Subgingival plaque	HMP
+Supragingival.plaque__763536994	Supragingival plaque	763536994	Supragingival plaque	HMP
+Throat__763536994	Throat	763536994	Throat	HMP
+Tongue.dorsum__763536994	Tongue dorsum	763536994	Tongue dorsum	HMP
+Attached.Keratinized.gingiva__763557224	Attached/Keratinized gingiva	763557224	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763557224	Buccal mucosa	763557224	Buccal mucosa	HMP
+Mid.vagina__763557224	Mid vagina	763557224	Mid vagina	HMP
+Palatine.Tonsils__763557224	Palatine Tonsils	763557224	Palatine Tonsils	HMP
+Posterior.fornix__763557224	Posterior fornix	763557224	Posterior fornix	HMP
+Saliva__763557224	Saliva	763557224	Saliva	HMP
+Stool__763557224	Stool	763557224	Stool	HMP
+Subgingival.plaque__763557224	Subgingival plaque	763557224	Subgingival plaque	HMP
+Supragingival.plaque__763557224	Supragingival plaque	763557224	Supragingival plaque	HMP
+Tongue.dorsum__763557224	Tongue dorsum	763557224	Tongue dorsum	HMP
+Vaginal.introitus__763557224	Vaginal introitus	763557224	Vaginal introitus	HMP
+Anterior.nares__763597684	Anterior nares	763597684	Anterior nares	HMP
+Attached.Keratinized.gingiva__763597684	Attached/Keratinized gingiva	763597684	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763597684	Buccal mucosa	763597684	Buccal mucosa	HMP
+Hard.palate__763597684	Hard palate	763597684	Hard palate	HMP
+L_Antecubital.fossa__763597684	L_Antecubital fossa	763597684	L_Antecubital fossa	HMP
+Palatine.Tonsils__763597684	Palatine Tonsils	763597684	Palatine Tonsils	HMP
+R_Antecubital.fossa__763597684	R_Antecubital fossa	763597684	R_Antecubital fossa	HMP
+Retroauricular.crease__763597684	Retroauricular crease	763597684	Retroauricular crease	HMP
+Saliva__763597684	Saliva	763597684	Saliva	HMP
+Stool__763597684	Stool	763597684	Stool	HMP
+Subgingival.plaque__763597684	Subgingival plaque	763597684	Subgingival plaque	HMP
+Supragingival.plaque__763597684	Supragingival plaque	763597684	Supragingival plaque	HMP
+Throat__763597684	Throat	763597684	Throat	HMP
+Tongue.dorsum__763597684	Tongue dorsum	763597684	Tongue dorsum	HMP
+Anterior.nares__763638144	Anterior nares	763638144	Anterior nares	HMP
+Attached.Keratinized.gingiva__763638144	Attached/Keratinized gingiva	763638144	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763638144	Buccal mucosa	763638144	Buccal mucosa	HMP
+Hard.palate__763638144	Hard palate	763638144	Hard palate	HMP
+L_Antecubital.fossa__763638144	L_Antecubital fossa	763638144	L_Antecubital fossa	HMP
+Mid.vagina__763638144	Mid vagina	763638144	Mid vagina	HMP
+Palatine.Tonsils__763638144	Palatine Tonsils	763638144	Palatine Tonsils	HMP
+Posterior.fornix__763638144	Posterior fornix	763638144	Posterior fornix	HMP
+R_Antecubital.fossa__763638144	R_Antecubital fossa	763638144	R_Antecubital fossa	HMP
+Retroauricular.crease__763638144	Retroauricular crease	763638144	Retroauricular crease	HMP
+Saliva__763638144	Saliva	763638144	Saliva	HMP
+Stool__763638144	Stool	763638144	Stool	HMP
+Subgingival.plaque__763638144	Subgingival plaque	763638144	Subgingival plaque	HMP
+Supragingival.plaque__763638144	Supragingival plaque	763638144	Supragingival plaque	HMP
+Throat__763638144	Throat	763638144	Throat	HMP
+Tongue.dorsum__763638144	Tongue dorsum	763638144	Tongue dorsum	HMP
+Vaginal.introitus__763638144	Vaginal introitus	763638144	Vaginal introitus	HMP
+Anterior.nares__763678604	Anterior nares	763678604	Anterior nares	HMP
+Attached.Keratinized.gingiva__763678604	Attached/Keratinized gingiva	763678604	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763678604	Buccal mucosa	763678604	Buccal mucosa	HMP
+Hard.palate__763678604	Hard palate	763678604	Hard palate	HMP
+L_Antecubital.fossa__763678604	L_Antecubital fossa	763678604	L_Antecubital fossa	HMP
+Palatine.Tonsils__763678604	Palatine Tonsils	763678604	Palatine Tonsils	HMP
+R_Antecubital.fossa__763678604	R_Antecubital fossa	763678604	R_Antecubital fossa	HMP
+Retroauricular.crease__763678604	Retroauricular crease	763678604	Retroauricular crease	HMP
+Stool__763678604	Stool	763678604	Stool	HMP
+Subgingival.plaque__763678604	Subgingival plaque	763678604	Subgingival plaque	HMP
+Supragingival.plaque__763678604	Supragingival plaque	763678604	Supragingival plaque	HMP
+Throat__763678604	Throat	763678604	Throat	HMP
+Tongue.dorsum__763678604	Tongue dorsum	763678604	Tongue dorsum	HMP
+Anterior.nares__763698834	Anterior nares	763698834	Anterior nares	HMP
+Attached.Keratinized.gingiva__763698834	Attached/Keratinized gingiva	763698834	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763698834	Buccal mucosa	763698834	Buccal mucosa	HMP
+Hard.palate__763698834	Hard palate	763698834	Hard palate	HMP
+L_Antecubital.fossa__763698834	L_Antecubital fossa	763698834	L_Antecubital fossa	HMP
+Mid.vagina__763698834	Mid vagina	763698834	Mid vagina	HMP
+Palatine.Tonsils__763698834	Palatine Tonsils	763698834	Palatine Tonsils	HMP
+Posterior.fornix__763698834	Posterior fornix	763698834	Posterior fornix	HMP
+R_Antecubital.fossa__763698834	R_Antecubital fossa	763698834	R_Antecubital fossa	HMP
+Retroauricular.crease__763698834	Retroauricular crease	763698834	Retroauricular crease	HMP
+Stool__763698834	Stool	763698834	Stool	HMP
+Subgingival.plaque__763698834	Subgingival plaque	763698834	Subgingival plaque	HMP
+Supragingival.plaque__763698834	Supragingival plaque	763698834	Supragingival plaque	HMP
+Throat__763698834	Throat	763698834	Throat	HMP
+Tongue.dorsum__763698834	Tongue dorsum	763698834	Tongue dorsum	HMP
+Vaginal.introitus__763698834	Vaginal introitus	763698834	Vaginal introitus	HMP
+Anterior.nares__763719065	Anterior nares	763719065	Anterior nares	HMP
+Attached.Keratinized.gingiva__763719065	Attached/Keratinized gingiva	763719065	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763719065	Buccal mucosa	763719065	Buccal mucosa	HMP
+Hard.palate__763719065	Hard palate	763719065	Hard palate	HMP
+L_Antecubital.fossa__763719065	L_Antecubital fossa	763719065	L_Antecubital fossa	HMP
+Mid.vagina__763719065	Mid vagina	763719065	Mid vagina	HMP
+Palatine.Tonsils__763719065	Palatine Tonsils	763719065	Palatine Tonsils	HMP
+Posterior.fornix__763719065	Posterior fornix	763719065	Posterior fornix	HMP
+R_Antecubital.fossa__763719065	R_Antecubital fossa	763719065	R_Antecubital fossa	HMP
+Retroauricular.crease__763719065	Retroauricular crease	763719065	Retroauricular crease	HMP
+Saliva__763719065	Saliva	763719065	Saliva	HMP
+Stool__763719065	Stool	763719065	Stool	HMP
+Subgingival.plaque__763719065	Subgingival plaque	763719065	Subgingival plaque	HMP
+Supragingival.plaque__763719065	Supragingival plaque	763719065	Supragingival plaque	HMP
+Throat__763719065	Throat	763719065	Throat	HMP
+Tongue.dorsum__763719065	Tongue dorsum	763719065	Tongue dorsum	HMP
+Vaginal.introitus__763719065	Vaginal introitus	763719065	Vaginal introitus	HMP
+Anterior.nares__763721271	Anterior nares	763721271	Anterior nares	HMP
+Attached.Keratinized.gingiva__763721271	Attached/Keratinized gingiva	763721271	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763721271	Buccal mucosa	763721271	Buccal mucosa	HMP
+Hard.palate__763721271	Hard palate	763721271	Hard palate	HMP
+L_Antecubital.fossa__763721271	L_Antecubital fossa	763721271	L_Antecubital fossa	HMP
+Mid.vagina__763721271	Mid vagina	763721271	Mid vagina	HMP
+Palatine.Tonsils__763721271	Palatine Tonsils	763721271	Palatine Tonsils	HMP
+Posterior.fornix__763721271	Posterior fornix	763721271	Posterior fornix	HMP
+R_Antecubital.fossa__763721271	R_Antecubital fossa	763721271	R_Antecubital fossa	HMP
+Retroauricular.crease__763721271	Retroauricular crease	763721271	Retroauricular crease	HMP
+Saliva__763721271	Saliva	763721271	Saliva	HMP
+Stool__763721271	Stool	763721271	Stool	HMP
+Subgingival.plaque__763721271	Subgingival plaque	763721271	Subgingival plaque	HMP
+Supragingival.plaque__763721271	Supragingival plaque	763721271	Supragingival plaque	HMP
+Throat__763721271	Throat	763721271	Throat	HMP
+Tongue.dorsum__763721271	Tongue dorsum	763721271	Tongue dorsum	HMP
+Vaginal.introitus__763721271	Vaginal introitus	763721271	Vaginal introitus	HMP
+Anterior.nares__763759525	Anterior nares	763759525	Anterior nares	HMP
+Attached.Keratinized.gingiva__763759525	Attached/Keratinized gingiva	763759525	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763759525	Buccal mucosa	763759525	Buccal mucosa	HMP
+Hard.palate__763759525	Hard palate	763759525	Hard palate	HMP
+L_Antecubital.fossa__763759525	L_Antecubital fossa	763759525	L_Antecubital fossa	HMP
+Mid.vagina__763759525	Mid vagina	763759525	Mid vagina	HMP
+Palatine.Tonsils__763759525	Palatine Tonsils	763759525	Palatine Tonsils	HMP
+Posterior.fornix__763759525	Posterior fornix	763759525	Posterior fornix	HMP
+R_Antecubital.fossa__763759525	R_Antecubital fossa	763759525	R_Antecubital fossa	HMP
+Retroauricular.crease__763759525	Retroauricular crease	763759525	Retroauricular crease	HMP
+Saliva__763759525	Saliva	763759525	Saliva	HMP
+Stool__763759525	Stool	763759525	Stool	HMP
+Subgingival.plaque__763759525	Subgingival plaque	763759525	Subgingival plaque	HMP
+Supragingival.plaque__763759525	Supragingival plaque	763759525	Supragingival plaque	HMP
+Throat__763759525	Throat	763759525	Throat	HMP
+Tongue.dorsum__763759525	Tongue dorsum	763759525	Tongue dorsum	HMP
+Vaginal.introitus__763759525	Vaginal introitus	763759525	Vaginal introitus	HMP
+Anterior.nares__763820215	Anterior nares	763820215	Anterior nares	HMP
+Attached.Keratinized.gingiva__763820215	Attached/Keratinized gingiva	763820215	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763820215	Buccal mucosa	763820215	Buccal mucosa	HMP
+Hard.palate__763820215	Hard palate	763820215	Hard palate	HMP
+L_Antecubital.fossa__763820215	L_Antecubital fossa	763820215	L_Antecubital fossa	HMP
+Mid.vagina__763820215	Mid vagina	763820215	Mid vagina	HMP
+Palatine.Tonsils__763820215	Palatine Tonsils	763820215	Palatine Tonsils	HMP
+Posterior.fornix__763820215	Posterior fornix	763820215	Posterior fornix	HMP
+R_Antecubital.fossa__763820215	R_Antecubital fossa	763820215	R_Antecubital fossa	HMP
+Retroauricular.crease__763820215	Retroauricular crease	763820215	Retroauricular crease	HMP
+Saliva__763820215	Saliva	763820215	Saliva	HMP
+Stool__763820215	Stool	763820215	Stool	HMP
+Subgingival.plaque__763820215	Subgingival plaque	763820215	Subgingival plaque	HMP
+Supragingival.plaque__763820215	Supragingival plaque	763820215	Supragingival plaque	HMP
+Tongue.dorsum__763820215	Tongue dorsum	763820215	Tongue dorsum	HMP
+Vaginal.introitus__763820215	Vaginal introitus	763820215	Vaginal introitus	HMP
+Anterior.nares__763840445	Anterior nares	763840445	Anterior nares	HMP
+Attached.Keratinized.gingiva__763840445	Attached/Keratinized gingiva	763840445	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763840445	Buccal mucosa	763840445	Buccal mucosa	HMP
+Hard.palate__763840445	Hard palate	763840445	Hard palate	HMP
+L_Antecubital.fossa__763840445	L_Antecubital fossa	763840445	L_Antecubital fossa	HMP
+Mid.vagina__763840445	Mid vagina	763840445	Mid vagina	HMP
+Palatine.Tonsils__763840445	Palatine Tonsils	763840445	Palatine Tonsils	HMP
+Posterior.fornix__763840445	Posterior fornix	763840445	Posterior fornix	HMP
+R_Antecubital.fossa__763840445	R_Antecubital fossa	763840445	R_Antecubital fossa	HMP
+Retroauricular.crease__763840445	Retroauricular crease	763840445	Retroauricular crease	HMP
+Saliva__763840445	Saliva	763840445	Saliva	HMP
+Stool__763840445	Stool	763840445	Stool	HMP
+Subgingival.plaque__763840445	Subgingival plaque	763840445	Subgingival plaque	HMP
+Supragingival.plaque__763840445	Supragingival plaque	763840445	Supragingival plaque	HMP
+Throat__763840445	Throat	763840445	Throat	HMP
+Tongue.dorsum__763840445	Tongue dorsum	763840445	Tongue dorsum	HMP
+Vaginal.introitus__763840445	Vaginal introitus	763840445	Vaginal introitus	HMP
+Anterior.nares__763860675	Anterior nares	763860675	Anterior nares	HMP
+Attached.Keratinized.gingiva__763860675	Attached/Keratinized gingiva	763860675	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763860675	Buccal mucosa	763860675	Buccal mucosa	HMP
+Hard.palate__763860675	Hard palate	763860675	Hard palate	HMP
+L_Antecubital.fossa__763860675	L_Antecubital fossa	763860675	L_Antecubital fossa	HMP
+Palatine.Tonsils__763860675	Palatine Tonsils	763860675	Palatine Tonsils	HMP
+Retroauricular.crease__763860675	Retroauricular crease	763860675	Retroauricular crease	HMP
+Saliva__763860675	Saliva	763860675	Saliva	HMP
+Stool__763860675	Stool	763860675	Stool	HMP
+Subgingival.plaque__763860675	Subgingival plaque	763860675	Subgingival plaque	HMP
+Supragingival.plaque__763860675	Supragingival plaque	763860675	Supragingival plaque	HMP
+Throat__763860675	Throat	763860675	Throat	HMP
+Tongue.dorsum__763860675	Tongue dorsum	763860675	Tongue dorsum	HMP
+Anterior.nares__763880905	Anterior nares	763880905	Anterior nares	HMP
+Attached.Keratinized.gingiva__763880905	Attached/Keratinized gingiva	763880905	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763880905	Buccal mucosa	763880905	Buccal mucosa	HMP
+Hard.palate__763880905	Hard palate	763880905	Hard palate	HMP
+L_Antecubital.fossa__763880905	L_Antecubital fossa	763880905	L_Antecubital fossa	HMP
+Palatine.Tonsils__763880905	Palatine Tonsils	763880905	Palatine Tonsils	HMP
+R_Antecubital.fossa__763880905	R_Antecubital fossa	763880905	R_Antecubital fossa	HMP
+Retroauricular.crease__763880905	Retroauricular crease	763880905	Retroauricular crease	HMP
+Saliva__763880905	Saliva	763880905	Saliva	HMP
+Stool__763880905	Stool	763880905	Stool	HMP
+Subgingival.plaque__763880905	Subgingival plaque	763880905	Subgingival plaque	HMP
+Supragingival.plaque__763880905	Supragingival plaque	763880905	Supragingival plaque	HMP
+Throat__763880905	Throat	763880905	Throat	HMP
+Tongue.dorsum__763880905	Tongue dorsum	763880905	Tongue dorsum	HMP
+Attached.Keratinized.gingiva__763901136	Attached/Keratinized gingiva	763901136	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763901136	Buccal mucosa	763901136	Buccal mucosa	HMP
+Hard.palate__763901136	Hard palate	763901136	Hard palate	HMP
+L_Antecubital.fossa__763901136	L_Antecubital fossa	763901136	L_Antecubital fossa	HMP
+Mid.vagina__763901136	Mid vagina	763901136	Mid vagina	HMP
+Palatine.Tonsils__763901136	Palatine Tonsils	763901136	Palatine Tonsils	HMP
+Posterior.fornix__763901136	Posterior fornix	763901136	Posterior fornix	HMP
+R_Antecubital.fossa__763901136	R_Antecubital fossa	763901136	R_Antecubital fossa	HMP
+Retroauricular.crease__763901136	Retroauricular crease	763901136	Retroauricular crease	HMP
+Saliva__763901136	Saliva	763901136	Saliva	HMP
+Stool__763901136	Stool	763901136	Stool	HMP
+Subgingival.plaque__763901136	Subgingival plaque	763901136	Subgingival plaque	HMP
+Supragingival.plaque__763901136	Supragingival plaque	763901136	Supragingival plaque	HMP
+Throat__763901136	Throat	763901136	Throat	HMP
+Tongue.dorsum__763901136	Tongue dorsum	763901136	Tongue dorsum	HMP
+Vaginal.introitus__763901136	Vaginal introitus	763901136	Vaginal introitus	HMP
+Anterior.nares__763921366	Anterior nares	763921366	Anterior nares	HMP
+Attached.Keratinized.gingiva__763921366	Attached/Keratinized gingiva	763921366	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763921366	Buccal mucosa	763921366	Buccal mucosa	HMP
+Hard.palate__763921366	Hard palate	763921366	Hard palate	HMP
+L_Antecubital.fossa__763921366	L_Antecubital fossa	763921366	L_Antecubital fossa	HMP
+Mid.vagina__763921366	Mid vagina	763921366	Mid vagina	HMP
+Palatine.Tonsils__763921366	Palatine Tonsils	763921366	Palatine Tonsils	HMP
+Posterior.fornix__763921366	Posterior fornix	763921366	Posterior fornix	HMP
+R_Antecubital.fossa__763921366	R_Antecubital fossa	763921366	R_Antecubital fossa	HMP
+Retroauricular.crease__763921366	Retroauricular crease	763921366	Retroauricular crease	HMP
+Saliva__763921366	Saliva	763921366	Saliva	HMP
+Stool__763921366	Stool	763921366	Stool	HMP
+Subgingival.plaque__763921366	Subgingival plaque	763921366	Subgingival plaque	HMP
+Supragingival.plaque__763921366	Supragingival plaque	763921366	Supragingival plaque	HMP
+Throat__763921366	Throat	763921366	Throat	HMP
+Tongue.dorsum__763921366	Tongue dorsum	763921366	Tongue dorsum	HMP
+Vaginal.introitus__763921366	Vaginal introitus	763921366	Vaginal introitus	HMP
+Anterior.nares__763982056	Anterior nares	763982056	Anterior nares	HMP
+Attached.Keratinized.gingiva__763982056	Attached/Keratinized gingiva	763982056	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__763982056	Buccal mucosa	763982056	Buccal mucosa	HMP
+Hard.palate__763982056	Hard palate	763982056	Hard palate	HMP
+L_Antecubital.fossa__763982056	L_Antecubital fossa	763982056	L_Antecubital fossa	HMP
+Palatine.Tonsils__763982056	Palatine Tonsils	763982056	Palatine Tonsils	HMP
+R_Antecubital.fossa__763982056	R_Antecubital fossa	763982056	R_Antecubital fossa	HMP
+Retroauricular.crease__763982056	Retroauricular crease	763982056	Retroauricular crease	HMP
+Saliva__763982056	Saliva	763982056	Saliva	HMP
+Stool__763982056	Stool	763982056	Stool	HMP
+Subgingival.plaque__763982056	Subgingival plaque	763982056	Subgingival plaque	HMP
+Supragingival.plaque__763982056	Supragingival plaque	763982056	Supragingival plaque	HMP
+Throat__763982056	Throat	763982056	Throat	HMP
+Tongue.dorsum__763982056	Tongue dorsum	763982056	Tongue dorsum	HMP
+Anterior.nares__764002286	Anterior nares	764002286	Anterior nares	HMP
+Attached.Keratinized.gingiva__764002286	Attached/Keratinized gingiva	764002286	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764002286	Buccal mucosa	764002286	Buccal mucosa	HMP
+Hard.palate__764002286	Hard palate	764002286	Hard palate	HMP
+L_Antecubital.fossa__764002286	L_Antecubital fossa	764002286	L_Antecubital fossa	HMP
+Palatine.Tonsils__764002286	Palatine Tonsils	764002286	Palatine Tonsils	HMP
+R_Antecubital.fossa__764002286	R_Antecubital fossa	764002286	R_Antecubital fossa	HMP
+Retroauricular.crease__764002286	Retroauricular crease	764002286	Retroauricular crease	HMP
+Saliva__764002286	Saliva	764002286	Saliva	HMP
+Stool__764002286	Stool	764002286	Stool	HMP
+Subgingival.plaque__764002286	Subgingival plaque	764002286	Subgingival plaque	HMP
+Supragingival.plaque__764002286	Supragingival plaque	764002286	Supragingival plaque	HMP
+Throat__764002286	Throat	764002286	Throat	HMP
+Tongue.dorsum__764002286	Tongue dorsum	764002286	Tongue dorsum	HMP
+Anterior.nares__764042746	Anterior nares	764042746	Anterior nares	HMP
+Attached.Keratinized.gingiva__764042746	Attached/Keratinized gingiva	764042746	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764042746	Buccal mucosa	764042746	Buccal mucosa	HMP
+Hard.palate__764042746	Hard palate	764042746	Hard palate	HMP
+L_Antecubital.fossa__764042746	L_Antecubital fossa	764042746	L_Antecubital fossa	HMP
+Mid.vagina__764042746	Mid vagina	764042746	Mid vagina	HMP
+Palatine.Tonsils__764042746	Palatine Tonsils	764042746	Palatine Tonsils	HMP
+Posterior.fornix__764042746	Posterior fornix	764042746	Posterior fornix	HMP
+R_Antecubital.fossa__764042746	R_Antecubital fossa	764042746	R_Antecubital fossa	HMP
+Retroauricular.crease__764042746	Retroauricular crease	764042746	Retroauricular crease	HMP
+Stool__764042746	Stool	764042746	Stool	HMP
+Subgingival.plaque__764042746	Subgingival plaque	764042746	Subgingival plaque	HMP
+Supragingival.plaque__764042746	Supragingival plaque	764042746	Supragingival plaque	HMP
+Throat__764042746	Throat	764042746	Throat	HMP
+Tongue.dorsum__764042746	Tongue dorsum	764042746	Tongue dorsum	HMP
+Vaginal.introitus__764042746	Vaginal introitus	764042746	Vaginal introitus	HMP
+Anterior.nares__764062976	Anterior nares	764062976	Anterior nares	HMP
+Attached.Keratinized.gingiva__764062976	Attached/Keratinized gingiva	764062976	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764062976	Buccal mucosa	764062976	Buccal mucosa	HMP
+Hard.palate__764062976	Hard palate	764062976	Hard palate	HMP
+L_Antecubital.fossa__764062976	L_Antecubital fossa	764062976	L_Antecubital fossa	HMP
+Mid.vagina__764062976	Mid vagina	764062976	Mid vagina	HMP
+Palatine.Tonsils__764062976	Palatine Tonsils	764062976	Palatine Tonsils	HMP
+Posterior.fornix__764062976	Posterior fornix	764062976	Posterior fornix	HMP
+R_Antecubital.fossa__764062976	R_Antecubital fossa	764062976	R_Antecubital fossa	HMP
+Retroauricular.crease__764062976	Retroauricular crease	764062976	Retroauricular crease	HMP
+Saliva__764062976	Saliva	764062976	Saliva	HMP
+Stool__764062976	Stool	764062976	Stool	HMP
+Subgingival.plaque__764062976	Subgingival plaque	764062976	Subgingival plaque	HMP
+Supragingival.plaque__764062976	Supragingival plaque	764062976	Supragingival plaque	HMP
+Throat__764062976	Throat	764062976	Throat	HMP
+Tongue.dorsum__764062976	Tongue dorsum	764062976	Tongue dorsum	HMP
+Vaginal.introitus__764062976	Vaginal introitus	764062976	Vaginal introitus	HMP
+Anterior.nares__764143897	Anterior nares	764143897	Anterior nares	HMP
+Attached.Keratinized.gingiva__764143897	Attached/Keratinized gingiva	764143897	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764143897	Buccal mucosa	764143897	Buccal mucosa	HMP
+Hard.palate__764143897	Hard palate	764143897	Hard palate	HMP
+Mid.vagina__764143897	Mid vagina	764143897	Mid vagina	HMP
+Palatine.Tonsils__764143897	Palatine Tonsils	764143897	Palatine Tonsils	HMP
+Posterior.fornix__764143897	Posterior fornix	764143897	Posterior fornix	HMP
+Retroauricular.crease__764143897	Retroauricular crease	764143897	Retroauricular crease	HMP
+Saliva__764143897	Saliva	764143897	Saliva	HMP
+Stool__764143897	Stool	764143897	Stool	HMP
+Subgingival.plaque__764143897	Subgingival plaque	764143897	Subgingival plaque	HMP
+Supragingival.plaque__764143897	Supragingival plaque	764143897	Supragingival plaque	HMP
+Throat__764143897	Throat	764143897	Throat	HMP
+Tongue.dorsum__764143897	Tongue dorsum	764143897	Tongue dorsum	HMP
+Vaginal.introitus__764143897	Vaginal introitus	764143897	Vaginal introitus	HMP
+Anterior.nares__764184357	Anterior nares	764184357	Anterior nares	HMP
+Attached.Keratinized.gingiva__764184357	Attached/Keratinized gingiva	764184357	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764184357	Buccal mucosa	764184357	Buccal mucosa	HMP
+Hard.palate__764184357	Hard palate	764184357	Hard palate	HMP
+L_Antecubital.fossa__764184357	L_Antecubital fossa	764184357	L_Antecubital fossa	HMP
+Mid.vagina__764184357	Mid vagina	764184357	Mid vagina	HMP
+Palatine.Tonsils__764184357	Palatine Tonsils	764184357	Palatine Tonsils	HMP
+Posterior.fornix__764184357	Posterior fornix	764184357	Posterior fornix	HMP
+R_Antecubital.fossa__764184357	R_Antecubital fossa	764184357	R_Antecubital fossa	HMP
+Retroauricular.crease__764184357	Retroauricular crease	764184357	Retroauricular crease	HMP
+Saliva__764184357	Saliva	764184357	Saliva	HMP
+Stool__764184357	Stool	764184357	Stool	HMP
+Subgingival.plaque__764184357	Subgingival plaque	764184357	Subgingival plaque	HMP
+Supragingival.plaque__764184357	Supragingival plaque	764184357	Supragingival plaque	HMP
+Throat__764184357	Throat	764184357	Throat	HMP
+Tongue.dorsum__764184357	Tongue dorsum	764184357	Tongue dorsum	HMP
+Vaginal.introitus__764184357	Vaginal introitus	764184357	Vaginal introitus	HMP
+Anterior.nares__764224817	Anterior nares	764224817	Anterior nares	HMP
+Attached.Keratinized.gingiva__764224817	Attached/Keratinized gingiva	764224817	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764224817	Buccal mucosa	764224817	Buccal mucosa	HMP
+Hard.palate__764224817	Hard palate	764224817	Hard palate	HMP
+L_Antecubital.fossa__764224817	L_Antecubital fossa	764224817	L_Antecubital fossa	HMP
+Palatine.Tonsils__764224817	Palatine Tonsils	764224817	Palatine Tonsils	HMP
+R_Antecubital.fossa__764224817	R_Antecubital fossa	764224817	R_Antecubital fossa	HMP
+Retroauricular.crease__764224817	Retroauricular crease	764224817	Retroauricular crease	HMP
+Saliva__764224817	Saliva	764224817	Saliva	HMP
+Stool__764224817	Stool	764224817	Stool	HMP
+Subgingival.plaque__764224817	Subgingival plaque	764224817	Subgingival plaque	HMP
+Supragingival.plaque__764224817	Supragingival plaque	764224817	Supragingival plaque	HMP
+Throat__764224817	Throat	764224817	Throat	HMP
+Tongue.dorsum__764224817	Tongue dorsum	764224817	Tongue dorsum	HMP
+Attached.Keratinized.gingiva__764245047	Attached/Keratinized gingiva	764245047	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764245047	Buccal mucosa	764245047	Buccal mucosa	HMP
+Hard.palate__764245047	Hard palate	764245047	Hard palate	HMP
+Mid.vagina__764245047	Mid vagina	764245047	Mid vagina	HMP
+Palatine.Tonsils__764245047	Palatine Tonsils	764245047	Palatine Tonsils	HMP
+Posterior.fornix__764245047	Posterior fornix	764245047	Posterior fornix	HMP
+Retroauricular.crease__764245047	Retroauricular crease	764245047	Retroauricular crease	HMP
+Saliva__764245047	Saliva	764245047	Saliva	HMP
+Stool__764245047	Stool	764245047	Stool	HMP
+Subgingival.plaque__764245047	Subgingival plaque	764245047	Subgingival plaque	HMP
+Supragingival.plaque__764245047	Supragingival plaque	764245047	Supragingival plaque	HMP
+Throat__764245047	Throat	764245047	Throat	HMP
+Tongue.dorsum__764245047	Tongue dorsum	764245047	Tongue dorsum	HMP
+Vaginal.introitus__764245047	Vaginal introitus	764245047	Vaginal introitus	HMP
+Attached.Keratinized.gingiva__764285508	Attached/Keratinized gingiva	764285508	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764285508	Buccal mucosa	764285508	Buccal mucosa	HMP
+Hard.palate__764285508	Hard palate	764285508	Hard palate	HMP
+Palatine.Tonsils__764285508	Palatine Tonsils	764285508	Palatine Tonsils	HMP
+Saliva__764285508	Saliva	764285508	Saliva	HMP
+Stool__764285508	Stool	764285508	Stool	HMP
+Subgingival.plaque__764285508	Subgingival plaque	764285508	Subgingival plaque	HMP
+Supragingival.plaque__764285508	Supragingival plaque	764285508	Supragingival plaque	HMP
+Throat__764285508	Throat	764285508	Throat	HMP
+Tongue.dorsum__764285508	Tongue dorsum	764285508	Tongue dorsum	HMP
+Anterior.nares__764325968	Anterior nares	764325968	Anterior nares	HMP
+Attached.Keratinized.gingiva__764325968	Attached/Keratinized gingiva	764325968	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764325968	Buccal mucosa	764325968	Buccal mucosa	HMP
+Hard.palate__764325968	Hard palate	764325968	Hard palate	HMP
+L_Antecubital.fossa__764325968	L_Antecubital fossa	764325968	L_Antecubital fossa	HMP
+Palatine.Tonsils__764325968	Palatine Tonsils	764325968	Palatine Tonsils	HMP
+R_Antecubital.fossa__764325968	R_Antecubital fossa	764325968	R_Antecubital fossa	HMP
+Retroauricular.crease__764325968	Retroauricular crease	764325968	Retroauricular crease	HMP
+Saliva__764325968	Saliva	764325968	Saliva	HMP
+Stool__764325968	Stool	764325968	Stool	HMP
+Subgingival.plaque__764325968	Subgingival plaque	764325968	Subgingival plaque	HMP
+Supragingival.plaque__764325968	Supragingival plaque	764325968	Supragingival plaque	HMP
+Throat__764325968	Throat	764325968	Throat	HMP
+Tongue.dorsum__764325968	Tongue dorsum	764325968	Tongue dorsum	HMP
+Anterior.nares__764346198	Anterior nares	764346198	Anterior nares	HMP
+Attached.Keratinized.gingiva__764346198	Attached/Keratinized gingiva	764346198	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764346198	Buccal mucosa	764346198	Buccal mucosa	HMP
+Hard.palate__764346198	Hard palate	764346198	Hard palate	HMP
+L_Antecubital.fossa__764346198	L_Antecubital fossa	764346198	L_Antecubital fossa	HMP
+Mid.vagina__764346198	Mid vagina	764346198	Mid vagina	HMP
+Palatine.Tonsils__764346198	Palatine Tonsils	764346198	Palatine Tonsils	HMP
+Posterior.fornix__764346198	Posterior fornix	764346198	Posterior fornix	HMP
+R_Antecubital.fossa__764346198	R_Antecubital fossa	764346198	R_Antecubital fossa	HMP
+Retroauricular.crease__764346198	Retroauricular crease	764346198	Retroauricular crease	HMP
+Stool__764346198	Stool	764346198	Stool	HMP
+Subgingival.plaque__764346198	Subgingival plaque	764346198	Subgingival plaque	HMP
+Supragingival.plaque__764346198	Supragingival plaque	764346198	Supragingival plaque	HMP
+Throat__764346198	Throat	764346198	Throat	HMP
+Tongue.dorsum__764346198	Tongue dorsum	764346198	Tongue dorsum	HMP
+Vaginal.introitus__764346198	Vaginal introitus	764346198	Vaginal introitus	HMP
+Anterior.nares__764366428	Anterior nares	764366428	Anterior nares	HMP
+Attached.Keratinized.gingiva__764366428	Attached/Keratinized gingiva	764366428	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764366428	Buccal mucosa	764366428	Buccal mucosa	HMP
+Hard.palate__764366428	Hard palate	764366428	Hard palate	HMP
+L_Antecubital.fossa__764366428	L_Antecubital fossa	764366428	L_Antecubital fossa	HMP
+Mid.vagina__764366428	Mid vagina	764366428	Mid vagina	HMP
+Palatine.Tonsils__764366428	Palatine Tonsils	764366428	Palatine Tonsils	HMP
+Posterior.fornix__764366428	Posterior fornix	764366428	Posterior fornix	HMP
+Retroauricular.crease__764366428	Retroauricular crease	764366428	Retroauricular crease	HMP
+Saliva__764366428	Saliva	764366428	Saliva	HMP
+Stool__764366428	Stool	764366428	Stool	HMP
+Subgingival.plaque__764366428	Subgingival plaque	764366428	Subgingival plaque	HMP
+Supragingival.plaque__764366428	Supragingival plaque	764366428	Supragingival plaque	HMP
+Throat__764366428	Throat	764366428	Throat	HMP
+Tongue.dorsum__764366428	Tongue dorsum	764366428	Tongue dorsum	HMP
+Vaginal.introitus__764366428	Vaginal introitus	764366428	Vaginal introitus	HMP
+Anterior.nares__764447348	Anterior nares	764447348	Anterior nares	HMP
+Attached.Keratinized.gingiva__764447348	Attached/Keratinized gingiva	764447348	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764447348	Buccal mucosa	764447348	Buccal mucosa	HMP
+Hard.palate__764447348	Hard palate	764447348	Hard palate	HMP
+Palatine.Tonsils__764447348	Palatine Tonsils	764447348	Palatine Tonsils	HMP
+R_Antecubital.fossa__764447348	R_Antecubital fossa	764447348	R_Antecubital fossa	HMP
+Retroauricular.crease__764447348	Retroauricular crease	764447348	Retroauricular crease	HMP
+Saliva__764447348	Saliva	764447348	Saliva	HMP
+Stool__764447348	Stool	764447348	Stool	HMP
+Subgingival.plaque__764447348	Subgingival plaque	764447348	Subgingival plaque	HMP
+Supragingival.plaque__764447348	Supragingival plaque	764447348	Supragingival plaque	HMP
+Throat__764447348	Throat	764447348	Throat	HMP
+Tongue.dorsum__764447348	Tongue dorsum	764447348	Tongue dorsum	HMP
+Anterior.nares__764467579	Anterior nares	764467579	Anterior nares	HMP
+Attached.Keratinized.gingiva__764467579	Attached/Keratinized gingiva	764467579	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764467579	Buccal mucosa	764467579	Buccal mucosa	HMP
+Hard.palate__764467579	Hard palate	764467579	Hard palate	HMP
+L_Antecubital.fossa__764467579	L_Antecubital fossa	764467579	L_Antecubital fossa	HMP
+Mid.vagina__764467579	Mid vagina	764467579	Mid vagina	HMP
+Palatine.Tonsils__764467579	Palatine Tonsils	764467579	Palatine Tonsils	HMP
+Posterior.fornix__764467579	Posterior fornix	764467579	Posterior fornix	HMP
+R_Antecubital.fossa__764467579	R_Antecubital fossa	764467579	R_Antecubital fossa	HMP
+Retroauricular.crease__764467579	Retroauricular crease	764467579	Retroauricular crease	HMP
+Saliva__764467579	Saliva	764467579	Saliva	HMP
+Stool__764467579	Stool	764467579	Stool	HMP
+Subgingival.plaque__764467579	Subgingival plaque	764467579	Subgingival plaque	HMP
+Supragingival.plaque__764467579	Supragingival plaque	764467579	Supragingival plaque	HMP
+Throat__764467579	Throat	764467579	Throat	HMP
+Tongue.dorsum__764467579	Tongue dorsum	764467579	Tongue dorsum	HMP
+Vaginal.introitus__764467579	Vaginal introitus	764467579	Vaginal introitus	HMP
+Anterior.nares__764487809	Anterior nares	764487809	Anterior nares	HMP
+Attached.Keratinized.gingiva__764487809	Attached/Keratinized gingiva	764487809	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764487809	Buccal mucosa	764487809	Buccal mucosa	HMP
+Hard.palate__764487809	Hard palate	764487809	Hard palate	HMP
+L_Antecubital.fossa__764487809	L_Antecubital fossa	764487809	L_Antecubital fossa	HMP
+Palatine.Tonsils__764487809	Palatine Tonsils	764487809	Palatine Tonsils	HMP
+R_Antecubital.fossa__764487809	R_Antecubital fossa	764487809	R_Antecubital fossa	HMP
+Retroauricular.crease__764487809	Retroauricular crease	764487809	Retroauricular crease	HMP
+Saliva__764487809	Saliva	764487809	Saliva	HMP
+Stool__764487809	Stool	764487809	Stool	HMP
+Subgingival.plaque__764487809	Subgingival plaque	764487809	Subgingival plaque	HMP
+Supragingival.plaque__764487809	Supragingival plaque	764487809	Supragingival plaque	HMP
+Throat__764487809	Throat	764487809	Throat	HMP
+Tongue.dorsum__764487809	Tongue dorsum	764487809	Tongue dorsum	HMP
+Anterior.nares__764508039	Anterior nares	764508039	Anterior nares	HMP
+Attached.Keratinized.gingiva__764508039	Attached/Keratinized gingiva	764508039	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764508039	Buccal mucosa	764508039	Buccal mucosa	HMP
+Hard.palate__764508039	Hard palate	764508039	Hard palate	HMP
+L_Antecubital.fossa__764508039	L_Antecubital fossa	764508039	L_Antecubital fossa	HMP
+Palatine.Tonsils__764508039	Palatine Tonsils	764508039	Palatine Tonsils	HMP
+R_Antecubital.fossa__764508039	R_Antecubital fossa	764508039	R_Antecubital fossa	HMP
+Retroauricular.crease__764508039	Retroauricular crease	764508039	Retroauricular crease	HMP
+Saliva__764508039	Saliva	764508039	Saliva	HMP
+Stool__764508039	Stool	764508039	Stool	HMP
+Subgingival.plaque__764508039	Subgingival plaque	764508039	Subgingival plaque	HMP
+Supragingival.plaque__764508039	Supragingival plaque	764508039	Supragingival plaque	HMP
+Throat__764508039	Throat	764508039	Throat	HMP
+Tongue.dorsum__764508039	Tongue dorsum	764508039	Tongue dorsum	HMP
+Attached.Keratinized.gingiva__764588959	Attached/Keratinized gingiva	764588959	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764588959	Buccal mucosa	764588959	Buccal mucosa	HMP
+Hard.palate__764588959	Hard palate	764588959	Hard palate	HMP
+L_Antecubital.fossa__764588959	L_Antecubital fossa	764588959	L_Antecubital fossa	HMP
+Mid.vagina__764588959	Mid vagina	764588959	Mid vagina	HMP
+Palatine.Tonsils__764588959	Palatine Tonsils	764588959	Palatine Tonsils	HMP
+Posterior.fornix__764588959	Posterior fornix	764588959	Posterior fornix	HMP
+R_Antecubital.fossa__764588959	R_Antecubital fossa	764588959	R_Antecubital fossa	HMP
+Retroauricular.crease__764588959	Retroauricular crease	764588959	Retroauricular crease	HMP
+Saliva__764588959	Saliva	764588959	Saliva	HMP
+Stool__764588959	Stool	764588959	Stool	HMP
+Subgingival.plaque__764588959	Subgingival plaque	764588959	Subgingival plaque	HMP
+Supragingival.plaque__764588959	Supragingival plaque	764588959	Supragingival plaque	HMP
+Throat__764588959	Throat	764588959	Throat	HMP
+Tongue.dorsum__764588959	Tongue dorsum	764588959	Tongue dorsum	HMP
+Anterior.nares__764649650	Anterior nares	764649650	Anterior nares	HMP
+Attached.Keratinized.gingiva__764649650	Attached/Keratinized gingiva	764649650	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764649650	Buccal mucosa	764649650	Buccal mucosa	HMP
+Hard.palate__764649650	Hard palate	764649650	Hard palate	HMP
+L_Antecubital.fossa__764649650	L_Antecubital fossa	764649650	L_Antecubital fossa	HMP
+Mid.vagina__764649650	Mid vagina	764649650	Mid vagina	HMP
+Palatine.Tonsils__764649650	Palatine Tonsils	764649650	Palatine Tonsils	HMP
+Posterior.fornix__764649650	Posterior fornix	764649650	Posterior fornix	HMP
+R_Antecubital.fossa__764649650	R_Antecubital fossa	764649650	R_Antecubital fossa	HMP
+Retroauricular.crease__764649650	Retroauricular crease	764649650	Retroauricular crease	HMP
+Saliva__764649650	Saliva	764649650	Saliva	HMP
+Stool__764649650	Stool	764649650	Stool	HMP
+Subgingival.plaque__764649650	Subgingival plaque	764649650	Subgingival plaque	HMP
+Supragingival.plaque__764649650	Supragingival plaque	764649650	Supragingival plaque	HMP
+Throat__764649650	Throat	764649650	Throat	HMP
+Tongue.dorsum__764649650	Tongue dorsum	764649650	Tongue dorsum	HMP
+Vaginal.introitus__764649650	Vaginal introitus	764649650	Vaginal introitus	HMP
+Anterior.nares__764669880	Anterior nares	764669880	Anterior nares	HMP
+Attached.Keratinized.gingiva__764669880	Attached/Keratinized gingiva	764669880	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764669880	Buccal mucosa	764669880	Buccal mucosa	HMP
+Hard.palate__764669880	Hard palate	764669880	Hard palate	HMP
+L_Antecubital.fossa__764669880	L_Antecubital fossa	764669880	L_Antecubital fossa	HMP
+Palatine.Tonsils__764669880	Palatine Tonsils	764669880	Palatine Tonsils	HMP
+R_Antecubital.fossa__764669880	R_Antecubital fossa	764669880	R_Antecubital fossa	HMP
+Retroauricular.crease__764669880	Retroauricular crease	764669880	Retroauricular crease	HMP
+Saliva__764669880	Saliva	764669880	Saliva	HMP
+Stool__764669880	Stool	764669880	Stool	HMP
+Subgingival.plaque__764669880	Subgingival plaque	764669880	Subgingival plaque	HMP
+Supragingival.plaque__764669880	Supragingival plaque	764669880	Supragingival plaque	HMP
+Throat__764669880	Throat	764669880	Throat	HMP
+Tongue.dorsum__764669880	Tongue dorsum	764669880	Tongue dorsum	HMP
+L_Antecubital.fossa__764710340	L_Antecubital fossa	764710340	L_Antecubital fossa	HMP
+Mid.vagina__764710340	Mid vagina	764710340	Mid vagina	HMP
+Posterior.fornix__764710340	Posterior fornix	764710340	Posterior fornix	HMP
+R_Antecubital.fossa__764710340	R_Antecubital fossa	764710340	R_Antecubital fossa	HMP
+Retroauricular.crease__764710340	Retroauricular crease	764710340	Retroauricular crease	HMP
+Stool__764710340	Stool	764710340	Stool	HMP
+Vaginal.introitus__764710340	Vaginal introitus	764710340	Vaginal introitus	HMP
+Anterior.nares__764750800	Anterior nares	764750800	Anterior nares	HMP
+Attached.Keratinized.gingiva__764750800	Attached/Keratinized gingiva	764750800	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764750800	Buccal mucosa	764750800	Buccal mucosa	HMP
+Hard.palate__764750800	Hard palate	764750800	Hard palate	HMP
+L_Antecubital.fossa__764750800	L_Antecubital fossa	764750800	L_Antecubital fossa	HMP
+Palatine.Tonsils__764750800	Palatine Tonsils	764750800	Palatine Tonsils	HMP
+R_Antecubital.fossa__764750800	R_Antecubital fossa	764750800	R_Antecubital fossa	HMP
+Retroauricular.crease__764750800	Retroauricular crease	764750800	Retroauricular crease	HMP
+Stool__764750800	Stool	764750800	Stool	HMP
+Subgingival.plaque__764750800	Subgingival plaque	764750800	Subgingival plaque	HMP
+Supragingival.plaque__764750800	Supragingival plaque	764750800	Supragingival plaque	HMP
+Throat__764750800	Throat	764750800	Throat	HMP
+Tongue.dorsum__764750800	Tongue dorsum	764750800	Tongue dorsum	HMP
+Attached.Keratinized.gingiva__764811490	Attached/Keratinized gingiva	764811490	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764811490	Buccal mucosa	764811490	Buccal mucosa	HMP
+Hard.palate__764811490	Hard palate	764811490	Hard palate	HMP
+Mid.vagina__764811490	Mid vagina	764811490	Mid vagina	HMP
+Palatine.Tonsils__764811490	Palatine Tonsils	764811490	Palatine Tonsils	HMP
+Posterior.fornix__764811490	Posterior fornix	764811490	Posterior fornix	HMP
+R_Antecubital.fossa__764811490	R_Antecubital fossa	764811490	R_Antecubital fossa	HMP
+Stool__764811490	Stool	764811490	Stool	HMP
+Subgingival.plaque__764811490	Subgingival plaque	764811490	Subgingival plaque	HMP
+Supragingival.plaque__764811490	Supragingival plaque	764811490	Supragingival plaque	HMP
+Throat__764811490	Throat	764811490	Throat	HMP
+Tongue.dorsum__764811490	Tongue dorsum	764811490	Tongue dorsum	HMP
+Vaginal.introitus__764811490	Vaginal introitus	764811490	Vaginal introitus	HMP
+Anterior.nares__764831721	Anterior nares	764831721	Anterior nares	HMP
+Attached.Keratinized.gingiva__764831721	Attached/Keratinized gingiva	764831721	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764831721	Buccal mucosa	764831721	Buccal mucosa	HMP
+Hard.palate__764831721	Hard palate	764831721	Hard palate	HMP
+L_Antecubital.fossa__764831721	L_Antecubital fossa	764831721	L_Antecubital fossa	HMP
+Palatine.Tonsils__764831721	Palatine Tonsils	764831721	Palatine Tonsils	HMP
+R_Antecubital.fossa__764831721	R_Antecubital fossa	764831721	R_Antecubital fossa	HMP
+Saliva__764831721	Saliva	764831721	Saliva	HMP
+Stool__764831721	Stool	764831721	Stool	HMP
+Subgingival.plaque__764831721	Subgingival plaque	764831721	Subgingival plaque	HMP
+Supragingival.plaque__764831721	Supragingival plaque	764831721	Supragingival plaque	HMP
+Throat__764831721	Throat	764831721	Throat	HMP
+Tongue.dorsum__764831721	Tongue dorsum	764831721	Tongue dorsum	HMP
+Anterior.nares__764872181	Anterior nares	764872181	Anterior nares	HMP
+Attached.Keratinized.gingiva__764872181	Attached/Keratinized gingiva	764872181	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764872181	Buccal mucosa	764872181	Buccal mucosa	HMP
+Hard.palate__764872181	Hard palate	764872181	Hard palate	HMP
+L_Antecubital.fossa__764872181	L_Antecubital fossa	764872181	L_Antecubital fossa	HMP
+Palatine.Tonsils__764872181	Palatine Tonsils	764872181	Palatine Tonsils	HMP
+R_Antecubital.fossa__764872181	R_Antecubital fossa	764872181	R_Antecubital fossa	HMP
+Retroauricular.crease__764872181	Retroauricular crease	764872181	Retroauricular crease	HMP
+Stool__764872181	Stool	764872181	Stool	HMP
+Subgingival.plaque__764872181	Subgingival plaque	764872181	Subgingival plaque	HMP
+Supragingival.plaque__764872181	Supragingival plaque	764872181	Supragingival plaque	HMP
+Throat__764872181	Throat	764872181	Throat	HMP
+Tongue.dorsum__764872181	Tongue dorsum	764872181	Tongue dorsum	HMP
+Anterior.nares__764892411	Anterior nares	764892411	Anterior nares	HMP
+Attached.Keratinized.gingiva__764892411	Attached/Keratinized gingiva	764892411	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764892411	Buccal mucosa	764892411	Buccal mucosa	HMP
+Hard.palate__764892411	Hard palate	764892411	Hard palate	HMP
+L_Antecubital.fossa__764892411	L_Antecubital fossa	764892411	L_Antecubital fossa	HMP
+Palatine.Tonsils__764892411	Palatine Tonsils	764892411	Palatine Tonsils	HMP
+R_Antecubital.fossa__764892411	R_Antecubital fossa	764892411	R_Antecubital fossa	HMP
+Retroauricular.crease__764892411	Retroauricular crease	764892411	Retroauricular crease	HMP
+Saliva__764892411	Saliva	764892411	Saliva	HMP
+Stool__764892411	Stool	764892411	Stool	HMP
+Subgingival.plaque__764892411	Subgingival plaque	764892411	Subgingival plaque	HMP
+Supragingival.plaque__764892411	Supragingival plaque	764892411	Supragingival plaque	HMP
+Throat__764892411	Throat	764892411	Throat	HMP
+Tongue.dorsum__764892411	Tongue dorsum	764892411	Tongue dorsum	HMP
+Anterior.nares__764953101	Anterior nares	764953101	Anterior nares	HMP
+Attached.Keratinized.gingiva__764953101	Attached/Keratinized gingiva	764953101	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__764953101	Buccal mucosa	764953101	Buccal mucosa	HMP
+Hard.palate__764953101	Hard palate	764953101	Hard palate	HMP
+Palatine.Tonsils__764953101	Palatine Tonsils	764953101	Palatine Tonsils	HMP
+R_Antecubital.fossa__764953101	R_Antecubital fossa	764953101	R_Antecubital fossa	HMP
+Saliva__764953101	Saliva	764953101	Saliva	HMP
+Stool__764953101	Stool	764953101	Stool	HMP
+Subgingival.plaque__764953101	Subgingival plaque	764953101	Subgingival plaque	HMP
+Supragingival.plaque__764953101	Supragingival plaque	764953101	Supragingival plaque	HMP
+Throat__764953101	Throat	764953101	Throat	HMP
+Tongue.dorsum__764953101	Tongue dorsum	764953101	Tongue dorsum	HMP
+Anterior.nares__765013792	Anterior nares	765013792	Anterior nares	HMP
+Attached.Keratinized.gingiva__765013792	Attached/Keratinized gingiva	765013792	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765013792	Buccal mucosa	765013792	Buccal mucosa	HMP
+Hard.palate__765013792	Hard palate	765013792	Hard palate	HMP
+Mid.vagina__765013792	Mid vagina	765013792	Mid vagina	HMP
+Palatine.Tonsils__765013792	Palatine Tonsils	765013792	Palatine Tonsils	HMP
+Posterior.fornix__765013792	Posterior fornix	765013792	Posterior fornix	HMP
+R_Antecubital.fossa__765013792	R_Antecubital fossa	765013792	R_Antecubital fossa	HMP
+Retroauricular.crease__765013792	Retroauricular crease	765013792	Retroauricular crease	HMP
+Saliva__765013792	Saliva	765013792	Saliva	HMP
+Stool__765013792	Stool	765013792	Stool	HMP
+Subgingival.plaque__765013792	Subgingival plaque	765013792	Subgingival plaque	HMP
+Supragingival.plaque__765013792	Supragingival plaque	765013792	Supragingival plaque	HMP
+Throat__765013792	Throat	765013792	Throat	HMP
+Tongue.dorsum__765013792	Tongue dorsum	765013792	Tongue dorsum	HMP
+Vaginal.introitus__765013792	Vaginal introitus	765013792	Vaginal introitus	HMP
+Anterior.nares__765034022	Anterior nares	765034022	Anterior nares	HMP
+Attached.Keratinized.gingiva__765034022	Attached/Keratinized gingiva	765034022	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765034022	Buccal mucosa	765034022	Buccal mucosa	HMP
+Hard.palate__765034022	Hard palate	765034022	Hard palate	HMP
+L_Antecubital.fossa__765034022	L_Antecubital fossa	765034022	L_Antecubital fossa	HMP
+Mid.vagina__765034022	Mid vagina	765034022	Mid vagina	HMP
+Palatine.Tonsils__765034022	Palatine Tonsils	765034022	Palatine Tonsils	HMP
+Posterior.fornix__765034022	Posterior fornix	765034022	Posterior fornix	HMP
+R_Antecubital.fossa__765034022	R_Antecubital fossa	765034022	R_Antecubital fossa	HMP
+Retroauricular.crease__765034022	Retroauricular crease	765034022	Retroauricular crease	HMP
+Saliva__765034022	Saliva	765034022	Saliva	HMP
+Stool__765034022	Stool	765034022	Stool	HMP
+Subgingival.plaque__765034022	Subgingival plaque	765034022	Subgingival plaque	HMP
+Supragingival.plaque__765034022	Supragingival plaque	765034022	Supragingival plaque	HMP
+Throat__765034022	Throat	765034022	Throat	HMP
+Tongue.dorsum__765034022	Tongue dorsum	765034022	Tongue dorsum	HMP
+Vaginal.introitus__765034022	Vaginal introitus	765034022	Vaginal introitus	HMP
+Anterior.nares__765074482	Anterior nares	765074482	Anterior nares	HMP
+Attached.Keratinized.gingiva__765074482	Attached/Keratinized gingiva	765074482	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765074482	Buccal mucosa	765074482	Buccal mucosa	HMP
+Hard.palate__765074482	Hard palate	765074482	Hard palate	HMP
+L_Antecubital.fossa__765074482	L_Antecubital fossa	765074482	L_Antecubital fossa	HMP
+Palatine.Tonsils__765074482	Palatine Tonsils	765074482	Palatine Tonsils	HMP
+R_Antecubital.fossa__765074482	R_Antecubital fossa	765074482	R_Antecubital fossa	HMP
+Retroauricular.crease__765074482	Retroauricular crease	765074482	Retroauricular crease	HMP
+Saliva__765074482	Saliva	765074482	Saliva	HMP
+Stool__765074482	Stool	765074482	Stool	HMP
+Subgingival.plaque__765074482	Subgingival plaque	765074482	Subgingival plaque	HMP
+Supragingival.plaque__765074482	Supragingival plaque	765074482	Supragingival plaque	HMP
+Throat__765074482	Throat	765074482	Throat	HMP
+Tongue.dorsum__765074482	Tongue dorsum	765074482	Tongue dorsum	HMP
+Anterior.nares__765094712	Anterior nares	765094712	Anterior nares	HMP
+Attached.Keratinized.gingiva__765094712	Attached/Keratinized gingiva	765094712	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765094712	Buccal mucosa	765094712	Buccal mucosa	HMP
+Hard.palate__765094712	Hard palate	765094712	Hard palate	HMP
+L_Antecubital.fossa__765094712	L_Antecubital fossa	765094712	L_Antecubital fossa	HMP
+Palatine.Tonsils__765094712	Palatine Tonsils	765094712	Palatine Tonsils	HMP
+R_Antecubital.fossa__765094712	R_Antecubital fossa	765094712	R_Antecubital fossa	HMP
+Retroauricular.crease__765094712	Retroauricular crease	765094712	Retroauricular crease	HMP
+Saliva__765094712	Saliva	765094712	Saliva	HMP
+Stool__765094712	Stool	765094712	Stool	HMP
+Subgingival.plaque__765094712	Subgingival plaque	765094712	Subgingival plaque	HMP
+Supragingival.plaque__765094712	Supragingival plaque	765094712	Supragingival plaque	HMP
+Throat__765094712	Throat	765094712	Throat	HMP
+Tongue.dorsum__765094712	Tongue dorsum	765094712	Tongue dorsum	HMP
+Anterior.nares__765135172	Anterior nares	765135172	Anterior nares	HMP
+Attached.Keratinized.gingiva__765135172	Attached/Keratinized gingiva	765135172	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765135172	Buccal mucosa	765135172	Buccal mucosa	HMP
+Hard.palate__765135172	Hard palate	765135172	Hard palate	HMP
+L_Antecubital.fossa__765135172	L_Antecubital fossa	765135172	L_Antecubital fossa	HMP
+Palatine.Tonsils__765135172	Palatine Tonsils	765135172	Palatine Tonsils	HMP
+Retroauricular.crease__765135172	Retroauricular crease	765135172	Retroauricular crease	HMP
+Saliva__765135172	Saliva	765135172	Saliva	HMP
+Stool__765135172	Stool	765135172	Stool	HMP
+Subgingival.plaque__765135172	Subgingival plaque	765135172	Subgingival plaque	HMP
+Supragingival.plaque__765135172	Supragingival plaque	765135172	Supragingival plaque	HMP
+Throat__765135172	Throat	765135172	Throat	HMP
+Tongue.dorsum__765135172	Tongue dorsum	765135172	Tongue dorsum	HMP
+Anterior.nares__765155402	Anterior nares	765155402	Anterior nares	HMP
+Attached.Keratinized.gingiva__765155402	Attached/Keratinized gingiva	765155402	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765155402	Buccal mucosa	765155402	Buccal mucosa	HMP
+Hard.palate__765155402	Hard palate	765155402	Hard palate	HMP
+L_Antecubital.fossa__765155402	L_Antecubital fossa	765155402	L_Antecubital fossa	HMP
+Palatine.Tonsils__765155402	Palatine Tonsils	765155402	Palatine Tonsils	HMP
+R_Antecubital.fossa__765155402	R_Antecubital fossa	765155402	R_Antecubital fossa	HMP
+Retroauricular.crease__765155402	Retroauricular crease	765155402	Retroauricular crease	HMP
+Saliva__765155402	Saliva	765155402	Saliva	HMP
+Stool__765155402	Stool	765155402	Stool	HMP
+Subgingival.plaque__765155402	Subgingival plaque	765155402	Subgingival plaque	HMP
+Supragingival.plaque__765155402	Supragingival plaque	765155402	Supragingival plaque	HMP
+Throat__765155402	Throat	765155402	Throat	HMP
+Tongue.dorsum__765155402	Tongue dorsum	765155402	Tongue dorsum	HMP
+Anterior.nares__765195863	Anterior nares	765195863	Anterior nares	HMP
+Attached.Keratinized.gingiva__765195863	Attached/Keratinized gingiva	765195863	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765195863	Buccal mucosa	765195863	Buccal mucosa	HMP
+Hard.palate__765195863	Hard palate	765195863	Hard palate	HMP
+L_Antecubital.fossa__765195863	L_Antecubital fossa	765195863	L_Antecubital fossa	HMP
+Mid.vagina__765195863	Mid vagina	765195863	Mid vagina	HMP
+Palatine.Tonsils__765195863	Palatine Tonsils	765195863	Palatine Tonsils	HMP
+Posterior.fornix__765195863	Posterior fornix	765195863	Posterior fornix	HMP
+R_Antecubital.fossa__765195863	R_Antecubital fossa	765195863	R_Antecubital fossa	HMP
+Retroauricular.crease__765195863	Retroauricular crease	765195863	Retroauricular crease	HMP
+Saliva__765195863	Saliva	765195863	Saliva	HMP
+Stool__765195863	Stool	765195863	Stool	HMP
+Subgingival.plaque__765195863	Subgingival plaque	765195863	Subgingival plaque	HMP
+Supragingival.plaque__765195863	Supragingival plaque	765195863	Supragingival plaque	HMP
+Throat__765195863	Throat	765195863	Throat	HMP
+Tongue.dorsum__765195863	Tongue dorsum	765195863	Tongue dorsum	HMP
+Vaginal.introitus__765195863	Vaginal introitus	765195863	Vaginal introitus	HMP
+Anterior.nares__765216093	Anterior nares	765216093	Anterior nares	HMP
+Attached.Keratinized.gingiva__765216093	Attached/Keratinized gingiva	765216093	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765216093	Buccal mucosa	765216093	Buccal mucosa	HMP
+Hard.palate__765216093	Hard palate	765216093	Hard palate	HMP
+L_Antecubital.fossa__765216093	L_Antecubital fossa	765216093	L_Antecubital fossa	HMP
+Palatine.Tonsils__765216093	Palatine Tonsils	765216093	Palatine Tonsils	HMP
+R_Antecubital.fossa__765216093	R_Antecubital fossa	765216093	R_Antecubital fossa	HMP
+Retroauricular.crease__765216093	Retroauricular crease	765216093	Retroauricular crease	HMP
+Saliva__765216093	Saliva	765216093	Saliva	HMP
+Stool__765216093	Stool	765216093	Stool	HMP
+Subgingival.plaque__765216093	Subgingival plaque	765216093	Subgingival plaque	HMP
+Supragingival.plaque__765216093	Supragingival plaque	765216093	Supragingival plaque	HMP
+Throat__765216093	Throat	765216093	Throat	HMP
+Tongue.dorsum__765216093	Tongue dorsum	765216093	Tongue dorsum	HMP
+Attached.Keratinized.gingiva__765256553	Attached/Keratinized gingiva	765256553	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765256553	Buccal mucosa	765256553	Buccal mucosa	HMP
+Hard.palate__765256553	Hard palate	765256553	Hard palate	HMP
+Mid.vagina__765256553	Mid vagina	765256553	Mid vagina	HMP
+Palatine.Tonsils__765256553	Palatine Tonsils	765256553	Palatine Tonsils	HMP
+Posterior.fornix__765256553	Posterior fornix	765256553	Posterior fornix	HMP
+R_Antecubital.fossa__765256553	R_Antecubital fossa	765256553	R_Antecubital fossa	HMP
+Retroauricular.crease__765256553	Retroauricular crease	765256553	Retroauricular crease	HMP
+Saliva__765256553	Saliva	765256553	Saliva	HMP
+Stool__765256553	Stool	765256553	Stool	HMP
+Supragingival.plaque__765256553	Supragingival plaque	765256553	Supragingival plaque	HMP
+Throat__765256553	Throat	765256553	Throat	HMP
+Tongue.dorsum__765256553	Tongue dorsum	765256553	Tongue dorsum	HMP
+Vaginal.introitus__765256553	Vaginal introitus	765256553	Vaginal introitus	HMP
+Anterior.nares__765276783	Anterior nares	765276783	Anterior nares	HMP
+Attached.Keratinized.gingiva__765276783	Attached/Keratinized gingiva	765276783	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765276783	Buccal mucosa	765276783	Buccal mucosa	HMP
+Hard.palate__765276783	Hard palate	765276783	Hard palate	HMP
+L_Antecubital.fossa__765276783	L_Antecubital fossa	765276783	L_Antecubital fossa	HMP
+Palatine.Tonsils__765276783	Palatine Tonsils	765276783	Palatine Tonsils	HMP
+R_Antecubital.fossa__765276783	R_Antecubital fossa	765276783	R_Antecubital fossa	HMP
+Retroauricular.crease__765276783	Retroauricular crease	765276783	Retroauricular crease	HMP
+Saliva__765276783	Saliva	765276783	Saliva	HMP
+Stool__765276783	Stool	765276783	Stool	HMP
+Subgingival.plaque__765276783	Subgingival plaque	765276783	Subgingival plaque	HMP
+Supragingival.plaque__765276783	Supragingival plaque	765276783	Supragingival plaque	HMP
+Throat__765276783	Throat	765276783	Throat	HMP
+Tongue.dorsum__765276783	Tongue dorsum	765276783	Tongue dorsum	HMP
+Attached.Keratinized.gingiva__765317243	Attached/Keratinized gingiva	765317243	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765317243	Buccal mucosa	765317243	Buccal mucosa	HMP
+Hard.palate__765317243	Hard palate	765317243	Hard palate	HMP
+Mid.vagina__765317243	Mid vagina	765317243	Mid vagina	HMP
+Palatine.Tonsils__765317243	Palatine Tonsils	765317243	Palatine Tonsils	HMP
+Posterior.fornix__765317243	Posterior fornix	765317243	Posterior fornix	HMP
+Retroauricular.crease__765317243	Retroauricular crease	765317243	Retroauricular crease	HMP
+Stool__765317243	Stool	765317243	Stool	HMP
+Subgingival.plaque__765317243	Subgingival plaque	765317243	Subgingival plaque	HMP
+Supragingival.plaque__765317243	Supragingival plaque	765317243	Supragingival plaque	HMP
+Throat__765317243	Throat	765317243	Throat	HMP
+Tongue.dorsum__765317243	Tongue dorsum	765317243	Tongue dorsum	HMP
+Vaginal.introitus__765317243	Vaginal introitus	765317243	Vaginal introitus	HMP
+Anterior.nares__765337473	Anterior nares	765337473	Anterior nares	HMP
+Attached.Keratinized.gingiva__765337473	Attached/Keratinized gingiva	765337473	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765337473	Buccal mucosa	765337473	Buccal mucosa	HMP
+Hard.palate__765337473	Hard palate	765337473	Hard palate	HMP
+L_Antecubital.fossa__765337473	L_Antecubital fossa	765337473	L_Antecubital fossa	HMP
+Mid.vagina__765337473	Mid vagina	765337473	Mid vagina	HMP
+Palatine.Tonsils__765337473	Palatine Tonsils	765337473	Palatine Tonsils	HMP
+Posterior.fornix__765337473	Posterior fornix	765337473	Posterior fornix	HMP
+R_Antecubital.fossa__765337473	R_Antecubital fossa	765337473	R_Antecubital fossa	HMP
+Retroauricular.crease__765337473	Retroauricular crease	765337473	Retroauricular crease	HMP
+Saliva__765337473	Saliva	765337473	Saliva	HMP
+Stool__765337473	Stool	765337473	Stool	HMP
+Subgingival.plaque__765337473	Subgingival plaque	765337473	Subgingival plaque	HMP
+Supragingival.plaque__765337473	Supragingival plaque	765337473	Supragingival plaque	HMP
+Throat__765337473	Throat	765337473	Throat	HMP
+Tongue.dorsum__765337473	Tongue dorsum	765337473	Tongue dorsum	HMP
+Vaginal.introitus__765337473	Vaginal introitus	765337473	Vaginal introitus	HMP
+Attached.Keratinized.gingiva__765377934	Attached/Keratinized gingiva	765377934	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765377934	Buccal mucosa	765377934	Buccal mucosa	HMP
+Hard.palate__765377934	Hard palate	765377934	Hard palate	HMP
+L_Antecubital.fossa__765377934	L_Antecubital fossa	765377934	L_Antecubital fossa	HMP
+Palatine.Tonsils__765377934	Palatine Tonsils	765377934	Palatine Tonsils	HMP
+R_Antecubital.fossa__765377934	R_Antecubital fossa	765377934	R_Antecubital fossa	HMP
+Retroauricular.crease__765377934	Retroauricular crease	765377934	Retroauricular crease	HMP
+Saliva__765377934	Saliva	765377934	Saliva	HMP
+Throat__765377934	Throat	765377934	Throat	HMP
+Tongue.dorsum__765377934	Tongue dorsum	765377934	Tongue dorsum	HMP
+R_Antecubital.fossa__765398164	R_Antecubital fossa	765398164	R_Antecubital fossa	HMP
+Retroauricular.crease__765398164	Retroauricular crease	765398164	Retroauricular crease	HMP
+L_Antecubital.fossa__765519544	L_Antecubital fossa	765519544	L_Antecubital fossa	HMP
+R_Antecubital.fossa__765519544	R_Antecubital fossa	765519544	R_Antecubital fossa	HMP
+Retroauricular.crease__765519544	Retroauricular crease	765519544	Retroauricular crease	HMP
+R_Antecubital.fossa__765539774	R_Antecubital fossa	765539774	R_Antecubital fossa	HMP
+Retroauricular.crease__765539774	Retroauricular crease	765539774	Retroauricular crease	HMP
+Throat__765539774	Throat	765539774	Throat	HMP
+Anterior.nares__765560005	Anterior nares	765560005	Anterior nares	HMP
+Attached.Keratinized.gingiva__765560005	Attached/Keratinized gingiva	765560005	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765560005	Buccal mucosa	765560005	Buccal mucosa	HMP
+Hard.palate__765560005	Hard palate	765560005	Hard palate	HMP
+L_Antecubital.fossa__765560005	L_Antecubital fossa	765560005	L_Antecubital fossa	HMP
+Palatine.Tonsils__765560005	Palatine Tonsils	765560005	Palatine Tonsils	HMP
+R_Antecubital.fossa__765560005	R_Antecubital fossa	765560005	R_Antecubital fossa	HMP
+Retroauricular.crease__765560005	Retroauricular crease	765560005	Retroauricular crease	HMP
+Subgingival.plaque__765560005	Subgingival plaque	765560005	Subgingival plaque	HMP
+Supragingival.plaque__765560005	Supragingival plaque	765560005	Supragingival plaque	HMP
+Throat__765560005	Throat	765560005	Throat	HMP
+Tongue.dorsum__765560005	Tongue dorsum	765560005	Tongue dorsum	HMP
+L_Antecubital.fossa__765620695	L_Antecubital fossa	765620695	L_Antecubital fossa	HMP
+R_Antecubital.fossa__765620695	R_Antecubital fossa	765620695	R_Antecubital fossa	HMP
+Retroauricular.crease__765620695	Retroauricular crease	765620695	Retroauricular crease	HMP
+Retroauricular.crease__765640925	Retroauricular crease	765640925	Retroauricular crease	HMP
+Mid.vagina__765661155	Mid vagina	765661155	Mid vagina	HMP
+Posterior.fornix__765661155	Posterior fornix	765661155	Posterior fornix	HMP
+Retroauricular.crease__765661155	Retroauricular crease	765661155	Retroauricular crease	HMP
+Stool__765661155	Stool	765661155	Stool	HMP
+Anterior.nares__765701615	Anterior nares	765701615	Anterior nares	HMP
+Attached.Keratinized.gingiva__765701615	Attached/Keratinized gingiva	765701615	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__765701615	Buccal mucosa	765701615	Buccal mucosa	HMP
+Hard.palate__765701615	Hard palate	765701615	Hard palate	HMP
+L_Antecubital.fossa__765701615	L_Antecubital fossa	765701615	L_Antecubital fossa	HMP
+Palatine.Tonsils__765701615	Palatine Tonsils	765701615	Palatine Tonsils	HMP
+R_Antecubital.fossa__765701615	R_Antecubital fossa	765701615	R_Antecubital fossa	HMP
+Retroauricular.crease__765701615	Retroauricular crease	765701615	Retroauricular crease	HMP
+Saliva__765701615	Saliva	765701615	Saliva	HMP
+Stool__765701615	Stool	765701615	Stool	HMP
+Subgingival.plaque__765701615	Subgingival plaque	765701615	Subgingival plaque	HMP
+Supragingival.plaque__765701615	Supragingival plaque	765701615	Supragingival plaque	HMP
+Tongue.dorsum__765701615	Tongue dorsum	765701615	Tongue dorsum	HMP
+R_Antecubital.fossa__857980665	R_Antecubital fossa	857980665	R_Antecubital fossa	HMP
+Retroauricular.crease__857980665	Retroauricular crease	857980665	Retroauricular crease	HMP
+Anterior.nares__861967750	Anterior nares	861967750	Anterior nares	HMP
+Attached.Keratinized.gingiva__861967750	Attached/Keratinized gingiva	861967750	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__861967750	Buccal mucosa	861967750	Buccal mucosa	HMP
+Hard.palate__861967750	Hard palate	861967750	Hard palate	HMP
+L_Antecubital.fossa__861967750	L_Antecubital fossa	861967750	L_Antecubital fossa	HMP
+Palatine.Tonsils__861967750	Palatine Tonsils	861967750	Palatine Tonsils	HMP
+R_Antecubital.fossa__861967750	R_Antecubital fossa	861967750	R_Antecubital fossa	HMP
+Retroauricular.crease__861967750	Retroauricular crease	861967750	Retroauricular crease	HMP
+Saliva__861967750	Saliva	861967750	Saliva	HMP
+Stool__861967750	Stool	861967750	Stool	HMP
+Subgingival.plaque__861967750	Subgingival plaque	861967750	Subgingival plaque	HMP
+Supragingival.plaque__861967750	Supragingival plaque	861967750	Supragingival plaque	HMP
+Throat__861967750	Throat	861967750	Throat	HMP
+Tongue.dorsum__861967750	Tongue dorsum	861967750	Tongue dorsum	HMP
+Attached.Keratinized.gingiva__863126187	Attached/Keratinized gingiva	863126187	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__863126187	Buccal mucosa	863126187	Buccal mucosa	HMP
+Hard.palate__863126187	Hard palate	863126187	Hard palate	HMP
+Palatine.Tonsils__863126187	Palatine Tonsils	863126187	Palatine Tonsils	HMP
+Retroauricular.crease__863126187	Retroauricular crease	863126187	Retroauricular crease	HMP
+Subgingival.plaque__863126187	Subgingival plaque	863126187	Subgingival plaque	HMP
+Throat__863126187	Throat	863126187	Throat	HMP
+Anterior.nares__866653606	Anterior nares	866653606	Anterior nares	HMP
+Attached.Keratinized.gingiva__866653606	Attached/Keratinized gingiva	866653606	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__866653606	Buccal mucosa	866653606	Buccal mucosa	HMP
+Hard.palate__866653606	Hard palate	866653606	Hard palate	HMP
+L_Antecubital.fossa__866653606	L_Antecubital fossa	866653606	L_Antecubital fossa	HMP
+Mid.vagina__866653606	Mid vagina	866653606	Mid vagina	HMP
+Palatine.Tonsils__866653606	Palatine Tonsils	866653606	Palatine Tonsils	HMP
+Posterior.fornix__866653606	Posterior fornix	866653606	Posterior fornix	HMP
+R_Antecubital.fossa__866653606	R_Antecubital fossa	866653606	R_Antecubital fossa	HMP
+Retroauricular.crease__866653606	Retroauricular crease	866653606	Retroauricular crease	HMP
+Saliva__866653606	Saliva	866653606	Saliva	HMP
+Stool__866653606	Stool	866653606	Stool	HMP
+Subgingival.plaque__866653606	Subgingival plaque	866653606	Subgingival plaque	HMP
+Supragingival.plaque__866653606	Supragingival plaque	866653606	Supragingival plaque	HMP
+Throat__866653606	Throat	866653606	Throat	HMP
+Tongue.dorsum__866653606	Tongue dorsum	866653606	Tongue dorsum	HMP
+Vaginal.introitus__866653606	Vaginal introitus	866653606	Vaginal introitus	HMP
+Anterior.nares__872848689	Anterior nares	872848689	Anterior nares	HMP
+Attached.Keratinized.gingiva__872848689	Attached/Keratinized gingiva	872848689	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__872848689	Buccal mucosa	872848689	Buccal mucosa	HMP
+Hard.palate__872848689	Hard palate	872848689	Hard palate	HMP
+L_Antecubital.fossa__872848689	L_Antecubital fossa	872848689	L_Antecubital fossa	HMP
+Mid.vagina__872848689	Mid vagina	872848689	Mid vagina	HMP
+Palatine.Tonsils__872848689	Palatine Tonsils	872848689	Palatine Tonsils	HMP
+Posterior.fornix__872848689	Posterior fornix	872848689	Posterior fornix	HMP
+R_Antecubital.fossa__872848689	R_Antecubital fossa	872848689	R_Antecubital fossa	HMP
+Retroauricular.crease__872848689	Retroauricular crease	872848689	Retroauricular crease	HMP
+Saliva__872848689	Saliva	872848689	Saliva	HMP
+Stool__872848689	Stool	872848689	Stool	HMP
+Subgingival.plaque__872848689	Subgingival plaque	872848689	Subgingival plaque	HMP
+Supragingival.plaque__872848689	Supragingival plaque	872848689	Supragingival plaque	HMP
+Throat__872848689	Throat	872848689	Throat	HMP
+Tongue.dorsum__872848689	Tongue dorsum	872848689	Tongue dorsum	HMP
+Vaginal.introitus__872848689	Vaginal introitus	872848689	Vaginal introitus	HMP
+Anterior.nares__875002022	Anterior nares	875002022	Anterior nares	HMP
+L_Antecubital.fossa__875002022	L_Antecubital fossa	875002022	L_Antecubital fossa	HMP
+R_Antecubital.fossa__875002022	R_Antecubital fossa	875002022	R_Antecubital fossa	HMP
+Vaginal.introitus__875002022	Vaginal introitus	875002022	Vaginal introitus	HMP
+Anterior.nares__901775393	Anterior nares	901775393	Anterior nares	HMP
+Stool__901775393	Stool	901775393	Stool	HMP
+Mid.vagina__937495960	Mid vagina	937495960	Mid vagina	HMP
+Posterior.fornix__937495960	Posterior fornix	937495960	Posterior fornix	HMP
+Retroauricular.crease__937495960	Retroauricular crease	937495960	Retroauricular crease	HMP
+Vaginal.introitus__937495960	Vaginal introitus	937495960	Vaginal introitus	HMP
+Anterior.nares__938202701	Anterior nares	938202701	Anterior nares	HMP
+Attached.Keratinized.gingiva__953045535	Attached/Keratinized gingiva	953045535	Attached/Keratinized gingiva	HMP
+Buccal.mucosa__953045535	Buccal mucosa	953045535	Buccal mucosa	HMP
+L_Antecubital.fossa__953045535	L_Antecubital fossa	953045535	L_Antecubital fossa	HMP
+Mid.vagina__953045535	Mid vagina	953045535	Mid vagina	HMP
+Palatine.Tonsils__953045535	Palatine Tonsils	953045535	Palatine Tonsils	HMP
+Posterior.fornix__953045535	Posterior fornix	953045535	Posterior fornix	HMP
+R_Antecubital.fossa__953045535	R_Antecubital fossa	953045535	R_Antecubital fossa	HMP
+Retroauricular.crease__953045535	Retroauricular crease	953045535	Retroauricular crease	HMP
+Subgingival.plaque__953045535	Subgingival plaque	953045535	Subgingival plaque	HMP
+Supragingival.plaque__953045535	Supragingival plaque	953045535	Supragingival plaque	HMP
+Tongue.dorsum__953045535	Tongue dorsum	953045535	Tongue dorsum	HMP
+positive.control__NA	positive control	NA	positive control	HMP
+water.blank__NA	water blank	NA	water blank	HMP

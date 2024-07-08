@@ -62,7 +62,7 @@ These options only stick around for your current session, so re-run them if you 
 Next try:
 
 ```
-install.packages("BiocManager")
+ackages("BiocManager")
 BiocManager::install(c("qvalue","biomformat","ggtree"))
 Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS="true")
 devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")

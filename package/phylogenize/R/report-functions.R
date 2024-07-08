@@ -650,7 +650,7 @@ process.16s <- function(abd.meta, ...) {
 #'   \item{type}{String. Type of data to use, either "midas" (shotgun) or "16S"
 #'   (amplicon).}
 #'   \item{db_version}{String. Which version of the MIDAS database to use
-#'   ("midas_v1.2", "midas_v1.0", "gtdb_v214", "uhgp").}
+#'   ("midas_v1.2", "midas_v1.0", "gtdb_v214", "midas2_uhgg_fam").}
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis.}
 #' }
@@ -682,6 +682,11 @@ import.pz.db <- function(...) {
             gp.file <- "midas2-uhgg-family-gene-presence-binary.rds"
             tr.file <- "midas2-uhgg-family-trees.rds"
             tax.file <- "midas2-uhgg-family-taxonomy.csv"
+        } else if (opts('db_version') == "gtdb_v214") {
+            # Okay plan of attack is to make the input feather mimic how the gp file is.
+            gp.file <- "midas2-uhgg-family-gene-presence-binary.rds"
+            tr.file <- "midas2-uhgg-family-trees.rds"
+            tax.file <- "midas2-uhgg-family-taxonomy.csv" 
         } else if (opts('db_version') == "custom") { # use together with data_dir
             gp.file <- "custom-gene-presence.rds"
             tr.file <- "custom-trees.rds"
@@ -1415,15 +1420,13 @@ is.dna <- function(seq) {
 #' @param figshare_url Optional: override the URL from which to obtain the data.
 #' @export
 install.data.figshare <- function(data_path=NULL,
-                                  figshare_url="https://ndownloader.figshare.com/files/43599432?private_link=987aeecdfebd2da02302") {
+                                  figshare_url="https://ndownloader.figshare.com/files/43692576?private_link=987aeecdfebd2da02302") {
     if (is.null(data_path)) {
         data_path = tempfile()
         curl::curl_download(figshare_url, data_path)
     }
     untar(data_path, exdir = system.file("", package="phylogenize"))
-    return(TRUE)
 }
-
 
 #' Return a boolean telling whether a phenotype has nonzero variance in different phyla.
 #'
