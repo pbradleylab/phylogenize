@@ -24,7 +24,7 @@ Depends:
     functional,
     future,
     furrr,
-    sparklyr
+    arrow
 Imports:
     data.table,
     parallel,
@@ -44,6 +44,6 @@ Imports:
     lobstr,
     testthat,
     ezknitr,
-    sparklyr
+    arrow
 Suggests: 
 RoxygenNote: 6.1.1.9000

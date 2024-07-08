@@ -660,57 +660,60 @@ process.16s <- function(abd.meta, ...) {
 #' @export
 import.pz.db <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    # parse
+    # Parse the user mode and collect the respective files.
     if (opts('type') == "midas") {
         if (opts('db_version') == "midas_v1.0") {
-            gp.file <- "MIDAS-gene-presence-binary-1.0.rds"
-            tr.file <- "MIDAS_1.0-trees.rds"
-            tax.file <- "MIDAS_1.0-taxonomy.csv"
+            gene.presence <- readRDS(file.path(opts('data_dir'), "MIDAS-gene-presence-binary-1.0.rds"))
+            trees <- readRDS(file.path(opts('data_dir'), "MIDAS_1.0-trees.rds"))
+            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"MIDAS_1.0-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
         } else if (opts('db_version') == "midas_v1.2") {
-            gp.file <- "MIDAS-gene-presence-binary-1.2.rds"
-            tr.file <- "MIDAS_1.2-trees.rds"
-            tax.file <- "MIDAS_1.2-taxonomy.csv"
+            gene.presence <- readRDS(file.path(opts('data_dir'), "MIDAS-gene-presence-binary-1.2.rds"))
+            trees <- readRDS(file.path(opts('data_dir'), "MIDAS_1.2-trees.rds"))
+            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"MIDAS_1.2-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
         } else if (opts('db_version') == "test") {
-            gp.file <- "test-gene-presence-binary.rds"
-            tr.file <- "test-trees.rds"
-            tax.file <- "test-taxonomy.csv"
+            gene.presence <- readRDS(file.path(opts('data_dir'), "test-gene-presence-binary.rds"))
+            trees <- readRDS(file.path(opts('data_dir'), "test-trees.rds"))
+            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"test-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
         } else if (opts('db_version') == "midas2_uhgg") {
-            gp.file <- "midas2-uhgg-gene-presence-binary.rds"
-            tr.file <- "midas2-uhgg-trees.rds"
-            tax.file <- "midas2-uhgg-taxonomy.csv"
+            gene.presence <- readRDS(file.path(opts('data_dir'), "midas2-uhgg-gene-presence-binary.rds"))
+            trees <- readRDS(file.path(opts('data_dir'), "midas2-uhgg-trees.rds"))
+            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"midas2-uhgg-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
         } else if (opts('db_version') == "midas2_uhgg_fam") {
-            gp.file <- "midas2-uhgg-family-gene-presence-binary.rds"
-            tr.file <- "midas2-uhgg-family-trees.rds"
-            tax.file <- "midas2-uhgg-family-taxonomy.csv"
-        } else if (opts('db_version') == "gtdb_v214") {
-            # Okay plan of attack is to make the input feather mimic how the gp file is.
-            gp.file <- "midas2-uhgg-family-gene-presence-binary.rds"
-            tr.file <- "midas2-uhgg-family-trees.rds"
-            tax.file <- "midas2-uhgg-family-taxonomy.csv" 
+            gene.presence <- readRDS(file.path(opts('data_dir'), "midas2-uhgg-family-gene-presence-binary.rds"))
+            trees <- readRDS(file.path(opts('data_dir'), "midas2-uhgg-family-trees.rds"))
+            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"midas2-uhgg-family-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
         } else if (opts('db_version') == "custom") { # use together with data_dir
-            gp.file <- "custom-gene-presence.rds"
-            tr.file <- "custom-trees.rds"
-            tax.file <- "custom-taxonomy.csv"
+            gene.presence <- readRDS(file.path(opts('data_dir'), "custom-gene-presence.rds"))
+            trees <- readRDS(file.path(opts('data_dir'), "custom-trees.rds"))
+            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"custom-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
         } else {
             pz.error(paste0("Unknown database version ", opts('db_version')))
         }
     } else if (opts('type') == "16S") {
-        gp.file <- "MIDAS-gene-presence-binary-1.2.rds"
-        tr.file <- "MIDAS_1.2-trees.rds"
-        tax.file <- "MIDAS_1.2-taxonomy.csv"
+        gene.presence <- readRDS(file.path(opts('data_dir'), "MIDAS-gene-presence-binary-1.2.rds"))
+        trees <- readRDS(file.path(opts('data_dir'), "MIDAS_1.2-trees.rds"))
+        taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"MIDAS_1.2-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
     } else if (opts('type') == "16S-test") {
-        gp.file <- "test-gene-presence-binary.rds"
-        tr.file <- "test-trees.rds"
-        tax.file <- "test-taxonomy.csv"
-    } else {
+        gene.presence <- readRDS(file.path(opts('data_dir'), "test-gene-presence-binary.rds"))
+        trees <- readRDS(file.path(opts('data_dir'), "test-trees.rds"))
+        taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"test-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
+    } else if (opts('type') == "gtdb") {
+        if (opts('db_version') == "gtdb_v214") {
+            # Read in gene presence and the functions file
+            gene.presence <- arrow::read_parquet(file.path(opts('data_dir'), "gtdb-gene-presence-binary-214.parquet"))
+
+            trees <- readRDS(file.path(opts('data_dir'), "gtdb_214-taxonomy.tree"))
+            # Add in the species column from the cluster column *This can be removed later on so that the external db is format fully
+            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"gtdb_214-taxonomy.csv")), stringsAsFactors = FALSE)
+            taxonomy$species <- sapply(strsplit(gtdb_tax$cluster, ","), function(x) {
+                last_part <- x[length(x)]
+                sub("(_[a-zA-Z0-9]+)_[0-9]+$", "\\1", last_part)
+                })
+        }
+    }else {
         pz.error(paste0("Unknown data type ", opts('type')))
     }
-    # read
-    gene.presence <- readRDS(file.path(opts('data_dir'), gp.file))
-    trees <- readRDS(file.path(opts('data_dir'), tr.file))
-    taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),
-                                                       tax.file)),
-                           stringsAsFactors = FALSE)[,-1]
+
     if ((opts('type') == 'midas') && (opts('db_version') == "midas2_uhgg")) {
         gene.to.fxn <- data.table::fread(file.path(opts('data_dir'),
                                                    "midas2-uhgg.functions"),
