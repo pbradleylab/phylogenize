@@ -11,6 +11,7 @@ License: MIT
 Encoding: UTF-8
 LazyData: true
 Depends:
+    pandoc,
     phylolm,
     settings,
     Matrix,
@@ -24,7 +25,7 @@ Depends:
     functional,
     future,
     furrr,
-    arrow
+    yaml
 Imports:
     data.table,
     parallel,
