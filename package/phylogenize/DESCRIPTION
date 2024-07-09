@@ -24,7 +24,8 @@ Depends:
     functional,
     future,
     furrr,
-    yaml
+    yaml,
+    sparklyr
 Imports:
     data.table,
     parallel,
