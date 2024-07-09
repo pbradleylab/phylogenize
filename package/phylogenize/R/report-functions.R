@@ -699,7 +699,7 @@ import.pz.db <- function(...) {
         taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"test-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
     } else if (opts('type') == "gtdb") {
         if (opts('db_version') == "gtdb_v214") {
-            # Read in gene presence and the functions file
+            # Read in gene presence and the functions file 
             gene.presence <- arrow::read_parquet(file.path(opts('data_dir'), "gtdb-gene-presence-binary-214.parquet"))
 
             trees <- readRDS(file.path(opts('data_dir'), "gtdb_214-taxonomy.tree"))

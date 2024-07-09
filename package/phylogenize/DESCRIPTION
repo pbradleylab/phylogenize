@@ -11,7 +11,6 @@ License: MIT
 Encoding: UTF-8
 LazyData: true
 Depends:
-    pandoc,
     phylolm,
     settings,
     Matrix,
@@ -44,7 +43,6 @@ Imports:
     svglite,
     lobstr,
     testthat,
-    ezknitr,
-    arrow
+    ezknitr
 Suggests: 
 RoxygenNote: 6.1.1.9000

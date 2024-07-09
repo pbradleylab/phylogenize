@@ -10,6 +10,7 @@ local({r <- getOption("repos")
 if (!requireNamespace("renv", quietly = TRUE)) {
     install.packages("renv")
 }
+renv::install("arrow", prompt=FALSE)
 
 # Install phylogenize
 if (!requireNamespace("phylogenize", quietly = TRUE)) {
