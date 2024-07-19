@@ -22,10 +22,9 @@ Depends:
     graphics,
     grDevices,
     functional,
-    future,
+    future,cd
     furrr,
-    yaml,
-    sparklyr
+    yaml
 Imports:
     data.table,
     parallel,

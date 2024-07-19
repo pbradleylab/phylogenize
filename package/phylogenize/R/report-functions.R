@@ -639,6 +639,16 @@ process.16s <- function(abd.meta, ...) {
     abd.meta
 }
 
+create_matrix <- function(sub_df) {
+  # Pivot the dataframe to wide format using pivot_wider
+  pivoted <- sub_df %>%
+    tidyr::pivot_wider(names_from = species, values_from = presence, values_fill = list(presence = 0))
+
+  mat <- as.matrix(pivoted %>% select(-all_of("max_count")) %>% select(-all_of("function")) %>% select(-all_of("protein")))
+  rownames(mat) <- pivoted$protein
+  return(mat)
+}
+
 #--- Import data necessary for analyses ---#
 
 #' Import the data necessary for *phylogenize* analysis.
@@ -699,9 +709,7 @@ import.pz.db <- function(...) {
         taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"test-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
     } else if (opts('type') == "gtdb") {
         if (opts('db_version') == "gtdb_v214") {
-            # Read in gene presence and the functions file 
-            gene.presence <- arrow::read_parquet(file.path(opts('data_dir'), "gtdb-gene-presence-binary-214.parquet"))
-
+            gene.presence <- readRDS(file.path(opts('data_dir'), "gtdb-gene-presence-binary.rds"))
             trees <- readRDS(file.path(opts('data_dir'), "gtdb_214-taxonomy.tree"))
             # Add in the species column from the cluster column *This can be removed later on so that the external db is format fully
             taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"gtdb_214-taxonomy.csv")), stringsAsFactors = FALSE)
@@ -1428,6 +1436,7 @@ install.data.figshare <- function(data_path=NULL,
         data_path = tempfile()
         curl::curl_download(figshare_url, data_path)
     }
+    print(system.file("", package="phylogenize"))
     untar(data_path, exdir = system.file("", package="phylogenize"))
 }
 
