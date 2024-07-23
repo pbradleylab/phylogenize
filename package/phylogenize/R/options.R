@@ -42,7 +42,7 @@ default_params <- list(
     pctmin=0.025,
     assume_below_LOD=TRUE,
     skip_graphs=FALSE,
-    vsearch_dir="/usr/local/bin",
+    vsearch_dir="",
     linearize=FALSE,
     check_mem_usage=FALSE,
     prev_color_low='black',

@@ -330,6 +330,8 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     samples.present <- intersect(abd.meta$metadata[[opts('sample_column')]],
                                  colnames(abd.meta$mtx))
+    #pz.error(abd.meta$metadata[[opts('sample_column')]][1])
+    pz.error(typeof(abd.meta)) 
     if (length(samples.present) == 0) {
         pz.error(paste0("No samples found in both metadata and ",
                         "abundance matrix; check for illegal characters ",
@@ -488,16 +490,16 @@ run.vsearch <- function(...) {
     binary = basename(opts('vsearch_bin'))
     pid = opts('vsearch_cutoff')
     if (binary %in% c("vsearch")) {
-      vsearch_args = c("-r",
+      vsearch_args = c("--db",
                      file.path(opts('data_dir'),
                                opts('vsearch_16sfile')),
-                     "-fr",
-                     "-q",
+                     "--usearch_global",
                      file.path(opts('in_dir'),
                                opts('vsearch_infile')),
-                     "-i",
+                     "--strand both",
+		     "--id",
                      pid,
-                     "-o",
+                     "--blast6out",
                      file.path(opts('in_dir'),
                                opts('vsearch_outfile')))
     } else if (binary == "vsearch") {
@@ -513,15 +515,15 @@ run.vsearch <- function(...) {
     } else {
       pz.warning(paste0("Aligner not recognized, calling as old version of ",
          "vsearch that does not support reverse complements"))
-      vsearch_args = c("-r",
+      vsearch_args = c("--db",
                      file.path(opts('data_dir'),
                                opts('vsearch_16sfile')),
-                     "-q",
+                     "--usearch_global",
                      file.path(opts('in_dir'),
                                opts('vsearch_infile')),
-                     "-i",
+                     "--id",
                      pid,
-                     "-o",
+                     "--blast6out",
                      file.path(opts('in_dir'),
                                opts('vsearch_outfile')))
 
@@ -700,24 +702,24 @@ import.pz.db <- function(...) {
     } else if (opts('type') == "gtdb") {
         if (opts('db_version') == "gtdb_v214") {
             # Read in gene presence and the functions file 
-            gene.presence <- arrow::read_parquet(file.path(opts('data_dir'), "gtdb-gene-presence-binary-214.parquet"))
-
-            trees <- readRDS(file.path(opts('data_dir'), "gtdb_214-taxonomy.tree"))
+            gene.presence <- readRDS(file.path(opts('data_dir'), "gtdb-gene-presence-binary.rds"))
+	    # Read in the phylogenitic tree
+            trees <- readRDS(file.path(opts('data_dir'), "gtdb_214-trees.rds"))
             # Add in the species column from the cluster column *This can be removed later on so that the external db is format fully
             taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"gtdb_214-taxonomy.csv")), stringsAsFactors = FALSE)
-            taxonomy$species <- sapply(strsplit(gtdb_tax$cluster, ","), function(x) {
-                last_part <- x[length(x)]
-                sub("(_[a-zA-Z0-9]+)_[0-9]+$", "\\1", last_part)
-                })
         }
     }else {
         pz.error(paste0("Unknown data type ", opts('type')))
     }
-
+    
     if ((opts('type') == 'midas') && (opts('db_version') == "midas2_uhgg")) {
         gene.to.fxn <- data.table::fread(file.path(opts('data_dir'),
                                                    "midas2-uhgg.functions"),
                                          header = F, sep='\t')
+    } else if ((opts('type') == 'gtdb') && (opts('db_version') == "gtdb_v214")) {
+        gene.to.fxn <- data.table::fread(file.path(opts('data_dir'),
+                                                   "gtdb.functions"),
+                                         header = F)
     } else {
         gene.to.fxn <- data.table::fread(file.path(opts('data_dir'),
                                                    "family.functions"),
@@ -726,6 +728,7 @@ import.pz.db <- function(...) {
     # process
     phyla <- intersect(names(trees), names(gene.presence))
     colnames(gene.to.fxn) <- c("gene", "function")
+
     fig.hierarchy <- data.frame(
         data.table::fread(file.path(opts('data_dir'),
                                     "subsys.txt"),
@@ -762,7 +765,7 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     taxa.observed <- rownames(abd.meta$mtx)
     taxa.per.tree <- lapply(pz.db$trees, function(tr) {
-        intersect(tr$tip.label, taxa.observed)
+	intersect(tr$tip.label, taxa.observed)
     })
     tL <- vapply(taxa.per.tree, length, 1L)
     if (all(tL < opts('treemin'))) {

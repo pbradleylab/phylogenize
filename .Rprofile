@@ -1,3 +1,4 @@
+# Assume that R and pandoc are already installed.
 library(utils)
 
 # Automatically select the cran mirror that is closest to the user
@@ -7,14 +8,23 @@ local({r <- getOption("repos")
 })
 
 # Install renv for package management
-if (!requireNamespace("renv", quietly = TRUE)) {
-    install.packages("renv")
+if (!requireNamespace("renv", quietly = TRUE)) {    
+    install.packages("renv", quietly = TRUE, type = "source")
 }
-renv::install("arrow", prompt=FALSE)
+# Install the dependancies that rely on biocmanager now
+if (!requireNamespace("qvalue", quietly = TRUE)) {
+    renv::install("bioc::qvalue", prompt=FALSE)
+}
+if (!requireNamespace("ggtree", quietly = TRUE)) {
+    renv::install("bioc::ggtree", prompt=FALSE)
+}
+if (!requireNamespace("biomformat", quietly = TRUE)) {
+    renv::install("bioc::biomformat", prompt=FALSE)
+}
 
-# Install phylogenize
+# Install the dev branch of phylogenize
 if (!requireNamespace("phylogenize", quietly = TRUE)) {
-  renv::install("pbradleylab/phylogenize/package/phylogenize@dev")
+    renv::install("pbradleylab/phylogenize/package/phylogenize@dev", prompt=FALSE)
 }
-library(phylogenize)
 phylogenize::install.data.figshare()
+

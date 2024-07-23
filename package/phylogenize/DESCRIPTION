@@ -25,7 +25,7 @@ Depends:
     future,
     furrr,
     yaml,
-    sparklyr
+    tidymodels
 Imports:
     data.table,
     parallel,
