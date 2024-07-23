@@ -175,7 +175,7 @@ read.abd.metadata.tabular <- function(...) {
         pz.error(paste0("file not found: ", mf))
     } else { pz.message(paste0("located metadata file: ", mf)) }
     abd.mtx <- fastread(af, cn=FALSE)
-    gc()
+    #gc()
     metadata <- data.frame(data.table::fread(mf))
     metadata <- check.process.metadata(metadata, ...)
     return(list(mtx=abd.mtx, metadata=metadata))
@@ -330,6 +330,9 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     samples.present <- intersect(abd.meta$metadata[[opts('sample_column')]],
                                  colnames(abd.meta$mtx))
+    #pz.error(opts('sample_column'))
+    #pz.error(colnames(abd.meta$metadata))
+    #pz.error(abd.meta$metadata[[opts('sample_column')]])
     if (length(samples.present) == 0) {
         pz.error(paste0("No samples found in both metadata and ",
                         "abundance matrix; check for illegal characters ",
@@ -754,7 +757,7 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     taxa.observed <- rownames(abd.meta$mtx)
     taxa.per.tree <- lapply(pz.db$trees, function(tr) {
-        intersect(tr$tip.label, taxa.observed)
+	intersect(tr$tip.label, taxa.observed)
     })
     tL <- vapply(taxa.per.tree, length, 1L)
     if (all(tL < opts('treemin'))) {
