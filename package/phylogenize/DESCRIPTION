@@ -22,7 +22,7 @@ Depends:
     graphics,
     grDevices,
     functional,
-    future,
+    future,cd
     furrr,
     yaml,
     tidymodels

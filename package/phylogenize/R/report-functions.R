@@ -641,6 +641,16 @@ process.16s <- function(abd.meta, ...) {
     abd.meta
 }
 
+create_matrix <- function(sub_df) {
+  # Pivot the dataframe to wide format using pivot_wider
+  pivoted <- sub_df %>%
+    tidyr::pivot_wider(names_from = species, values_from = presence, values_fill = list(presence = 0))
+
+  mat <- as.matrix(pivoted %>% select(-all_of("max_count")) %>% select(-all_of("function")) %>% select(-all_of("protein")))
+  rownames(mat) <- pivoted$protein
+  return(mat)
+}
+
 #--- Import data necessary for analyses ---#
 
 #' Import the data necessary for *phylogenize* analysis.
@@ -1431,6 +1441,7 @@ install.data.figshare <- function(data_path=NULL,
         data_path = tempfile()
         curl::curl_download(figshare_url, data_path)
     }
+    print(system.file("", package="phylogenize"))
     untar(data_path, exdir = system.file("", package="phylogenize"))
 }
 
