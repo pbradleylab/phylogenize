@@ -31,7 +31,6 @@ params:
   skip_graphs: FALSE
   vsearch_dir: "./bin"
   linearize: FALSE
-  check_mem_usage: TRUE
   use_rmd_params: TRUE
   error_to_file: TRUE
 ---
@@ -52,10 +51,6 @@ if (pz.options('use_rmd_params')) {
 
 if (is.null(pz.options('relative_out_dir'))) {
   pz.options(relative_out_dir=pz.options('out_dir'))
-}
-
-check.mem_usage <- function(x) {
-	if (pz.options('check_mem_usage')) message(lobstr::cst(obj_size(x)))
 }
 
 # Note that params give defaults for the web tool, while PZ_OPTIONS gives
@@ -86,9 +81,6 @@ if (!pz.options('skip_graphs')) {
 }
 
 # Only load lobstr to track memory usage if debugging
-if (pz.options('check_mem_usage')) { library(lobstr) }
-if (pz.options('check_mem_usage')) message(lobstr::mem_used() / 1e6)
-
 dir.create(pz.options('out_dir'))
 
 # Read in user-supplied
@@ -104,7 +96,6 @@ if (pz.options('assume_below_LOD')) {
 
 # Make back into a binary sparse matrix to save memory
 gc()
-check.mem_usage()
 pz.message("Starting evaluation...")
 
 ```
@@ -113,7 +104,7 @@ pz.message("Starting evaluation...")
 
 This report was generated automatically by [phylogenize](https://phylogenize.org/) (Bradley and Pollard, 2019: https://phylogenize.org), with the following parameters:
 
-- Type of input data: "`r pz.options('type')`"
+- Type of input data: "`r pz.options('db')`"
 - Phenotype calculated: "`r pz.options('which_phenotype')`"
 - Environment of interest: "`r pz.options('which_envir')`"
 - Prior probabilities for environments: "`r pz.options('prior_type')`"

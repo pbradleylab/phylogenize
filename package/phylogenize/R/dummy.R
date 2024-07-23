@@ -410,8 +410,8 @@ write.test.tabular <- function(abd.meta,
                                prep=TRUE,
                                ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    af <- file.path(opts('in_dir'), abdfile)
-    mf <- file.path(opts('in_dir'), metafile)
+    af <- opts('abundance_file')
+    mf <- opts('metadata_file')
     if (prep) abd.meta$mtx <- prep.mtx.for.write(abd.meta$mtx)
     write.table(as.matrix(abd.meta$mtx),
                 af,
@@ -453,9 +453,6 @@ prep.mtx.for.write <- function(mtx, initial.octo=FALSE) {
 #' \describe{
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file (in this
 #'   case, to write to disk).}
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
-#'   input files). In this case, this is the directory where the BIOM file will
-#'   be *written*.}
 #'   \item{biom_dir}{String. Path to BIOM command-line executables. These are
 #'   necessary to write the BIOM file and add the metadata.}
 #' }
@@ -476,7 +473,7 @@ write.test.biom <- function(abd.meta,
     af <- file.path(td, "tests/data/test-abundance.tab")
     mf <- file.path(td, "tests/data/test-metadata.tab")
     tmp.bf <- tempfile("test-", fileext=".biom")
-    bf <- file.path(opts('in_dir'), opts('biom_file'))
+    bf <- opts('biom_file')
     if (overwrite) file.remove(tmp.bf)
     if (overwrite) file.remove(bf)
     write.test.tabular(abd.meta,

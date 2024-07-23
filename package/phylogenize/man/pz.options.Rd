@@ -34,7 +34,7 @@ These options are global because they affect how most of the functions in
   \item{biom_dir}{String. Path to BIOM executables. Only used during testing. Default: "/usr/local/bin/"}
   \item{vsearch_dir}{String. Path where the binary of vsearch is found. Default: "/usr/local/bin/"}
   \item{vsearch_bin}{String. File name of the binary of vsearch. Default: "vsearch"}
-  \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_renamed.frn"}
+  \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_gtdb.frn"}
   \item{vsearch_infile}{String. File name of the sequences written to disk and then read into vsearch. Default: "input_seqs.txt"}
   \item{vsearch_outfile}{String. File name where vsearch writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
 }
@@ -81,7 +81,6 @@ These options are global because they affect how most of the functions in
 \section{Memory management}{
 
 \describe{
-  \item{check_mem_usage}{Boolean. If TRUE, report memory usage when generating the report. Default: FALSE}
   \item{separate_process}{Boolean. When displaying clustered top gene associations alongside a tree colored by phenotype, this flag indicates whether to use a separate subprocess. This allows memory used by clustering to be released back to the operating system immediately. Default: TRUE}
 }
 }

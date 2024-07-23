@@ -1,4 +1,4 @@
-#SampleID	dset	env
+#SampleID	dataset	env
 1	sample1	dset1	env1
 2	sample2	dset1	env1
 3	sample3	dset2	env2

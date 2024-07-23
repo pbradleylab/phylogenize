@@ -42,7 +42,7 @@ read.abd.metadata <- function(...) {
     }
     sanity.check.abundance(abd.meta$mtx, ...)
     sanity.check.metadata(abd.meta$metadata, ...)
-    if (opts('type') %in% c('16S', '16S-test')) {
+    if (opts('type_16S') == TRUE) {
         abd.meta <- process.16s(abd.meta, ...)
     }
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
@@ -113,7 +113,6 @@ check.process.metadata <- function(metadata, ...) {
 #'     relevant options are:
 #'
 #' \describe{
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for input files). Default: "."}
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
 #' }
 #'
@@ -122,7 +121,7 @@ check.process.metadata <- function(metadata, ...) {
 #' @keywords internal
 read.abd.metadata.biom <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    bf <- file.path(opts('in_dir'), opts('biom_file'))
+    bf <- opts('biom_file')
     pz.message(paste0("looking for file: ", normalizePath(bf)))
     if (!(file.exists(bf))) {
         pz.error(paste0("file not found: ", bf))
@@ -139,7 +138,7 @@ read.abd.metadata.biom <- function(...) {
                           " check that your biom file is not corrupt"))
       }
     } else {
-        mf <- file.path(opts('in_dir'), opts('metadata_file'))
+        mf <- opts('metadata_file')
         if (!(file.exists(mf))) {
             pz.error(paste0("file not found: ", mf))
         } else { pz.message(paste0("located metadata file: ", mf)) }
@@ -157,7 +156,6 @@ read.abd.metadata.biom <- function(...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   \item{in_dir}{Input data/metadata directory.}
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #' }
 #'
@@ -166,8 +164,8 @@ read.abd.metadata.biom <- function(...) {
 #' @keywords internal
 read.abd.metadata.tabular <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    af <- file.path(opts('in_dir'), opts('abundance_file'))
-    mf <- file.path(opts('in_dir'), opts('metadata_file'))
+    af <- opts('abundance_file')
+    mf <- opts('metadata_file')
     if (!(file.exists(af))) {
         pz.error(paste0("file not found: ", af))
     } else { pz.message(paste0("located abundance file: ", af)) }
@@ -330,8 +328,6 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     samples.present <- intersect(abd.meta$metadata[[opts('sample_column')]],
                                  colnames(abd.meta$mtx))
-    #pz.error(abd.meta$metadata[[opts('sample_column')]][1])
-    pz.error(typeof(abd.meta)) 
     if (length(samples.present) == 0) {
         pz.error(paste0("No samples found in both metadata and ",
                         "abundance matrix; check for illegal characters ",
@@ -417,7 +413,6 @@ harmonize.abd.meta <- function(abd.meta, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #'   input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk and
 #'   then read into vsearch/vsearch.}
@@ -448,8 +443,7 @@ prepare.vsearch.input <- function(mtx, ...) {
     }
     seqinr::write.fasta(as.list(asvs),
                         asvnames,
-                        file.out=file.path(opts('in_dir'),
-                                           opts('vsearch_infile')),
+                        file.out=opts('vsearch_infile'),
                         nbchar=99999,
                         as.string=TRUE)
     return(TRUE)
@@ -467,7 +461,6 @@ prepare.vsearch.input <- function(mtx, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #' input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences to be read into
 #' vsearch.}
@@ -494,22 +487,20 @@ run.vsearch <- function(...) {
                      file.path(opts('data_dir'),
                                opts('vsearch_16sfile')),
                      "--usearch_global",
-                     file.path(opts('in_dir'),
-                               opts('vsearch_infile')),
+                     opts('vsearch_infile'),
                      "--strand both",
 		     "--id",
                      pid,
                      "--blast6out",
-                     file.path(opts('in_dir'),
-                               opts('vsearch_outfile')))
+                     opts('vsearch_outfile'))
     } else if (binary == "vsearch") {
       vsearch_args = c("--usearch_global",
-        file.path(opts('in_dir'), opts('vsearch_infile')),
+        opts('vsearch_infile'),
         "--db",
         file.path(opts('data_dir'), opts('vsearch_16sfile')),
         "--strand both",
         "--blast6out",
-        file.path(opts('in_dir'), opts('vsearch_outfile')),
+        opts('vsearch_outfile'),
         "--id",
         pid)
     } else {
@@ -519,13 +510,11 @@ run.vsearch <- function(...) {
                      file.path(opts('data_dir'),
                                opts('vsearch_16sfile')),
                      "--usearch_global",
-                     file.path(opts('in_dir'),
-                               opts('vsearch_infile')),
+                     opts('vsearch_infile'),
                      "--id",
                      pid,
                      "--blast6out",
-                     file.path(opts('in_dir'),
-                               opts('vsearch_outfile')))
+                     opts('vsearch_outfile'))
 
     }
     pz.message(paste0("Calling aligner ", binary, " with arguments: ",
@@ -548,7 +537,6 @@ run.vsearch <- function(...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #'   input files).}
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output which is
 #'   then read back into \emph{phylogenize}.}
@@ -561,7 +549,7 @@ get.vsearch.results <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     # map to MIDAS IDs using vsearch
     assignments <- data.frame(
-        data.table::fread(file.path(opts('in_dir'), opts('vsearch_outfile'))))
+        data.table::fread(opts('vsearch_outfile')))
     row.hits <- as.numeric(gsub("Row", "", assignments[, 1]))
     row.targets <- sapply(assignments[, 2],
                           function(x) strsplit(x, ";;")[[1]][3])
@@ -578,7 +566,6 @@ get.vsearch.results <- function(...) {
 #' Some particularly relevant global options are:
 #' \describe{
 #'   \item{out_dir}{String. Path to output directory. Default: "output"}
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #'   input files).}
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis. Default: on package
@@ -615,7 +602,6 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
 #'   input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk and
 #'   then read into vsearch.}
@@ -672,90 +658,26 @@ create_matrix <- function(sub_df) {
 #' @export
 import.pz.db <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    # Parse the user mode and collect the respective files.
-    if (opts('type') == "midas") {
-        if (opts('db_version') == "midas_v1.0") {
-            gene.presence <- readRDS(file.path(opts('data_dir'), "MIDAS-gene-presence-binary-1.0.rds"))
-            trees <- readRDS(file.path(opts('data_dir'), "MIDAS_1.0-trees.rds"))
-            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"MIDAS_1.0-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
-        } else if (opts('db_version') == "midas_v1.2") {
-            gene.presence <- readRDS(file.path(opts('data_dir'), "MIDAS-gene-presence-binary-1.2.rds"))
-            trees <- readRDS(file.path(opts('data_dir'), "MIDAS_1.2-trees.rds"))
-            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"MIDAS_1.2-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
-        } else if (opts('db_version') == "test") {
-            gene.presence <- readRDS(file.path(opts('data_dir'), "test-gene-presence-binary.rds"))
-            trees <- readRDS(file.path(opts('data_dir'), "test-trees.rds"))
-            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"test-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
-        } else if (opts('db_version') == "midas2_uhgg") {
-            gene.presence <- readRDS(file.path(opts('data_dir'), "midas2-uhgg-gene-presence-binary.rds"))
-            trees <- readRDS(file.path(opts('data_dir'), "midas2-uhgg-trees.rds"))
-            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"midas2-uhgg-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
-        } else if (opts('db_version') == "midas2_uhgg_fam") {
-            gene.presence <- readRDS(file.path(opts('data_dir'), "midas2-uhgg-family-gene-presence-binary.rds"))
-            trees <- readRDS(file.path(opts('data_dir'), "midas2-uhgg-family-trees.rds"))
-            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"midas2-uhgg-family-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
-        } else if (opts('db_version') == "custom") { # use together with data_dir
-            gene.presence <- readRDS(file.path(opts('data_dir'), "custom-gene-presence.rds"))
-            trees <- readRDS(file.path(opts('data_dir'), "custom-trees.rds"))
-            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"custom-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
-        } else {
-            pz.error(paste0("Unknown database version ", opts('db_version')))
-        }
-    } else if (opts('type') == "16S") {
-        gene.presence <- readRDS(file.path(opts('data_dir'), "MIDAS-gene-presence-binary-1.2.rds"))
-        trees <- readRDS(file.path(opts('data_dir'), "MIDAS_1.2-trees.rds"))
-        taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"MIDAS_1.2-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
-    } else if (opts('type') == "16S-test") {
-        gene.presence <- readRDS(file.path(opts('data_dir'), "test-gene-presence-binary.rds"))
-        trees <- readRDS(file.path(opts('data_dir'), "test-trees.rds"))
-        taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"test-taxonomy.csv")), stringsAsFactors = FALSE)[,-1]
-    } else if (opts('type') == "gtdb") {
-        if (opts('db_version') == "gtdb_v214") {
+    
+    if (opts('db') == "gtdb") {
             # Read in gene presence and the functions file 
             gene.presence <- readRDS(file.path(opts('data_dir'), "gtdb-gene-presence-binary.rds"))
 	    # Read in the phylogenitic tree
             trees <- readRDS(file.path(opts('data_dir'), "gtdb_214-trees.rds"))
             # Add in the species column from the cluster column *This can be removed later on so that the external db is format fully
             taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"gtdb_214-taxonomy.csv")), stringsAsFactors = FALSE)
-        }
-    }else {
-        pz.error(paste0("Unknown data type ", opts('type')))
-    }
-    
-    if ((opts('type') == 'midas') && (opts('db_version') == "midas2_uhgg")) {
-        gene.to.fxn <- data.table::fread(file.path(opts('data_dir'),
-                                                   "midas2-uhgg.functions"),
-                                         header = F, sep='\t')
-    } else if ((opts('type') == 'gtdb') && (opts('db_version') == "gtdb_v214")) {
-        gene.to.fxn <- data.table::fread(file.path(opts('data_dir'),
-                                                   "gtdb.functions"),
-                                         header = F)
+	    # Read in the KO annotations file
+            gene.to.fxn <- data.table::fread(file.path(opts('data_dir'), "gtdb.functions"), header = F)
     } else {
-        gene.to.fxn <- data.table::fread(file.path(opts('data_dir'),
-                                                   "family.functions"),
-                                         header = F)
+#'   \item{type_16S}{String. Which  Default: "gtdb"}
+        pz.error(paste0("Unknown data type ", opts('db')))
     }
-    # process
-    phyla <- intersect(names(trees), names(gene.presence))
     colnames(gene.to.fxn) <- c("gene", "function")
 
-    fig.hierarchy <- data.frame(
-        data.table::fread(file.path(opts('data_dir'),
-                                    "subsys.txt"),
-                          header = F))[,1:4]
-    colnames(fig.hierarchy) <-  c("level1", "level2", "level3", "function")
-    g.mappings <- lapply.across.names(colnames(fig.hierarchy)[1:3],
-                                      function(x) {
-        gene.to.subsys <- merge(data.frame(gene.to.fxn),
-                                fig.hierarchy[, c(x, "function"), drop=FALSE],
-                                by.x = "function.", by.y = "function")[, -1, drop=FALSE]
-    })
     # finished
     return(list(gene.presence = gene.presence,
                 trees = trees,
-                phyla = phyla,
                 taxonomy = taxonomy,
-                g.mappings = g.mappings,
                 gene.to.fxn = gene.to.fxn))
 }
 
@@ -1354,7 +1276,6 @@ render.report <- function(output_file='report_output.html',
     prev.options <- pz.options()
     do.call(pz.options, list(...))
     pz.options(working_dir=normalizePath(getwd()))
-    pz.options(in_dir=normalizePath(pz.options("in_dir")))
     pz.options(out_dir=normalizePath(pz.options("out_dir")))
     if (!dir.exists(pz.options('out_dir'))) {dir.create(pz.options('out_dir'))}
     p <- pz.options()
