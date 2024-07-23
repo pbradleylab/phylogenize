@@ -99,7 +99,9 @@ def create_app(config=None):
     database = RadioField(
       choices = [
         ("midas_v1.0", "MIDAS 1.0"),
-        ("midas_v1.2", "MIDAS 1.2")
+        ("midas_v1.2", "MIDAS 1.2"),
+        ("gtdb_v214", "GTDB 214"),
+        ("uhgp", "UHGP")
       ],
       default = "midas_v1.2",
       label = "Database version"

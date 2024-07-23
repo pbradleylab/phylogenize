@@ -23,7 +23,10 @@ Depends:
     grDevices,
     functional,
     future,
-    furrr
+    cd,
+    yaml,
+    furrr,
+    tidymodels
 Imports:
     data.table,
     parallel,
@@ -40,7 +43,7 @@ Imports:
     pbapply,
     gtools,
     svglite,
-    pryr,
+    lobstr,
     testthat,
     ezknitr
 Suggests: 

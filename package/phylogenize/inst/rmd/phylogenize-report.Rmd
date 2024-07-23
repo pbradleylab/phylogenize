@@ -29,9 +29,8 @@ params:
   treemin: 5
   assume_below_LOD: TRUE
   skip_graphs: FALSE
-  burst_dir: "./bin"
+  vsearch_dir: "./bin"
   linearize: FALSE
-  pryr: TRUE
   use_rmd_params: TRUE
   error_to_file: TRUE
 ---
@@ -52,10 +51,6 @@ if (pz.options('use_rmd_params')) {
 
 if (is.null(pz.options('relative_out_dir'))) {
   pz.options(relative_out_dir=pz.options('out_dir'))
-}
-
-check.pryr <- function() {
-    if (pz.options('pryr')) message(pryr::mem_used() / 1e6)
 }
 
 # Note that params give defaults for the web tool, while PZ_OPTIONS gives
@@ -85,10 +80,7 @@ if (!pz.options('skip_graphs')) {
     })
 }
 
-# Only load pryr to track memory usage if debugging
-if (pz.options('pryr')) { library(pryr) }
-if (pz.options('pryr')) message(pryr::mem_used() / 1e6)
-
+# Only load lobstr to track memory usage if debugging
 dir.create(pz.options('out_dir'))
 
 # Read in user-supplied
@@ -104,7 +96,6 @@ if (pz.options('assume_below_LOD')) {
 
 # Make back into a binary sparse matrix to save memory
 gc()
-check.pryr()
 pz.message("Starting evaluation...")
 
 ```
@@ -113,7 +104,7 @@ pz.message("Starting evaluation...")
 
 This report was generated automatically by [phylogenize](https://phylogenize.org/) (Bradley and Pollard, 2019: https://phylogenize.org), with the following parameters:
 
-- Type of input data: "`r pz.options('type')`"
+- Type of input data: "`r pz.options('db')`"
 - Phenotype calculated: "`r pz.options('which_phenotype')`"
 - Environment of interest: "`r pz.options('which_envir')`"
 - Prior probabilities for environments: "`r pz.options('prior_type')`"
@@ -186,7 +177,7 @@ write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
 
 # be a little parsimonious with memory here
 rm(abd.meta); gc()
-check.pryr()
+check.mem_usage()
 ```
 
 # Phenotype mapped across trees {.tabset}
@@ -201,7 +192,7 @@ if (!pz.options('skip_graphs')) {
                                  label=pz.options('which_phenotype'))
 }
 
-check.pryr()
+check.mem_usage()
 ```
 
 ## Only mapped/observed taxa {.tabset}
@@ -241,7 +232,7 @@ if (!pz.options('skip_graphs')) {
   }
 }
 
-check.pryr()
+check.mem_usage()
 ```
 
 `r rmd.message`
@@ -303,7 +294,7 @@ rm(pos.sig.thresh.descs)
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
           results.matrix)
 rm(results.matrix)
-check.pryr()
+check.mem_usage()
 ```
 
 # Gene association heat maps
@@ -319,7 +310,7 @@ have particularly extreme phenotypes.
 ```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=TRUE}
 
 
-check.pryr()
+check.mem_usage()
 
 cluster.plots <- mapply(do.clust.plot, 
                         pz.db$gene.presence[phy.with.sigs],
@@ -331,7 +322,7 @@ cluster.plots <- mapply(do.clust.plot,
 
 rm(cluster.plots)
 rm(plotted.pheno.trees)
-check.pryr()
+check.mem_usage()
 
 ```
 
@@ -374,9 +365,9 @@ if (!is.null(enrichment.tbl)) {
             Subsystem_level,
             desc(Enrichment_odds_ratio))
 
-  check.pryr()
+  check.mem_usage()
   write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
-  check.pryr()
+  check.mem_usage()
 }
 
 ```
@@ -384,10 +375,10 @@ Enrichment tables:
 
 ```{r enrichment_display, echo=FALSE, results='asis'}
 options(knitr.table.format = "html")
-check.pryr()
+check.mem_usage()
 if (!is.null(pretty.enr.tbl)) {
-  print(output.enr.table(pretty.enr.tbl))
-  check.pryr()
+  cat(output.enr.table(pretty.enr.tbl))
+  check.mem_usage()
   if (nrow(enrichment.tbl) > 0) {
     enr.overlap <- select(enrichment.tbl,
                           phylum,
@@ -402,7 +393,7 @@ if (!is.null(pretty.enr.tbl)) {
                    mutate(effectsize=map2_dbl(phylum,
                                               gene,
                                               ~results[[.x]][1, .y]))
-    check.pryr()
+    check.mem_usage()
     write.csv(file=file.path(pz.options('out_dir'),
                              "enr-overlaps.csv"),
               enr.overlap)
@@ -414,7 +405,7 @@ if (!is.null(pretty.enr.tbl)) {
                       termset,
                       term,
                       desc(effectsize)))
-    check.pryr()
+    check.mem_usage()
     rm(enr.overlap)
     rm(enrichments)
   }

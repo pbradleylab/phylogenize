@@ -405,13 +405,13 @@ generate.fake.abd.meta <- function(n.samples=100,
 #' @return Return value of \code{base::write.table}.
 #' @keywords internal
 write.test.tabular <- function(abd.meta,
-                               abdfile="test-abundance.tab",
-                               metafile="test-metadata.tab",
+                               abdfile="tests/data/test-abundance.tab",
+                               metafile="tests/data/test-metadata.tab",
                                prep=TRUE,
                                ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    af <- file.path(opts('in_dir'), abdfile)
-    mf <- file.path(opts('in_dir'), metafile)
+    af <- opts('abundance_file')
+    mf <- opts('metadata_file')
     if (prep) abd.meta$mtx <- prep.mtx.for.write(abd.meta$mtx)
     write.table(as.matrix(abd.meta$mtx),
                 af,
@@ -453,9 +453,6 @@ prep.mtx.for.write <- function(mtx, initial.octo=FALSE) {
 #' \describe{
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file (in this
 #'   case, to write to disk).}
-#'   \item{in_dir}{String. Path to input directory (i.e., where to look for
-#'   input files). In this case, this is the directory where the BIOM file will
-#'   be *written*.}
 #'   \item{biom_dir}{String. Path to BIOM command-line executables. These are
 #'   necessary to write the BIOM file and add the metadata.}
 #' }
@@ -473,16 +470,16 @@ write.test.biom <- function(abd.meta,
     colnames(abd.meta$metadata)[which(cn==opts('sample_column'))] <- "#SampleID"
     abd.meta$mtx <- prep.mtx.for.write(abd.meta$mtx, initial.octo=TRUE)
     td <- tempdir()
-    af <- file.path(td, "test-abundance.tab")
-    mf <- file.path(td, "test-metadata.tab")
+    af <- file.path(td, "tests/data/test-abundance.tab")
+    mf <- file.path(td, "tests/data/test-metadata.tab")
     tmp.bf <- tempfile("test-", fileext=".biom")
-    bf <- file.path(opts('in_dir'), opts('biom_file'))
+    bf <- opts('biom_file')
     if (overwrite) file.remove(tmp.bf)
     if (overwrite) file.remove(bf)
     write.test.tabular(abd.meta,
                        in_dir=tempdir(),
-                       abdfile="test-abundance.tab",
-                       metafile="test-metadata.tab",
+                       abdfile="tests/data/test-abundance.tab",
+                       metafile="tests/data/test-metadata.tab",
                        prep=FALSE)
     system2(file.path(opts('biom_dir'), "biom"),
             args = c("convert",
@@ -512,7 +509,7 @@ write.test.biom <- function(abd.meta,
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis. Here, this is where the
 #'   16S database is located.}
-#'   \item{burst_16sfile}{String. Filename of the 16S FASTA database that maps
+#'   \item{vsearch_16sfile}{String. Filename of the 16S FASTA database that maps
 #'   back to MIDAS species.}
 #' }
 #'
@@ -531,7 +528,7 @@ random.species.from.file <- function(n.taxa,
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     species.list <- seqinr::read.fasta(
                                 file.path(opts('data_dir'),
-                                          opts('burst_16sfile')),
+                                          opts('vsearch_16sfile')),
                                 seqtype='DNA',
                                 as.string=TRUE)
     species.map <- sample(1:length(species.list), n.taxa, replace=FALSE)
@@ -656,7 +653,7 @@ generate.test.pzdb <- function(nt=75, ng=50, fp=0.1, minN=2, ...) {
         } # otherwise don't change
     }
     gp <- dummy.g2s(pz.db$gene.presence, ng, fp, minN)
-    saveRDS(gp, file.path(opts('data_dir'), "test-gene-presence-binary.rds"))
-    saveRDS(dtr, file.path(opts('data_dir'), "test-trees.rds"))
-    write.csv(pz.db$taxonomy, file.path(opts('data_dir'), "test-taxonomy.csv"))
+    saveRDS(gp, file.path(opts('data_dir'), "tests/data/test-gene-presence-binary.rds"))
+    saveRDS(dtr, file.path(opts('data_dir'), "tests/data/test-trees.rds"))
+    write.csv(pz.db$taxonomy, file.path(opts('data_dir'), "tests/data/test-taxonomy.csv"))
 }

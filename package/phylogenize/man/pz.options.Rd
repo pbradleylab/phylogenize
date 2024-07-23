@@ -23,20 +23,20 @@ These options are global because they affect how most of the functions in
   \item{in_dir}{String. Path to input directory (i.e., where to look for input files). Default: "."}
   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: "./data", but on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
   \item{working_dir}{String. Path to directory where relative paths should originate from. Default: \code{"."}}
-  \item{abundance_file}{String. Name of abundance tabular file. Default: "test-abundance.tab"}
-  \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
-  \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
+  \item{abundance_file}{String. Name of abundance tabular file. Default: "tests/data/test-abundance.tab"}
+  \item{metadata_file}{String. Name of metadata tabular file. Default: "tests/data/test-metadata.tab"}
+  \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "tests/data/test.biom"}
   \item{separate_metadata}{Boolean. For BIOM data, is there a separate tabular abundance table? Default: FALSE}
   \item{input_format}{String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). Default: "tabular"}
   \item{phenotype_file}{String. Name of input file for optional pre-calculated phenotype. Default: ""}
   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message output to an error message file? Default: FALSE}
   \item{biom_dir}{String. Path to BIOM executables. Only used during testing. Default: "/usr/local/bin/"}
-  \item{burst_dir}{String. Path where the binary of BURST is found. Default: "/usr/local/bin/"}
-  \item{burst_bin}{String. File name of the binary of BURST. Default: "burst12"}
-  \item{burst_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_renamed.frn"}
-  \item{burst_infile}{String. File name of the sequences written to disk and then read into BURST. Default: "input_seqs.txt"}
-  \item{burst_outfile}{String. File name where BURST writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
+  \item{vsearch_dir}{String. Path where the binary of vsearch is found. Default: "/usr/local/bin/"}
+  \item{vsearch_bin}{String. File name of the binary of vsearch. Default: "vsearch"}
+  \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_gtdb.frn"}
+  \item{vsearch_infile}{String. File name of the sequences written to disk and then read into vsearch. Default: "input_seqs.txt"}
+  \item{vsearch_outfile}{String. File name where vsearch writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
 }
 }
 
@@ -49,14 +49,14 @@ These options are global because they affect how most of the functions in
   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
   \item{sample_column}{String. Name of column in metadata file containing the sample IDs. Default: "sample_id"}
   \item{single_dset}{Boolean. If true, will assume that all samples come from a single dataset called \code{dset1} no matter what, if anything, is in \code{dset_column}. Default: FALSE}
-  \item{db_version}{String. Which version of the MIDAS database to use ("midas_v1.2" or "midas_v1.0"). Default: "midas_v1.2"}
+  \item{db_version}{String. Which version of the MIDAS database to use ("midas_v1.2" "midas_v1.0", "gtdb_v214", "midas2_uhgg_fam"). Default: "midas_v1.2"}
   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence" or "specificity"). Default: "prevalence"}
   \item{which_envir}{String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. Default: "Stool"}
   \item{prior_type}{String. What type of prior to use ("uninformative" or "file"). Default: "uninformative"}
   \item{minimum}{Integer. A particular gene must be observed, and also absent, at least this many times to be reported as a significant positive association with the phenotype. Default: 3}
   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
-  \item{burst_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using BURST. Default: 0.985}
+  \item{vsearch_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using vsearch. Default: 0.985}
   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: TRUE}
   \item{min_fx}{Positive double. Effects that are significantly equivalent to this effect size will be excluded from significant positive hits. If zero, the equivalence test will be skipped. Default: 0}
 }
@@ -81,7 +81,6 @@ These options are global because they affect how most of the functions in
 \section{Memory management}{
 
 \describe{
-  \item{pryr}{Boolean. If TRUE, report memory usage when generating the report. Default: FALSE}
   \item{separate_process}{Boolean. When displaying clustered top gene associations alongside a tree colored by phenotype, this flag indicates whether to use a separate subprocess. This allows memory used by clustering to be released back to the operating system immediately. Default: TRUE}
 }
 }

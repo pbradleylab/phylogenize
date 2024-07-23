@@ -4,8 +4,8 @@
 \alias{write.test.tabular}
 \title{Write and then read in tabular data.}
 \usage{
-write.test.tabular(abd.meta, abdfile = "test-abundance.tab",
-  metafile = "test-metadata.tab", prep = TRUE, ...)
+write.test.tabular(abd.meta, abdfile = "tests/data/test-abundance.tab",
+  metafile = "tests/data/test-metadata.tab", prep = TRUE, ...)
 }
 \arguments{
 \item{abd.meta}{List containing a matrix of abundance values, \code{mtx}, and
