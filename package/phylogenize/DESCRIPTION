@@ -22,9 +22,10 @@ Depends:
     graphics,
     grDevices,
     functional,
-    future,cd
-    furrr,
+    future,
+    cd,
     yaml,
+    furrr,
     tidymodels
 Imports:
     data.table,
