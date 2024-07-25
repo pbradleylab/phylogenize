@@ -696,9 +696,16 @@ import.pz.db <- function(...) {
 adjust.db <- function(pz.db, abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     taxa.observed <- rownames(abd.meta$mtx)
+
+    # Since midas ID are inclded in the database, we remove them
+    # and match on a species level 
     taxa.per.tree <- lapply(pz.db$trees, function(tr) {
-	intersect(tr$tip.label, taxa.observed)
+	truncated_tips <- sapply(tr$tip.label, function(label) {
+        	sub("_(?!.*_).*", "", label, perl = TRUE)
+        })   
+	intersect(pz.db$taxonomy$family, taxa.observed)
     })
+    
     tL <- vapply(taxa.per.tree, length, 1L)
     if (all(tL < opts('treemin'))) {
         pz.error("Too few taxa found. Was the right database used?")

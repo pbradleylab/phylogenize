@@ -7,6 +7,7 @@
 #'     maximum node height.
 #' @keywords internal
 fix.tree <- function(phy, len=1e-6) {
+  #pz.error(phy)
   phy <- ape::multi2di(phy)
   ## from Liam Revell's blog, June 23 2015:
   ## http://blog.phytools.org/2015/06/update-to-rerootingmethod-for-ancestral.html
