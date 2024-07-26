@@ -680,12 +680,12 @@ import.pz.db <- function(...) {
     if (opts('db') == "gtdb") {
             # Read in gene presence and the functions file 
             gene.presence <- readRDS(file.path(opts('data_dir'), "gtdb-gene-presence-binary.rds"))
-	    # Read in the phylogenitic tree
+            # Read in the phylogenetic trees
             trees <- readRDS(file.path(opts('data_dir'), "gtdb_214-trees.rds"))
             # Add in the species column from the cluster column *This can be removed later on so that the external db is format fully
-            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"gtdb_214-taxonomy.csv")), stringsAsFactors = FALSE)
+            taxonomy <- read_csv(file.path(opts('data_dir'),"gtdb_214-taxonomy.csv"))
 	    # Read in the KO annotations file
-            gene.to.fxn <- data.table::fread(file.path(opts('data_dir'), "gtdb.functions"), header = F)
+            gene.to.fxn <- read_csv(file.path(opts('data_dir'), "gtdb.functions"), col_names=FALSE)
     } else {
 #'   \item{type_16S}{String. Which  Default: "gtdb"}
         pz.error(paste0("Unknown data type ", opts('db')))

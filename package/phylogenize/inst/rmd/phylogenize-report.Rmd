@@ -352,43 +352,47 @@ and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
 
 ```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=TRUE}
-
-pretty.enr.tbl <- NULL
-enrichment.tbl <- multi.enrich(signif,
-                               signs,
-                               pz.db$g.mappings)
-if (!is.null(enrichment.tbl)) {
-  enrichment.tbl <- filter(enrichment.tbl,
-                           enr.qval <= 0.25, enr.estimate > 1)
-  pretty.enr.tbl <- select(enrichment.tbl,
-                          phylum,
-                          cutoff,
-                          termset,
-                          term,
-                          enr.qval,
-                          enr.estimate) %>%
-    rename(Gene_significance=cutoff,
-          Subsystem_level=termset,
-          Phylum=phylum,
-          Subsystem=term,
-          q_value=enr.qval,
-          Enrichment_odds_ratio=enr.estimate) %>%
-    arrange(factor(Gene_significance, levels=names(signif[[1]])),
-            Phylum,
-            Subsystem_level,
-            desc(Enrichment_odds_ratio))
-
-  check.mem_usage()
-  write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
-  check.mem_usage()
+do_enrichment <- ("clusterProfiler" %in% rownames(installed.packages()))
+if (do_enrichment) {
+  pretty.enr.tbl <- NULL
+  enrichment.tbl <- multi.kegg.enrich(signif,
+                                      signs,
+                                      pz.db$g.mappings)
+  if (!is.null(enrichment.tbl)) {
+    enrichment.tbl <- filter(enrichment.tbl,
+                             qvalue <= 0.25, enr.estimate > 1)
+    pretty.enr.tbl <- select(enrichment.tbl,
+                             taxon,
+                             cutoff,
+                             ID,
+                             Description,
+                             GeneRatio,
+                             BgRatio,
+                             qvalue,
+                             enr.estimate) %>%
+      rename(Gene_significance=cutoff,
+             Taxon=taxon,
+             ID=ID,
+             Description=Description,
+             q_value=qvalue,
+             Enrichment_odds_ratio=enr.estimate) %>%
+      arrange(factor(Gene_significance, levels=names(signif[[1]])),
+              Phylum,
+              Subsystem_level,
+              desc(Enrichment_odds_ratio))
+    
+    check.mem_usage()
+    write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
+    check.mem_usage()
+  }
 }
-
 ```
 Enrichment tables:
 
 ```{r enrichment_display, echo=FALSE, results='asis'}
 options(knitr.table.format = "html")
 check.mem_usage()
+if (do_enrichment) {
 if (!is.null(pretty.enr.tbl)) {
   cat(output.enr.table(pretty.enr.tbl))
   check.mem_usage()
@@ -425,6 +429,9 @@ if (!is.null(pretty.enr.tbl)) {
 }
 rm(enr.overlap.lists)
 gc()
+} else {
+  pz.message("Skipping enrichment as clusterProfiler could not be found")
+}
 ```
 
 ```{r cleanup, warning=FALSE, message=FALSE, echo=FALSE}

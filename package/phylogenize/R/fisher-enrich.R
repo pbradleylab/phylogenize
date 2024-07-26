@@ -69,12 +69,14 @@ do.fisher <- function(list1, list2, background, alt="two.sided") {
     f
 }
 
+
+
 #' Given lists of significant genes (at different thresholds), effect sizes, and
 #' gene set mappings, assemble a tbl of results.
 #'
-#' @param sigs List giving, per phylum (outer) and per significance cutoff
+#' @param sigs List giving, per taxonomic group (outer) and per significance cutoff
 #'     (inner), significant hits to test for enrichment.
-#' @param signs List giving, per phylum, signs of all gene effect sizes.
+#' @param signs List giving, per taxonomic group, signs of all gene effect sizes.
 #' @param mappings List of data.frames giving gene-to-gene-set mappings.
 #' @param dirxn Count only genes with this effect sign as significant.
 #' @return A tbl giving Fisher's test p-values, q-values, effect sizes, and overlaps.
