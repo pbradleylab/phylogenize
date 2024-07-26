@@ -53,54 +53,7 @@ default_params <- list(
 
 
 # Options given by user
-PZ_OPTIONS <- options_manager(
-    abundance_file = default_params["abundance_file"][[1]],
-    assume_below_LOD = default_params["assume_below_LOD"][[1]],
-    biom_file = default_params["biom_file"][[1]],
-    db = default_params["db"][[1]],
-    data_dir = default_params["data_dir"][[1]],
-    devel = default_params["devel"][[1]],
-    devel_pkgdir = default_params["devel_pkgdir"][[1]],
-    dset_column = default_params["dset_column"][[1]],
-    env_column = default_params["env_column"][[1]],
-    error_to_file = default_params["error_to_file"][[1]],
-    gene_color_absent = default_params["gene_color_absent"][[1]],
-    gene_color_present = default_params["gene_color_present"][[1]],
-    input_format = default_params["input_format"][[1]],
-    linearize = default_params["linearize"][[1]],
-    meas_err = default_params["meas_err"][[1]],
-    metadata_file = default_params["metadata_file"][[1]],
-    min_fx = default_params["min_fx"][[1]],
-    minimum = default_params["minimum"][[1]],
-    ncl = default_params["ncl"][[1]],
-    output_file = default_params["output_file"][[1]],
-    out_dir = default_params["out_dir"][[1]],
-    pctmin = default_params["pctmin"][[1]],
-    phenotype_file = default_params["phenotype_file"][[1]],
-    prev_color_high = default_params["prev_color_high"][[1]],
-    prev_color_low = default_params["prev_color_low"][[1]],
-    prior_file = default_params["prior_file"][[1]],
-    prior_type = default_params["prior_type"][[1]],
-    relative_out_dir = default_params["relative_out_dir"][[1]],
-    sample_column = default_params["sample_column"][[1]],
-    separate_process = default_params["separate_process"][[1]],
-    single_dset = default_params["single_dset"][[1]],
-    skip_graphs = default_params["skip_graphs"][[1]],
-    spec_color_high = default_params["spec_color_high"][[1]],
-    spec_color_low = default_params["spec_color_low"][[1]],
-    spec_color_mid = default_params["spec_color_mid"][[1]],
-    treemin = default_params["treemin"][[1]],
-    type_16S = default_params["type_16S"][[1]],
-    use_rmd_params = default_params["use_rmd_params"][[1]],
-    vsearch_16sfile = default_params["vsearch_16sfile"][[1]],
-    vsearch_cutoff = default_params["vsearch_cutoff"][[1]],
-    vsearch_dir = default_params["vsearch_dir"][[1]],
-    vsearch_infile = default_params["vsearch_infile"][[1]],
-    vsearch_outfile = default_params["vsearch_outfile"][[1]],
-    which_envir = default_params["which_envir"][[1]],
-    which_phenotype = default_params["which_phenotype"][[1]],
-    working_dir = default_params["working_dir"][[1]]
-)
+PZ_OPTIONS <- options_manager(.list=default_params)
 
 #' Set and get options for phylogenize.
 #'
