@@ -777,7 +777,7 @@ clr <- function(mtx, pc = 0.5) {
 #'   \item{ess}{Logit-transformed, shrunken estimates of specificity.}
 #'   \item{regularized}{Non-transformed regularized values.}
 #'   \item{priors}{Values of priors.}
-#'   \item{phenoP}{Color-scale limits for visualizing the phenotype.}
+#'   \item{phenoP}{Prior for environment of interest.}
 #' } 
 #' @export
 calc.ess <- function(abd.meta,

@@ -151,9 +151,6 @@ if (pz.options('which_phenotype') == "prevalence") {
                                       mapped.observed)
   pz.db$taxa <- lapply(pz.db$trees, function(x) x$tip.label)
   pz.db$nphyla <- length(pz.db$trees)
-} else if (pz.options("which_phenotype") == "correlation") {
-  phenotype <- correl.clr(abd.meta)
-  phenoP <- 0
 } else if (pz.options("which_phenotype") == "provided") {
   p_tbl <- read_tsv(pz.options("phenotype_file"))
   if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
@@ -171,7 +168,7 @@ if (pz.options('which_phenotype') == "prevalence") {
   }
 } else if (pz.options("which_phenotype") == "abundance") {
   phenotype <- ashr.diff.abund(abd.meta)
-  phenoP <- NULL
+  phenoP <- 0
 } else {
   pz.error(paste0("don't know how to calculate the phenotype ",
                   pz.options('which_phenotype')))

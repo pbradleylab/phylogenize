@@ -851,14 +851,14 @@ clean.pheno <- function(phenotype, pz.db) {
 #'     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
 #'     (\code{zero}).
 #' @export
-get.pheno.plotting.scales <- function(phenotype, trees, phenoP=NULL, ...) {
+get.pheno.plotting.scales <- function(phenotype, trees, phenoP=0, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (opts('which_phenotype') == 'prevalence') {
         get.pheno.plotting.scales.prevalence(phenotype,
                                              trees,
                                              phenoP,
                                              ...)
-    } else if (opts('which_phenotype') %in% c('specificity', 'correlation')) {
+    } else if (opts('which_phenotype') %in% c('specificity', 'abundance')) {
         get.pheno.plotting.scales.specificity(phenotype,
                                               trees,
                                               phenoP,
@@ -886,7 +886,7 @@ get.pheno.plotting.scales <- function(phenotype, trees, phenoP=NULL, ...) {
 #' @keywords internal
 get.pheno.plotting.scales.prevalence <- function(phenotype,
                                                  trees,
-                                                 phenoP=NULL,
+                                                 phenoP=0,
                                                  ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     phenoLimits <- quantile(unique(phenotype), c(0.2, 0.8))
@@ -904,7 +904,7 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
 }
 
 
-#' Get phenotype plotting scales (specificity-specific).
+#' Get phenotype plotting scales (specificity or abundance).
 #'
 #' Some particularly relevant global options are:
 #' \describe{
@@ -925,7 +925,7 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
 #' @keywords internal
 get.pheno.plotting.scales.specificity <- function(phenotype,
                                                   trees,
-                                                  phenoP=NULL,
+                                                  phenoP=0,
                                                   ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     phenoLimits <- c(phenoP - 1 * sd(phenotype),
