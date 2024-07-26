@@ -45,6 +45,7 @@ default_params <- list(
     vsearch_outfile = "output_assignments.txt",
     which_envir = "stool",
     which_phenotype = "prevalence",
+    diff_abund_method = "maaslin2",
     working_dir = '.'
 )
 
@@ -142,8 +143,9 @@ PZ_OPTIONS <- options_manager(
 #'   \item{treemin}{Integer. A phylum must have at least this many representatives in order to be processed. Default: 5}
 #'   \item{type_16S}{Boolean. If 16S data other wise shotgun data is assumed. Default: False}
 #'   \item{vsearch_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using vsearch. Default: 0.985}
-#'   \item{which_envir}{String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. Default: "Stool"}
-#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence" or "specificity"). Default: "prevalence"}
+#'   \item{which_envir}{String. Environment for which prevalence, specificity, or differential abundance scores will be the phenotype of interest. Must match annotations in metadata. Default: "Stool"}
+#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence", "specificity", "abundance"). Default: "prevalence"}
+#'   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "Maaslin2"}
 #' }
 #'
 #' @section Graphing:
