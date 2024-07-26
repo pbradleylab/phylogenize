@@ -131,7 +131,7 @@ PZ_OPTIONS <- options_manager(
 #' @section Computing phenotypes:
 #' \describe{
 #'   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
-#'   \item{db}{String. Type of data to use, gtdb or uhgp. Default: "gtdb"}
+#'   \item{db}{String. Which database to use. Can be "gtdb" or "uhgp." Default: "gtdb"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
 #'   \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}
 #'   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
@@ -143,7 +143,7 @@ PZ_OPTIONS <- options_manager(
 #'   \item{prior_type}{String. What type of prior to use ("uninformative" or "file"). Default: "uninformative"}
 #'   \item{single_dset}{Boolean. If true, will assume that all samples come from a single dataset called \code{dset1} no matter what, if anything, is in \code{dset_column}. Default: FALSE}
 #'   \item{treemin}{Integer. A phylum must have at least this many representatives in order to be processed. Default: 5}
-#'   \item{type_16S}{Boolean. If 16S data other wise shotgun data is assumed. Default: False}
+#'   \item{type_16S}{Boolean. If 16S data, TRUE, otherwise shotgun data is assumed. Default: FALSE}
 #'   \item{vsearch_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using vsearch. Default: 0.985}
 #'   \item{which_envir}{String. Environment for which prevalence, specificity, or differential abundance scores will be the phenotype of interest. Must match annotations in metadata. Default: "Stool"}
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence", "specificity", "abundance", "provided"). Default: "prevalence"}

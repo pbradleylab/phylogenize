@@ -665,10 +665,8 @@ create_matrix <- function(sub_df) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   \item{type}{String. Type of data to use, either "midas" (shotgun) or "16S"
-#'   (amplicon).}
-#'   \item{db_version}{String. Which version of the MIDAS database to use
-#'   ("midas_v1.2", "midas_v1.0", "gtdb_v214", "midas2_uhgg_fam").}
+#'   \item{type_16S}{Boolean. If 16S data, TRUE, otherwise shotgun data is assumed. Default: FALSE}
+#'   \item{db}{String. Which database to use ("gtdb" or "uhgp")).}
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis.}
 #' }
