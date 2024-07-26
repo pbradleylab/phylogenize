@@ -2,7 +2,7 @@
 
 #' Simulate microbe counts given multinomial probabilities and number of reads.
 #'
-#' @param com Multinomial probability distribution for all taxa.
+#' @param com Multinomial probability distribution for all species.
 #' @param nr Read depth.
 #' @return Count matrix.
 #' @keywords internal
@@ -17,9 +17,9 @@ simulate.counts <- function(com, nr) {
     counts
 }
 
-#' Calculate prevalence (with additive smoothing) for taxa given an abundance matrix.
+#' Calculate prevalence (with additive smoothing) for species given an abundance matrix.
 #'
-#' @param mtx Abundance matrix (rows: taxa; columns: samples).
+#' @param mtx Abundance matrix (rows: species; columns: samples).
 #' @return Prevalence with additive smoothing.
 #' @keywords internal
 simple.prevalence <- function(mtx) {
@@ -40,7 +40,7 @@ colnorm <- function(mtx) {
 
 #' Construct a simulation of microbial sequencing data.
 #'
-#' @param n.taxa Integer; number of taxa to simulate.
+#' @param n.species Integer; number of species to simulate.
 #' @param n.samples Integer; number of samples to simulate.
 #' @param avg.reads Number or numeric vector giving read depth(s) per sample.
 #' @param prev.dist Two-element numeric vector giving beta distribution
@@ -52,27 +52,27 @@ colnorm <- function(mtx) {
 #' @return A list:
 #'   \item{sim}{A simulated abundance matrix}
 #'   \item{com}{Multinomial distribution used to simulate abundances}
-#'   \item{prev}{Distribution of taxon prevalences.}
+#'   \item{prev}{Distribution of species prevalences.}
 #' @keywords internal
-make.sim <- function(n.taxa,
+make.sim <- function(n.species,
                      n.samples,
                      avg.reads, # can be a vector
                      prev.dist=c(-4, 2),
                      effect.size.mtx=0,
                      alphas=NULL) {
     if (is.null(alphas)) {
-        alphas <- round(runif(n.taxa, min = 1, max = 100000))
+        alphas <- round(runif(n.species, min = 1, max = 100000))
     }
     reads <- rnorm(n.samples, log(avg.reads), 0.5) %>% exp %>% round
     com <- gtools::rdirichlet(n.samples, alphas) %>% t
     colnames(com) <- paste0("sample", 1:n.samples)
-    rownames(com) <- paste0("taxon", 1:n.taxa)
+    rownames(com) <- paste0("species", 1:n.species)
     ncells <- nrow(com) * ncol(com)
-    random.logitprevs <- rnorm(n.taxa, prev.dist[1], prev.dist[2])
+    random.logitprevs <- rnorm(n.species, prev.dist[1], prev.dist[2])
     logitprev.mtx <- rep.col(random.logitprevs, n.samples) + effect.size.mtx
     random.prevalences <- logistic(logitprev.mtx)
     rownames(random.prevalences) <- rownames(com)
-    for (nt in 1:n.taxa) {
+    for (nt in 1:n.species) {
         prev.vec <- rbinom(n.samples, prob=random.prevalences[nt, , drop=FALSE], size = 1)
         com[nt, (prev.vec == 0)] <- 0
     }
@@ -88,8 +88,8 @@ make.sim <- function(n.taxa,
 #' Add a true effect to a matrix of effect sizes (or generate a new one).
 #'
 #' @param samples Vector of strings representing the sample names.
-#' @param taxa Vector of strings representing taxon names.
-#' @param which.taxa Vector of strings giving subset of taxa to be affected.
+#' @param species Vector of strings representing species names.
+#' @param which.species Vector of strings giving subset of species to be affected.
 #' @param which.samples Vector of strings giving which samples to be affected.
 #' @param mtx Optionally, an existing matrix (if not provided, generate a new
 #'     one).
@@ -97,16 +97,16 @@ make.sim <- function(n.taxa,
 #' @return A new effect size matrix.
 #' @keywords internal
 add.fx.to.matrix <- function(samples,
-                             taxa,
-                             which.taxa,
+                             species,
+                             which.species,
                              which.samples,
                              mtx=0,
                              fx=1) {
     fx.mtx <- matrix(nc=length(samples),
-                     nr=length(taxa),
+                     nr=length(species),
                      0,
-                     dimnames=list(taxa, samples))
-    fx.mtx[which.taxa, which.samples] <- fx
+                     dimnames=list(species, samples))
+    fx.mtx[which.species, which.samples] <- fx
     mtx + fx.mtx
 }
 
@@ -114,8 +114,8 @@ add.fx.to.matrix <- function(samples,
 #' Assemble an effect-size matrix from a set of distinct effects.
 #'
 #' @param samples Vector of strings representing the sample names.
-#' @param taxa Vector of strings representing taxon names.
-#' @param wtaxa List of vectors of strings giving the subset of taxa to be
+#' @param species Vector of strings representing species names.
+#' @param wspecies List of vectors of strings giving the subset of species to be
 #'     affected in each distinct effect.
 #' @param wsamples List of vectors of strings giving which samples to be
 #'     affected, one for every distinct effect.
@@ -123,22 +123,22 @@ add.fx.to.matrix <- function(samples,
 #' @return An effect size matrix.
 #' @keywords internal
 build.fx.matrix <- function(samples,
-                            taxa,
+                            species,
                             fx,
-                            wtaxa,
+                            wspecies,
                             wsamples) {
     fx.mtx <- 0
     if (!is.null(fx)) {
-        if (length(fx) != length(wtaxa)) {
-            stop("fx and wtaxa must be the same length")
+        if (length(fx) != length(wspecies)) {
+            stop("fx and wspecies must be the same length")
         }
         if (length(fx) != length(wsamples)) {
             stop("fx and wsamples must be the same length")
         }
         for (e in 1:length(fx)) {
             fx.mtx <- add.fx.to.matrix(samples,
-                                       taxa,
-                                       wtaxa[[e]],
+                                       species,
+                                       wspecies[[e]],
                                         # from divided$env/dset
                                        wsamples[[e]],
                                        fx.mtx,
@@ -152,45 +152,45 @@ build.fx.matrix <- function(samples,
 #' effects (wraps \code{master.fx.matrix}).
 #'
 #' @param divided Output of \code{divide.samples}.
-#' @param taxa Vector of strings representing taxon names.
+#' @param species Vector of strings representing species names.
 #' @param env.fx Named numeric vector giving effect sizes per environment.
-#' @param env.taxa List of vectors of strings giving the subset of taxa to be
+#' @param env.species List of vectors of strings giving the subset of species to be
 #'     affected in each distinct environment effect.
 #' @param dset.fx Named numeric vector giving effect sizes per dataset.
-#' @param dset.taxa List of vectors of strings giving the subset of taxa to be
+#' @param dset.species List of vectors of strings giving the subset of species to be
 #'     affected in each distinct dataset effect.
 #' @return An effect size matrix incorporating both environmental and dataset
 #'     effects.
 #' @keywords internal
 master.fx.matrix <- function(divided,
-                             taxa,
+                             species,
                              env.fx,
-                             env.taxa,
+                             env.species,
                              dset.fx,
-                             dset.taxa) {
+                             dset.species) {
     env.mtx <- build.fx.matrix(divided$metadata$sample,
-                               taxa,
+                               species,
                                env.fx,
-                               env.taxa,
+                               env.species,
                                divided$env)
     dset.mtx <- build.fx.matrix(divided$metadata$sample,
-                                taxa,
+                                species,
                                 dset.fx,
-                                dset.taxa,
+                                dset.species,
                                 divided$dset)
     env.mtx + dset.mtx
 }
 
-#' Generate fake names for taxa or samples.
+#' Generate fake names for species or samples.
 #' @return A vector of fake names.
 #' @name NameFaker
 #' @keywords internal
 NULL
 
 #' @rdname NameFaker
-#' @param n.taxa Number of taxa.
+#' @param n.species Number of species.
 #' @keywords internal
-get.taxon.names <- function(n.taxa) { paste0("taxon", 1:n.taxa) }
+get.species.names <- function(n.species) { paste0("species", 1:n.species) }
 
 #' @rdname NameFaker
 #' @param n.samples Number of samples.
@@ -199,46 +199,46 @@ get.sample.names <- function(n.samples) { paste0("sample", 1:n.samples) }
 
 #' Wrapper function for generating an effect size matrix automatically.
 #'
-#' @param n.taxa Number of taxa to simulate
+#' @param n.species Number of species to simulate
 #' @param divided Output of \code{divide.samples}
-#' @param env.n.affected Number of taxa to be affected by environment effects.
-#' @param dset.n.affected Number of taxa to be affected by dataset effects.
+#' @param env.n.affected Number of species to be affected by environment effects.
+#' @param dset.n.affected Number of species to be affected by dataset effects.
 #' @return A list:
 #'   \item{mtx}{An effect size matrix.}
 #'   \item{fx}{The chosen, randomly generated effect sizes (see
 #'     \code{pick.env.dset.fx}.}
 #' @keywords internal
-master.mtx.wrapper <- function(n.taxa,
+master.mtx.wrapper <- function(n.species,
                                divided,
                                env.n.affected,
                                dset.n.affected,
                                ...) {
-    fx <- pick.env.dset.fx(n.taxa,
+    fx <- pick.env.dset.fx(n.species,
                            env.n.affected,
                            dset.n.affected,
                            divided,
                            ...)
     mtx <- master.fx.matrix(divided,
-                            get.taxon.names(n.taxa),
+                            get.species.names(n.species),
                             fx$env.fx,
-                            fx$env.taxa,
+                            fx$env.species,
                             fx$dset.fx,
-                            fx$dset.taxa)
+                            fx$dset.species)
     return(list(mtx=mtx, fx=fx))
 }
 
-#' Function for picking taxa to simulate.
+#' Function for picking species to simulate.
 #'
-#' @param n.taxa Number of taxa to simulate
+#' @param n.species Number of species to simulate
 #' @param divided Output of \code{divide.samples}
-#' @param env.n.affected Number of taxa to be affected by environment effects.
-#' @param dset.n.affected Number of taxa to be affected by dataset effects.
+#' @param env.n.affected Number of species to be affected by environment effects.
+#' @param dset.n.affected Number of species to be affected by dataset effects.
 #' @return A list:
 #'   \item{mtx}{An effect size matrix.}
 #'   \item{fx}{The chosen, randomly generated effect sizes (see
 #'     \code{pick.env.dset.fx}.}
 #' @keywords internal
-pick.env.dset.fx <- function(n.taxa,
+pick.env.dset.fx <- function(n.species,
                              env.n.affected,
                              dset.n.affected,
                              divided,
@@ -246,7 +246,7 @@ pick.env.dset.fx <- function(n.taxa,
                              env.sd = 0,
                              dset.mean = 0,
                              dset.sd = 0) {
-    taxa <- get.taxon.names(n.taxa)
+    species <- get.species.names(n.species)
     env <- divided$env
     dset <- divided$dset
     n.env <- length(env)
@@ -259,13 +259,13 @@ pick.env.dset.fx <- function(n.taxa,
         dset.n.affected <- rep(dset.n.affected, n.dset)
         names(dset.n.affected) <- names(dset)
     }
-    env.taxa <- lapply(env.n.affected, function(x) sample(taxa, x))
-    dset.taxa <- lapply(dset.n.affected, function(x) sample(taxa, x))
+    env.species <- lapply(env.n.affected, function(x) sample(species, x))
+    dset.species <- lapply(dset.n.affected, function(x) sample(species, x))
     env.fx <- rnorm(n.env, env.mean, env.sd)
     dset.fx <- rnorm(n.dset, dset.mean, dset.sd)
     names(env.fx) <- names(env.n.affected)
     names(dset.fx) <- names(dset.n.affected)
-    return(list(env.fx=env.fx, dset.fx=dset.fx, env.taxa=env.taxa, dset.taxa=dset.taxa))
+    return(list(env.fx=env.fx, dset.fx=dset.fx, env.species=env.species, dset.species=dset.species))
 }
 
 #' Divide a given number of samples into a given number of datasets and
@@ -314,22 +314,22 @@ rep.col <- function(vec, nc) {
 #' Wrapper script to generate fake data and metadata.
 #'
 #' @param n.samples Positive integer: how many samples should be simulated?
-#' @param n.taxa Positive integer: how many taxa should be simulated?
+#' @param n.species Positive integer: how many species should be simulated?
 #' @param n.envs Positive integer: how many environments should be simulated?
 #' @param n.dsets Positive integer: how many datasets should be simulated?
 #' @param n.reads Number or numeric vector giving read depth(s) per sample.
 #' @param env.fx.sizes A numeric vector of effect sizes, one per environment.
 #' @param dset.fx.sizes A numeric vector of effect sizes, one per dataset.
-#' @param env.frac.affected Proportion of taxa that will be affected by an
+#' @param env.frac.affected Proportion of species that will be affected by an
 #'     environment.
-#' @param dset.frac.affected Proportion of taxa that will be affected by a
+#' @param dset.frac.affected Proportion of species that will be affected by a
 #'     dataset effect.
 #' @param env.sd Number: when sampling environment effect sizes, use this
 #'     standard deviation.
 #' @param dset.sd Number: when sampling dataset effect sizes, use this standard
 #'     deviation.
 #' @param prev.dist Numeric vector of length 2 giving beta parameters for the
-#'     distribution of taxon prevalences.
+#'     distribution of species prevalences.
 #' @param make.16s Simulate a 16S dataset instead of a WGS-MIDAS dataset.
 #' @param tag.length If simulating 16S data, amplicon sequence variants will be
 #'     this length.
@@ -338,7 +338,7 @@ rep.col <- function(vec, nc) {
 #'   \item{metadata}{Simulated metadata data frame}
 #' @keywords internal
 generate.fake.abd.meta <- function(n.samples=100,
-                                   n.taxa=1000,
+                                   n.species=1000,
                                    n.envs=3,
                                    n.dsets=2,
                                    n.reads=1e6,
@@ -353,10 +353,10 @@ generate.fake.abd.meta <- function(n.samples=100,
                                    tag.length=100,
                                    t.names=NULL,
                                    ...) {
-    env.n.affected <- round(n.taxa * env.frac.affected)
-    dset.n.affected <- round(n.taxa * dset.frac.affected)
+    env.n.affected <- round(n.species * env.frac.affected)
+    dset.n.affected <- round(n.species * dset.frac.affected)
     divided <- divide.samples(n.samples, n.dsets, n.envs)
-    master.mtx <- master.mtx.wrapper(n.taxa,
+    master.mtx <- master.mtx.wrapper(n.species,
                                      divided,
                                      env.n.affected,
                                      dset.n.affected,
@@ -364,7 +364,7 @@ generate.fake.abd.meta <- function(n.samples=100,
                                      env.sd=env.sd,
                                      dset.mean=dset.fx.sizes,
                                      dset.sd=dset.sd)
-    sim <- make.sim(n.taxa,
+    sim <- make.sim(n.species,
                     n.samples,
                     avg.reads=n.reads,
                     prev.dist=prev.dist,
@@ -513,16 +513,16 @@ write.test.biom <- function(abd.meta,
 #'   back to MIDAS species.}
 #' }
 #'
-#' @param n.taxa Positive integer: how many ASVs to simulate?
+#' @param n.species Positive integer: how many ASVs to simulate?
 #' @param tag.length Positive integer: how long should the ASVs be?
 #' @return A list:
 #'   \item{seqs}{String vector: sequences of simulated ASVs.}
-#'   \item{names}{String vector: names of the taxa to which the ASVs "should"
+#'   \item{names}{String vector: names of the species to which the ASVs "should"
 #'     map.}
 #'   \item{species.map}{Numeric vector where the $i$'th element gives the number
-#'     of the species that taxon $i$ was mapped to.}
+#'     of the species that species $i$ was mapped to.}
 #' @keywords internal
-random.species.from.file <- function(n.taxa,
+random.species.from.file <- function(n.species,
                                      tag.length=100,
                                      ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -531,22 +531,22 @@ random.species.from.file <- function(n.taxa,
                                           opts('vsearch_16sfile')),
                                 seqtype='DNA',
                                 as.string=TRUE)
-    species.map <- sample(1:length(species.list), n.taxa, replace=FALSE)
-    taxon.seqs <- sapply(species.map, function(x) {
+    species.map <- sample(1:length(species.list), n.species, replace=FALSE)
+    species.seqs <- sapply(species.map, function(x) {
         if (is.null(tag.length)) {
             species.list[x]
         } else {
             substr(species.list[x], 1, tag.length)
         }
     })
-    #taxon.real.names <- sapply(species.map, function(x) {
+    #species.real.names <- sapply(species.map, function(x) {
     #    attr(species.list[x], 'name')
     #})
-    taxon.real.names <- sapply(species.map, function(x) {
+    species.real.names <- sapply(species.map, function(x) {
         strsplit(attr(species.list[[x]], 'Annot'), " ")[[1]][3]
     })
-    return(list(seqs=taxon.seqs,
-                names=taxon.real.names,
+    return(list(seqs=species.seqs,
+                names=species.real.names,
                 map=species.map))
 }
 
@@ -562,16 +562,16 @@ random.species.from.file <- function(n.taxa,
 #'   \item{mtx}{The input matrix, with renamed rows.}
 #'   \item{map}{String vector of ASVs, named with the original row names of
 #'     \code{mtx}.}
-#'   \item{n}{Names of the MIDAS taxa to which the rows of \code{mtx} "should"
+#'   \item{n}{Names of the MIDAS species to which the rows of \code{mtx} "should"
 #'     map.}
 #' @keywords internal
 make.simulated.denoised.data <- function(mtx, tag.length=100, ...) {
-    taxa <- rownames(mtx)
-    rs <- random.species.from.file(n.taxa=length(taxa),
+    species <- rownames(mtx)
+    rs <- random.species.from.file(n.species=length(species),
                                    tag.length=tag.length,
                                    ...)
     rownames(mtx) <- rs$seqs
-    names(rs$seqs) <- taxa
+    names(rs$seqs) <- species
     return(list(mtx=mtx,
                 map=rs$seqs,
                 n=rs$names))
@@ -586,8 +586,8 @@ make.simulated.denoised.data <- function(mtx, tag.length=100, ...) {
 #' than the desired \code{n}. Matrices with 1 or fewer genes after sampling will
 #' be dropped.
 #'
-#' @param g2s.matrices A list of sparse binary matrices, one per phylum.
-#' @param n Integer: how many genes per phylum to sample?
+#' @param g2s.matrices A list of sparse binary matrices, one per taxon.
+#' @param n Integer: how many genes per taxon to sample?
 #' @param fp Double: what proportion of highest-variance genes to sample from?
 #' @param minN Integer: minimum number of genes to return in a matrix
 #' @keywords internal
@@ -617,7 +617,7 @@ dummy.g2s <- function(g2s.matrices, n, fp=0.1, minN=2) {
 #' Downsample trees.
 #'
 #' @param trees List of trees.
-#' @param n Number of taxa to retain (maximum)
+#' @param n Number of species to retain (maximum)
 #' @keywords internal
 dummy.trees <- function(trees, n=50) {
     lapply(trees, function(tr) {
@@ -630,10 +630,10 @@ dummy.trees <- function(trees, n=50) {
 #' Wrapper to generate a low-memory, fast-running dummy database. Make sure
 #' \code{Matrix} is loaded.
 #'
-#' @param nt Number of taxa to sample per phylum.
-#' @param ng Number of genes to sample per phylum.
+#' @param nt Number of species to sample per taxon.
+#' @param ng Number of genes to sample per taxon.
 #' @param fp Fraction of most-variable genes to sample.
-#' @param minN Only keep phyla with at least this many genes.
+#' @param minN Only keep species with at least this many genes.
 #' @keywords internal
 generate.test.pzdb <- function(nt=75, ng=50, fp=0.1, minN=2, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)

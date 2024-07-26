@@ -92,10 +92,10 @@ PZ_OPTIONS <- options_manager(.list=default_params)
 #'   \item{min_fx}{Positive double. Effects that are significantly equivalent to this effect size will be excluded from significant positive hits. If zero, the equivalence test will be skipped. Default: 0}
 #'   \item{minimum}{Integer. A particular gene must be observed, and also absent, at least this many times to be reported as a significant positive association with the phenotype. Default: 3}
 #'   \item{ncl}{Integer. Number of cores to use for parallel computation. Default: 1}
-#'   \item{pctmin}{Float. A phylum must have at least this percent of observed representatives in order to be processed. Default: 0.01}
+#'   \item{pctmin}{Float. A taxon must have at least this percent of observed representatives in order to be processed. Default: 0.01}
 #'   \item{prior_type}{String. What type of prior to use ("uninformative" or "file"). Default: "uninformative"}
 #'   \item{single_dset}{Boolean. If true, will assume that all samples come from a single dataset called \code{dset1} no matter what, if anything, is in \code{dset_column}. Default: FALSE}
-#'   \item{treemin}{Integer. A phylum must have at least this many representatives in order to be processed. Default: 5}
+#'   \item{treemin}{Integer. A taxon must have at least this many representatives in order to be processed. Default: 5}
 #'   \item{type_16S}{Boolean. If 16S data, TRUE, otherwise shotgun data is assumed. Default: FALSE}
 #'   \item{vsearch_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using vsearch. Default: 0.985}
 #'   \item{which_envir}{String. Environment for which prevalence, specificity, or differential abundance scores will be the phenotype of interest. Must match annotations in metadata. Default: "Stool"}

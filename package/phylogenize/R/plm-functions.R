@@ -1,23 +1,23 @@
 #' Fit phylogenetic (or linear) models.
 #'
-#' @param phyla Character vector giving the names of the phyla.
-#' @param pheno Named numeric vector giving phenotype values per taxon.
-#' @param tree Either a single tree covering all taxa, or a list of per-phylum
+#' @param taxa Character vector giving the names of the taxa.
+#' @param pheno Named numeric vector giving phenotype values per species.
+#' @param tree Either a single tree covering all species, or a list of per-taxon
 #'     trees.
-#' @param proteins Named list of gene presence/absence matrices, per phylum.
-#' @param clusters Named list of character vectors of taxon IDs, per phylum.
+#' @param proteins Named list of gene presence/absence matrices, per taxon.
+#' @param clusters Named list of character vectors of species IDs, per taxon.
 #' @param method A function that returns a length-2 numeric vector of
 #'     effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
 #'     \code{lm.fx.pv}).
 #' @param restrict.figfams Optionally, a character vector giving a subset of
 #'     genes to test.
 #' @param drop.zero.var Boolean giving whether to drop genes that are always
-#'     present or always absent in a particular phylum.
+#'     present or always absent in a particular taxon.
 #' @param only.return.names Boolean giving whether to just return the names of
 #'     genes to be tested (for debugging).
-#' @return Named list of p-value and effect-size matrices, one per phylum.
+#' @return Named list of p-value and effect-size matrices, one per taxon.
 #' @export result.wrapper.plm
-result.wrapper.plm <- function(phyla,
+result.wrapper.plm <- function(taxa,
                                pheno,
                                tree,
                                proteins,
@@ -28,7 +28,7 @@ result.wrapper.plm <- function(phyla,
                                only.return.names = FALSE,
                                ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    lapply.across.names(phyla, function(p) {
+    lapply.across.names(taxa, function(p) {
         message(p)
         if (class(tree) == "phylo") {
             tr <- tree
@@ -72,35 +72,35 @@ result.wrapper.plm <- function(phyla,
     })
 }
 
-#' Fit phylogenetic (or linear) models (single core version, single phylum).
+#' Fit phylogenetic (or linear) models (single core version, single taxon).
 #'
 #' @param gene.matrix Gene presence/absence matrix.
 #' @param tree Phylogeny relating taxa.
 #' @param pheno Named numeric vector giving phenotype values per taxon.
-#' @param phylum.name Name of phylum being considered.
+#' @param taxon.name Name of taxon being considered.
 #' @param method A function that returns a length-2 numeric vector of
 #'     effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
 #'     \code{lm.fx.pv}).
 #' @param restrict.ff Optionally, a character vector giving a subset of
 #'     genes to test.
 #' @param remove.low.variance Boolean giving whether to drop genes that are
-#'     always present or always absent in a particular phylum.
+#'     always present or always absent in a particular taxon.
 #' @param use.for.loop Boolean giving whether to use a for loop instead of a
 #'     pbapply.
-#' @return Named list of p-value and effect-size matrices, one per phylum.
+#' @return Named list of p-value and effect-size matrices, one per taxon.
 #' @export
 nonparallel.results.generator <- function(gene.matrix,
                                          tree,
                                          taxa,
                                          pheno,
-                                         phylum.name="TestPhylum",
+                                         taxon.name="TestFamily",
                                          method=phylolm.fx.pv,
                                          restrict.ff=NULL,
                                          remove.low.variance=TRUE,
                                          use.for.loop=TRUE,
                                          ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    message(phylum.name)
+    message(taxon.name)
     restrict.taxa <- Reduce(intersect, list(colnames(gene.matrix),
                                             tree$tip.label,
                                             names(pheno),
@@ -309,10 +309,10 @@ cluster.load.pkg <- function(cl, devel, pkgdir="package/phylogenize") {
     }
 }
 
-#' Perform phylogenetic (or linear) modeling for a single phylum.
+#' Perform phylogenetic (or linear) modeling for a single taxon.
 #'
-#' @param pheno Named numeric vector giving phenotype values per taxon.
-#' @param tree A tree relating taxa within a phylum.
+#' @param pheno Named numeric vector giving phenotype values per species.
+#' @param tree A tree relating taxa within a taxon.
 #' @param mtx Gene presence/absence matrix.
 #' @param method A function that returns a length-2 numeric vector of
 #'     effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
@@ -1040,7 +1040,7 @@ pz.warning <- function(msgtext, ...) {
 #' @export
 make.results.matrix <- function(results) {
     Reduce(rbind, lapply(names(results), function(rn) {
-        data.frame(phylum = rn,
+        data.frame(taxon = rn,
                    gene = results[[rn]] %>% colnames,
                    effect.size = results[[rn]][1,],
                    p.value = results[[rn]][2,],
@@ -1058,7 +1058,7 @@ make.results.matrix <- function(results) {
 #'   association with the phenotype.}
 #' }
 #' @param pz.db A database for use with *phylogenize* analyses.
-#' @param phy.with.sigs A vector of strings giving which phyla had significant
+#' @param phy.with.sigs A vector of strings giving which taxa had significant
 #'     results.
 #' @return A single data frame with entries from \code{results}.
 #' @export
@@ -1082,13 +1082,13 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 
 #' Add gene descriptions to significant results; return in a tibble.
 #'
-#' @param phy.with.sigs Character vector giving the phyla with significant hits.
-#' @param pos.sig List of character vectors, one per phylum, of significant hits.
+#' @param phy.with.sigs Character vector giving the taxa with significant hits.
+#' @param pos.sig List of character vectors, one per species, of significant hits.
 #' @param gene.to.fxn Data frame used to annotate genes to functions.
 #' @return A single data frame of all significant results plus descriptions.
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
-    pos.sig.tbl <- enframe(pos.sig, name="phylum", value="gene") %>% unnest
+    pos.sig.tbl <- enframe(pos.sig, name="taxon", value="gene") %>% unnest
     pos.sig.descs <- left_join(pos.sig.tbl,
                                gene.to.fxn,
                                by="gene") %>%

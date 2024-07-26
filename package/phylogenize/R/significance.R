@@ -3,7 +3,7 @@
 #' @param sigs Output of \code{make.sigs}
 #' @param signs Output of \code{make.signs}
 #' @param cut String giving named significance level to use.
-#' @return List (per phylum) of string vectors of positive significant hits.
+#' @return List (per taxon) of string vectors of positive significant hits.
 #' @export
 make.pos.sig <- function(sigs, signs, cut = "strong") {
     lapply.across.names(names(sigs), function(x) {
@@ -83,7 +83,7 @@ equiv_test <- function(fx, se, df, min_fx=0.25) {
 #'     \code{results}.
 #' @param exclude String vector of genes to exclude (optional).
 #' @param min.fx Minimum effect size for calling something significant.
-#' @return List (per phylum) of string vectors of significant hits.
+#' @return List (per taxon) of string vectors of significant hits.
 #' @export
 make.sigs <- function(results,
                       cuts = c(strong = 0.05,
@@ -110,7 +110,7 @@ make.sigs <- function(results,
 #'
 #' @param results List of result matrices with two rows (effect size and
 #'     p-value) and one column per gene tested.
-#' @return List (per phylum) of numeric vectors of signs of hits.
+#' @return List (per taxon) of numeric vectors of signs of hits.
 #' @export
 make.signs <- function(results) {
   lapply(results, function(r) {
@@ -146,10 +146,10 @@ calc.alpha.power <- function(pvs, null, alt, alpha = 0.05, filter = NULL) {
 
 #' Create a summary table giving how many tests were significant.
 #'
-#' @param results List of result matrices, one per phylum.
+#' @param results List of result matrices, one per taxon.
 #' @param sigs The output of \code{make.sigs}.
 #' @param signs The output of \code{make.signs}.
-#' @return A table with the number of positive significant results per phylum at
+#' @return A table with the number of positive significant results per taxon at
 #'     each significance level in \code{sigs}.
 #' @export
 results.report <- function(results, sigs, signs) {
@@ -165,14 +165,14 @@ results.report <- function(results, sigs, signs) {
 
 #' Return the significant hits with the N smallest p-values.
 #'
-#' @param p A phylum
+#' @param p A taxon
 #' @param sigs The output of \code{make.sigs}.
 #' @param signs The output of \code{make.signs}.
-#' @param results List of result matrices, one per phylum.
+#' @param results List of result matrices, one per taxon.
 #' @param N Integer; how many hits to return.
 #' @param level Significance level (must be in \code{sigs[[1]]}).
 #' @param exclude Optional: exclude these genes from any list.
-#' @param genomes.per.protein Optional: list (one per phylum) of named numeric
+#' @param genomes.per.protein Optional: list (one per taxon) of named numeric
 #'     vectors giving the number of genomes that each protein was found in.
 #' @param total.n.cutoff Optional: if \code{genomes.per.protein} provided, only
 #'     return hits found in at least this many genomes.
