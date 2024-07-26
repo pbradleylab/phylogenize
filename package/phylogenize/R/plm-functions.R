@@ -771,7 +771,14 @@ clr <- function(mtx, pc = 0.5) {
 #' @param pdata Named numeric vector giving priors per environment.
 #' @param b.optim If not NULL, use this value for the regularization parameter
 #'     $b$, otherwise optimize it.
-#' @return An additively-smoothed estimate of taxon prevalences.
+#' @return A list with the following components:
+#' \describe{
+#'   \item{b.optim}{Shrinkage parameter b obtained through optimization}
+#'   \item{ess}{Logit-transformed, shrunken estimates of specificity.}
+#'   \item{regularized}{Non-transformed regularized values.}
+#'   \item{priors}{Values of priors.}
+#'   \item{phenoP}{Color-scale limits for visualizing the phenotype.}
+#' } 
 #' @export
 calc.ess <- function(abd.meta,
                      pdata = NULL,
@@ -856,7 +863,23 @@ calc.ess <- function(abd.meta,
         phenoP=phenoP))
 }
 
+### Wrap ashr with default parameters
 
+#' Wrapper function to perform adaptive shrinkage.
+#'  TODO make user-configurable
+#'
+#' @param m Estimates of parameter of interest.
+#' @param s Standard errors of parameters of interest.
+#' @param nw Null weight (default=10).
+#' @param ashr_df Degrees of freedom (default=5)
+#' @return A vector giving shrunken estimates of parameter.
+ash_wrapper <- function(m, s, nw=10, ashr_df=5) {
+  ashr::ash(m, s,
+            mixcompdist="halfuniform",
+            prior="nullbiased",
+            nullweight=nw,
+            df=ashr_df)
+}
 ### calculate differential abundance
 
 #' Main function to calculate differential abundances using either ANCOMBC2
@@ -879,33 +902,31 @@ calc.ess <- function(abd.meta,
 ashr.diff.abund <- function(abd.meta,
                             ...) {
   opts <- clone_and_merge(PZ_OPTIONS, ...)
+  categorical <- opts('categorical')
   envir <- opts('which_envir')
   E <- opts('env_column')
   D <- opts('dset_column')
   S <- opts('sample_column')
   M <- tolower(opts('diff_abund_method'))
-  if !(M %in% c('ancombc2', 'maaslin2')) {
-    stop(paste0("method ", M, " not recognized (see help)"))
+  if (!(M %in% c('ancombc2', 'maaslin2'))) {
+    pz.error(paste0("method ", M, " not recognized (see help)"))
   }
-  env_levels <- levels(abd.meta$metadata[[E]])
-  if (!(envir %in% env_levels))) {
-    stop(paste0("environment ", envir, " not found in metadata"))
+  if (categorical) {
+    env_levels <- levels(abd.meta$metadata[[E]])
+    if (!(envir %in% env_levels)) {
+      pz.error(paste0("environment ", envir, " not found in metadata"))
+    }
+  } else {
+    abd.meta$metadata[[E]] <- as.numeric(abd.meta$metadata[[E]])
+    if (all(is.na(abd.meta$metadata[[E]]))) {
+      pz.error("Environment failed conversion to numeric; is this supposed to be a categorical variable?")
+    }
   }
-  # This method will use all "levels" of an environment but needs to report the one given by the variable envir, which means we need to make sure that's the last level in the factor
-  env_factor <- abd.meta$metadata[[E]]
-  levels(env_factor) <- c(setdiff(env_levels, envir), envir)
-  abd.meta$metadata[[E]] <- env_factor
   # Both tools expect rownames to be sample IDs
   named_metadata <- data.frame(
-    abd.meta$metadata[, setdiff(colnames(abd.metadata$metadata), S]
+    abd.meta$metadata[, setdiff(colnames(abd.metadata$metadata), S)]
   )
   rownames(named_metadata) <- abd.meta$metadata[[S]]
-  # TODO make user-configurable
-  ash_wrapper <- function(m, s) { ashr::ash(m, s,
-                                            mixcompdist="halfuniform",
-                                            prior="nullbiased",
-                                            nullweight=10,
-                                            df=ashr_df)}
   if (M=="ancombc2") {
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
       assays=S4Vectors::SimpleList(counts=abd.meta$mtx),

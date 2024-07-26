@@ -62,6 +62,7 @@ read.abd.metadata <- function(...) {
 #' Some particularly relevant global options are:
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment annotations.}
+#'   \item{envir}{Environment of interest.}
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #'   \item{single_dset}{Boolean. If true, will assume that all samples come from
 #'   a single dataset called \code{dset1} no matter what, if anything, is in
@@ -73,10 +74,15 @@ read.abd.metadata <- function(...) {
 #'     \?pz.options).
 #' @return A data frame of metadata, with environment and
 #'     dataset columns converted to factors, *unless* calculating correlation
-#'     in which case environment column will be cast as numeric.
+#'     in which case environment column will be cast as numeric. The environment
+#'     factor will be automatically re-leveled so that \code{envir} is last, so
+#'     that it is guaranteed to appear in the output of differential abundance 
+#'     estimators.
 #' @export
 check.process.metadata <- function(metadata, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
+    E <- opts('env_column')
+    envir <- opts('which_envir')
     if (!(opts('env_column') %in% colnames(metadata))) {
         pz.error(paste0("environment column not found: ", opts('env_column')))
     }
@@ -96,8 +102,19 @@ check.process.metadata <- function(metadata, ...) {
             pz.error(paste0("sample column not found: ", opts('sample_column')))
         }
     }
-    if (!(opts('which_phenotype') == "correlation")) {
-        metadata[[opts('env_column')]] <- as.factor(metadata[[opts('env_column')]])
+    if (opts('categorical')) {   # i.e., env not continuous
+      env_factor <- factor(metadata[[E]])
+      env_levels <- levels(env_factor)
+      if (!(envir %in% env_levels)) {
+        pz.error(paste0("environment ", envir, " not found in metadata"))
+      }
+      levels(env_factor) <- c(setdiff(env_levels, envir), envir)
+      metadata[[E]] <- env_factor
+    } else {
+      metadata[[E]] <- as.numeric(metadata[[E]])
+      if (all(is.na(abd.meta$metadata[[E]]))) {
+        pz.error("Environment failed conversion to numeric; is this supposed to be a categorical variable?")
+      }
     }
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
     return(metadata)
