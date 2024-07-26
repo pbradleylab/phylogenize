@@ -647,7 +647,7 @@ b.scorer <- function(s, a) {
 
 ### calculate prevalence
 
-#' Master function to calculate taxon prevalences with additive smoothing.
+#' Main function to calculate taxon prevalences with additive smoothing.
 #'
 #' Some particularly relevant global options are:
 #' \describe{
@@ -701,7 +701,7 @@ prev.addw <- function(abd.meta,
 
 ### calculate correlation
 
-#' Master function to calculate taxon-to-phenotype correlations, using clr-transformed abundances.
+#' Main function to calculate taxon-to-phenotype correlations, using clr-transformed abundances.
 #'
 #' Some particularly relevant global options are:
 #' \describe{
@@ -753,7 +753,7 @@ clr <- function(mtx, pc = 0.5) {
   apply(mtx + pc, 2, function(x) log(x) - mean(log(x)))
 }
 
-#' Master function to calculate environmental specificity scores.
+#' Main function to calculate environmental specificity scores.
 #'
 #' Some particularly relevant global options are:
 #' \describe{
@@ -854,6 +854,96 @@ calc.ess <- function(abd.meta,
         regularized=regularized,
         priors=priors,
         phenoP=phenoP))
+}
+
+
+### calculate differential abundance
+
+#' Main function to calculate differential abundances using either ANCOMBC2
+#' or MaAsLin2, then smooth the results with adaptive shrinkage. Note that the
+#' packages for ANCOMBC2 or MaAsLin2 must already be installed.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{env_column}{String. Name of column in metadata file containing the
+#'   environment annotations.}
+#'   \item{dset_column}{String. Name of column in metadata file containing the
+#'   dataset annotations. Will be incorporated as a "nuisance" variable.}
+#'   \item{diff_abund_method}{String. Either "ANCOMBC2" or "Maaslin2" (case 
+#'   insensitive).}
+#' }
+#'
+#' @param abd.meta A list giving an abundance matrix and metadata.
+#' @return A vector giving shrunken estimates of differential abundance.
+#' @export
+ashr.diff.abund <- function(abd.meta,
+                            ...) {
+  opts <- clone_and_merge(PZ_OPTIONS, ...)
+  envir <- opts('which_envir')
+  E <- opts('env_column')
+  D <- opts('dset_column')
+  S <- opts('sample_column')
+  M <- tolower(opts('diff_abund_method'))
+  if !(M %in% c('ancombc2', 'maaslin2')) {
+    stop(paste0("method ", M, " not recognized (see help)"))
+  }
+  env_levels <- levels(abd.meta$metadata[[E]])
+  if (!(envir %in% env_levels))) {
+    stop(paste0("environment ", envir, " not found in metadata"))
+  }
+  # This method will use all "levels" of an environment but needs to report the one given by the variable envir, which means we need to make sure that's the last level in the factor
+  env_factor <- abd.meta$metadata[[E]]
+  levels(env_factor) <- c(setdiff(env_levels, envir), envir)
+  abd.meta$metadata[[E]] <- env_factor
+  # Both tools expect rownames to be sample IDs
+  named_metadata <- data.frame(
+    abd.meta$metadata[, setdiff(colnames(abd.metadata$metadata), S]
+  )
+  rownames(named_metadata) <- abd.meta$metadata[[S]]
+  # TODO make user-configurable
+  ash_wrapper <- function(m, s) { ashr::ash(m, s,
+                                            mixcompdist="halfuniform",
+                                            prior="nullbiased",
+                                            nullweight=10,
+                                            df=ashr_df)}
+  if (M=="ancombc2") {
+    ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
+      assays=S4Vectors::SimpleList(counts=abd.meta$mtx),
+      colData=named_metadata)
+    ancom_results <- ancombc2(ancom_tse,
+                              assay_name="counts",
+                              fix_formula=paste0(E, "+", D))
+    ancom_results_tbl <- ancom_results$res %>% tibble()
+    envir_stem <- paste0("env", envir)
+    lfc_col <- paste0("lfc_", envir_stem)
+    se_col <- paste0("se_", envir_stem)
+    ancom_ash <- ash_wrapper(dplyr::select(ancom_results_tbl,
+                                           taxon,
+                                           !!(lfc_col)) %>% deframe,
+                             dplyr::select(ancom_results_tbl,
+                                           taxon,
+                                           !!(se_col)) %>% deframe)
+    sample_ashr <- as_tibble(ancom_ash$result, rownames="species")
+  } else if (M=="maaslin2") {
+    maaslin_res <- Maaslin2::Maaslin2(input_data=abd.meta$mtx,
+                            input_metadata=named_metadata,
+                            fixed_effects=paste0(E, ",", D),
+                            output="temp/",
+                            plot_heatmap = FALSE,
+                            plot_scatter = FALSE)
+    maaslin_results_tbl <- maaslin_res$results %>% tibble() %>%
+      dplyr::filter(metadata==E, value==envir) #%>% 
+      #mutate(feature=gsub("^X","",feature)) # TODO check numeric
+    maaslin_ash <- ash_wrapper(dplyr::select(maaslin_results_tbl, feature, coef) %>% deframe,
+                               dplyr::select(maaslin_results_tbl, feature, stderr) %>% deframe)
+    sample_ashr <- as_tibble(maaslin_ash$result, rownames="species")
+  } else {
+    pz.error("This shouldn't be possible, but somehow an incorrect differential abundance method was selected")
+  }
+  sample_pheno <- sample_ashr %>%
+    dplyr::select(species, PosteriorMean) %>%
+    deframe
+  return(sample_pheno)
 }
 
 #' Throw an error and optionally log it in errmsg.txt.

@@ -26,7 +26,8 @@ Depends:
     cd,
     yaml,
     furrr,
-    tidymodels
+    tidymodels,
+    ashr
 Imports:
     data.table,
     parallel,
@@ -47,4 +48,6 @@ Imports:
     testthat,
     ezknitr
 Suggests: 
+    ANCOMBC,
+    Maaslin2
 RoxygenNote: 6.1.1.9000
