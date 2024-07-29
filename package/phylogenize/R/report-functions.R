@@ -700,10 +700,13 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     # Since midas ID are inclded in the database, we remove them
     # and match on a species level 
     taxa.per.tree <- lapply(pz.db$trees, function(tr) {
-	truncated_tips <- sapply(tr$tip.label, function(label) {
-        	sub("_(?!.*_).*", "", label, perl = TRUE)
-        })   
-	intersect(pz.db$taxonomy$family, taxa.observed)
+	#truncated_tips <- sapply(tr$tip.label, function(label) {
+        #	sub("_(?!.*_).*", "", label, perl = TRUE)
+        #}
+	#pz.error(taxa.observed[1])
+	pz.error(tr$tip.label[1])
+	pz.error(intersect(tr$tip.label, taxa.observed))
+	intersect(tr$tip.label, taxa.observed)
     })
     
     tL <- vapply(taxa.per.tree, length, 1L)
@@ -723,8 +726,8 @@ adjust.db <- function(pz.db, abd.meta, ...) {
                                         tL[tn] >= opts('treemin')),
                                        yes="kept",
                                        no="dropped")
-                          ))
-    }
+		  ))
+}
     saved.phyla <- intersect(passed.min, passed.pct)
     if (length(saved.phyla) == 0) {
         pz.error(paste0("All trees had less than ",
@@ -737,7 +740,7 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     pz.db$trees <- pz.db$trees[saved.phyla]
     pz.db$taxa <- lapply(pz.db$trees, function(x) x$tip.label)
     pz.db$nphyla <- length(pz.db$trees)
-    pz.db$trees <- lapply(pz.db$trees, fix.tree)
+    pz.db$trees <- lapply(pz.db$trees, function(phy) fix.tree(phy))
     pz.db
 }
 
@@ -808,7 +811,7 @@ clean.pheno <- function(phenotype, pz.db) {
     tips <- Reduce(union, lapply(pz.db$trees, function(x) x$tip.label))
     cols <- Reduce(union, lapply(pz.db$gene.presence, colnames))
     valid.names <- intersect(tips, cols)
-    phenotype[intersect(names(phenotype), valid.names)]
+    phenotype[intersect(unlist(names(phenotype)), unlist(valid.names))]
 }
 
 
@@ -878,7 +881,7 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     phenoLimits <- quantile(unique(phenotype), c(0.2, 0.8))
     phenoLimitsPhylum <- lapply(trees, function(tr) {
-        phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>%
+        phi <- phenotype[intersect(unlist(names(phenotype)), unlist(tr$tip.label))] %>%
             na.omit
         quantile(unique(phi), c(0.2, 0.8))
     })
@@ -964,6 +967,7 @@ plot.phenotype.trees <- function(phenotype,
                                             opts('which_phenotype')),
                                plot=FALSE)},
                  error=function(e) {
+		     #pz.error(scale$phy.limits[[tn]])
                      pz.warning(e)
                      NA
                  })

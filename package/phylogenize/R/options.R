@@ -37,6 +37,7 @@ default_params <- list(
     spec_color_mid = 'gray50',
     treemin = 5,
     type_16S = FALSE,
+    tax_level = "family",
     use_rmd_params = FALSE,
     vsearch_16sfile = "16s_gtdb.frn",
     vsearch_cutoff = 0.985,
@@ -88,6 +89,7 @@ PZ_OPTIONS <- options_manager(
     spec_color_mid = default_params["spec_color_mid"][[1]],
     treemin = default_params["treemin"][[1]],
     type_16S = default_params["type_16S"][[1]],
+    tax_level = default_params["tax_level"][[1]],
     use_rmd_params = default_params["use_rmd_params"][[1]],
     vsearch_16sfile = default_params["vsearch_16sfile"][[1]],
     vsearch_cutoff = default_params["vsearch_cutoff"][[1]],
@@ -141,6 +143,7 @@ PZ_OPTIONS <- options_manager(
 #'   \item{single_dset}{Boolean. If true, will assume that all samples come from a single dataset called \code{dset1} no matter what, if anything, is in \code{dset_column}. Default: FALSE}
 #'   \item{treemin}{Integer. A phylum must have at least this many representatives in order to be processed. Default: 5}
 #'   \item{type_16S}{Boolean. If 16S data other wise shotgun data is assumed. Default: False}
+#'   \item{tax_level}{String. A classification of taxonomy which is either "phylum", "class", "order", "family", or "genus" Default: "family"}
 #'   \item{vsearch_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using vsearch. Default: 0.985}
 #'   \item{which_envir}{String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. Default: "Stool"}
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence" or "specificity"). Default: "prevalence"}

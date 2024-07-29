@@ -7,11 +7,19 @@
 #'     maximum node height.
 #' @keywords internal
 fix.tree <- function(phy, len=1e-6) {
-  #pz.error(phy)
-  phy <- ape::multi2di(phy)
+  if (!is.null(phy) && inherits(phy, "phylo")) {
+      phy <- ape::multi2di(phy)
+      if (any(phy$edge.length == 0)) {
+          max_height <- max(phytools::nodeHeights(phy))
+          phy$edge.length[phy$edge.length == 0] <- max_height * len
+      }
+  }
+  
+  
+
   ## from Liam Revell's blog, June 23 2015:
   ## http://blog.phytools.org/2015/06/update-to-rerootingmethod-for-ancestral.html
-  phy$edge.length[phy$edge.length==0] <- max(phytools::nodeHeights(phy)) * len
+  #phy$edge.length[phy$edge.length==0] <- max(phytools::nodeHeights(phy)) * len
   phy
 }
 
@@ -86,7 +94,7 @@ gg.cont.tree <- function(phy,
                          ladderize = T,
                          ...) {
   if (!is.null(restrict)) {
-    ctrait <- ctrait[intersect(names(ctrait), restrict)]
+      ctrait <- ctrait[intersect(names(ctrait), restrict)]
   }
   if (is.null(n)) { n <- intersect(phy$tip.label, names(ctrait)) }
   if (is.null(reduced.phy)) { reduced.phy <- fix.tree(keep.tips(phy, n)) }
