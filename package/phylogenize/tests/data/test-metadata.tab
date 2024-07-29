@@ -27,18 +27,10 @@ sample25	dset2	env3
 sample26	dset2	env2
 sample27	dset1	env2
 sample28	dset2	stool
-sample29	dset1	env2
-sample30	dset1	env3
-sample31	dset2	env3
-sample32	dset1	env3
 sample33	dset2	stool
 sample34	dset2	env3
 sample35	dset2	stool
 sample36	dset2	stool
-sample37	dset2	env2
-sample38	dset1	env2
-sample39	dset2	env3
-sample40	dset2	env3
 sample41	dset1	stool
 sample42	dset2	env3
 sample43	dset1	env2
@@ -98,4 +90,5 @@ sample96	dset2	env2
 sample97	dset2	env2
 sample98	dset1	stool
 sample99	dset1	env2
-sample100	dset2	stool
+sample100	dset2	env1
+sample40	dset1	stool
