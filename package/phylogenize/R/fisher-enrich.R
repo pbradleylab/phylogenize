@@ -1,4 +1,4 @@
-# Functions for performing enrichment analysis
+# Functions for performing enrichment analysis. Note: deprecated in newest version, use kegg_enrich.R
 
 #' Wrapper around \code{qvalue} that extracts only q-values. If there is an
 #' error in estimating q-values, will automatically fall back to a

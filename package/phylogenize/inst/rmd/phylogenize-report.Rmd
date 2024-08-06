@@ -20,7 +20,7 @@ params:
   env_column: "env"
   dset_column: "dataset"
   phenotype_file: ""
-  db_version: "midas_v1.2"
+  db: "gtdb"
   which_phenotype: "prevalence"
   which_envir: "Stool"
   prior_type: "uninformative"
@@ -136,7 +136,7 @@ if (pz.options('which_phenotype') == "prevalence") {
 } else if (pz.options('which_phenotype') == "specificity") {
   if (pz.options('prior_type') == "file") {
     prior.data <- read.table(file.path(pz.options('input_dir'),
-                                        pz.options('prior_file')))
+                                       pz.options('prior_file')))
   } else {
     prior.data <- NULL
   }
