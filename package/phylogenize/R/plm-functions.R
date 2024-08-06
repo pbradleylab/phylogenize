@@ -1088,8 +1088,20 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 #' @return A single data frame of all significant results plus descriptions.
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
-    pos.sig.tbl <- enframe(pos.sig, name="taxon", value="gene") %>% unnest
-    pos.sig.descs <- left_join(pos.sig.tbl,
+    pos.sig.tbl <- enframe(pos.sig, name="phylum", value="gene") %>% unnest
+    
+    column_names <- colnames(gene.to.fxn)
+    na_columns <- which(is.na(column_names))
+    pz.error(colnames(pos.sig.tbl))
+    pz.error(colnames(gene.to.fxn)) 
+    if (length(na_columns) > 0) {
+        for (i in seq_along(na_columns)) {
+            column_names[na_columns[i]] <- paste0("NA_col_", i)
+        }
+    }
+    colnames(gene.to.fxn) <- column_names
+    
+    pos.sig.descs <- dplyr::left_join(pos.sig.tbl,
                                gene.to.fxn,
                                by="gene") %>%
         rename(description=`function`)

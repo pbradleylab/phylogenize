@@ -35,7 +35,7 @@ params:
   error_to_file: TRUE
 ---
 
-```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=TRUE}
+```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=FALSE}
 
 library(phylogenize)
 library(Matrix)
@@ -124,7 +124,7 @@ taxa that are neither.
 
 
 
-```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=TRUE}
+```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=FALSE}
 
 # Calculate the phenotype of interest
 
@@ -190,14 +190,13 @@ write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
 
 # be a little parsimonious with memory here
 rm(abd.meta); gc()
-check.mem_usage()
 ```
 
 # Phenotype mapped across trees {.tabset}
 
 ## All taxa
 
-```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=TRUE}
+```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=FALSE}
 
 if (!pz.options('skip_graphs')) {
     plot.labeled.phenotype.trees(plotted.pheno.trees,
@@ -205,14 +204,13 @@ if (!pz.options('skip_graphs')) {
                                  label=pz.options('which_phenotype'))
 }
 
-check.mem_usage()
 ```
 
 ## Only mapped/observed taxa {.tabset}
 
 Displays phenotype on trees, with only the mapped/observed taxa plotted.
 
-```{r subtrees_pre, cache=TRUE, echo=FALSE}
+```{r subtrees_pre, cache=FALSE, echo=FALSE}
 
 pheno.labels <- names(phenotype)
 subtrees <- lapply(pz.db$trees, function(tr) {
@@ -226,7 +224,7 @@ subtrees <- Filter(function(x) {
 
 ```
 
-```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(subtrees), cache.lazy = FALSE, cache=TRUE, echo=FALSE}
+```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(subtrees), cache.lazy = FALSE, cache=FALSE, echo=FALSE}
 
 if (!pz.options('skip_graphs')) {
   plotted.pheno.subtrees <- plot.phenotype.trees(phenotype,
@@ -245,7 +243,6 @@ if (!pz.options('skip_graphs')) {
   }
 }
 
-check.mem_usage()
 ```
 
 `r rmd.message`
@@ -255,7 +252,7 @@ check.mem_usage()
 This table gives an overview of how many genes were significantly associated at
 an FDR of 5%.
 
-```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=TRUE}
+```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
 
 if (pz.options('linearize')) { # mostly for testing
   p.method <- lm.fx.pv
@@ -264,7 +261,6 @@ if (pz.options('linearize')) { # mostly for testing
 }
 
 taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$taxa)))
-
 if (pz.options('ncl') > 1) {
     results <- result.wrapper.plm(taxa=taxaN,
                                   pheno=phenotype,
@@ -307,7 +303,6 @@ rm(pos.sig.thresh.descs)
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
           results.matrix)
 rm(results.matrix)
-check.mem_usage()
 ```
 
 # Gene association heat maps
@@ -320,10 +315,9 @@ right by Jaccard dissimilarity, so genes with similar patterns of inheritance
 will form vertical stripes. Horizontal stripes may be visible for taxa that
 have particularly extreme phenotypes.
 
-```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=TRUE}
+```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=FALSE}
 
 
-check.mem_usage()
 
 cluster.plots <- mapply(do.clust.plot, 
                         pz.db$gene.presence[phy.with.sigs],
@@ -335,7 +329,6 @@ cluster.plots <- mapply(do.clust.plot,
 
 rm(cluster.plots)
 rm(plotted.pheno.trees)
-check.mem_usage()
 
 ```
 
@@ -350,7 +343,7 @@ All pathways/modules returned are significant at an FDR of 25%. "Strong", "Med",
 and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
 
-```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=TRUE}
+```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=FALSE}
 do_enrichment <- ("clusterProfiler" %in% rownames(installed.packages()))
 if (do_enrichment) {
   pretty.enr.tbl <- NULL
@@ -377,9 +370,7 @@ if (do_enrichment) {
               Taxon,
               qvalue)
     
-    check.mem_usage()
     write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
-    check.mem_usage()
   }
 }
 ```
@@ -387,11 +378,9 @@ Enrichment tables:
 
 ```{r enrichment_display, echo=FALSE, results='asis'}
 options(knitr.table.format = "html")
-check.mem_usage()
 if (do_enrichment) {
   if (!is.null(pretty.enr.tbl)) {
     cat(output.enr.table(pretty.enr.tbl))
-    check.mem_usage()
     accession_to_fxn <- pz.db$gene.to.fxn %>%
       select(accession, `function`) %>%
       distinct()
@@ -410,7 +399,6 @@ if (do_enrichment) {
         mutate(effectsize=map2_dbl(taxon,
                                    gene,
                                    ~results[[.x]][1, .y]))
-    check.mem_usage()
     write.csv(file=file.path(pz.options('out_dir'),
                              "enr-overlaps.csv"),
               enr.overlap)
@@ -420,7 +408,6 @@ if (do_enrichment) {
                       taxon,
                       factor(cutoff, levels=names(signif[[1]])),
                       desc(effectsize)))
-    check.mem_usage()
     rm(enr.overlap)
     rm(enrichments)
   }
