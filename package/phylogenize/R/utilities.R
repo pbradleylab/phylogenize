@@ -144,10 +144,11 @@ truncated <- function(x, lim = c(logit(0.001), logit(0.25))) {
 fastread <- function(location, cn = TRUE) {
     # rownames are useful
     master <- data.frame(read.csv(location, sep='\t', row.names=1, header=T))
-    rn <- master[, 1, drop=TRUE]
-    rest <- master[, -1, drop=FALSE]
-    rownames(rest) <- rn
-    return(data.matrix(rest))
+    #rn <- master[, 1, drop=TRUE]
+    #rest <- master[, -1, drop=FALSE]
+    #pz.error(location)
+    #rownames(rest) <- rn
+    return(data.matrix(master))
 }
 
 # Parallelization
@@ -399,20 +400,35 @@ hack.tree.labels <- function(tree.obj,
     uniq.x2 <- unique(xml.x2)
     count.x2 <- sapply(uniq.x2, function(x) sum(xml.x2 == x))
     terminus <- uniq.x2[which(count.x2 == length(tip.labels))]
+    #pz.error("text.contents: ", paste(xml.text.contents, collapse = ", "))
+    #pz.error("tip.labels: ", paste(tip.labels, collapse = ", "))
+    #pz.error("xml.label.indices: ", paste(xml.label.indices, collapse = ", "))
+    #pz.error("xml.label.heights: ", paste(xml.label.heights, collapse = ", "))
+    #pz.error("ordered.labels: ", paste(ordered.labels, collapse = ", "))
+    #pz.error("xml.x2: ", paste(xml.x2, collapse = ", "))
+    #pz.error("uniq.x2: ", paste(uniq.x2, collapse = ", "))
+    #pz.error("count.x2: ", paste(count.x2, collapse = ", "))
+    pz.error("terminus: ", ifelse(length(terminus) == 0, "EMPTY", paste(terminus, collapse = ", ")))
     xml.y2.sorted <- sort(xml.y2[xml.x2 == terminus])
     # skootch over, remove tip, add title
     for (x in xml.text) {
         label <- xml2::xml_text(x)
-        if (label %in% ordered.labels) {
-            xml2::xml_set_attr(x, "x", as.character(terminus))
-            xml2::xml_set_text(x, " ")
-            if (native.tooltip) {
-                xml2::xml_add_sibling(x, xml2::read_xml(paste0("<title>",
-                                                               label,
-                                                               "</title>")))
+        tryCatch({
+            if (label %in% ordered.labels) {
+		xml2::xml_set_attr(x, "x", as.character(terminus))
+                #xml2::xml_set_text(x, " ")
+                #if (native.tooltip) {
+                #    xml2::xml_add_sibling(x, xml2::read_xml(paste0("<title>",
+                #                                                   label,
+                #                                                   "</title>")))
+                #}
             }
-        }
+	}, error = function(e) {
+		t<-as.character(terminus)
+		pz.error(t)
+	})
     }
+    pz.error("hit")
     for (l in xml.lines) {
         l.attr <- xml2::xml_attrs(l)
         l.y2 <- as.numeric(l.attr["y2"])

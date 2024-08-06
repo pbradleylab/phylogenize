@@ -190,7 +190,6 @@ read.abd.metadata.tabular <- function(...) {
         pz.error(paste0("file not found: ", mf))
     } else { pz.message(paste0("located metadata file: ", mf)) }
     abd.mtx <- fastread(af, cn=FALSE)
-    #gc()
     metadata <- data.frame(data.table::fread(mf))
     metadata <- check.process.metadata(metadata, ...)
     return(list(mtx=abd.mtx, metadata=metadata))
@@ -261,6 +260,7 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
     cs <- Matrix::colSums(abd.mtx)
     nz.cols <- which(cs > 0)
     z.col.logical <- (cs == 0)
+    
     if (sum(z.col.logical) > 0) {
         pz.warning(paste0("Dropping ", sum(z.col.logical),
                           " column(s), since no mapped taxa had observations"))
@@ -345,9 +345,8 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     samples.present <- intersect(abd.meta$metadata[[opts('sample_column')]],
                                  colnames(abd.meta$mtx))
-    #pz.error(opts('sample_column'))
-    #pz.error(colnames(abd.meta$metadata))
-    #pz.error(abd.meta$metadata[[opts('sample_column')]])
+    #pz.error(colnames(abd.meta$mtx)[1])
+    #pz.error(abd.meta$metadata[[opts('sample_column')]][1])
     if (length(samples.present) == 0) {
         pz.error(paste0("No samples found in both metadata and ",
                         "abundance matrix; check for illegal characters ",
@@ -686,9 +685,13 @@ import.pz.db <- function(...) {
             taxonomy <- read_csv(file.path(opts('data_dir'),"gtdb_214-taxonomy.csv"))
 	    # Read in the KO annotations file
             gene.to.fxn <- read_csv(file.path(opts('data_dir'), "gtdb.functions"))
+    } else if (opts('db') == "uhgp") {
+	    gene.presence <- readRDS(file.path(opts('data_dir'), "uhgp-gene-presence-binary.rds"))
+	    trees <- readRDS(file.path(opts('data_dir'), "uhgp-trees.rds"))
+	    taxonomy <- read_csv(file.path(opts('data_dir'),"uhgp-taxonomy.csv"))
+	    gene.to.fxn <- read_csv(file.path(opts('data_dir'), "uhgp.functions"))
     } else {
-#'   \item{type_16S}{String. Which  Default: "gtdb"}
-        pz.error(paste0("Unknown data type ", opts('db')))
+            pz.error(paste0("Unknown data type ", opts('db')))
     }
     colnames(gene.to.fxn) <- c("gene", "function")
 
@@ -1005,7 +1008,7 @@ plot.pheno.distributions <- function(phenotype,
     kept.species <- Reduce(c, lapply(pz.db$trees, function(x) x$tip.label))
     pheno.taxon <- pz.db$taxonomy[match(names(phenotype),
                                          pz.db$taxonomy$cluster),
-                                   "taxon",
+                                   "phylum",
                                    drop=TRUE]
     pheno.characteristics <- data.frame(pheno=phenotype,
                                         taxon=pheno.taxon,
@@ -1024,6 +1027,7 @@ plot.pheno.distributions <- function(phenotype,
     }
     return(distros)
 }
+
 
 #' Edit a list of plotted trees to add fancy highlight labels.
 #'
@@ -1055,101 +1059,37 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
         pz.message("warning: no trees found")
         return(NULL)
     }
-    pl <- length(plotted.pheno.trees)
+
     for (pn in 1:length(plotted.pheno.trees)) {
-        p <- plotted.pheno.trees[[pn]]
-        rp <- p$rphy
-        tr <- p$tree
-        rp2 <- rp
-        # pad tip labels so the additional stuff doesn't get cut off when
-        # calculating x limits
-        rp2$tip.label <- paste0(rp2$tip.label, " (phenotype = ...", units, ")")
-        xlim <- plot(rp2, plot=FALSE, no.margin=TRUE)$x.lim
-        new.tr <- tr +
-            ggtree::geom_tiplab() +
-            ggplot2::xlim(xlim[1], xlim[2])
-        fn <- knitr::fig_path('svg', number = pn)
-        tryCatch(
-            hack.tree.labels(new.tr,
-                             fn,
-                             stroke.scale=stroke.scale,
-                             pheno=phenotype,
-                             units=units,
-                             pheno.name=label),
-            error = function(e) {
-                pz.message(e)
-                # Fall back to non-interactive
-                non.interactive.plot(new.tr, fn)
-            })
+	    p <- plotted.pheno.trees[[pn]]
+	    rp <- p$rphy
+	    tr <- p$tree
+	    rp2 <- rp
+	    rp2$tip.label <- paste0(rp2$tip.label, " (phenotype = ...", units, ")")
+	    xlim <- plot(rp2, plot=FALSE, no.margin=TRUE)$x.lim
+	    new.tr <- tr +
+		    ggtree::geom_tiplab() +
+		    ggplot2::xlim(xlim[1], xlim[2])
+	    fn <- knitr::fig_path('svg', number = pn)
+
+	    #new.tr + geom_tiplab() + xlim(NA, 5)
+            # Make the labels as species not the midas id
+
+
+	    non.interactive.plot(new.tr, fn)
     }
+    #tree_list <- lapply(plotted.pheno.trees, function(tree) {
+    #    pz.error(tree)        
+    #})
+    
+    
+
+    #interactive_plot_list <- lapply(plotted.pheno.trees, plot.interactive.tree, phenotype)
+    #for (i in seq_along(interactive_plot_list)) {
+    #    plot.tree.with.phenotype(tree_list[[i]], phenotype_data, paste0("tree_plot_", i, ".svg"))
+    #}
 }
 
-# IN PROGRESS
-plotly.labeled.phenotype.trees <- function(plotted.pheno.trees,
-                                           phenotype,
-                                           label='prevalence',
-                                           stroke.scale=0.3,
-                                           units='%') {
-    if (is.null(plotted.pheno.trees)) {
-        pz.message("warning: no trees found")
-        return(NULL)
-    }
-    if (length(plotted.pheno.trees) == 0) {
-        pz.message("warning: no trees found")
-        return(NULL)
-    }
-    pl <- length(plotted.pheno.trees)
-    for (pn in 1:length(plotted.pheno.trees)) {
-        p <- plotted.pheno.trees[[pn]]
-        rp <- p$rphy
-        tr <- p$tree
-        rp2 <- rp
-        # pad tip labels so the additional stuff doesn't get cut off when
-        # calculating x limits
-        # rp2$tip.label <- paste0(rp2$tip.label, " (phenotype = ...", units, ")")
-        # xlim <- plot(rp2, plot=FALSE, no.margin=TRUE)$x.lim
-        tr_data <- filter(tr$data, isTip) %>%
-            left_join()
-            mutate(label=paste(
-
-                   ))
-        new.tr <- tr +
-            ggtree::geom_tiplab() +
-            ggplot2::xlim(xlim[1], xlim[2])
-        fn <- knitr::fig_path('svg', number = pn)
-        plotly
-        tryCatch(
-            hack.tree.labels(new.tr,
-                             fn,
-                             stroke.scale=stroke.scale,
-                             pheno=phenotype,
-                             units=units,
-                             pheno.name=label),
-            error = function(e) {
-                pz.message(e)
-                # Fall back to non-interactive
-                non.interactive.plot(new.tr, fn)
-            })
-    }
-    tip_data <- filter(p$data, isTip) %>%
-        mutate(label=paste(
-                   protein_type,
-                   class,
-                   family,
-                   species,
-                   label,
-                   sep="::"
-               ))
-    gp <- (p + geom_point(data=tip_data,
-                          aes(x=x, y=y, color=clade,
-                              shape=protein_type, label=label),
-                          size=3) +
-           scale_shape_manual(values=c(15, 2)) +
-           scale_color_manual(values=clade_cols)) %>% ggplotly
-    if (!is.null(path)) {
-        htmlwidgets::saveWidget(gp, path)
-    } else {gp}
-}
 
 #' Make a hybrid tree-heatmap plot showing the taxon distribution of significant
 #' hits.

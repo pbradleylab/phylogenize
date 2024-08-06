@@ -27,7 +27,8 @@ Depends:
     yaml,
     furrr,
     tidymodels,
-    ashr
+    ashr,
+    plotly
 Imports:
     data.table,
     parallel,
@@ -46,7 +47,8 @@ Imports:
     svglite,
     lobstr,
     testthat,
-    ezknitr
+    ezknitr,
+    plotly
 Suggests: 
     ANCOMBC,
     Maaslin2
