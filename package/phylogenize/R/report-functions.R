@@ -345,8 +345,6 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     samples.present <- intersect(abd.meta$metadata[[opts('sample_column')]],
                                  colnames(abd.meta$mtx))
-    #pz.error(colnames(abd.meta$mtx)[1])
-    #pz.error(abd.meta$metadata[[opts('sample_column')]][1])
     if (length(samples.present) == 0) {
         pz.error(paste0("No samples found in both metadata and ",
                         "abundance matrix; check for illegal characters ",
@@ -364,7 +362,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
         })
         names(env.number) <- all.envs
         singleton.envs <- names(which(env.number == 1))
-        if (length(singleton.envs) > 0) {
+	if (length(singleton.envs) > 0) {
             pz.warning(paste0("Warning: each environment requires at least two samples."))
             pz.warning("Dropped the following environment(s) from the analysis: ")
             for (s in singleton.envs) {
@@ -399,6 +397,11 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     pz.message(paste0(length(nonsingleton.dsets),
                       " non-singleton dataset(s) found"))
     if (opts('which_phenotype') != "correlation") {
+      #all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
+      #env.number <- sapply(all.envs, function(e) {
+      #    sum(abd.meta$metadata[[opts('env_column')]] == e)
+      #})
+      #nonsingleton.envs <- names(which(env.number > 1))
       wrows <- which(
       (abd.meta$metadata[[opts('env_column')]] %in% nonsingleton.envs) &
       (abd.meta$metadata[[opts('dset_column')]] %in% nonsingleton.dsets))
@@ -1328,12 +1331,10 @@ install.data.figshare <- function(data_path=NULL,
 #' @param taxa From `pz.db$taxa`.
 #' @return A boolean vector with length equal to `length(taxa)`.
 #' @export
-pheno_nonzero_var <- function(phenotype,
-                              taxa) {
+pheno_nonzero_var <- function(phenotype,taxa) {
     vapply(taxa,
            function(tx) {
-               p <- phenotype[intersect(names(phenotype),
-                                        tx)]
+               p <- phenotype[intersect(names(phenotype),tx)]
                return((var(p) > 0))
            },
            TRUE)

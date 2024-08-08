@@ -95,7 +95,6 @@ if (pz.options('assume_below_LOD')) {
 }
 
 # Make back into a binary sparse matrix to save memory
-gc()
 pz.message("Starting evaluation...")
 
 ```
@@ -260,7 +259,8 @@ if (pz.options('linearize')) { # mostly for testing
   p.method <- phylolm.fx.pv
 }
 
-taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$taxa)))
+
+taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$species)))
 if (pz.options('ncl') > 1) {
     results <- result.wrapper.plm(taxa=taxaN,
                                   pheno=phenotype,
@@ -281,7 +281,7 @@ if (pz.options('ncl') > 1) {
 }
 signif <- make.sigs(results)
 signs <- make.signs(results)
-# pos.sig <- make.pos.sig(sigs=signif, signs=signs)
+
 pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
 results.matrix <- make.results.matrix(results)
 
@@ -412,8 +412,6 @@ if (do_enrichment) {
     rm(enrichments)
   }
 }
-rm(enr.overlap.lists)
-gc()
 } else {
   pz.message("Skipping enrichment as clusterProfiler could not be found")
 }
@@ -425,7 +423,6 @@ rm(results)
 rm(plotted.pheno.subtrees)
 rm(plotted.pheno.trees)
 rm(pz.db)
-gc()
 ```
 
 # Full output files

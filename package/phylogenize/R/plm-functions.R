@@ -1092,8 +1092,6 @@ add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
     
     column_names <- colnames(gene.to.fxn)
     na_columns <- which(is.na(column_names))
-    pz.error(colnames(pos.sig.tbl))
-    pz.error(colnames(gene.to.fxn)) 
     if (length(na_columns) > 0) {
         for (i in seq_along(na_columns)) {
             column_names[na_columns[i]] <- paste0("NA_col_", i)
