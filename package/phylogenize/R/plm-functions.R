@@ -1098,7 +1098,12 @@ add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
         }
     }
     colnames(gene.to.fxn) <- column_names
-    
+   
+    # Ensure they are the same type and are not doubles
+    gene.to.fxn <- gene.to.fxn %>%
+	    mutate(gene = as.character(gene)) 
+    pos.sig.tbl <- pos.sig.tbl %>%
+	    mutate(gene = as.character(gene))
     pos.sig.descs <- dplyr::left_join(pos.sig.tbl,
                                gene.to.fxn,
                                by="gene") %>%
