@@ -355,7 +355,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                             abd.meta$metadata[[opts('sample_column')]] %in%
                             samples.present, ]
 
-    if (opts('which_phenotype') %in% c("specificity", "prevalence")) {
+    if (opts('which_phenotype') %in% c("specificity", "prevalence", "abundance")) {
         all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
         env.number <- sapply(all.envs, function(e) {
             sum(abd.meta$metadata[[opts('env_column')]] == e)
@@ -397,11 +397,6 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     pz.message(paste0(length(nonsingleton.dsets),
                       " non-singleton dataset(s) found"))
     if (opts('which_phenotype') != "correlation") {
-      #all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
-      #env.number <- sapply(all.envs, function(e) {
-      #    sum(abd.meta$metadata[[opts('env_column')]] == e)
-      #})
-      #nonsingleton.envs <- names(which(env.number > 1))
       wrows <- which(
       (abd.meta$metadata[[opts('env_column')]] %in% nonsingleton.envs) &
       (abd.meta$metadata[[opts('dset_column')]] %in% nonsingleton.dsets))
