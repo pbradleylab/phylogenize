@@ -691,7 +691,8 @@ import.pz.db <- function(...) {
     } else {
             pz.error(paste0("Unknown data type ", opts('db')))
     }
-    colnames(gene.to.fxn) <- c("gene", "function")
+
+    gene.to.fxn$gene <- gene.to.fxn$node_head
 
     # finished
     return(list(gene.presence = gene.presence,

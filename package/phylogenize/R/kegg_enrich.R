@@ -52,6 +52,7 @@ kegg.enrich.single <- function(sc, sn, p2k, cn="test_cutoff", d=1, tg="test_taxo
   genes <- intersect(sc, nw(sn == d))
   if (is.null(background)) { background <- unique(p2k[["accession"]]) }
   KOs <- unique(dplyr::filter(p2k, node_head %in% genes)[["accession"]])
+
   pwy_enr <- clusterProfiler::enrichKEGG(gene = KOs,
                                          organism = "ko",
                                          universe = background,
@@ -60,8 +61,15 @@ kegg.enrich.single <- function(sc, sn, p2k, cn="test_cutoff", d=1, tg="test_taxo
                                           organism = "ko",
                                           universe = background,
                                           qvalueCutoff = 0.25)
-  total_enr_tbl <- bind_rows(pwy_enr@result, mod_enr@result) %>%
-    as_tibble() %>%
-    mutate(cutoff = cn, taxon = tg)
-  total_enr_tbl
+
+  if (is.null(pwy_enr) || is.null(mod_enr)) {
+	  return(NULL)
+  } else if(!is.null(pwy_enr) && !is.null(mod_enr)) {
+	  total_enr_tbl <- bind_rows(pwy_enr@result, mod_enr@result) %>%
+  		  as_tibble() %>%
+  		  mutate(cutoff = cn, taxon = tg)
+	  return(total_enr_tbl)
+  } else {
+  	  pz.error("Internal dataframe is malformed for kegg.enrich.single. Please file a bug report.")
+  }
 }

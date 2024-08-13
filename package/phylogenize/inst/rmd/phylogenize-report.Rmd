@@ -93,7 +93,6 @@ if (pz.options('assume_below_LOD')) {
   abd.meta <- add.below.LOD(pz.db, abd.meta)
   sanity.check.abundance(abd.meta$mtx)
 }
-
 # Make back into a binary sparse matrix to save memory
 pz.message("Starting evaluation...")
 
@@ -185,7 +184,6 @@ print(pheno.distros)
 write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
             phenotype,
             sep = '\t')
-
 
 # be a little parsimonious with memory here
 rm(abd.meta); gc()
@@ -349,8 +347,9 @@ if (do_enrichment) {
   pretty.enr.tbl <- NULL
   enrichment.tbl <- multi.kegg.enrich(signif,
                                       signs,
-                                      pz.db$g.mappings)
+                                      pz.db$gene.to.fxn)
   if (!is.null(enrichment.tbl)) {
+    pz.error(enrichment.tbl$qvalue)
     enrichment.tbl <- filter(enrichment.tbl,
                              qvalue <= 0.25, enr.estimate > 1)
     pretty.enr.tbl <- select(enrichment.tbl,
