@@ -26,5 +26,10 @@ if (!requireNamespace("biomformat", quietly = TRUE)) {
 if (!requireNamespace("phylogenize", quietly = TRUE)) {
     renv::install("pbradleylab/phylogenize/package/phylogenize@dev", prompt=FALSE)
 }
+
+if (!requireNamespace("Maaslin2", quietly = TRUE)) {
+    renv::install("bioc::Maaslin2", prompt=FALSE)
+}
+
 #phylogenize::install.data.figshare()
 

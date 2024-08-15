@@ -46,8 +46,14 @@ read.abd.metadata <- function(...) {
         abd.meta <- process.16s(abd.meta, ...)
     }
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
-    # binarize to save memory usage since we care about pres/abs
-    abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+    if (opts('which_phenotype') == 'abundance') {
+    	# So abundance needs a non-binary so what we will do is not
+	#pz.error(abd.meta$mtx)
+	abd.meta$mtx <- as.matrix(abd.meta$mtx)
+    } else {
+    	# binarize to save memory usage since we care about pres/abs
+    	abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+    }
     gc()
     return(abd.meta)
 }
@@ -355,7 +361,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                             abd.meta$metadata[[opts('sample_column')]] %in%
                             samples.present, ]
 
-    if (opts('which_phenotype') %in% c("specificity", "prevalence")) {
+    if (opts('which_phenotype') %in% c("specificity", "prevalence", "abundance")) {
         all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
         env.number <- sapply(all.envs, function(e) {
             sum(abd.meta$metadata[[opts('env_column')]] == e)
@@ -397,11 +403,6 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     pz.message(paste0(length(nonsingleton.dsets),
                       " non-singleton dataset(s) found"))
     if (opts('which_phenotype') != "correlation") {
-      #all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
-      #env.number <- sapply(all.envs, function(e) {
-      #    sum(abd.meta$metadata[[opts('env_column')]] == e)
-      #})
-      #nonsingleton.envs <- names(which(env.number > 1))
       wrows <- which(
       (abd.meta$metadata[[opts('env_column')]] %in% nonsingleton.envs) &
       (abd.meta$metadata[[opts('dset_column')]] %in% nonsingleton.dsets))
@@ -696,7 +697,8 @@ import.pz.db <- function(...) {
     } else {
             pz.error(paste0("Unknown data type ", opts('db')))
     }
-    colnames(gene.to.fxn) <- c("gene", "function")
+
+    gene.to.fxn$gene <- gene.to.fxn$node_head
 
     # finished
     return(list(gene.presence = gene.presence,

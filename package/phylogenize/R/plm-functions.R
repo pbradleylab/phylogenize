@@ -874,7 +874,7 @@ calc.ess <- function(abd.meta,
 #' @param ashr_df Degrees of freedom (default=5)
 #' @return A vector giving shrunken estimates of parameter.
 ash_wrapper <- function(m, s, nw=10, ashr_df=5) {
-  ashr::ash(m, s,
+    ashr::ash(m, s,
             mixcompdist="halfuniform",
             prior="nullbiased",
             nullweight=nw,
@@ -924,7 +924,7 @@ ashr.diff.abund <- function(abd.meta,
   }
   # Both tools expect rownames to be sample IDs
   named_metadata <- data.frame(
-    abd.meta$metadata[, setdiff(colnames(abd.metadata$metadata), S)]
+    abd.meta$metadata[, setdiff(colnames(abd.meta$metadata), S)]
   )
   rownames(named_metadata) <- abd.meta$metadata[[S]]
   if (M=="ancombc2") {
@@ -946,18 +946,37 @@ ashr.diff.abund <- function(abd.meta,
                                            !!(se_col)) %>% deframe)
     sample_ashr <- as_tibble(ancom_ash$result, rownames="species")
   } else if (M=="maaslin2") {
-    maaslin_res <- Maaslin2::Maaslin2(input_data=abd.meta$mtx,
+    write.csv(as.data.frame(as.matrix(abd.meta$mtx)), file=file.path(pz.options('out_dir'),"abund_meta_mtx"), sep='\t')
+    maaslin_res <- Maaslin2::Maaslin2(input_data=as.data.frame(as.matrix(abd.meta$mtx)),
                             input_metadata=named_metadata,
                             fixed_effects=paste0(E, ",", D),
                             output="temp/",
                             plot_heatmap = FALSE,
                             plot_scatter = FALSE)
+    write.csv(maaslin_res, file=file.path(pz.options('out_dir'),"maaslin_res"), sep='\t')
     maaslin_results_tbl <- maaslin_res$results %>% tibble() %>%
-      dplyr::filter(metadata==E, value==envir) #%>% 
-      #mutate(feature=gsub("^X","",feature)) # TODO check numeric
-    maaslin_ash <- ash_wrapper(dplyr::select(maaslin_results_tbl, feature, coef) %>% deframe,
+      dplyr::filter(metadata==E, value==envir) 
+     
+  # Else there is an error saying it is TRUE/FALSE
+ # if (!is.numeric(maaslin_results_tbl$coef)) {
+ # maaslin_results_tbl <- maaslin_results_tbl %>%
+ #   mutate(coef = as.numeric(coef))
+ # }
+ # if (!is.numeric(maaslin_results_tbl$stderr)) {
+ # maaslin_results_tbl <- maaslin_results_tbl %>%
+ #   mutate(stderr = as.numeric(stderr))
+ # }
+  
+  if (any(is.na(maaslin_results_tbl$coef)) || any(is.na(maaslin_results_tbl$stderr))) {
+    pz.error("Error: Missing values found in coef or stderr columns.")
+  }
+  write.csv(maaslin_results_tbl, file=file.path(pz.options('out_dir'),
+                             "maaslin_results_tbl"), sep='\t')
+  #pz.error(dplyr::select(maaslin_results_tbl, feature, stderr))
+  #pz.error(typeof(dplyr::select(maaslin_results_tbl, feature, stderr))
+  maaslin_ash <- ash_wrapper(dplyr::select(maaslin_results_tbl, feature, coef) %>% deframe,
                                dplyr::select(maaslin_results_tbl, feature, stderr) %>% deframe)
-    sample_ashr <- as_tibble(maaslin_ash$result, rownames="species")
+  sample_ashr <- as_tibble(maaslin_ash$result, rownames="species")
   } else {
     pz.error("This shouldn't be possible, but somehow an incorrect differential abundance method was selected")
   }

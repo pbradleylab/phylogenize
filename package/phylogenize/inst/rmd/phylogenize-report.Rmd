@@ -35,7 +35,7 @@ params:
   error_to_file: TRUE
 ---
 
-```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=FALSE}
+```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=TRUE}
 
 library(phylogenize)
 library(Matrix)
@@ -93,7 +93,6 @@ if (pz.options('assume_below_LOD')) {
   abd.meta <- add.below.LOD(pz.db, abd.meta)
   sanity.check.abundance(abd.meta$mtx)
 }
-
 # Make back into a binary sparse matrix to save memory
 pz.message("Starting evaluation...")
 
@@ -123,7 +122,7 @@ taxa that are neither.
 
 
 
-```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=FALSE}
+```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=TRUE}
 
 # Calculate the phenotype of interest
 
@@ -186,7 +185,6 @@ write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
             phenotype,
             sep = '\t')
 
-
 # be a little parsimonious with memory here
 rm(abd.meta); gc()
 ```
@@ -195,7 +193,7 @@ rm(abd.meta); gc()
 
 ## All taxa
 
-```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=FALSE}
+```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=TRUE}
 
 if (!pz.options('skip_graphs')) {
     plot.labeled.phenotype.trees(plotted.pheno.trees,
@@ -209,7 +207,7 @@ if (!pz.options('skip_graphs')) {
 
 Displays phenotype on trees, with only the mapped/observed taxa plotted.
 
-```{r subtrees_pre, cache=FALSE, echo=FALSE}
+```{r subtrees_pre, cache=TRUE, echo=FALSE}
 
 pheno.labels <- names(phenotype)
 subtrees <- lapply(pz.db$trees, function(tr) {
@@ -223,7 +221,7 @@ subtrees <- Filter(function(x) {
 
 ```
 
-```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(subtrees), cache.lazy = FALSE, cache=FALSE, echo=FALSE}
+```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(subtrees), cache.lazy = FALSE, cache=TRUE, echo=FALSE}
 
 if (!pz.options('skip_graphs')) {
   plotted.pheno.subtrees <- plot.phenotype.trees(phenotype,
@@ -251,7 +249,7 @@ if (!pz.options('skip_graphs')) {
 This table gives an overview of how many genes were significantly associated at
 an FDR of 5%.
 
-```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
+```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=TRUE}
 
 if (pz.options('linearize')) { # mostly for testing
   p.method <- lm.fx.pv
@@ -302,7 +300,6 @@ rm(pos.sig.thresh.descs)
 
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
           results.matrix)
-rm(results.matrix)
 ```
 
 # Gene association heat maps
@@ -315,7 +312,7 @@ right by Jaccard dissimilarity, so genes with similar patterns of inheritance
 will form vertical stripes. Horizontal stripes may be visible for taxa that
 have particularly extreme phenotypes.
 
-```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=FALSE}
+```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=TRUE}
 
 
 
@@ -349,7 +346,7 @@ if (do_enrichment) {
   pretty.enr.tbl <- NULL
   enrichment.tbl <- multi.kegg.enrich(signif,
                                       signs,
-                                      pz.db$g.mappings)
+                                      pz.db$gene.to.fxn)
   if (!is.null(enrichment.tbl)) {
     enrichment.tbl <- filter(enrichment.tbl,
                              qvalue <= 0.25, enr.estimate > 1)
@@ -360,16 +357,14 @@ if (do_enrichment) {
                              Description,
                              qvalue,
                              enr.estimate) %>%
-      rename(Gene_significance=cutoff,
+       rename(Gene_significance=cutoff,
              Taxon=taxon,
-             ID=ID,
              Description=Description,
              q_value=qvalue,
              Enrichment_odds_ratio=enr.estimate) %>%
       arrange(factor(Gene_significance, levels=names(signif[[1]])),
               Taxon,
-              qvalue)
-    
+              q_value)
     write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
   }
 }
@@ -377,6 +372,19 @@ if (do_enrichment) {
 Enrichment tables:
 
 ```{r enrichment_display, echo=FALSE, results='asis'}
+
+check_combination <- function(taxon, gene) {
+  tryCatch({
+    value <- results.matrix[[taxon]][1, gene]
+    if (length(value) == 0) {
+      return(FALSE)
+    }
+    return(TRUE)
+  }, error = function(e) {
+    return(FALSE)
+  })
+}
+
 options(knitr.table.format = "html")
 if (do_enrichment) {
   if (!is.null(pretty.enr.tbl)) {
@@ -396,9 +404,19 @@ if (do_enrichment) {
                   accession_to_fxn,
                   by=c("geneID"="accession")) %>%
         rename(gene=geneID, description=`function`) %>%
-        mutate(effectsize=map2_dbl(taxon,
+	mutate(effectsize=map2_dbl(taxon,
                                    gene,
-                                   ~results[[.x]][1, .y]))
+                                   ~{
+					   tryCatch({
+						   value <- results.matrix[[.x]][1, .y]
+					   	   if (length(value) == 0) {
+							   return(NA_real_)
+						   }
+						   return(value)
+					   }, error = function(e) {
+						   return(NA_real_)
+					   })
+				     }))
     write.csv(file=file.path(pz.options('out_dir'),
                              "enr-overlaps.csv"),
               enr.overlap)
@@ -410,6 +428,7 @@ if (do_enrichment) {
                       desc(effectsize)))
     rm(enr.overlap)
     rm(enrichments)
+    rm(results.matrix)
   }
 }
 } else {
