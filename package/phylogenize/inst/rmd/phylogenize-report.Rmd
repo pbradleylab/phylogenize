@@ -300,7 +300,6 @@ rm(pos.sig.thresh.descs)
 
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
           results.matrix)
-rm(results.matrix)
 ```
 
 # Gene association heat maps
@@ -349,7 +348,6 @@ if (do_enrichment) {
                                       signs,
                                       pz.db$gene.to.fxn)
   if (!is.null(enrichment.tbl)) {
-    pz.error(enrichment.tbl$qvalue)
     enrichment.tbl <- filter(enrichment.tbl,
                              qvalue <= 0.25, enr.estimate > 1)
     pretty.enr.tbl <- select(enrichment.tbl,
@@ -359,16 +357,14 @@ if (do_enrichment) {
                              Description,
                              qvalue,
                              enr.estimate) %>%
-      rename(Gene_significance=cutoff,
+       rename(Gene_significance=cutoff,
              Taxon=taxon,
-             ID=ID,
              Description=Description,
              q_value=qvalue,
              Enrichment_odds_ratio=enr.estimate) %>%
       arrange(factor(Gene_significance, levels=names(signif[[1]])),
               Taxon,
-              qvalue)
-    
+              q_value)
     write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
   }
 }
@@ -376,6 +372,19 @@ if (do_enrichment) {
 Enrichment tables:
 
 ```{r enrichment_display, echo=FALSE, results='asis'}
+
+check_combination <- function(taxon, gene) {
+  tryCatch({
+    value <- results.matrix[[taxon]][1, gene]
+    if (length(value) == 0) {
+      return(FALSE)
+    }
+    return(TRUE)
+  }, error = function(e) {
+    return(FALSE)
+  })
+}
+
 options(knitr.table.format = "html")
 if (do_enrichment) {
   if (!is.null(pretty.enr.tbl)) {
@@ -395,9 +404,19 @@ if (do_enrichment) {
                   accession_to_fxn,
                   by=c("geneID"="accession")) %>%
         rename(gene=geneID, description=`function`) %>%
-        mutate(effectsize=map2_dbl(taxon,
+	mutate(effectsize=map2_dbl(taxon,
                                    gene,
-                                   ~results[[.x]][1, .y]))
+                                   ~{
+					   tryCatch({
+						   value <- results.matrix[[.x]][1, .y]
+					   	   if (length(value) == 0) {
+							   return(NA_real_)
+						   }
+						   return(value)
+					   }, error = function(e) {
+						   return(NA_real_)
+					   })
+				     }))
     write.csv(file=file.path(pz.options('out_dir'),
                              "enr-overlaps.csv"),
               enr.overlap)
@@ -409,6 +428,7 @@ if (do_enrichment) {
                       desc(effectsize)))
     rm(enr.overlap)
     rm(enrichments)
+    rm(results.matrix)
   }
 }
 } else {

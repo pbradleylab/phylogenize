@@ -46,8 +46,14 @@ read.abd.metadata <- function(...) {
         abd.meta <- process.16s(abd.meta, ...)
     }
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
-    # binarize to save memory usage since we care about pres/abs
-    abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+    if (opts('which_phenotype') == 'abundance') {
+    	# So abundance needs a non-binary so what we will do is not
+	#pz.error(abd.meta$mtx)
+	abd.meta$mtx <- as.matrix(abd.meta$mtx)
+    } else {
+    	# binarize to save memory usage since we care about pres/abs
+    	abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+    }
     gc()
     return(abd.meta)
 }
