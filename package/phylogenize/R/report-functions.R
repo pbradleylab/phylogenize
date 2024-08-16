@@ -48,8 +48,8 @@ read.abd.metadata <- function(...) {
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
     if (opts('which_phenotype') == 'abundance') {
     	# So abundance needs a non-binary so what we will do is not
-	#pz.error(abd.meta$mtx)
 	abd.meta$mtx <- as.matrix(abd.meta$mtx)
+    	abd.meta$abund_mtx <- as.matrix(abd.meta$abund_mtx)
     } else {
     	# binarize to save memory usage since we care about pres/abs
     	abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
@@ -198,7 +198,11 @@ read.abd.metadata.tabular <- function(...) {
     abd.mtx <- fastread(af, cn=FALSE)
     metadata <- data.frame(data.table::fread(mf))
     metadata <- check.process.metadata(metadata, ...)
-    return(list(mtx=abd.mtx, metadata=metadata))
+    if (opts('which_phenotype') == "abundance"){
+    	return(list(mtx=abd.mtx, abund_mtx=abd.mtx, metadata=metadata))
+    } else {
+    	return(list(mtx=abd.mtx, metadata=metadata))
+    }
 }
 
 #' Sanity-check abundance data

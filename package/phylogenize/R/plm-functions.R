@@ -926,12 +926,20 @@ ashr.diff.abund <- function(abd.meta,
   named_metadata <- data.frame(
     abd.meta$metadata[, setdiff(colnames(abd.meta$metadata), S)]
   )
+
   rownames(named_metadata) <- abd.meta$metadata[[S]]
-  if (M=="ancombc2") {
+  if (M=="ancombc2") { 
+    named_metadata <- named_metadata %>%
+	    mutate(across(c(E, D), as.factor))
+
+    # This is filtering them all out leaving nothing in the named_metadata
+    named_metadata <- named_metadata %>%
+	    filter(!is.na(E) & !is.na(D)) %>%
+	    filter(length(levels(E)) > 1 & length(levels(D)) > 1)
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
-      assays=S4Vectors::SimpleList(counts=abd.meta$mtx),
+      assays=S4Vectors::SimpleList(counts=abd.meta$abund_mtx),
       colData=named_metadata)
-    ancom_results <- ancombc2(ancom_tse,
+    ancom_results <- ANCOMBC::ancombc2(ancom_tse,
                               assay_name="counts",
                               fix_formula=paste0(E, "+", D))
     ancom_results_tbl <- ancom_results$res %>% tibble()
@@ -946,34 +954,22 @@ ashr.diff.abund <- function(abd.meta,
                                            !!(se_col)) %>% deframe)
     sample_ashr <- as_tibble(ancom_ash$result, rownames="species")
   } else if (M=="maaslin2") {
-    write.csv(as.data.frame(as.matrix(abd.meta$mtx)), file=file.path(pz.options('out_dir'),"abund_meta_mtx"), sep='\t')
-    maaslin_res <- Maaslin2::Maaslin2(input_data=as.data.frame(as.matrix(abd.meta$mtx)),
+    # Note:: This method is broken as Maaslin2 is consisitant not constructing the complex models we need.
+    # Due to this, I have set an error to be thrown if this option is selected 
+    pz.error("We apologize. Maaslin2 is not yet implemeted into this tool but we plan on it in a later release. Run with ancombc2 instead.")
+    maaslin_res <- Maaslin2::Maaslin2(input_data=as.data.frame(as.matrix(abd.meta$abund_mtx)),
                             input_metadata=named_metadata,
                             fixed_effects=paste0(E, ",", D),
                             output="temp/",
                             plot_heatmap = FALSE,
                             plot_scatter = FALSE)
-    write.csv(maaslin_res, file=file.path(pz.options('out_dir'),"maaslin_res"), sep='\t')
+
     maaslin_results_tbl <- maaslin_res$results %>% tibble() %>%
       dplyr::filter(metadata==E, value==envir) 
-     
-  # Else there is an error saying it is TRUE/FALSE
- # if (!is.numeric(maaslin_results_tbl$coef)) {
- # maaslin_results_tbl <- maaslin_results_tbl %>%
- #   mutate(coef = as.numeric(coef))
- # }
- # if (!is.numeric(maaslin_results_tbl$stderr)) {
- # maaslin_results_tbl <- maaslin_results_tbl %>%
- #   mutate(stderr = as.numeric(stderr))
- # }
   
   if (any(is.na(maaslin_results_tbl$coef)) || any(is.na(maaslin_results_tbl$stderr))) {
     pz.error("Error: Missing values found in coef or stderr columns.")
   }
-  write.csv(maaslin_results_tbl, file=file.path(pz.options('out_dir'),
-                             "maaslin_results_tbl"), sep='\t')
-  #pz.error(dplyr::select(maaslin_results_tbl, feature, stderr))
-  #pz.error(typeof(dplyr::select(maaslin_results_tbl, feature, stderr))
   maaslin_ash <- ash_wrapper(dplyr::select(maaslin_results_tbl, feature, coef) %>% deframe,
                                dplyr::select(maaslin_results_tbl, feature, stderr) %>% deframe)
   sample_ashr <- as_tibble(maaslin_ash$result, rownames="species")
