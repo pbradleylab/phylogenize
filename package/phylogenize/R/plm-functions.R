@@ -929,15 +929,8 @@ ashr.diff.abund <- function(abd.meta,
 
   rownames(named_metadata) <- abd.meta$metadata[[S]]
   if (M=="ancombc2") { 
-    named_metadata <- named_metadata %>%
-	    mutate(across(c(E, D), as.factor))
-
-    # This is filtering them all out leaving nothing in the named_metadata
-    named_metadata <- named_metadata %>%
-	    filter(!is.na(E) & !is.na(D)) %>%
-	    filter(length(levels(E)) > 1 & length(levels(D)) > 1)
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
-      assays=S4Vectors::SimpleList(counts=abd.meta$abund_mtx),
+      assays=S4Vectors::SimpleList(counts=as.matrix(abd.meta$abund_mtx)),
       colData=named_metadata)
     ancom_results <- ANCOMBC::ancombc2(ancom_tse,
                               assay_name="counts",
