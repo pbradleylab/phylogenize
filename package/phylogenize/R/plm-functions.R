@@ -929,9 +929,9 @@ ashr.diff.abund <- function(abd.meta,
   rownames(named_metadata) <- abd.meta$metadata[[S]]
   if (M=="ancombc2") {
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
-      assays=S4Vectors::SimpleList(counts=abd.meta$mtx),
+      assays=S4Vectors::SimpleList(counts=as.matrix(abd.meta$mtx)),
       colData=named_metadata)
-    ancom_results <- ancombc2(ancom_tse,
+    ancom_results <- ANCOMBC::ancombc2(ancom_tse,
                               assay_name="counts",
                               fix_formula=paste0(E, "+", D))
     ancom_results_tbl <- ancom_results$res %>% tibble()
