@@ -931,17 +931,22 @@ ashr.diff.abund <- function(abd.meta,
   if (M=="ancombc2") { 
     named_metadata <- named_metadata %>%
 	    mutate(across(c(E, D), as.factor))
-
-    # This is filtering them all out leaving nothing in the named_metadata
+    if (length(levels(named_metadata[[D]])) < 2) {
+      ancom_formula = E
+      } else {
+      ancom_formula = paste0(E, "+", D)
+    }
+    if (length(levels(named_metadata[[E]])) < 2) {
+      pz.error("For abundance there must be at least two different environments")
+    }
     named_metadata <- named_metadata %>%
-	    filter(!is.na(E) & !is.na(D)) %>%
-	    filter(length(levels(E)) > 1 & length(levels(D)) > 1)
+	    filter(!is.na(E) | !is.na(D)) 
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
-      assays=S4Vectors::SimpleList(counts=as.matrix(abd.meta$abund_mtx)),
+      assays=S4Vectors::SimpleList(counts=abd.meta$abund_mtx),
       colData=named_metadata)
     ancom_results <- ANCOMBC::ancombc2(ancom_tse,
                               assay_name="counts",
-                              fix_formula=paste0(E, "+", D))
+                              fix_formula=ancom_formula)
     ancom_results_tbl <- ancom_results$res %>% tibble()
     envir_stem <- paste0("env", envir)
     lfc_col <- paste0("lfc_", envir_stem)
