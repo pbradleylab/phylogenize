@@ -1023,6 +1023,14 @@ plot.pheno.distributions <- function(phenotype,
                                         taxon=pheno.taxon,
                                         cluster=names(phenotype))
     sub.pheno <- subset(pheno.characteristics, cluster %in% kept.species)
+    # Get the number of tips and change the list order to be from greatest to smallest
+    sub.pheno <- sub.pheno %>%
+	    group_by(taxon) %>%
+	    mutate(count = n()) %>%
+	    ungroup() %>%
+	    arrange(desc(count))
+
+    # Basic plot
     distros <- ggplot2::ggplot(sub.pheno,
                                ggplot2::aes(pheno,
                                             color = taxon,
@@ -1034,6 +1042,7 @@ plot.pheno.distributions <- function(phenotype,
     if (length(unique(sub.pheno$taxon)) > 1) { # don't assume >1 taxon
         distros <- distros + ggplot2::facet_grid(taxon ~ .)
     }
+    distros <- plotly::ggplotly(distros)
     return(distros)
 }
 
