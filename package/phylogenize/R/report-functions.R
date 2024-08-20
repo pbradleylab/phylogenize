@@ -1017,7 +1017,7 @@ plot.pheno.distributions <- function(phenotype,
     kept.species <- Reduce(c, lapply(pz.db$trees, function(x) x$tip.label))
     pheno.taxon <- pz.db$taxonomy[match(names(phenotype),
                                          pz.db$taxonomy$cluster),
-                                   "phylum",
+                                   "family",
                                    drop=TRUE]
     pheno.characteristics <- data.frame(pheno=phenotype,
                                         taxon=pheno.taxon,
