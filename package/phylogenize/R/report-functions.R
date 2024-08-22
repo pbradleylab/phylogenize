@@ -1030,19 +1030,28 @@ plot.pheno.distributions <- function(phenotype,
 	    ungroup() %>%
 	    arrange(desc(count))
 
-    # Basic plot
-    distros <- ggplot2::ggplot(sub.pheno,
-                               ggplot2::aes(pheno,
-                                            color = taxon,
-                                            fill = taxon)) +
-        ggplot2::geom_density() +
-        ggplot2::xlab(opts('which_phenotype')) +
-        ggplot2::ggtitle(paste0("Distributions of phenotype (",
-                                opts('which_phenotype'), ")"))
-    if (length(unique(sub.pheno$taxon)) > 1) { # don't assume >1 taxon
-        distros <- distros + ggplot2::facet_grid(taxon ~ .)
-    }
-    distros <- plotly::ggplotly(distros)
+    distros <- plyr::dlply(sub.pheno, "taxon", function(data_subset) {
+	taxon_name <- unique(data_subset$taxon)
+        if (nrow(data_subset) > 0 && length(unique(data_subset$taxon)) > 1) {
+            p <- ggplot2::ggplot(data_subset, ggplot2::aes(pheno, color = taxon, fill = taxon)) +
+                ggplot2::geom_density() +
+                ggplot2::xlab(opts('which_phenotype')) +
+                ggplot2::ggtitle(paste0(paste0("Distributions of phenotype (", opts('which_phenotype'), ") for ", taxon_name))) +
+                ggplot2::theme_minimal()
+        } else if (nrow(data_subset) > 0) {
+            p <- ggplot2::ggplot(data_subset, ggplot2::aes(pheno)) +
+                ggplot2::geom_density(fill = "blue", color = "blue") +  # Default color for single group
+                ggplot2::xlab(opts('which_phenotype')) +
+                ggplot2::ggtitle(paste0(paste0("Distributions of phenotype (", opts('which_phenotype'), ") for ", taxon_name))) +
+                ggplot2::theme_minimal()
+        } else {
+            return(NULL)  # Skip empty groups
+        }
+        return(p)
+    })
+    
+    distros <- distros[!sapply(distros, is.null)]
+    distros <- lapply(distros, ggplotly)
     return(distros)
 }
 
