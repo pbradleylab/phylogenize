@@ -1049,8 +1049,14 @@ plot.pheno.distributions <- function(phenotype,
         }
         return(p)
     })
-    
-    distros <- distros[!sapply(distros, is.null)]
+    # Group the ggplots into sets of 10 with them already being ordered from the
+    # groups with the most individuals to the least for node tips in the kept taxon
+    combine_plots <- function(plots, ncol = 2) {
+	    patchwork::wrap_plots(plots, ncol = ncol)
+    }
+    grouped_plots <- split(distros, ceiling(seq_along(distros) / 10))
+    distros <- lapply(grouped_plots, combine_plots)
+
     distros <- lapply(distros, ggplotly)
     return(distros)
 }

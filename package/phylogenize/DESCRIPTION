@@ -48,7 +48,8 @@ Imports:
     lobstr,
     testthat,
     ezknitr,
-    plotly
+    plotly,
+    patchwork
 Suggests: 
     ANCOMBC,
     Maaslin2
