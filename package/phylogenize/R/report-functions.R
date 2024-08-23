@@ -1027,15 +1027,9 @@ plot.pheno.distributions <- function(phenotype,
     taxon_levels <- unique(sub.pheno$taxon)
     color_palette <- scales::hue_pal()(length(taxon_levels))
     # Get the number of tips and change the list order to be from greatest to smallest
-    sub.pheno <- sub.pheno %>%
-	    group_by(taxon) %>%
-	    mutate(count = n()) %>%
-	    ungroup() %>%
-	    arrange(desc(count))
-
     distros <- plyr::dlply(sub.pheno, "taxon", function(data_subset) {
 	taxon_name <- unique(data_subset$taxon)
-        if (nrow(data_subset) > 1) {
+        if (nrow(data_subset) > 0) {
             p <- ggplot2::ggplot(data_subset, ggplot2::aes(pheno, fill=taxon_name)) +
 		    ggplot2::geom_density() +  
                     ggplot2::xlab(opts('which_phenotype')) +
@@ -1043,19 +1037,24 @@ plot.pheno.distributions <- function(phenotype,
                     ggplot2::theme_minimal() + 
 		    ggplot2::scale_fill_manual(values = setNames(color_palette, taxon_levels)) + 
 		    ggplot2::guides(fill = "none")
-        } else {
+            return(p)
+	} else {
             return(NULL)  # Skip empty groups
         }
-        return(p)
     })
+    distros <- Filter(Negate(is.null), distros)
     # Group the ggplots into sets of 10 with them already being ordered from the
     # groups with the most individuals to the least for node tips in the kept taxon
     combine_plots <- function(plots, ncol = 2) {
 	    patchwork::wrap_plots(plots, ncol = ncol)
     }
-    # Sort in post.
-
-    grouped_plots <- split(distros, ceiling(seq_along(distros) / 10))
+    # Sort plots in post since we know they will be alphabetical.
+    count_points <- function(plot) {
+            sum(ggplot_build(plot)$data[[1]]$count)
+    }
+    points_count <- sapply(distros, count_points)
+    sorted_plots <- distros[order(points_count, decreasing = TRUE)]
+    grouped_plots <- split(sorted_plots, ceiling(seq_along(sorted_plots) / 6))
     distros <- lapply(grouped_plots, combine_plots)
 
     return(distros)
