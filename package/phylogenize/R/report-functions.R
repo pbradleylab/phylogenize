@@ -1023,6 +1023,9 @@ plot.pheno.distributions <- function(phenotype,
                                         taxon=pheno.taxon,
                                         cluster=names(phenotype))
     sub.pheno <- subset(pheno.characteristics, cluster %in% kept.species)
+    # Get color pallet
+    taxon_levels <- unique(sub.pheno$taxon)
+    color_palette <- scales::hue_pal()(length(taxon_levels))
     # Get the number of tips and change the list order to be from greatest to smallest
     sub.pheno <- sub.pheno %>%
 	    group_by(taxon) %>%
@@ -1032,18 +1035,14 @@ plot.pheno.distributions <- function(phenotype,
 
     distros <- plyr::dlply(sub.pheno, "taxon", function(data_subset) {
 	taxon_name <- unique(data_subset$taxon)
-        if (nrow(data_subset) > 0 && length(unique(data_subset$taxon)) > 1) {
-            p <- ggplot2::ggplot(data_subset, ggplot2::aes(pheno, color = taxon, fill = taxon)) +
-                ggplot2::geom_density() +
-                ggplot2::xlab(opts('which_phenotype')) +
-                ggplot2::ggtitle(paste0(paste0("Distributions of phenotype (", opts('which_phenotype'), ") for ", taxon_name))) +
-                ggplot2::theme_minimal()
-        } else if (nrow(data_subset) > 0) {
-            p <- ggplot2::ggplot(data_subset, ggplot2::aes(pheno)) +
-                ggplot2::geom_density(fill = "blue", color = "blue") +  # Default color for single group
-                ggplot2::xlab(opts('which_phenotype')) +
-                ggplot2::ggtitle(paste0(paste0("Distributions of phenotype (", opts('which_phenotype'), ") for ", taxon_name))) +
-                ggplot2::theme_minimal()
+        if (nrow(data_subset) > 1) {
+            p <- ggplot2::ggplot(data_subset, ggplot2::aes(pheno, fill=taxon_name)) +
+		    ggplot2::geom_density() +  
+                    ggplot2::xlab(opts('which_phenotype')) +
+                    ggplot2::ggtitle(taxon_name) +
+                    ggplot2::theme_minimal() + 
+		    ggplot2::scale_fill_manual(values = setNames(color_palette, taxon_levels)) + 
+		    ggplot2::guides(fill = "none")
         } else {
             return(NULL)  # Skip empty groups
         }
@@ -1054,10 +1053,11 @@ plot.pheno.distributions <- function(phenotype,
     combine_plots <- function(plots, ncol = 2) {
 	    patchwork::wrap_plots(plots, ncol = ncol)
     }
+    # Sort in post.
+
     grouped_plots <- split(distros, ceiling(seq_along(distros) / 10))
     distros <- lapply(grouped_plots, combine_plots)
 
-    distros <- lapply(distros, ggplotly)
     return(distros)
 }
 
