@@ -1015,46 +1015,45 @@ plot.pheno.distributions <- function(phenotype,
                                      ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     kept.species <- Reduce(c, lapply(pz.db$trees, function(x) x$tip.label))
-    pheno.taxon <- pz.db$taxonomy[match(names(phenotype),
-                                         pz.db$taxonomy$cluster),
+    pheno.taxon <- pz.db$taxonomy[match(names(phenotype), pz.db$taxonomy$cluster),
                                    "family",
                                    drop=TRUE]
     pheno.characteristics <- data.frame(pheno=phenotype,
                                         taxon=pheno.taxon,
                                         cluster=names(phenotype))
     sub.pheno <- subset(pheno.characteristics, cluster %in% kept.species)
+    taxon_uniq <- unique(sub.pheno$taxon)
     # Get color pallet
-    taxon_levels <- unique(sub.pheno$taxon)
-    color_palette <- scales::hue_pal()(length(taxon_levels))
-    # Get the number of tips and change the list order to be from greatest to smallest
-    distros <- plyr::dlply(sub.pheno, "taxon", function(data_subset) {
-	taxon_name <- unique(data_subset$taxon)
-        if (nrow(data_subset) > 0) {
-            p <- ggplot2::ggplot(data_subset, ggplot2::aes(pheno, fill=taxon_name)) +
+    color_palette <- scales::hue_pal()(length(taxon_uniq))
+
+    distros <- sub.pheno %>%
+	    dplyr::group_by(taxon) %>%
+	    nest() %>%
+	    mutate(n_datapoints = map_dbl(data, nrow)) %>%
+	    dplyr::filter(n_datapoints >= 3) %>%
+	    arrange(-n_datapoints) %>%
+	    mutate(plots = map2(data, taxon, ~ {
+            	p <- ggplot2::ggplot(.x, ggplot2::aes(pheno, fill=.y)) +
 		    ggplot2::geom_density() +  
                     ggplot2::xlab(opts('which_phenotype')) +
-                    ggplot2::ggtitle(taxon_name) +
+                    ggplot2::ggtitle(.y) +
                     ggplot2::theme_minimal() + 
-		    ggplot2::scale_fill_manual(values = setNames(color_palette, taxon_levels)) + 
+		    ggplot2::scale_fill_manual(values = setNames(color_palette, taxon_uniq)) + 
 		    ggplot2::guides(fill = "none")
-            return(p)
-	} else {
-            return(NULL)  # Skip empty groups
-        }
-    })
-    distros <- Filter(Negate(is.null), distros)
+            	return(p)
+		 })) %>%
+	    ungroup() %>%
+	    dplyr::select(plots) %>%
+	    tibble::deframe()
+
     # Group the ggplots into sets of 10 with them already being ordered from the
     # groups with the most individuals to the least for node tips in the kept taxon
     combine_plots <- function(plots, ncol = 2) {
 	    patchwork::wrap_plots(plots, ncol = ncol)
     }
-    # Sort plots in post since we know they will be alphabetical.
-    count_points <- function(plot) {
-            sum(ggplot_build(plot)$data[[1]]$count)
-    }
-    points_count <- sapply(distros, count_points)
-    sorted_plots <- distros[order(points_count, decreasing = TRUE)]
-    grouped_plots <- split(sorted_plots, ceiling(seq_along(sorted_plots) / 6))
+    # This number can be adjusted for how many plots per facet.
+    # Anything above 6 starts to squish the axis however.
+    grouped_plots <- split(distros, ceiling(seq_along(distros) / 6)) 
     distros <- lapply(grouped_plots, combine_plots)
 
     return(distros)
@@ -1106,15 +1105,11 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 
 	    #new.tr + geom_tiplab() + xlim(NA, 5)
             # Make the labels as species not the midas id
-
-
 	    non.interactive.plot(new.tr, fn)
     }
     #tree_list <- lapply(plotted.pheno.trees, function(tree) {
     #    pz.error(tree)        
     #})
-    
-    
 
     #interactive_plot_list <- lapply(plotted.pheno.trees, plot.interactive.tree, phenotype)
     #for (i in seq_along(interactive_plot_list)) {
