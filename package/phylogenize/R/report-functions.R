@@ -1026,6 +1026,10 @@ plot.pheno.distributions <- function(phenotype,
     # Get color pallet
     color_palette <- scales::hue_pal()(length(taxon_uniq))
 
+    # Remove any rows with NA as they were unable to be found by by that
+    # taxonomic classification in the codebase
+    sub.pheno <- sub.pheno[!(sub.pheno$taxon == "" | is.na(sub.pheno$taxon)), ]
+
     distros <- sub.pheno %>%
 	    dplyr::group_by(taxon) %>%
 	    nest() %>%

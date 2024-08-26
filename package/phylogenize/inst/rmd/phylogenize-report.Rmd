@@ -177,7 +177,7 @@ pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
 
 # Template for plots
 template <- c(
-    "### Taxonomy Group {{nm}}\n",
+    "### Page {{nm}}\n",
     "```{r, echo = FALSE, warning = FALSE, message = FALSE}\n",
     "pheno.distros[[{{nm}}]]\n",
     "```\n",
@@ -188,7 +188,144 @@ plots <- lapply(1:length(pheno.distros), function(nm) {
     knitr::knit_expand(text = template, nm = nm)
 })
 
+write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
+            phenotype,
+            sep = '\t')
+
 # be a little parsimonious with memory here
 rm(abd.meta); gc()
 ```
 `r knitr::knit(text = unlist(plots))`
+## Phenotype Mapped Across Trees {.tabset}
+### All Taxa
+```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=TRUE}
+
+if (!pz.options('skip_graphs')) {
+	plot.labeled.phenotype.trees(plotted.pheno.trees,
+				     100*logistic(phenotype),
+				     label=pz.options('which_phenotype'))
+}
+
+```
+
+### Only mapped/observed taxa {.tabset}
+
+Displays phenotype on trees, with only the mapped/observed taxa plotted.
+
+```{r subtrees_pre, cache=TRUE, echo=FALSE}
+
+pheno.labels <- names(phenotype)
+subtrees <- lapply(pz.db$trees, function(tr) {
+  keep.tips(tr, intersect(mapped.observed, pheno.labels))
+})
+subtrees <- Filter(function(x) {
+  if (is.null(x)) return(FALSE)
+  if (length(x$tip.label) > 2) return(TRUE)
+  return(FALSE)
+}, subtrees)
+
+```
+```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(subtrees), cache.lazy = FALSE, cache=TRUE, echo=FALSE}
+
+if (!pz.options('skip_graphs')) {
+  plotted.pheno.subtrees <- plot.phenotype.trees(phenotype,
+                                                 subtrees,
+                                                 pheno.scale)
+  if (!is.null(plotted.pheno.subtrees)) {
+    if (length(plotted.pheno.subtrees) > 0) {
+      plot.labeled.phenotype.trees(plotted.pheno.subtrees,
+                                   100*logistic(phenotype))
+      rmd.message <- ""
+    } else {
+      rmd.message <- "(no taxa had more than one tip)"
+    }
+  } else {
+    rmd.message <- "(no taxa had more than one tip)"
+  }
+}
+
+```
+`r rmd.message`
+# Associations between genes and taxa
+
+This table gives an overview of how many genes were significantly associated at
+an FDR of 5%.
+
+```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=TRUE}
+
+if (pz.options('linearize')) { # mostly for testing
+  p.method <- lm.fx.pv
+} else {
+  p.method <- phylolm.fx.pv
+}
+
+
+taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$species)))
+if (pz.options('ncl') > 1) {
+    results <- result.wrapper.plm(taxa=taxaN,
+                                  pheno=phenotype,
+                                  tree=pz.db$trees[taxaN],
+                                  clusters=pz.db$species[taxaN],
+                                  proteins=pz.db$gene.presence[taxaN],
+                                  method=p.method)
+} else {
+    results <- mapply(nonparallel.results.generator,
+                      pz.db$gene.presence[taxaN],
+                      pz.db$trees[taxaN],
+                      pz.db$species[taxaN],
+                      as.list(taxaN),
+                      MoreArgs=list(pheno=phenotype,
+                                    method=p.method,
+                                    use.for.loop=FALSE),
+                      SIMPLIFY=FALSE)
+}
+signif <- make.sigs(results)
+signs <- make.signs(results)
+
+pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
+results.matrix <- make.results.matrix(results)
+
+knitr::kable(sapply(pos.sig, length), col.names = "significant genes")
+
+phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
+pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
+
+pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig)
+pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs, pos.sig.thresh, pz.db$gene.to.fxn)
+
+# recalculate, since some of these may go away
+phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
+
+write.csv(file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
+          pos.sig.thresh.descs)
+rm(pos.sig.thresh.descs)
+
+write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
+          results.matrix)
+
+```
+# Gene association heat maps
+
+The left shows the phenotype painted on tips of the tree as above. The right
+adds a heatmap where blue points represent presence of a gene (aligned with the
+tips of the tree) and white points represent absence. Only
+significantly-associated genes are displayed. Genes are clustered from left to
+right by Jaccard dissimilarity, so genes with similar patterns of inheritance
+will form vertical stripes. Horizontal stripes may be visible for taxa that
+have particularly extreme phenotypes.
+
+```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=TRUE}
+
+
+
+cluster.plots <- mapply(do.clust.plot,
+                        pz.db$gene.presence[phy.with.sigs],
+                        pos.sig.thresh[phy.with.sigs],
+                        pz.db$trees[phy.with.sigs],
+                        plotted.pheno.trees[phy.with.sigs],
+                        phy.with.sigs,
+                        SIMPLIFY = FALSE)
+
+rm(cluster.plots)
+rm(plotted.pheno.trees)
+
