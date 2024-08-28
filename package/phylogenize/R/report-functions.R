@@ -996,7 +996,7 @@ plot.phenotype.trees <- function(phenotype,
     if (length(plotted.pheno.trees) == 0) {
         pz.warning("No trees were plotted: too few taxa for any taxon?")
     }
-    plotted.pheno.trees
+    return(plotted.pheno.trees)
 }
 
 #' Plot distributions of a phenotype across taxa.
@@ -1095,30 +1095,11 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
         return(NULL)
     }
 
-    for (pn in 1:length(plotted.pheno.trees)) {
-	    p <- plotted.pheno.trees[[pn]]
-	    rp <- p$rphy
-	    tr <- p$tree
-	    rp2 <- rp
-	    rp2$tip.label <- paste0(rp2$tip.label, " (phenotype = ...", units, ")")
-	    xlim <- plot(rp2, plot=FALSE, no.margin=TRUE)$x.lim
-	    new.tr <- tr +
-		    ggtree::geom_tiplab() +
-		    ggplot2::xlim(xlim[1], xlim[2])
-	    fn <- knitr::fig_path('svg', number = pn)
-
-	    #new.tr + geom_tiplab() + xlim(NA, 5)
-            # Make the labels as species not the midas id
-	    non.interactive.plot(new.tr, fn)
-    }
-    #tree_list <- lapply(plotted.pheno.trees, function(tree) {
-    #    pz.error(tree)        
-    #})
-
-    #interactive_plot_list <- lapply(plotted.pheno.trees, plot.interactive.tree, phenotype)
-    #for (i in seq_along(interactive_plot_list)) {
-    #    plot.tree.with.phenotype(tree_list[[i]], phenotype_data, paste0("tree_plot_", i, ".svg"))
-    #}
+    trees <- lapply(plotted.pheno.trees, function(item) {
+				      item$tree <- ggplotly(item$tree)
+				      return(item)
+    })
+    return(trees)
 }
 
 

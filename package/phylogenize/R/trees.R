@@ -113,26 +113,28 @@ gg.cont.tree <- function(phy,
                                                guide = "colorbar",
                                                name = cName)
   }
-  # plot trees
+  
+  tree_plot <- ggplot(reduced.phy, aes(x = branch.length, y = tip.label)) +
+    geom_segment(aes(xend = parent.branch.length, yend = parent.tip.label, color = cDisplay), ...) +
+    cColors +
+    theme_minimal() +
+    theme(legend.position = "bottom")
+
   if (reverse) {
-      ctree <- ggtree::ggtree(reduced.phy,
-                              ladderize = ladderize,
-                              ggplot2::aes_string(color = cDisplay), ...) +
-          cColors + ggplot2::scale_x_reverse() + ggplot2::theme(legend.position = "bottom")
-  } else {
-      ctree <- ggtree::ggtree(reduced.phy,
-                              ladderize = ladderize,
-                              ggplot2::aes_string(color = cDisplay), ...) +
-          cColors + ggplot2::theme(legend.position = "bottom")
-  }
-  if (plot) print(ctree)
-  return(list(tree = ctree,
-              cAnc = cAnc,
-              rphy = reduced.phy,
-              n = n,
-              cols = colors,
-              lims = cLimits,
-              disp = cDisplay))
+	  tree_plot <- tree_plot + scale_x_reverse()
+  } 
+  #interactive_tree <- ggplotly(tree_plot)
+
+  return(list(
+    tree = interactive_tree,
+    cAnc = cAnc,
+    rphy = reduced.phy,
+    n = n,
+    cols = colors,
+    lims = cLimits,
+    disp = cDisplay
+  ))
+
 }
 
 
