@@ -35,7 +35,7 @@ params:
   error_to_file: TRUE
 ---
 
-```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=TRUE}
+```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=FALSE}
 
 library(phylogenize)
 library(Matrix)
@@ -106,7 +106,7 @@ This report was generated automatically by [phylogenize](https://phylogenize.org
 - Environment of interest: "`r pz.options('which_envir')`"
 - Prior probabilities for environments: "`r pz.options('prior_type')`"
 
-# Phenotype calculation
+# Phenotypic Calculation
 
 Below, trees for all taxa with at least `r pz.options('treemin')`
 representatives in the input data are presented. Trees are colored according to
@@ -119,9 +119,8 @@ specific for an environment, blue for taxa that are specific for other
 environments (i.e., found less often in the environment chosen), and gray for
 taxa that are neither.
 
-
-
-```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=TRUE}
+## Distribution of Phenotype {.tabset}
+```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=FALSE}
 
 # Calculate the phenotype of interest
 
@@ -173,13 +172,22 @@ if (pz.options('which_phenotype') == "prevalence") {
 
 phenotype <- clean.pheno(phenotype, pz.db)
 pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
-plotted.pheno.trees <- plot.phenotype.trees(phenotype,
-                                            pz.db$trees,
-                                            pheno.scale)
-pheno.distros <- plot.pheno.distributions(phenotype,
-                                          pz.db)
+plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pheno.scale)
+pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
 
-print(pheno.distros)
+# Template for plots
+template <- c(
+    "### Page {{nm}}\n",
+    "```{r, echo = FALSE, warning = FALSE, message = FALSE}\n",
+    "pheno.distros[[{{nm}}]]\n",
+    "```\n",
+    "\n"
+)
+
+plots <- lapply(1:length(pheno.distros), function(nm) {
+    knitr::knit_expand(text = template, nm = nm)
+})
+
 write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
             phenotype,
             sep = '\t')
@@ -187,26 +195,24 @@ write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
 # be a little parsimonious with memory here
 rm(abd.meta); gc()
 ```
-
-# Phenotype mapped across trees {.tabset}
-
-## All taxa
-
-```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=TRUE}
+`r knitr::knit(text = unlist(plots))`
+## Phenotype Mapped Across Trees {.tabset}
+### All Taxa
+```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=FALSE}
 
 if (!pz.options('skip_graphs')) {
-    plot.labeled.phenotype.trees(plotted.pheno.trees,
-                                 100*logistic(phenotype),
-                                 label=pz.options('which_phenotype'))
+	plot.labeled.phenotype.trees(plotted.pheno.trees,
+				     100*logistic(phenotype),
+				     label=pz.options('which_phenotype'))
 }
 
 ```
 
-## Only mapped/observed taxa {.tabset}
+### Only mapped/observed taxa {.tabset}
 
 Displays phenotype on trees, with only the mapped/observed taxa plotted.
 
-```{r subtrees_pre, cache=TRUE, echo=FALSE}
+```{r subtrees_pre, cache=FALSE, echo=FALSE}
 
 pheno.labels <- names(phenotype)
 subtrees <- lapply(pz.db$trees, function(tr) {
@@ -219,8 +225,7 @@ subtrees <- Filter(function(x) {
 }, subtrees)
 
 ```
-
-```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(subtrees), cache.lazy = FALSE, cache=TRUE, echo=FALSE}
+```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(subtrees), cache.lazy = FALSE, cache=FALSE, echo=FALSE}
 
 if (!pz.options('skip_graphs')) {
   plotted.pheno.subtrees <- plot.phenotype.trees(phenotype,
@@ -240,15 +245,13 @@ if (!pz.options('skip_graphs')) {
 }
 
 ```
-
 `r rmd.message`
-
 # Associations between genes and taxa
 
 This table gives an overview of how many genes were significantly associated at
 an FDR of 5%.
 
-```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=TRUE}
+```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
 
 if (pz.options('linearize')) { # mostly for testing
   p.method <- lm.fx.pv
@@ -299,8 +302,8 @@ rm(pos.sig.thresh.descs)
 
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
           results.matrix)
-```
 
+```
 # Gene association heat maps
 
 The left shows the phenotype painted on tips of the tree as above. The right
@@ -311,11 +314,11 @@ right by Jaccard dissimilarity, so genes with similar patterns of inheritance
 will form vertical stripes. Horizontal stripes may be visible for taxa that
 have particularly extreme phenotypes.
 
-```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=TRUE}
+```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=FALSE}
 
 
 
-cluster.plots <- mapply(do.clust.plot, 
+cluster.plots <- mapply(do.clust.plot,
                         pz.db$gene.presence[phy.with.sigs],
                         pos.sig.thresh[phy.with.sigs],
                         pz.db$trees[phy.with.sigs],
@@ -339,7 +342,7 @@ All pathways/modules returned are significant at an FDR of 25%. "Strong", "Med",
 and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
 
-```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=TRUE}
+```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=FALSE}
 do_enrichment <- ("clusterProfiler" %in% rownames(installed.packages()))
 if (do_enrichment) {
   pretty.enr.tbl <- NULL
