@@ -35,7 +35,7 @@ params:
   error_to_file: TRUE
 ---
 
-```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=TRUE}
+```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=FALSE}
 
 library(phylogenize)
 library(Matrix)
@@ -120,7 +120,7 @@ environments (i.e., found less often in the environment chosen), and gray for
 taxa that are neither.
 
 ## Distribution of Phenotype {.tabset}
-```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=TRUE}
+```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=FALSE}
 
 # Calculate the phenotype of interest
 
@@ -198,7 +198,7 @@ rm(abd.meta); gc()
 `r knitr::knit(text = unlist(plots))`
 ## Phenotype Mapped Across Trees {.tabset}
 ### All Taxa
-```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=TRUE}
+```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=FALSE}
 
 if (!pz.options('skip_graphs')) {
 	plot.labeled.phenotype.trees(plotted.pheno.trees,
@@ -212,7 +212,7 @@ if (!pz.options('skip_graphs')) {
 
 Displays phenotype on trees, with only the mapped/observed taxa plotted.
 
-```{r subtrees_pre, cache=TRUE, echo=FALSE}
+```{r subtrees_pre, cache=FALSE, echo=FALSE}
 
 pheno.labels <- names(phenotype)
 subtrees <- lapply(pz.db$trees, function(tr) {
@@ -225,7 +225,7 @@ subtrees <- Filter(function(x) {
 }, subtrees)
 
 ```
-```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(subtrees), cache.lazy = FALSE, cache=TRUE, echo=FALSE}
+```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(subtrees), cache.lazy = FALSE, cache=FALSE, echo=FALSE}
 
 if (!pz.options('skip_graphs')) {
   plotted.pheno.subtrees <- plot.phenotype.trees(phenotype,
@@ -251,7 +251,7 @@ if (!pz.options('skip_graphs')) {
 This table gives an overview of how many genes were significantly associated at
 an FDR of 5%.
 
-```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=TRUE}
+```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
 
 if (pz.options('linearize')) { # mostly for testing
   p.method <- lm.fx.pv
@@ -314,7 +314,7 @@ right by Jaccard dissimilarity, so genes with similar patterns of inheritance
 will form vertical stripes. Horizontal stripes may be visible for taxa that
 have particularly extreme phenotypes.
 
-```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=TRUE}
+```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=FALSE}
 
 
 
@@ -342,7 +342,7 @@ All pathways/modules returned are significant at an FDR of 25%. "Strong", "Med",
 and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
 
-```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=TRUE}
+```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=FALSE}
 do_enrichment <- ("clusterProfiler" %in% rownames(installed.packages()))
 if (do_enrichment) {
   pretty.enr.tbl <- NULL
