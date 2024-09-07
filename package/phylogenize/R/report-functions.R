@@ -663,6 +663,125 @@ create_matrix <- function(sub_df) {
   return(mat)
 }
 
+
+#' Changes the presence / absence binary for the desired taxonomic level given by the user.
+#'
+#' \code{import.pz.db} filters down the binary file for database
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{binary}{Matrix. Object that represent a phylogenize prepared internal database}
+#'   \item{taxon}{String. Can be either be 'phylum','class',''order','family', or 'genus'}
+#' }
+#' @return list of binary objects that are ready for use at the user given tax_level
+#' @export
+change.presence.tax.level <- function(binary, taxon){
+	# Make a mapping file that is at the taxonomic level selected from the tax file.
+	clean <- tax %>%
+		select(cluster, taxon, phylum) %>%
+		distinct()
+        # Drop empty values from the taxonomic level selected if they are not 
+	clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
+        # Arrange them so that the runtime is slightly less in the lookup
+	clean <- clean %>%
+		group_by(across(all_of(taxon))) %>%
+		filter(n() > 1) %>%
+		ungroup() %>%
+		arrange(phylum, !!sym(taxon)) %>%
+		mutate(cluster := as.character(cluster))
+        # Split the dataframe by phylum so that we only need to lookup the taxon associated with 
+	# each one.
+	clean <- clean %>% 
+		split(.$phylum)
+
+        # For every species in the dataframe, if the species is selected, pop the column and remove
+	# it from the sparse matrix.
+        binary_matrices <- list()
+	taxon <- sym(taxon)
+
+        for (i in 1:length(names(binary))){
+		name <- names(binary)[i]
+		b <- binary[[name]]
+		t <- clean[[name]]
+     
+                split_taxs <- t %>%
+			group_split(!!taxon) %>%
+			map(~ pull(.x, cluster))
+     
+        	split_names <- t %>%
+			group_split(!!taxon) %>%
+			map(~ pull(.x, !!taxon)) %>%
+			unlist() %>%
+			unique()
+       
+        	columns <- colnames(binary[[name]])
+     
+        	for (j in 1:length(split_names)){
+			union <- intersect(split_taxs[[j]], columns)
+			binary_matrices[[split_names[j]]] <- b[, union, drop = FALSE]
+        	}
+        }
+	return(binary_matrices)
+}
+
+
+#' Changes the internal database tree for the desired taxonomic level given by the user.
+#'
+#' \code{import.pz.db} filters down the binary file for database
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{tree}{List. Object that represent a phylogenize prepared internal database}
+#'   \item{taxon}{String. Can be either be 'phylum','class',''order','family', or 'genus'}
+#' }
+#' @return list of tree objects that are ready for use at the user given tax_level
+#' @export
+change.tree.tax.level <- function(tree, taxon){
+	# Make a mapping file that is at the taxonomic level selected from the tax file.
+	clean <- tax %>%
+  		select(cluster, taxon, phylum) %>%
+  		distinct()
+	# Drop empty values from the taxonomic level selected if they are not 
+	clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
+	# Arrange them so that the runtime is slightly less in the lookup
+	clean <- clean %>%
+  		group_by(across(all_of(taxon))) %>%
+  		filter(n() > 1) %>%
+  		ungroup() %>%
+  		arrange(phylum, !!sym(taxon)) %>%
+  		mutate(cluster := as.character(cluster))
+	# Split the dataframe by phylum so that we only need to lookup the taxon associated with 
+	# each one.
+	clean <- clean %>% 
+		split(.$phylum)
+
+
+	tree_matrices <- list()
+	names <- names(tree)
+	# Loop through each tree
+	for (i in seq_along(tree)) {
+  		name <- names[i]
+  		tr <- tree[[name]]
+  		t <- clean[[name]]
+  
+  		# Generate a list of unique split names based on taxon
+  		split_names <- t %>%
+    			group_split(!!sym(taxon)) %>%
+    			map(~ pull(.x, !!sym(taxon))) %>%
+    			unlist() %>%
+    			unique()
+  
+ 	 	# Process each split name
+ 		for (j in seq_along(split_names)) {
+    			tips <- tr$tip.label
+    			subtree <- ape::keep.tip(tr, tips)
+    			tree_matrices[[split_names[j]]] <- subtree    
+  		}
+	}
+	return(tree_matrices)
+}
+
+
 #--- Import data necessary for analyses ---#
 
 #' Import the data necessary for *phylogenize* analysis.
@@ -684,13 +803,13 @@ import.pz.db <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     
     if (opts('db') == "gtdb") {
-            # Read in gene presence and the functions file 
+	    # Read in gene presence and the functions file
             gene.presence <- readRDS(file.path(opts('data_dir'), "gtdb-gene-presence-binary.rds"))
-            # Read in the phylogenetic trees
+	    # Read in the phylogenetic trees
             trees <- readRDS(file.path(opts('data_dir'), "gtdb_214-trees.rds"))
-            # Add in the species column from the cluster column *This can be removed later on so that the external db is format fully
+	    # Add in the species column from the cluster column *This can be removed later on so that the external db is format fully
             taxonomy <- read_csv(file.path(opts('data_dir'),"gtdb_214-taxonomy.csv"))
-	    # Read in the KO annotations file
+            # Read in the KO annotations file
             gene.to.fxn <- read_csv(file.path(opts('data_dir'), "gtdb.functions"))
     } else if (opts('db') == "uhgp") {
 	    gene.presence <- readRDS(file.path(opts('data_dir'), "uhgp-gene-presence-binary.rds"))
@@ -703,6 +822,12 @@ import.pz.db <- function(...) {
 
     gene.to.fxn$gene <- gene.to.fxn$node_head
 
+    # Make the files at the user requested taxon level
+    if(opts('taxon_level') != "phylum"){
+	    gene.presence <- change.presence.tax.level(gene.presence)
+	    trees <- change.tree.tax.level(trees)
+    }
+    
     # finished
     return(list(gene.presence = gene.presence,
                 trees = trees,

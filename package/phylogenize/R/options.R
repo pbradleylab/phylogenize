@@ -9,6 +9,7 @@ default_params <- list(
     devel_pkgdir = 'package/phylogenize',
     dset_column = "dataset",
     env_column = "env",
+    taxon_level = "phylum",
     error_to_file = TRUE,
     gene_color_absent = 'black',
     gene_color_present = 'slateblue2',
@@ -86,6 +87,7 @@ PZ_OPTIONS <- options_manager(.list=default_params)
 #'   \item{db}{String. Which database to use. Can be "gtdb" or "uhgp." Default: "gtdb"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
 #'   \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}
+#'   \item{env_column}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
 #'   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
 #'   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: TRUE}
 #'   \item{min_fx}{Positive double. Effects that are significantly equivalent to this effect size will be excluded from significant positive hits. If zero, the equivalence test will be skipped. Default: 0}
