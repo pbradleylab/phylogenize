@@ -606,7 +606,7 @@ optimize.b.wrapper <- function(real.mtx,
     N <- count.each(real.ids)
     which.env <- which(names(N) == which.real.env)
     get.optim <- function(b) {
-        sim <- simulate.binom.mtx(effect.size = effect.size,
+	sim <- simulate.binom.mtx(effect.size = effect.size,
                                   baseline.distro = shapes[[shape.n]],
                                   samples = N,
                                   taxa = nrow(real.mtx),
@@ -961,7 +961,7 @@ ashr.diff.abund <- function(abd.meta,
   } else if (M=="maaslin2") {
     # Note:: This method is broken as Maaslin2 is consisitant not constructing the complex models we need.
     # Due to this, I have set an error to be thrown if this option is selected 
-    pz.error("We apologize. Maaslin2 is not yet implemeted into this tool but we plan on it in a later release. Run with ancombc2 instead.")
+    #pz.error("We apologize. Maaslin2 is not yet implemeted into this tool but we plan on it in a later release. Run with ancombc2 instead.")
     maaslin_res <- Maaslin2::Maaslin2(input_data=as.data.frame(as.matrix(abd.meta$abund_mtx)),
                             input_metadata=named_metadata,
                             fixed_effects=paste0(E, ",", D),

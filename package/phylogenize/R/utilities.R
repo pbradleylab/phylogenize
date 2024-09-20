@@ -144,10 +144,6 @@ truncated <- function(x, lim = c(logit(0.001), logit(0.25))) {
 fastread <- function(location, cn = TRUE) {
     # rownames are useful
     master <- data.frame(read.csv(location, sep='\t', row.names=1, header=T))
-    #rn <- master[, 1, drop=TRUE]
-    #rest <- master[, -1, drop=FALSE]
-    #pz.error(location)
-    #rownames(rest) <- rn
     return(data.matrix(master))
 }
 

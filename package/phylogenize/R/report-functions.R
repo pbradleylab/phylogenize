@@ -40,6 +40,7 @@ read.abd.metadata <- function(...) {
     } else {
         pz.error(paste0("Invalid input format: ", opts('input_format')))
     }
+   
     sanity.check.abundance(abd.meta$mtx, ...)
     sanity.check.metadata(abd.meta$metadata, ...)
     if (opts('type_16S') == TRUE) {
@@ -52,7 +53,7 @@ read.abd.metadata <- function(...) {
     	abd.meta$abund_mtx <- as.matrix(abd.meta$abund_mtx)
     } else {
     	# binarize to save memory usage since we care about pres/abs
-    	abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+	abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
     }
     gc()
     return(abd.meta)
@@ -111,11 +112,16 @@ check.process.metadata <- function(metadata, ...) {
     if (opts('categorical')) {   # i.e., env not continuous
       env_factor <- factor(metadata[[E]])
       env_levels <- levels(env_factor)
+
+      order <- c(setdiff(env_levels, envir), envir)
+      metadata <- metadata %>%
+	      mutate(env = factor(env, levels = order)) %>%
+	      arrange(env)	    
+      
       if (!(envir %in% env_levels)) {
         pz.error(paste0("environment ", envir, " not found in metadata"))
       }
-      levels(env_factor) <- c(setdiff(env_levels, envir), envir)
-      metadata[[E]] <- env_factor
+
     } else {
       metadata[[E]] <- as.numeric(metadata[[E]])
       if (all(is.na(abd.meta$metadata[[E]]))) {
@@ -123,6 +129,7 @@ check.process.metadata <- function(metadata, ...) {
       }
     }
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
+    
     return(metadata)
 }
 
@@ -1140,7 +1147,7 @@ plot.pheno.distributions <- function(phenotype,
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     kept.species <- Reduce(c, lapply(pz.db$trees, function(x) x$tip.label))
     pheno.taxon <- pz.db$taxonomy[match(names(phenotype), pz.db$taxonomy$cluster),
-                                   "family",
+                                   pz.options("taxon_level"),
                                    drop=TRUE]
     pheno.characteristics <- data.frame(pheno=phenotype,
                                         taxon=pheno.taxon,

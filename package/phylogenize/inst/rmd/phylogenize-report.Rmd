@@ -18,6 +18,7 @@ params:
   biom_file: ""
   input_format: "tabular"
   env_column: "env"
+  taxon_level: "phylum"
   dset_column: "dataset"
   phenotype_file: ""
   db: "gtdb"
@@ -85,6 +86,7 @@ dir.create(pz.options('out_dir'))
 
 # Read in user-supplied
 abd.meta <- read.abd.metadata()
+
 # Read in trees, gene presence/absence, taxonomy
 pz.db <- import.pz.db()
 # Figure out how many trees to retain
@@ -171,6 +173,7 @@ if (pz.options('which_phenotype') == "prevalence") {
 }
 
 phenotype <- clean.pheno(phenotype, pz.db)
+
 pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
 plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pheno.scale)
 pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
