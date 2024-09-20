@@ -859,6 +859,7 @@ import.pz.db <- function(...) {
 adjust.db <- function(pz.db, abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     species.observed <- rownames(abd.meta$mtx)
+    
     species.per.tree <- lapply(pz.db$trees, function(tr) {
 	intersect(tr$tip.label, species.observed)
     })
