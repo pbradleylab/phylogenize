@@ -679,10 +679,11 @@ create_matrix <- function(sub_df) {
 #' \describe{
 #'   \item{binary}{Matrix. Object that represent a phylogenize prepared internal database}
 #'   \item{taxon}{String. Can be either be 'phylum','class',''order','family', or 'genus'}
+#'   \item{tax}{dataframe. Object with all the taxonomy for the given database. Has column mathcing the taxon parameter}
 #' }
 #' @return list of binary objects that are ready for use at the user given tax_level
 #' @export
-change.presence.tax.level <- function(binary, taxon){
+change.presence.tax.level <- function(binary, taxon, tax){
 	# Make a mapping file that is at the taxonomic level selected from the tax file.
 	clean <- tax %>%
 		select(cluster, taxon, phylum) %>%
@@ -740,10 +741,11 @@ change.presence.tax.level <- function(binary, taxon){
 #' \describe{
 #'   \item{tree}{List. Object that represent a phylogenize prepared internal database}
 #'   \item{taxon}{String. Can be either be 'phylum','class',''order','family', or 'genus'}
+#'   \item{tax}{dataframe. Object with all the taxonomy for the given database. Has column mathcing the taxon parameter}
 #' }
 #' @return list of tree objects that are ready for use at the user given tax_level
 #' @export
-change.tree.tax.level <- function(tree, taxon){
+change.tree.tax.level <- function(tree, taxon, tax){
 	# Make a mapping file that is at the taxonomic level selected from the tax file.
 	clean <- tax %>%
   		select(cluster, taxon, phylum) %>%
@@ -831,8 +833,8 @@ import.pz.db <- function(...) {
 
     # Make the files at the user requested taxon level
     if(opts('taxon_level') != "phylum"){
-	    gene.presence <- change.presence.tax.level(gene.presence)
-	    trees <- change.tree.tax.level(trees)
+	    gene.presence <- change.presence.tax.level(gene.presence, opts('taxon_level'), taxonomy)
+	    trees <- change.tree.tax.level(trees, opts('taxon_level'), taxonomy)
     }
     
     # finished
