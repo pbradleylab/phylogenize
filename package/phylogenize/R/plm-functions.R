@@ -962,25 +962,28 @@ ashr.diff.abund <- function(abd.meta,
                                            !!(se_col)) %>% deframe)
     sample_ashr <- as_tibble(ancom_ash$result, rownames="species")
   } else if (M=="maaslin2") {
-    # Note:: This method is broken as Maaslin2 is consisitant not constructing the complex models we need.
-    # Due to this, I have set an error to be thrown if this option is selected 
-    #pz.error("We apologize. Maaslin2 is not yet implemeted into this tool but we plan on it in a later release. Run with ancombc2 instead.")
-    maaslin_res <- Maaslin2::Maaslin2(input_data=as.data.frame(as.matrix(abd.meta$abund_mtx)),
-                            input_metadata=named_metadata,
+    # Note:: This method is not working for ANY of the datasets we have as Maaslin2 is
+    # constructing the complex models we need. Due to this, I have set an error to be 
+    # thrown if this option is selected and it fails. Not sure how else to handle this
+    tryCatch({
+	    maaslin_res <- Maaslin2::Maaslin2(input_data=as.data.frame(as.matrix(abd.meta$mtx)),
+                            input_metadata=as.data.frame(named_metadata),
                             fixed_effects=paste0(E, ",", D),
                             output="temp/",
                             plot_heatmap = FALSE,
                             plot_scatter = FALSE)
-
-    maaslin_results_tbl <- maaslin_res$results %>% tibble() %>%
-      dplyr::filter(metadata==E, value==envir) 
+            maaslin_results_tbl <- maaslin_res$results %>% tibble() %>%
+		    dplyr::filter(metadata==E, value==envir) 
   
-  if (any(is.na(maaslin_results_tbl$coef)) || any(is.na(maaslin_results_tbl$stderr))) {
-    pz.error("Error: Missing values found in coef or stderr columns.")
-  }
-  maaslin_ash <- ash_wrapper(dplyr::select(maaslin_results_tbl, feature, coef) %>% deframe,
+            if (any(is.na(maaslin_results_tbl$coef)) || any(is.na(maaslin_results_tbl$stderr))) {
+		    pz.error("Error: Missing values found in coef or stderr columns.")
+            }
+            maaslin_ash <- ash_wrapper(dplyr::select(maaslin_results_tbl, feature, coef) %>% deframe,
                                dplyr::select(maaslin_results_tbl, feature, stderr) %>% deframe)
-  sample_ashr <- as_tibble(maaslin_ash$result, rownames="species")
+            sample_ashr <- as_tibble(maaslin_ash$result, rownames="species")
+    }, error = function(e) {
+	    pz.error("Something went wrong with Maaslin2. Normally this is because the data is ill suited for this method; however, if you believe this to not be the case please file a bug report.")
+    })
   } else {
     pz.error("This shouldn't be possible, but somehow an incorrect differential abundance method was selected")
   }
@@ -989,6 +992,7 @@ ashr.diff.abund <- function(abd.meta,
     deframe
   return(sample_pheno)
 }
+
 
 #' Throw an error and optionally log it in errmsg.txt.
 #'
