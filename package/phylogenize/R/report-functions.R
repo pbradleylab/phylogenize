@@ -1111,8 +1111,6 @@ plot.phenotype.trees <- function(phenotype,
     if (any(!(names(trees) %in% names(scale$phy.limits)))) {
         pz.error("taxon-specific limits must be calculated for every tree")
     }
-    write.csv(phenotype, "abund.tsv")
-    pz.error()
     plotted.pheno.trees <- lapply(names(trees), function(tn) {
         tryCatch({gg.cont.tree(trees[[tn]],
                                phenotype,
