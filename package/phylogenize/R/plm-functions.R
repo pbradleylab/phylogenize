@@ -1,23 +1,23 @@
 #' Fit phylogenetic (or linear) models.
 #'
-#' @param phyla Character vector giving the names of the phyla.
-#' @param pheno Named numeric vector giving phenotype values per taxon.
-#' @param tree Either a single tree covering all taxa, or a list of per-phylum
+#' @param taxa Character vector giving the names of the taxa.
+#' @param pheno Named numeric vector giving phenotype values per species.
+#' @param tree Either a single tree covering all species, or a list of per-taxon
 #'     trees.
-#' @param proteins Named list of gene presence/absence matrices, per phylum.
-#' @param clusters Named list of character vectors of taxon IDs, per phylum.
+#' @param proteins Named list of gene presence/absence matrices, per taxon.
+#' @param clusters Named list of character vectors of species IDs, per taxon.
 #' @param method A function that returns a length-2 numeric vector of
 #'     effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
 #'     \code{lm.fx.pv}).
 #' @param restrict.figfams Optionally, a character vector giving a subset of
 #'     genes to test.
 #' @param drop.zero.var Boolean giving whether to drop genes that are always
-#'     present or always absent in a particular phylum.
+#'     present or always absent in a particular taxon.
 #' @param only.return.names Boolean giving whether to just return the names of
 #'     genes to be tested (for debugging).
-#' @return Named list of p-value and effect-size matrices, one per phylum.
+#' @return Named list of p-value and effect-size matrices, one per taxon.
 #' @export result.wrapper.plm
-result.wrapper.plm <- function(phyla,
+result.wrapper.plm <- function(taxa,
                                pheno,
                                tree,
                                proteins,
@@ -28,7 +28,7 @@ result.wrapper.plm <- function(phyla,
                                only.return.names = FALSE,
                                ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    lapply.across.names(phyla, function(p) {
+    lapply.across.names(taxa, function(p) {
         message(p)
         if (class(tree) == "phylo") {
             tr <- tree
@@ -72,35 +72,35 @@ result.wrapper.plm <- function(phyla,
     })
 }
 
-#' Fit phylogenetic (or linear) models (single core version, single phylum).
+#' Fit phylogenetic (or linear) models (single core version, single taxon).
 #'
 #' @param gene.matrix Gene presence/absence matrix.
 #' @param tree Phylogeny relating taxa.
 #' @param pheno Named numeric vector giving phenotype values per taxon.
-#' @param phylum.name Name of phylum being considered.
+#' @param taxon.name Name of taxon being considered.
 #' @param method A function that returns a length-2 numeric vector of
 #'     effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
 #'     \code{lm.fx.pv}).
 #' @param restrict.ff Optionally, a character vector giving a subset of
 #'     genes to test.
 #' @param remove.low.variance Boolean giving whether to drop genes that are
-#'     always present or always absent in a particular phylum.
+#'     always present or always absent in a particular taxon.
 #' @param use.for.loop Boolean giving whether to use a for loop instead of a
 #'     pbapply.
-#' @return Named list of p-value and effect-size matrices, one per phylum.
+#' @return Named list of p-value and effect-size matrices, one per taxon.
 #' @export
 nonparallel.results.generator <- function(gene.matrix,
                                          tree,
                                          taxa,
                                          pheno,
-                                         phylum.name="TestPhylum",
+                                         taxon.name="TestFamily",
                                          method=phylolm.fx.pv,
                                          restrict.ff=NULL,
                                          remove.low.variance=TRUE,
                                          use.for.loop=TRUE,
                                          ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    message(phylum.name)
+    message(taxon.name)
     restrict.taxa <- Reduce(intersect, list(colnames(gene.matrix),
                                             tree$tip.label,
                                             names(pheno),
@@ -309,10 +309,10 @@ cluster.load.pkg <- function(cl, devel, pkgdir="package/phylogenize") {
     }
 }
 
-#' Perform phylogenetic (or linear) modeling for a single phylum.
+#' Perform phylogenetic (or linear) modeling for a single taxon.
 #'
-#' @param pheno Named numeric vector giving phenotype values per taxon.
-#' @param tree A tree relating taxa within a phylum.
+#' @param pheno Named numeric vector giving phenotype values per species.
+#' @param tree A tree relating taxa within a taxon.
 #' @param mtx Gene presence/absence matrix.
 #' @param method A function that returns a length-2 numeric vector of
 #'     effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
@@ -606,7 +606,7 @@ optimize.b.wrapper <- function(real.mtx,
     N <- count.each(real.ids)
     which.env <- which(names(N) == which.real.env)
     get.optim <- function(b) {
-        sim <- simulate.binom.mtx(effect.size = effect.size,
+	sim <- simulate.binom.mtx(effect.size = effect.size,
                                   baseline.distro = shapes[[shape.n]],
                                   samples = N,
                                   taxa = nrow(real.mtx),
@@ -647,7 +647,7 @@ b.scorer <- function(s, a) {
 
 ### calculate prevalence
 
-#' Master function to calculate taxon prevalences with additive smoothing.
+#' Main function to calculate taxon prevalences with additive smoothing.
 #'
 #' Some particularly relevant global options are:
 #' \describe{
@@ -701,7 +701,7 @@ prev.addw <- function(abd.meta,
 
 ### calculate correlation
 
-#' Master function to calculate taxon-to-phenotype correlations, using clr-transformed abundances.
+#' Main function to calculate taxon-to-phenotype correlations, using clr-transformed abundances.
 #'
 #' Some particularly relevant global options are:
 #' \describe{
@@ -753,7 +753,7 @@ clr <- function(mtx, pc = 0.5) {
   apply(mtx + pc, 2, function(x) log(x) - mean(log(x)))
 }
 
-#' Master function to calculate environmental specificity scores.
+#' Main function to calculate environmental specificity scores.
 #'
 #' Some particularly relevant global options are:
 #' \describe{
@@ -771,7 +771,14 @@ clr <- function(mtx, pc = 0.5) {
 #' @param pdata Named numeric vector giving priors per environment.
 #' @param b.optim If not NULL, use this value for the regularization parameter
 #'     $b$, otherwise optimize it.
-#' @return An additively-smoothed estimate of taxon prevalences.
+#' @return A list with the following components:
+#' \describe{
+#'   \item{b.optim}{Shrinkage parameter b obtained through optimization}
+#'   \item{ess}{Logit-transformed, shrunken estimates of specificity.}
+#'   \item{regularized}{Non-transformed regularized values.}
+#'   \item{priors}{Values of priors.}
+#'   \item{phenoP}{Prior for environment of interest.}
+#' } 
 #' @export
 calc.ess <- function(abd.meta,
                      pdata = NULL,
@@ -856,6 +863,137 @@ calc.ess <- function(abd.meta,
         phenoP=phenoP))
 }
 
+### Wrap ashr with default parameters
+
+#' Wrapper function to perform adaptive shrinkage.
+#'  TODO make user-configurable
+#'
+#' @param m Estimates of parameter of interest.
+#' @param s Standard errors of parameters of interest.
+#' @param nw Null weight (default=10).
+#' @param ashr_df Degrees of freedom (default=5)
+#' @return A vector giving shrunken estimates of parameter.
+ash_wrapper <- function(m, s, nw=10, ashr_df=5) {
+    ashr::ash(m, s,
+            mixcompdist="halfuniform",
+            prior="nullbiased",
+            nullweight=nw,
+            df=ashr_df)
+}
+### calculate differential abundance
+
+#' Main function to calculate differential abundances using either ANCOMBC2
+#' or MaAsLin2, then smooth the results with adaptive shrinkage. Note that the
+#' packages for ANCOMBC2 or MaAsLin2 must already be installed.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{env_column}{String. Name of column in metadata file containing the
+#'   environment annotations.}
+#'   \item{dset_column}{String. Name of column in metadata file containing the
+#'   dataset annotations. Will be incorporated as a "nuisance" variable.}
+#'   \item{diff_abund_method}{String. Either "ANCOMBC2" or "Maaslin2" (case 
+#'   insensitive).}
+#' }
+#'
+#' @param abd.meta A list giving an abundance matrix and metadata.
+#' @return A vector giving shrunken estimates of differential abundance.
+#' @export
+ashr.diff.abund <- function(abd.meta,
+                            ...) {
+  opts <- clone_and_merge(PZ_OPTIONS, ...)
+  categorical <- opts('categorical')
+  envir <- opts('which_envir')
+  E <- opts('env_column')
+  D <- opts('dset_column')
+  S <- opts('sample_column')
+  M <- tolower(opts('diff_abund_method'))
+  if (!(M %in% c('ancombc2', 'maaslin2'))) {
+    pz.error(paste0("method ", M, " not recognized (see help)"))
+  }
+  if (categorical) {
+    env_levels <- levels(abd.meta$metadata[[E]])
+    if (!(envir %in% env_levels)) {
+      pz.error(paste0("environment ", envir, " not found in metadata"))
+    }
+  } else {
+    abd.meta$metadata[[E]] <- as.numeric(abd.meta$metadata[[E]])
+    if (all(is.na(abd.meta$metadata[[E]]))) {
+      pz.error("Environment failed conversion to numeric; is this supposed to be a categorical variable?")
+    }
+  }
+  # Both tools expect rownames to be sample IDs
+  named_metadata <- data.frame(
+    abd.meta$metadata[, setdiff(colnames(abd.meta$metadata), S)]
+  )
+
+  rownames(named_metadata) <- abd.meta$metadata[[S]]
+  if (M=="ancombc2") { 
+    named_metadata <- named_metadata %>%
+	    mutate(across(c(E, D), as.factor))
+    if (length(levels(named_metadata[[D]])) < 2) {
+      ancom_formula = E
+      } else {
+      ancom_formula = paste0(E, "+", D)
+    }
+    if (length(levels(named_metadata[[E]])) < 2) {
+      pz.error("For abundance there must be at least two different environments")
+    }
+    named_metadata <- named_metadata %>%
+	    filter(!is.na(E) | !is.na(D))
+    # Make sure they are in the same order
+    named_metadata <- named_metadata[match(colnames(abd.meta$mtx), rownames(named_metadata)), ]
+    ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
+      assays=S4Vectors::SimpleList(counts=abd.meta$mtx),
+      colData=S4Vectors::DataFrame(named_metadata))
+    
+    ancom_results <- ANCOMBC::ancombc2(ancom_tse,
+                              assay_name="counts",
+                              fix_formula=ancom_formula)
+    ancom_results_tbl <- ancom_results$res %>% tibble()
+    envir_stem <- paste0("env", envir)
+    lfc_col <- paste0("lfc_", envir_stem)
+    se_col <- paste0("se_", envir_stem)
+    ancom_ash <- ash_wrapper(dplyr::select(ancom_results_tbl,
+                                           taxon,
+                                           !!(lfc_col)) %>% deframe,
+                             dplyr::select(ancom_results_tbl,
+                                           taxon,
+                                           !!(se_col)) %>% deframe)
+    sample_ashr <- as_tibble(ancom_ash$result, rownames="species")
+  } else if (M=="maaslin2") {
+    # Note:: This method is not working for ANY of the datasets we have as Maaslin2 is
+    # constructing the complex models we need. Due to this, I have set an error to be 
+    # thrown if this option is selected and it fails. Not sure how else to handle this
+    tryCatch({
+	    maaslin_res <- Maaslin2::Maaslin2(input_data=as.data.frame(as.matrix(abd.meta$mtx)),
+                            input_metadata=as.data.frame(named_metadata),
+                            fixed_effects=paste0(E, ",", D),
+                            output="temp/",
+                            plot_heatmap = FALSE,
+                            plot_scatter = FALSE)
+            maaslin_results_tbl <- maaslin_res$results %>% tibble() %>%
+		    dplyr::filter(metadata==E, value==envir) 
+  
+            if (any(is.na(maaslin_results_tbl$coef)) || any(is.na(maaslin_results_tbl$stderr))) {
+		    pz.error("Error: Missing values found in coef or stderr columns.")
+            }
+            maaslin_ash <- ash_wrapper(dplyr::select(maaslin_results_tbl, feature, coef) %>% deframe,
+                               dplyr::select(maaslin_results_tbl, feature, stderr) %>% deframe)
+            sample_ashr <- as_tibble(maaslin_ash$result, rownames="species")
+    }, error = function(e) {
+	    pz.error("Something went wrong with Maaslin2. Normally this is because the data is ill suited for this method; however, if you believe this to not be the case please file a bug report.")
+    })
+  } else {
+    pz.error("This shouldn't be possible, but somehow an incorrect differential abundance method was selected")
+  }
+  sample_pheno <- sample_ashr %>%
+    dplyr::select(species, PosteriorMean) %>%
+    deframe
+  return(sample_pheno)
+}
+
+
 #' Throw an error and optionally log it in errmsg.txt.
 #'
 #' Some particularly relevant global options are:
@@ -929,7 +1067,7 @@ pz.warning <- function(msgtext, ...) {
 #' @export
 make.results.matrix <- function(results) {
     Reduce(rbind, lapply(names(results), function(rn) {
-        data.frame(phylum = rn,
+        data.frame(taxon = rn,
                    gene = results[[rn]] %>% colnames,
                    effect.size = results[[rn]][1,],
                    p.value = results[[rn]][2,],
@@ -947,7 +1085,7 @@ make.results.matrix <- function(results) {
 #'   association with the phenotype.}
 #' }
 #' @param pz.db A database for use with *phylogenize* analyses.
-#' @param phy.with.sigs A vector of strings giving which phyla had significant
+#' @param phy.with.sigs A vector of strings giving which taxa had significant
 #'     results.
 #' @return A single data frame with entries from \code{results}.
 #' @export
@@ -971,14 +1109,29 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 
 #' Add gene descriptions to significant results; return in a tibble.
 #'
-#' @param phy.with.sigs Character vector giving the phyla with significant hits.
-#' @param pos.sig List of character vectors, one per phylum, of significant hits.
+#' @param phy.with.sigs Character vector giving the taxa with significant hits.
+#' @param pos.sig List of character vectors, one per species, of significant hits.
 #' @param gene.to.fxn Data frame used to annotate genes to functions.
 #' @return A single data frame of all significant results plus descriptions.
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
-    pos.sig.tbl <- enframe(pos.sig, name="phylum", value="gene") %>% unnest
-    pos.sig.descs <- left_join(pos.sig.tbl,
+    pos.sig.tbl <- enframe(pos.sig, name="taxon", value="gene") %>% unnest
+    
+    column_names <- colnames(gene.to.fxn)
+    na_columns <- which(is.na(column_names))
+    if (length(na_columns) > 0) {
+        for (i in seq_along(na_columns)) {
+            column_names[na_columns[i]] <- paste0("NA_col_", i)
+        }
+    }
+    colnames(gene.to.fxn) <- column_names
+   
+    # Ensure they are the same type and are not doubles
+    gene.to.fxn <- gene.to.fxn %>%
+	    mutate(gene = as.character(gene)) 
+    pos.sig.tbl <- pos.sig.tbl %>%
+	    mutate(gene = as.character(gene))
+    pos.sig.descs <- dplyr::left_join(pos.sig.tbl,
                                gene.to.fxn,
                                by="gene") %>%
         rename(description=`function`)

@@ -9,6 +9,7 @@ default_params <- list(
     devel_pkgdir = 'package/phylogenize',
     dset_column = "dataset",
     env_column = "env",
+    taxon_level = "phylum",
     error_to_file = TRUE,
     gene_color_absent = 'black',
     gene_color_present = 'slateblue2',
@@ -45,59 +46,15 @@ default_params <- list(
     vsearch_outfile = "output_assignments.txt",
     which_envir = "stool",
     which_phenotype = "prevalence",
+    phenotype_file = "phenotype.tsv",
+    categorical = TRUE,
+    diff_abund_method = "maaslin2",
     working_dir = '.'
 )
 
 
 # Options given by user
-PZ_OPTIONS <- options_manager(
-    abundance_file = default_params["abundance_file"][[1]],
-    assume_below_LOD = default_params["assume_below_LOD"][[1]],
-    biom_file = default_params["biom_file"][[1]],
-    db = default_params["db"][[1]],
-    data_dir = default_params["data_dir"][[1]],
-    devel = default_params["devel"][[1]],
-    devel_pkgdir = default_params["devel_pkgdir"][[1]],
-    dset_column = default_params["dset_column"][[1]],
-    env_column = default_params["env_column"][[1]],
-    error_to_file = default_params["error_to_file"][[1]],
-    gene_color_absent = default_params["gene_color_absent"][[1]],
-    gene_color_present = default_params["gene_color_present"][[1]],
-    input_format = default_params["input_format"][[1]],
-    linearize = default_params["linearize"][[1]],
-    meas_err = default_params["meas_err"][[1]],
-    metadata_file = default_params["metadata_file"][[1]],
-    min_fx = default_params["min_fx"][[1]],
-    minimum = default_params["minimum"][[1]],
-    ncl = default_params["ncl"][[1]],
-    output_file = default_params["output_file"][[1]],
-    out_dir = default_params["out_dir"][[1]],
-    pctmin = default_params["pctmin"][[1]],
-    phenotype_file = default_params["phenotype_file"][[1]],
-    prev_color_high = default_params["prev_color_high"][[1]],
-    prev_color_low = default_params["prev_color_low"][[1]],
-    prior_file = default_params["prior_file"][[1]],
-    prior_type = default_params["prior_type"][[1]],
-    relative_out_dir = default_params["relative_out_dir"][[1]],
-    sample_column = default_params["sample_column"][[1]],
-    separate_process = default_params["separate_process"][[1]],
-    single_dset = default_params["single_dset"][[1]],
-    skip_graphs = default_params["skip_graphs"][[1]],
-    spec_color_high = default_params["spec_color_high"][[1]],
-    spec_color_low = default_params["spec_color_low"][[1]],
-    spec_color_mid = default_params["spec_color_mid"][[1]],
-    treemin = default_params["treemin"][[1]],
-    type_16S = default_params["type_16S"][[1]],
-    use_rmd_params = default_params["use_rmd_params"][[1]],
-    vsearch_16sfile = default_params["vsearch_16sfile"][[1]],
-    vsearch_cutoff = default_params["vsearch_cutoff"][[1]],
-    vsearch_dir = default_params["vsearch_dir"][[1]],
-    vsearch_infile = default_params["vsearch_infile"][[1]],
-    vsearch_outfile = default_params["vsearch_outfile"][[1]],
-    which_envir = default_params["which_envir"][[1]],
-    which_phenotype = default_params["which_phenotype"][[1]],
-    working_dir = default_params["working_dir"][[1]]
-)
+PZ_OPTIONS <- options_manager(.list=default_params)
 
 #' Set and get options for phylogenize.
 #'
@@ -119,7 +76,6 @@ PZ_OPTIONS <- options_manager(
 #'   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
 #'   \item{separate_metadata}{Boolean. For BIOM data, is there a separate tabular abundance table? Default: FALSE}
 #'   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_gtdb.frn"}
-#'   \item{vsearch_bin}{String. File name of the binary of the aligner. Default: "vsearch"}
 #'   \item{vsearch_dir}{String. Path where the binary of the aligner is found. Default: "/usr/local/bin/"}
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk and then read into the aligner. Default: "input_seqs.txt"}
 #'   \item{vsearch_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
@@ -128,22 +84,26 @@ PZ_OPTIONS <- options_manager(
 #' @section Computing phenotypes:
 #' \describe{
 #'   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
-#'   \item{db}{String. Type of data to use, gtdb or uhgp. Default: "gtdb"}
+#'   \item{db}{String. Which database to use. Can be "gtdb" or "uhgp." Default: "gtdb"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
 #'   \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}
+#'   \item{taxon_level}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
 #'   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
 #'   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: TRUE}
 #'   \item{min_fx}{Positive double. Effects that are significantly equivalent to this effect size will be excluded from significant positive hits. If zero, the equivalence test will be skipped. Default: 0}
 #'   \item{minimum}{Integer. A particular gene must be observed, and also absent, at least this many times to be reported as a significant positive association with the phenotype. Default: 3}
 #'   \item{ncl}{Integer. Number of cores to use for parallel computation. Default: 1}
-#'   \item{pctmin}{Float. A phylum must have at least this percent of observed representatives in order to be processed. Default: 0.01}
+#'   \item{pctmin}{Float. A taxon must have at least this percent of observed representatives in order to be processed. Default: 0.01}
 #'   \item{prior_type}{String. What type of prior to use ("uninformative" or "file"). Default: "uninformative"}
 #'   \item{single_dset}{Boolean. If true, will assume that all samples come from a single dataset called \code{dset1} no matter what, if anything, is in \code{dset_column}. Default: FALSE}
-#'   \item{treemin}{Integer. A phylum must have at least this many representatives in order to be processed. Default: 5}
-#'   \item{type_16S}{Boolean. If 16S data other wise shotgun data is assumed. Default: False}
+#'   \item{treemin}{Integer. A taxon must have at least this many representatives in order to be processed. Default: 5}
+#'   \item{type_16S}{Boolean. If 16S data, TRUE, otherwise shotgun data is assumed. Default: FALSE}
 #'   \item{vsearch_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using vsearch. Default: 0.985}
-#'   \item{which_envir}{String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. Default: "Stool"}
-#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence" or "specificity"). Default: "prevalence"}
+#'   \item{which_envir}{String. Environment for which prevalence, specificity, or differential abundance scores will be the phenotype of interest. Must match annotations in metadata. Default: "Stool"}
+#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence", "specificity", "abundance", "provided"). Default: "prevalence"}
+#'   \item{phenotype_file}{String. If phenotype is provided, what is the path to the file? Default: "phenotype.tsv"}
+#'   \item{categorical}{Boolean. For abundance estimates, is the environment in env_column a categorical variable (TRUE) or continuous (FALSE)? Default: TRUE}
+#'   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "Maaslin2"}
 #' }
 #'
 #' @section Graphing:
