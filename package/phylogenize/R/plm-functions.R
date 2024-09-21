@@ -942,9 +942,9 @@ ashr.diff.abund <- function(abd.meta,
     named_metadata <- named_metadata %>%
 	    filter(!is.na(E) | !is.na(D))
     # Make sure they are in the same order
-    named_metadata <- named_metadata[match(colnames(abd.meta$abund_mtx), rownames(named_metadata)), ]
+    named_metadata <- named_metadata[match(colnames(abd.meta$mtx), rownames(named_metadata)), ]
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
-      assays=S4Vectors::SimpleList(counts=abd.meta$abund_mtx),
+      assays=S4Vectors::SimpleList(counts=abd.meta$mtx),
       colData=S4Vectors::DataFrame(named_metadata))
     
     ancom_results <- ANCOMBC::ancombc2(ancom_tse,

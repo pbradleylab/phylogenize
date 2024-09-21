@@ -47,13 +47,11 @@ read.abd.metadata <- function(...) {
         abd.meta <- process.16s(abd.meta, ...)
     }
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
-    if (opts('which_phenotype') == 'abundance') {
-    	# So abundance needs a non-binary so what we will do is not
-	abd.meta$mtx <- as.matrix(abd.meta$mtx)
-    	abd.meta$abund_mtx <- as.matrix(abd.meta$abund_mtx)
-    } else {
-    	# binarize to save memory usage since we care about pres/abs
+    if (opts('which_phenotype') != 'abundance') {
+	# binarize to save memory usage since we care about pres/abs
 	abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+    } else {
+        abd.meta$mtx <- abd.meta$mtx
     }
     gc()
     return(abd.meta)
@@ -435,7 +433,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     }
     abd.meta$mtx <- abd.meta$mtx[, wcols, drop=FALSE]
     abd.meta$mtx <- remove.allzero.abundances(abd.meta$mtx)
-    abd.meta
+    return(abd.meta)
 }
 
 #--- Process 16S data---#
@@ -924,8 +922,10 @@ add.below.LOD <- function(pz.db, abd.meta, ...) {
         abd.meta$mtx <- rbind(abd.meta$mtx, taxa.zero)
     }
     # Make sure still binary
-    abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
-    abd.meta
+    if(opts('which_phenotype') != 'abundance'){
+        abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+    }
+    return(abd.meta)
 }
 
 #' Modify trees to retain only observed taxa (for use with specificity only).
@@ -965,6 +965,7 @@ clean.pheno <- function(phenotype, pz.db) {
     tips <- Reduce(union, lapply(pz.db$trees, function(x) x$tip.label))
     cols <- Reduce(union, lapply(pz.db$gene.presence, colnames))
     valid.names <- intersect(tips, cols)
+    pz.error(names(phenotype))
     phenotype[intersect(names(phenotype), valid.names)]
 }
 
@@ -1111,6 +1112,8 @@ plot.phenotype.trees <- function(phenotype,
     if (any(!(names(trees) %in% names(scale$phy.limits)))) {
         pz.error("taxon-specific limits must be calculated for every tree")
     }
+    write.csv(phenotype, "abund.tsv")
+    pz.error()
     plotted.pheno.trees <- lapply(names(trees), function(tn) {
         tryCatch({gg.cont.tree(trees[[tn]],
                                phenotype,
