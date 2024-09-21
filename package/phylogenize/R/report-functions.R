@@ -965,7 +965,6 @@ clean.pheno <- function(phenotype, pz.db) {
     tips <- Reduce(union, lapply(pz.db$trees, function(x) x$tip.label))
     cols <- Reduce(union, lapply(pz.db$gene.presence, colnames))
     valid.names <- intersect(tips, cols)
-    pz.error(names(phenotype))
     phenotype[intersect(names(phenotype), valid.names)]
 }
 
