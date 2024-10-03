@@ -780,8 +780,9 @@ change.tree.tax.level <- function(tree, taxon, tax){
   
  	 	# Process each split name
  		for (j in seq_along(split_names)) {
-    			tips <- tr$tip.label
-    			subtree <- ape::keep.tip(tr, tips)
+    			split_tips <- t %>%
+				filter(family == split_names[[j]])
+    			subtree <- ape::keep.tip(tr, split_tips[["cluster"]])
     			tree_matrices[[split_names[j]]] <- subtree    
   		}
 	}
