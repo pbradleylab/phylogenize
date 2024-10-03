@@ -691,7 +691,6 @@ change.presence.tax.level <- function(binary, taxon, tax){
         # Arrange them so that the runtime is slightly less in the lookup
 	clean <- clean %>%
 		group_by(across(all_of(taxon))) %>%
-		filter(n() > 1) %>%
 		ungroup() %>%
 		arrange(phylum, !!sym(taxon)) %>%
 		mutate(cluster := as.character(cluster))
@@ -724,7 +723,9 @@ change.presence.tax.level <- function(binary, taxon, tax){
      
         	for (j in 1:length(split_names)){
 			union <- intersect(split_taxs[[j]], columns)
-			binary_matrices[[split_names[j]]] <- b[, union, drop = FALSE]
+			if (length(union) > 1){
+			   binary_matrices[[split_names[j]]] <- b[, union, drop = FALSE]
+			}
         	}
         }
 	return(binary_matrices)
@@ -753,7 +754,6 @@ change.tree.tax.level <- function(tree, taxon, tax){
 	# Arrange them so that the runtime is slightly less in the lookup
 	clean <- clean %>%
   		group_by(across(all_of(taxon))) %>%
-  		filter(n() > 1) %>%
   		ungroup() %>%
   		arrange(phylum, !!sym(taxon)) %>%
   		mutate(cluster := as.character(cluster))
@@ -770,8 +770,9 @@ change.tree.tax.level <- function(tree, taxon, tax){
   		name <- names[i]
   		tr <- tree[[name]]
   		t <- clean[[name]]
-  
+ 
   		# Generate a list of unique split names based on taxon
+		
   		split_names <- t %>%
     			group_split(!!sym(taxon)) %>%
     			map(~ pull(.x, !!sym(taxon))) %>%
@@ -780,11 +781,15 @@ change.tree.tax.level <- function(tree, taxon, tax){
   
  	 	# Process each split name
  		for (j in seq_along(split_names)) {
+			tips <- tr$tip.label
     			split_tips <- t %>%
 				filter(family == split_names[[j]])
-    			subtree <- ape::keep.tip(tr, split_tips[["cluster"]])
-    			tree_matrices[[split_names[j]]] <- subtree    
-  		}
+    			tips <- intersect(tips, split_tips[["cluster"]])
+			subtree <- ape::keep.tip(tr, tips)
+    			if (!is.null(subtree) && length(subtree$tip.label) > 1) {
+			   tree_matrices[[split_names[j]]] <- subtree    
+			}
+		}
 	}
 	return(tree_matrices)
 }
