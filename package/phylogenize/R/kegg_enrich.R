@@ -28,12 +28,17 @@ multi.kegg.enrich <- function(sigs, signs, pid_to_ko, dirxn=1) {
                                    })
                                    dplyr::bind_rows(all_cutoffs)
                                  })
-  out <- dplyr::bind_rows(enrichment_tbls) %>% # Put together and add direction of enrichment
-    separate_wider_delim(cols = GeneRatio, delim="/", names=c("GeneNum","GeneDenom")) %>%
-    separate_wider_delim(cols = BgRatio, delim="/", names=c("BgRatioNum", "BgRatioDenom")) %>%
-    mutate(enr.estimate =
-             (as.numeric(GeneNum)/as.numeric(GeneDenom))/
-             (as.numeric(BgRatioNum)/as.numeric(BgRatioDenom)))
+  out <- tryCatch({
+    dplyr::bind_rows(enrichment_tbls) %>%  # Put together and add direction of enrichment
+      separate_wider_delim(cols = GeneRatio, delim = "/", names = c("GeneNum", "GeneDenom")) %>%
+      separate_wider_delim(cols = BgRatio, delim = "/", names = c("BgRatioNum", "BgRatioDenom")) %>%
+      mutate(enr.estimate =
+             (as.numeric(GeneNum) / as.numeric(GeneDenom)) /
+             (as.numeric(BgRatioNum) / as.numeric(BgRatioDenom)))
+  }, error = function(e) {
+    message("An error occurred: ", e$message)
+    return(NULL)
+  })
   return(out)
 }
 

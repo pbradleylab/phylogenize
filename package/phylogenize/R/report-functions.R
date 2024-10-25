@@ -728,6 +728,7 @@ change.presence.tax.level <- function(binary, taxon, tax){
 			}
         	}
         }
+	binary_matrices <- Filter(function(b) length(colnames(b)) > 1, binary_matrices)
 	return(binary_matrices)
 }
 
@@ -791,6 +792,7 @@ change.tree.tax.level <- function(tree, taxon, tax){
 			}
 		}
 	}
+	tree_matrices <- Filter(function(tr) length(tr$tip.label) > 1, tree_matrices)
 	return(tree_matrices)
 }
 
@@ -839,6 +841,7 @@ import.pz.db <- function(...) {
     if(opts('taxon_level') != "phylum"){
 	    gene.presence <- change.presence.tax.level(gene.presence, opts('taxon_level'), taxonomy)
 	    trees <- change.tree.tax.level(trees, opts('taxon_level'), taxonomy)
+	    trees <- Filter(function(tr) length(tr$tip.label) > 1, trees)
     }
     
     # finished
@@ -1043,8 +1046,13 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
     phenoLimitsTaxon <- lapply(trees, function(tr) {
         phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>%
             na.omit
-        quantile(unique(phi), c(0.2, 0.8))
+	if (length(unique(phi)) > 1) {
+		quantile(unique(phi), c(0.2, 0.8))
+        } else {
+                return(NULL)
+        }
     })
+    #phenoLimitsTaxon[!sapply(phenoLimitsTaxon, is.null)]
     phenoColors <- c(low.col=opts('prev_color_low'),
                      high.col=opts('prev_color_high'))
     return(list(limits=phenoLimits,
@@ -1118,26 +1126,24 @@ plot.phenotype.trees <- function(phenotype,
         pz.error("taxon-specific limits must be calculated for every tree")
     }
     plotted.pheno.trees <- lapply(names(trees), function(tn) {
-        tryCatch({gg.cont.tree(trees[[tn]],
-                               phenotype,
-                               cLimits=scale$phy.limits[[tn]],
-                               colors=scale$colors,
-                               cName=paste0(tn,
-                                            ": ",
-                                            opts('which_phenotype')),
-                               plot=FALSE)},
-                 error=function(e) {
-                     pz.warning(e)
-                     NA
-                 })
-    })
-    names(plotted.pheno.trees) <- names(trees)
-    plotted.pheno.trees <- plotted.pheno.trees[vapply(plotted.pheno.trees, is.list, TRUE)]
-    if (length(plotted.pheno.trees) == 0) {
-        pz.warning("No trees were plotted: too few taxa for any taxon?")
+					  tryCatch(
+                                              gg.cont.tree(trees[[tn]], phenotype, cLimits=scale$phy.limits[[tn]],colors=scale$colors,cName=tn,plot=FALSE),
+					      error = function(e) {
+						message(paste("Error in tree", tn, ": ", e$message))
+					        return(NULL)
+					      })
+                                 })
+
+    if(!is.null(plotted.pheno.trees)) {
+       names(plotted.pheno.trees) <- names(trees)
+       plotted.pheno.trees <- plotted.pheno.trees[vapply(plotted.pheno.trees, is.list, TRUE)]
+       if (length(plotted.pheno.trees) == 0) {
+          pz.warning("No trees were plotted: too few taxa for any taxon?")
+       }
+       return(plotted.pheno.trees)
     }
-    plotted.pheno.trees
 }
+    
 
 #' Plot distributions of a phenotype across taxa.
 #'
