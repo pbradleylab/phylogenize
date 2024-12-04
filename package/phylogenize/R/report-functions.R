@@ -165,7 +165,7 @@ read.abd.metadata.biom <- function(...) {
         if (!(file.exists(mf))) {
             pz.error(paste0("file not found: ", mf))
         } else { pz.message(paste0("located metadata file: ", mf)) }
-        metadata <- data.frame(data.table::fread(mf))
+        metadata <- readr::read_tsv(mf)
         metadata <- check.process.metadata(metadata, ...)
     }
     rm(biomf); gc()
@@ -195,8 +195,8 @@ read.abd.metadata.tabular <- function(...) {
     if (!(file.exists(mf))) {
         pz.error(paste0("file not found: ", mf))
     } else { pz.message(paste0("located metadata file: ", mf)) }
-    abd.mtx <- fastread(af, cn=FALSE)
-    metadata <- data.frame(data.table::fread(mf))
+    abd.mtx <- readr::read_tsv(af)
+    metadata <- readr::read_tsv(mf)
     metadata <- check.process.metadata(metadata, ...)
     if (opts('which_phenotype') == "abundance"){
     	return(list(mtx=abd.mtx, abund_mtx=abd.mtx, metadata=metadata))
@@ -575,7 +575,7 @@ get.vsearch.results <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     # map to MIDAS IDs using vsearch
     assignments <- data.frame(
-        data.table::fread(opts('vsearch_outfile')))
+        readr::read_tsv(opts('vsearch_outfile')))
     row.hits <- as.numeric(gsub("Row", "", assignments[, 1]))
     row.targets <- sapply(assignments[, 2],
                           function(x) strsplit(x, ";;")[[1]][3])
@@ -816,6 +816,11 @@ import.pz.db <- function(...) {
 	    trees <- readRDS(file.path(opts('data_dir'), "uhgp-trees.rds"))
 	    taxonomy <- read_csv(file.path(opts('data_dir'),"uhgp-taxonomy.csv"))
 	    gene.to.fxn <- read_csv(file.path(opts('data_dir'), "uhgp.functions"))
+    }   else if (opts('db') == "midas1.2") {
+        gene.presence <- readRDS(file.path(opts('data_dir'), "MIDAS-gene-presence-binary-1.2.rds"))
+        trees <- readRDS(file.path(opts('data_dir'), "MIDAS_1.2-trees.rds"))
+        taxonomy <- read_csv(file.path(opts('data_dir'),"MIDAS_1.2-taxonomy.csv"))
+        gene.to.fxn <- read_csv(file.path(opts('data_dir'), "uhgp.functions"))
     } else {
             pz.error(paste0("Unknown data type ", opts('db')))
     }
