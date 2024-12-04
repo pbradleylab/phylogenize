@@ -53,6 +53,7 @@ tree.to.dist <- function(tree) {
 #'
 #' @param phy A \code{phylo} object.
 #' @param ctrait A named numeric vector assigning trait values to tree tips.
+#' @param taxonomy A dataframe with the taxonomic information.
 #' @param cAnc Calculated ancestry for continuous trait; if this is NULL, it is calculated.
 #' @param model Model for calculating ancestry (see phytools::fastAnc).
 #' @param cLimits Scale bar limits for plotting continuous trait.
@@ -69,6 +70,7 @@ tree.to.dist <- function(tree) {
 #' @export
 gg.cont.tree <- function(phy,
                          ctrait,
+			 taxonomy,
                          cAnc = NULL,
                          model = "ARD",
                          cLimits = logit(c(0.025, 0.1)),
@@ -87,9 +89,10 @@ gg.cont.tree <- function(phy,
   if (!is.null(restrict)) {
     ctrait <- ctrait[intersect(names(ctrait), restrict)]
   }
+
   if (is.null(n)) { n <- intersect(phy$tip.label, names(ctrait)) }
   kept_tips <- keep.tips(phy, n)
-
+   
   if(!is.null(kept_tips)) {
      if(is.null(reduced.phy)) {reduced.phy <- fix.tree(kept_tips)}
         pz.message("getting continuous trait ancestry")
@@ -115,7 +118,10 @@ gg.cont.tree <- function(phy,
                                                guide = "colorbar",
                                                name = cName)
         }
-        # plot trees
+	cluster_to_species <- setNames(taxonomy$species, taxonomy$cluster)
+        reduced.phy$tip.label <- cluster_to_species[reduced.phy$tip.label]
+
+	# plot trees
         if (reverse) {
            ctree <- ggtree::ggtree(reduced.phy,
                               ladderize = ladderize,
@@ -128,8 +134,13 @@ gg.cont.tree <- function(phy,
            cColors + ggplot2::theme(legend.position = "bottom")
         }
 
-        if (plot) print(ctree)
-        
+        if (plot) {
+		ctree +
+			ggiraph::geom_tippoint_interactive(aes(tooltip = label), size = 2) +
+			ggiraph::geom_tiplab_interactive(aes(tooltip = label))
+		girafe(ggobj = ctree)
+	}
+
         return(list(tree = ctree,
               cAnc = cAnc,
               rphy = reduced.phy,

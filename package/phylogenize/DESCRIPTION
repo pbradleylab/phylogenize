@@ -38,6 +38,7 @@ Imports:
     knitr,
     kableExtra,
     scales,
+    ggiraph,
     xml2,
     ggplot2,
     MASS,

@@ -1113,12 +1113,14 @@ get.pheno.plotting.scales.specificity <- function(phenotype,
 #'
 #' @param phenotype A named vector with the phenotype values for each taxon.
 #' @param trees A list of trees.
+#' @param taxonomy A dataframe with the taxonomix information.
 #' @param scale A list returned from \code{get.pheno.plotting.scales}.
 #' @return A list of ggtree objects in which the phenotype has been plotted
 #'     across each tree in \code{trees}.
 #' @export plot.phenotype.trees
 plot.phenotype.trees <- function(phenotype,
                                  trees,
+				 taxonomy,
                                  scale,
                                  ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -1126,12 +1128,12 @@ plot.phenotype.trees <- function(phenotype,
         pz.error("taxon-specific limits must be calculated for every tree")
     }
     plotted.pheno.trees <- lapply(names(trees), function(tn) {
-					  tryCatch(
-                                              gg.cont.tree(trees[[tn]], phenotype, cLimits=scale$phy.limits[[tn]],colors=scale$colors,cName=tn,plot=FALSE),
-					      error = function(e) {
-						message(paste("Error in tree", tn, ": ", e$message))
-					        return(NULL)
-					      })
+					 # tryCatch(
+                                              gg.cont.tree(trees[[tn]], phenotype, taxonomy, cLimits=scale$phy.limits[[tn]], colors=scale$colors, cName=tn, plot=FALSE)#,
+					      #error = function(e) {
+					#	message(paste("Error in tree", tn, ": ", e$message))
+					#        return(NULL)
+					#      })
                                  })
 
     if(!is.null(plotted.pheno.trees)) {
@@ -1253,18 +1255,14 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 		    ggplot2::xlim(xlim[1], xlim[2])
 	    fn <- knitr::fig_path('svg', number = pn)
 
-	    #new.tr + geom_tiplab() + xlim(NA, 5)
-            # Make the labels as species not the midas id
-	    non.interactive.plot(new.tr, fn)
+	    new.tr + geom_tiplab() + xlim(NA, 5)
+	    tryCatch(
+		     interactive.plot(new.tr, fn),
+		     error = function(e) {
+			    pz.message(e)
+			    non.interactive.plot(new.tr, fn)
+	    })
     }
-    #tree_list <- lapply(plotted.pheno.trees, function(tree) {
-    #    pz.error(tree)        
-    #})
-
-    #interactive_plot_list <- lapply(plotted.pheno.trees, plot.interactive.tree, phenotype)
-    #for (i in seq_along(interactive_plot_list)) {
-    #    plot.tree.with.phenotype(tree_list[[i]], phenotype_data, paste0("tree_plot_", i, ".svg"))
-    #}
 }
 
 
