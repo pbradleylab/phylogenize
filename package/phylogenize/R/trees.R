@@ -47,6 +47,37 @@ tree.to.dist <- function(tree) {
   ((1 - (ape::vcv(tree, TRUE))) / 2) %>% as.dist
 }
 
+
+#' Helper function for gg.cont.tree
+#'
+#' \code{gg.cont.tree} generates the right internals for later use in plotting interactive trees.
+#'
+#' @param taxonomy A dataframe with the taxonomic information.
+#' @param reduced.phy A reduced phylogenetic tree (phylo)
+#' @param ctree a graphed phylogenetic tree object
+#' @return a graphed phylogenetic tree object with edited labels and color column
+change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
+	# Map the colors to the tree object directly to use ggplotly later for interactive trees
+        tax_filt <- taxonomy[taxonomy$cluster %in% reduced.phy$tip.label, c("species", "cluster")]
+        ctree_data <- merge(ctree$data, tax_filt, by.x = "label", by.y = "species", all.x = TRUE)
+        tax_colors <- data.frame(label = as.character(names(ctree$mapping$colour)),
+                   color = ctree$mapping$colour
+                   )
+        ctree_data <- merge(ctree_data, tax_colors, by = "label", all.x = TRUE)
+        ctree_data$color <- ifelse(is.na(ctree_data$color), 0, ctree_data$color)
+
+        # Make labels to be species name
+        colnames(taxonomy)[colnames(taxonomy) == "cluster"] <- "label"
+        ctree_data <- merge(ctree_data, taxonomy[c("label", "species")], by = "label")
+        ctree_data$label <- ctree_data$species
+
+        # Finally make the label switch for tree
+        ctree$data <- ctree_data
+
+	return(ctree)
+}
+
+
 #' Plot continuous trait on a tree.
 #'
 #' \code{gg.cont.tree} paints a continuous trait along a tree.
@@ -118,9 +149,6 @@ gg.cont.tree <- function(phy,
                                                guide = "colorbar",
                                                name = cName)
         }
-	#cluster_to_species <- setNames(taxonomy$species, taxonomy$cluster)
-        #species_to_keep <- cluster_to_species[reduced.phy$tip.label]
-	#reduced.phy$tip.label <- species_to_keep
 
 	# plot trees
         if (reverse) {
@@ -135,19 +163,21 @@ gg.cont.tree <- function(phy,
            cColors + ggplot2::theme(legend.position = "bottom")
         }
 
-	# Map the colors to the tree object directly to use ggplotly later for interactive trees
-	tax_filt <- taxonomy[taxonomy$cluster %in% reduced.phy$tip.label, c("species", "cluster")]
-	ctree_data <- merge(ctree$data, tax_filt, by.x = "label", by.y = "species", all.x = TRUE)
-	tax_colors <- data.frame(label = as.character(names(ctree$mapping$colour)),
+        # Make the plots so that they can be graphed interactively or non-interactively later on
+	ctree <- change_tree_plot_internals(taxonomy, reduced.phy, ctree)
+
 		   color = ctree$mapping$colour
 		   )
 	ctree_data <- merge(ctree_data, tax_colors, by = "label", all.x = TRUE)
         ctree_data$color <- ifelse(is.na(ctree_data$color), 0, ctree_data$color)
 
         # Make labels to be species name
-	pz.error(names(ctree_data))
-        ctree_data <- merge(ctree_data, tax_filt[c("species", "cluster")], by.x = "label", by.y = "species", all.x = TRUE)
-        pz.error(names(ctree_data))
+	colnames(taxonomy)[colnames(taxonomy) == "cluster"] <- "label"
+	ctree_data <- merge(ctree_data, taxonomy[c("label", "species")], by = "label")
+	ctree_data$label <- ctree_data$species
+
+	# Finally make the label switch for tree
+	ctree$data <- ctree_data
 
         if (plot) {ctree}
 

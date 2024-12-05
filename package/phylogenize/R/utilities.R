@@ -357,8 +357,14 @@ capwords <- function(words, USE.NAMES=FALSE) {
 #' @param file A filename where the final SVG output will be written.
 #' @export
 interactive.plot <- function(tree.obj, file) {
-	saveRDS(tree.obj, "tree.rds")
-	#pz.error()
+	valid_labels <- subset(tree$data, !is.na(label))
+	# Create the interactive tree with ggplotly
+	interactive_tree <- ggtree(as.phylo(tree)) +
+		geom_point(data = valid_labels, aes(text = label)) +  
+		geom_tiplab(data = valid_labels)  
+
+  interactive_tree <- ggplotly(interactive_tree, tooltip = "text")
+  #todo: add back in color
 }
 
 
