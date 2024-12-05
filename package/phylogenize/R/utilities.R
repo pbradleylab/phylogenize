@@ -358,7 +358,7 @@ capwords <- function(words, USE.NAMES=FALSE) {
 #' @export
 interactive.plot <- function(tree.obj, file) {
 	saveRDS(tree.obj, "tree.rds")
-	pz.error()
+	#pz.error()
 }
 
 
