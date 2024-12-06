@@ -166,8 +166,6 @@ gg.cont.tree <- function(phy,
         # Make the plots so that they can be graphed interactively or non-interactively later on
 	ctree <- change_tree_plot_internals(taxonomy, reduced.phy, ctree)
 
-		   color = ctree$mapping$colour
-		   )
 	ctree_data <- merge(ctree_data, tax_colors, by = "label", all.x = TRUE)
         ctree_data$color <- ifelse(is.na(ctree_data$color), 0, ctree_data$color)
 
