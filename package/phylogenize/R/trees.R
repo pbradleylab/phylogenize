@@ -166,17 +166,6 @@ gg.cont.tree <- function(phy,
         # Make the plots so that they can be graphed interactively or non-interactively later on
 	ctree <- change_tree_plot_internals(taxonomy, reduced.phy, ctree)
 
-	ctree_data <- merge(ctree_data, tax_colors, by = "label", all.x = TRUE)
-        ctree_data$color <- ifelse(is.na(ctree_data$color), 0, ctree_data$color)
-
-        # Make labels to be species name
-	colnames(taxonomy)[colnames(taxonomy) == "cluster"] <- "label"
-	ctree_data <- merge(ctree_data, taxonomy[c("label", "species")], by = "label")
-	ctree_data$label <- ctree_data$species
-
-	# Finally make the label switch for tree
-	ctree$data <- ctree_data
-
         if (plot) {ctree}
 
         return(list(tree = ctree,
