@@ -904,7 +904,7 @@ calc.ess <- function(abd.meta,
     }
     ids <- sapply(colnames(abd.meta$mtx),
                   function (sn) abd.meta$meta[(abd.meta$meta[[S]] == sn), E])
-    if (length(unique(ids)) < 2) {
+    if (length(unique(ids)) < 2) { 
         stop("error: only one environment found")
     }
     names(ids) <- colnames(abd.meta$mtx)
@@ -997,7 +997,8 @@ ashr.diff.abund <- function(abd.meta,
   S <- opts('sample_column')
   M <- tolower(opts('diff_abund_method'))
   if (!(M %in% c('ancombc2', 'maaslin2'))) {
-    pz.error(paste0("method ", M, " not recognized (see help)"))
+    pz.error(paste0("method ", M, " not recognized (se
+                    e help)"))
   }
   if (categorical) {
     env_levels <- levels(abd.meta$metadata[[E]])
@@ -1047,9 +1048,9 @@ ashr.diff.abund <- function(abd.meta,
                                            !!(se_col)) %>% deframe)
     sample_ashr <- as_tibble(ancom_ash$result, rownames="species")
   } else if (M=="maaslin2") {
-    # Note:: This method is broken as Maaslin2 is consisitant not constructing the complex models we need.
+    # Note:: This method is broken as Maaslin2 is consistently not constructing the complex models we need.
     # Due to this, I have set an error to be thrown if this option is selected 
-    pz.error("We apologize. Maaslin2 is not yet implemeted into this tool but we plan on it in a later release. Run with ancombc2 instead.")
+    pz.error("We apologize. Maaslin2 is not yet implemented into this tool, but we plan on it in a later release. Run with ANCOMBC2 instead.")
     maaslin_res <- Maaslin2::Maaslin2(input_data=as.data.frame(as.matrix(abd.meta$abund_mtx)),
                             input_metadata=named_metadata,
                             fixed_effects=paste0(E, ",", D),
