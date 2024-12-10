@@ -1129,12 +1129,12 @@ plot.phenotype.trees <- function(phenotype,
     }
 
     plotted.pheno.trees <- lapply(names(trees), function(tn) {
-					 #tryCatch(
-                                              gg.cont.tree(trees[[tn]], phenotype, taxonomy, cLimits=scale$phy.limits[[tn]], colors=scale$colors, cName=tn, plot=FALSE)#,
-					      #error = function(e) {
-					#	message(paste("Error in tree", tn, ": ", e$message))
-					#        return(NULL)
-					#      })
+					tryCatch(
+                                             gg.cont.tree(trees[[tn]], phenotype, taxonomy, cLimits=scale$phy.limits[[tn]], colors=scale$colors, cName=tn, plot=FALSE),
+					     error = function(e) {
+						message(paste("Error in tree", tn, ": ", e$message))
+					        return(NULL)
+					      })
                                  })
 
     if(!is.null(plotted.pheno.trees)) {

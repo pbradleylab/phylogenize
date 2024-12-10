@@ -140,9 +140,6 @@ pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
 pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
 plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pz.db$taxonomy, pheno.scale)
 
-saveRDS(plotted.pheno.trees, "plotted.pheno.trees.rds")
-pz.error("hit in the rmd script")
-
 # Template for plots
 template <- c(
     "### Page {{nm}}\n",
