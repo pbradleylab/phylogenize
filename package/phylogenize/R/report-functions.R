@@ -114,7 +114,7 @@ check.process.metadata <- function(metadata, ...) {
       if (!(envir %in% env_levels)) {
         pz.error(paste0("environment ", envir, " not found in metadata"))
       }
-      env_factor <- forcats::fct_relevel(env_factor, envir)
+      env_factor <- forcats::fct_relevel(env_factor, envir, after=Inf)
       metadata[[E]] <- env_factor
     } else {
       metadata[[E]] <- as.numeric(metadata[[E]])

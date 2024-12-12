@@ -1039,6 +1039,13 @@ ashr.diff.abund <- function(abd.meta,
     envir_stem <- paste0("env", envir)
     lfc_col <- paste0("lfc_", envir_stem)
     se_col <- paste0("se_", envir_stem)
+    for (ctest in c(lfc_col, se_col)) {
+        if (!(ctest %in% colnames(ancom_results_tbl))) {
+            pz.error(paste0("The column ", ctest, " was not found in the ",
+                            "ANCOMBC2 results. This should never happen and ",
+                            "should be reported as a bug."))
+        } 
+    }
     ancom_ash <- ash_wrapper(dplyr::select(ancom_results_tbl,
                                            taxon,
                                            !!(lfc_col)) %>% deframe,
@@ -1050,9 +1057,16 @@ ashr.diff.abund <- function(abd.meta,
     # Note:: This method is broken as Maaslin2 is consistently not constructing the complex models we need.
     # Due to this, I have set an error to be thrown if this option is selected 
     pz.error("We apologize. Maaslin2 is not yet implemented into this tool, but we plan on it in a later release. Run with ANCOMBC2 instead.")
-    maaslin_res <- Maaslin2::Maaslin2(input_data=as.data.frame(as.matrix(abd.meta$abund_mtx)),
+          ref_env_level <- levels(named_metadata[[E]])[1]
+          ref_dset_level <- levels(named_metadata[[D]])[1]
+          maaslin_res <- Maaslin2::Maaslin2(input_data=as.data.frame(as.matrix(abd.meta$abund_mtx)),
                             input_metadata=named_metadata,
-                            fixed_effects=paste0(E, ",", D),
+                            # this is a vector of strings
+                            fixed_effects=c(E, D),
+                            # this has to be a single string
+                            reference=paste0(ref_env_level,
+                                             ",",
+                                             ref_dset_level),
                             output="temp/",
                             plot_heatmap = FALSE,
                             plot_scatter = FALSE)
@@ -1067,7 +1081,12 @@ ashr.diff.abund <- function(abd.meta,
                                dplyr::select(maaslin_results_tbl, feature, stderr) %>% deframe)
   sample_ashr <- as_tibble(maaslin_ash$result, rownames="species")
   } else {
-    pz.error("This shouldn't be possible, but somehow an incorrect differential abundance method was selected")
+      pz.error(
+          paste0(
+              "This shouldn't be possible, but somehow an incorrect ",
+              "differential abundance method was selected"
+          )
+      )
   }
   sample_pheno <- sample_ashr %>%
     dplyr::select(species, PosteriorMean) %>%
