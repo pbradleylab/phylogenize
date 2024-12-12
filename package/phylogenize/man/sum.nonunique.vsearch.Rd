@@ -25,8 +25,6 @@ then sums any rows that mapped to the same MIDAS ID.
 Some particularly relevant global options are:
 \describe{
   \item{out_dir}{String. Path to output directory. Default: "output"}
-  \item{in_dir}{String. Path to input directory (i.e., where to look for
-  input files).}
   \item{data_dir}{String. Path to directory containing the data files
   required to perform a \emph{phylogenize} analysis. Default: on package
   load, this default is set to the result of \code{system.file("extdata",

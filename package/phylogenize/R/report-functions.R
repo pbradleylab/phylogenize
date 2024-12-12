@@ -195,7 +195,11 @@ read.abd.metadata.tabular <- function(...) {
     if (!(file.exists(mf))) {
         pz.error(paste0("file not found: ", mf))
     } else { pz.message(paste0("located metadata file: ", mf)) }
-    abd.mtx <- readr::read_tsv(af)
+    abd.df <- readr::read_tsv(af)
+    # convert to matrix
+    abd.mtx <- data.matrix(abd.df[, -1])
+    rownames(abd.mtx) <- abd.df[[1]]
+    # can remain as tbl
     metadata <- readr::read_tsv(mf)
     metadata <- check.process.metadata(metadata, ...)
     if (opts('which_phenotype') == "abundance"){
@@ -361,6 +365,9 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "in sample ID column"))
     }
     abd.meta$mtx <- abd.meta$mtx[, samples.present, drop=FALSE]
+    if (abund_mtx %in% names(abd.meta)) {
+        abd.meta$abund_mtx <- abd.meta$abund_mtx[, samples.present, drop=FALSE]
+    }
     abd.meta$metadata <- abd.meta$metadata[
                             abd.meta$metadata[[opts('sample_column')]] %in%
                             samples.present, ]
@@ -440,7 +447,6 @@ harmonize.abd.meta <- function(abd.meta, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk and
 #'   then read into vsearch/vsearch.}
 #' }
@@ -488,7 +494,6 @@ prepare.vsearch.input <- function(mtx, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#' input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences to be read into
 #' vsearch.}
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output which is
@@ -563,7 +568,6 @@ run.vsearch <- function(...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   input files).}
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output which is
 #'   then read back into \emph{phylogenize}.}
 #' }
@@ -592,7 +596,6 @@ get.vsearch.results <- function(...) {
 #' Some particularly relevant global options are:
 #' \describe{
 #'   \item{out_dir}{String. Path to output directory. Default: "output"}
-#'   input files).}
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis. Default: on package
 #'   load, this default is set to the result of \code{system.file("extdata",
@@ -628,7 +631,6 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk and
 #'   then read into vsearch.}
 #' }
@@ -860,7 +862,8 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     })
     tL <- vapply(species.per.tree, length, 1L)
     if (all(tL < opts('treemin'))) {
-        pz.error("Too few species found. Was the right database used?")
+        pz.error(paste0("Too few species found. Was the right database used? ",
+        "Are taxa named properly for this database?"))
     }
     passed.min <- nw(tL >= opts('treemin'))
     totalL <- vapply(pz.db$trees, function(tr) { length(tr$tip.label) }, 1L)
@@ -1509,16 +1512,16 @@ pheno_nonzero_var <- function(phenotype,taxa) {
 data_to_phenotypes <- function(save_data=FALSE, ...) {
     pz.options <- clone_and_merge(PZ_OPTIONS, ...)
     # Read in user-supplied data and metadata
-    abd.meta <- read.abd.metadata()
+    abd.meta <- read.abd.metadata(...)
     # Read in trees, gene presence/absence, taxonomy
-    pz.db <- import.pz.db()
+    pz.db <- import.pz.db(...)
     # Figure out how many trees to retain
-    pz.db <- adjust.db(pz.db, abd.meta)
+    pz.db <- adjust.db(pz.db, abd.meta, ...)
     if (pz.options('assume_below_LOD')) {
         abd.meta <- add.below.LOD(pz.db, abd.meta)
-        sanity.check.abundance(abd.meta$mtx)
+        sanity.check.abundance(abd.meta$mtx, ...)
     }
-    phenotype_results <- calculate_phenotypes(abd_meta, pz.db, ...)
+    phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
     if (pz.options('which_phenotype') %in% c("specificity", "abundance")) {
         # only retain observed taxa
         pz.db$trees <- retain.observed.taxa(pz.db$trees,
@@ -1551,7 +1554,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
         pz.warning('POMS will ignore this phenotype as it computes its own on balances')
     }
     if (opts('which_phenotype') == "prevalence") {
-        phenotype <- prev.addw(abd.meta)
+        phenotype <- prev.addw(abd.meta, ...)
         phenoP <- NULL
     } else if (opts('which_phenotype') == "specificity") {
         if (opts('prior_type') == "file") {
@@ -1561,7 +1564,8 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
             prior.data <- NULL
         }
         ess <- calc.ess(abd.meta,
-                        prior.data)
+                        prior.data,
+                        ...)
         phenotype <- ess$ess
         phenoP <- ess$phenoP
     } else if (pz.options("which_phenotype") == "provided") {
@@ -1573,7 +1577,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
             p_se <- as.numeric(p_tbl[["stderr"]])
             names(p_est) <- p_tbl[[1]]
             names(p_se) <- p_tbl[[1]]
-            ashr_res <- ashr_wrapper(p_est, p_se)
+            ashr_res <- ash_wrapper(p_est, p_se)
             phenotype <- ashr_res$result %>%
                 as_tibble(rownames="species") %>%
                 dplyr::select(species, PosteriorMean) %>%
@@ -1581,7 +1585,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
         }
         phenoP <- 0
     } else if (opts("which_phenotype") == "abundance") {
-        phenotype <- ashr.diff.abund(abd.meta)
+        phenotype <- ashr.diff.abund(abd.meta, ...)
         phenoP <- 0
     } else {
         pz.error(paste0("don't know how to calculate the phenotype ",

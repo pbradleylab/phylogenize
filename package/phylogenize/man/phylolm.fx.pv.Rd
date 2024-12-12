@@ -4,8 +4,7 @@
 \alias{phylolm.fx.pv}
 \title{Wrapper around \emph{phylolm} that returns just the effect size and p-value.}
 \usage{
-phylolm.fx.pv(m, p, tr, coefname = "mTRUE", restrict = NULL,
-  meas_err = FALSE)
+phylolm.fx.pv(m, p, tr, coefname = "mTRUE", restrict = NULL, meas_err = FALSE)
 }
 \arguments{
 \item{m}{Named numeric vector of gene presence/absences per taxon.}

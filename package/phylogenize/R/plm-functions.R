@@ -997,8 +997,7 @@ ashr.diff.abund <- function(abd.meta,
   S <- opts('sample_column')
   M <- tolower(opts('diff_abund_method'))
   if (!(M %in% c('ancombc2', 'maaslin2'))) {
-    pz.error(paste0("method ", M, " not recognized (se
-                    e help)"))
+    pz.error(paste0("method ", M, " not recognized (see help)"))
   }
   if (categorical) {
     env_levels <- levels(abd.meta$metadata[[E]])

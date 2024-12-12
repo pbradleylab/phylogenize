@@ -4,8 +4,7 @@
 \alias{lm.fx.pv}
 \title{Wrapper around \emph{lm} that returns just the effect size and p-value.}
 \usage{
-lm.fx.pv(m, p, tr, coefname = "mTRUE", restrict = NULL,
-  meas_err = FALSE)
+lm.fx.pv(m, p, tr, coefname = "mTRUE", restrict = NULL, meas_err = FALSE)
 }
 \arguments{
 \item{m}{Named numeric vector of gene presence/absences per taxon.}

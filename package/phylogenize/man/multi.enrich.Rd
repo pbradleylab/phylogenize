@@ -8,10 +8,10 @@ gene set mappings, assemble a tbl of results.}
 multi.enrich(sigs, signs, mappings, dirxn = 1)
 }
 \arguments{
-\item{sigs}{List giving, per phylum (outer) and per significance cutoff
+\item{sigs}{List giving, per taxonomic group (outer) and per significance cutoff
 (inner), significant hits to test for enrichment.}
 
-\item{signs}{List giving, per phylum, signs of all gene effect sizes.}
+\item{signs}{List giving, per taxonomic group, signs of all gene effect sizes.}
 
 \item{mappings}{List of data.frames giving gene-to-gene-set mappings.}
 

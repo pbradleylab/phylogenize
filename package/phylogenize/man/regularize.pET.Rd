@@ -4,8 +4,16 @@
 \alias{regularize.pET}
 \title{Obtain a regularized estimate of specificity.}
 \usage{
-regularize.pET(vec, env.ids, which.env = 1, prior = 0.05, b = 1,
-  add.pc = FALSE, min.limit = -10, max.limit = 10)
+regularize.pET(
+  vec,
+  env.ids,
+  which.env = 1,
+  prior = 0.05,
+  b = 1,
+  add.pc = FALSE,
+  min.limit = -10,
+  max.limit = 10
+)
 }
 \arguments{
 \item{vec}{A named numeric vector giving presence/absence across samples.}

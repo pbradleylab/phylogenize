@@ -2,16 +2,16 @@
 % Please edit documentation in R/dummy.R
 \name{NameFaker}
 \alias{NameFaker}
-\alias{get.taxon.names}
+\alias{get.species.names}
 \alias{get.sample.names}
-\title{Generate fake names for taxa or samples.}
+\title{Generate fake names for species or samples.}
 \usage{
-get.taxon.names(n.taxa)
+get.species.names(n.species)
 
 get.sample.names(n.samples)
 }
 \arguments{
-\item{n.taxa}{Number of taxa.}
+\item{n.species}{Number of species.}
 
 \item{n.samples}{Number of samples.}
 }
@@ -19,6 +19,6 @@ get.sample.names(n.samples)
 A vector of fake names.
 }
 \description{
-Generate fake names for taxa or samples.
+Generate fake names for species or samples.
 }
 \keyword{internal}
