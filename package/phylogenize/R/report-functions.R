@@ -49,7 +49,7 @@ read.abd.metadata <- function(...) {
     if (opts('which_phenotype') == 'abundance') {
     	# So abundance needs a non-binary so what we will do is not
 	abd.meta$mtx <- as.matrix(abd.meta$mtx)
-    	abd.meta$abund_mtx <- as.matrix(abd.meta$abund_mtx)
+    abd.meta$abund_mtx <- as.matrix(abd.meta$abund_mtx)
     } else {
     	# binarize to save memory usage since we care about pres/abs
     	abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
@@ -114,7 +114,7 @@ check.process.metadata <- function(metadata, ...) {
       if (!(envir %in% env_levels)) {
         pz.error(paste0("environment ", envir, " not found in metadata"))
       }
-      levels(env_factor) <- c(setdiff(env_levels, envir), envir)
+      env_factor <- forcats::fct_relevel(env_factor, envir)
       metadata[[E]] <- env_factor
     } else {
       metadata[[E]] <- as.numeric(metadata[[E]])
@@ -365,7 +365,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "in sample ID column"))
     }
     abd.meta$mtx <- abd.meta$mtx[, samples.present, drop=FALSE]
-    if (abund_mtx %in% names(abd.meta)) {
+    if ("abund_mtx" %in% names(abd.meta)) {
         abd.meta$abund_mtx <- abd.meta$abund_mtx[, samples.present, drop=FALSE]
     }
     abd.meta$metadata <- abd.meta$metadata[
