@@ -1035,7 +1035,7 @@ ashr.diff.abund <- function(abd.meta,
     ancom_results <- ANCOMBC::ancombc2(ancom_tse,
                               assay_name="counts",
                               fix_formula=ancom_formula,
-                              n_cl=opts('n_cl'))
+                              n_cl=opts('ncl'))
     ancom_results_tbl <- ancom_results$res %>% tibble()
     envir_stem <- paste0("env", envir)
     lfc_col <- paste0("lfc_", envir_stem)
