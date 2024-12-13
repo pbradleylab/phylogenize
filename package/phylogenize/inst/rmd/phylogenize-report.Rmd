@@ -18,6 +18,7 @@ params:
   biom_file: ""
   input_format: "tabular"
   env_column: "env"
+  taxon_level: "phylum"
   dset_column: "dataset"
   phenotype_file: ""
   db: "gtdb"
@@ -129,6 +130,7 @@ list2env(data_to_phenotypes(save_data = !do_POMS), environment())
 # Also unpack "phenotype, phenoP, ..." into current environment
 list2env(phenotype_results, environment())
 
+
 pheno.scale <- get.pheno.plotting.scales(phenotype,
                                          pz.db$trees,
                                          phenoP)
@@ -136,6 +138,7 @@ plotted.pheno.trees <- plot.phenotype.trees(phenotype,
                                             pz.db$trees,
                                             pheno.scale)
 pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
+
 
 # Template for plots
 template <- c(

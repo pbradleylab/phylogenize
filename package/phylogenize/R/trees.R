@@ -88,51 +88,60 @@ gg.cont.tree <- function(phy,
     ctrait <- ctrait[intersect(names(ctrait), restrict)]
   }
   if (is.null(n)) { n <- intersect(phy$tip.label, names(ctrait)) }
-  if (is.null(reduced.phy)) { reduced.phy <- fix.tree(keep.tips(phy, n)) }
-  pz.message("getting continuous trait ancestry")
-  if (is.null(reduced.phy)) {
-      stop("all tips were dropped")
-  }
-  if (length(reduced.phy$tip.label) < 2) {
-      stop("need at least two tips for a tree")
-  }
-  if (is.null(cAnc)) cAnc <- phytools::fastAnc(reduced.phy, ctrait[n])
-  # concatenate tip values and node values
-  cDisplay <- truncated(c(ctrait[n], cAnc), cLimits)
-  # make color scales
-  if ("mid.col" %in% names(colors)) {
-      cColors <- ggplot2::scale_color_gradient2(low = colors["low.col"],
+
+  kept_tips <- keep.tips(phy, n)
+
+  if(!is.null(kept_tips)) {
+     if(is.null(reduced.phy)) {reduced.phy <- fix.tree(kept_tips)}
+        pz.message("getting continuous trait ancestry")
+        if (is.null(reduced.phy)) {
+           pz.error("all tips were dropped")
+        }
+        if (length(reduced.phy$tip.label) < 2) {
+           pz.error("need at least two tips for a tree")
+        }
+        if (is.null(cAnc)) cAnc <- phytools::fastAnc(reduced.phy, ctrait[n])
+        cDisplay <- truncated(c(unlist(ctrait[n]), unlist(cAnc)), unlist(cLimits))
+        
+        if ("mid.col" %in% names(colors)) {
+            cColors <- ggplot2::scale_color_gradient2(low = colors["low.col"],
                                                 high = colors["high.col"],
                                                 mid = colors["mid.col"],
                                                 midpoint = mean(cLimits),
                                                 guide = "colorbar",
                                                 name = cName)
-  } else {
-      cColors <- ggplot2::scale_color_gradient(low = colors["low.col"],
+        } else {
+          cColors <- ggplot2::scale_color_gradient(low = colors["low.col"],
                                                high = colors["high.col"],
                                                guide = "colorbar",
                                                name = cName)
-  }
-  # plot trees
-  if (reverse) {
-      ctree <- ggtree::ggtree(reduced.phy,
+        }
+        # plot trees
+        if (reverse) {
+           ctree <- ggtree::ggtree(reduced.phy,
                               ladderize = ladderize,
                               ggplot2::aes_string(color = cDisplay), ...) +
-          cColors + ggplot2::scale_x_reverse() + ggplot2::theme(legend.position = "bottom")
-  } else {
-      ctree <- ggtree::ggtree(reduced.phy,
+           cColors + ggplot2::scale_x_reverse() + ggplot2::theme(legend.position = "bottom")
+        } else {
+           ctree <- ggtree::ggtree(reduced.phy,
                               ladderize = ladderize,
                               ggplot2::aes_string(color = cDisplay), ...) +
-          cColors + ggplot2::theme(legend.position = "bottom")
-  }
-  if (plot) print(ctree)
-  return(list(tree = ctree,
+           cColors + ggplot2::theme(legend.position = "bottom")
+        }
+
+        if (plot) print(ctree)
+        
+        return(list(tree = ctree,
               cAnc = cAnc,
               rphy = reduced.phy,
               n = n,
               cols = colors,
               lims = cLimits,
               disp = cDisplay))
+    } else {
+        pz.message(paste0(cName, " has been removed from the phylogenetic trees: No phenotype found associated"))
+        return(NA)
+  }
 }
 
 
