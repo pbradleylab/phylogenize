@@ -1061,7 +1061,7 @@ ashr.diff.abund <- function(abd.meta,
       ref_env_level <- levels(named_metadata[[E]])[1]
       ref_dset_level <- levels(named_metadata[[D]])[1]
       maaslin_res <- Maaslin2::Maaslin2(
-          input_data = as.data.frame(as.matrix(abd.meta$abund_mtx)),
+          input_data = as.data.frame(as.matrix(abd.meta$mtx)),
           input_metadata = named_metadata,
           # this is a vector of strings
           fixed_effects = c(E, D),
