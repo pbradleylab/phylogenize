@@ -357,19 +357,24 @@ capwords <- function(words, USE.NAMES=FALSE) {
 #' @param file A filename where the final SVG output will be written.
 #' @export
 interactive.plot <- function(tree.obj, file) {
-	valid_labels <- subset(tree.obj$data, !is.na(label))
+	valid_labels <- subset(tree.obj$tree$data, !is.na(label))
 	low_color <- tree.obj$cols["low.col"]
 	high_color <- tree.obj$cols["high.col"]
-	
-	# Create the interactive tree with ggplotly
-	tree <- ggtree(as.phylo(tree.obj)) +
-		geom_point(data = valid_labels, aes(text = label, color = color)) +  
-		geom_tiplab(data = valid_labels)  
 
+	# Create the interactive tree with ggplotly
+	tree <- ggtree(as.phylo(tree.obj$tree)) +
+		geom_point(data = valid_labels, aes(text = label, color = color)) +  
+		geom_tiplab(data = valid_labels, aes(color = color))
+    
+	# Write to an svg for the non-interactive plot so the output is
+	# still semi-meaningful
+	svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
+	writeLines(as.character(svg), file) 
+
+	# Make interactive
         interactive_tree <- ggplotly(tree, tooltip = "text")
-        non.int <- svglite::xmlSVG(print(tree), standalone = TRUE)
-        xml2::write_xml(x = non.int, file)
-        return(interactive_tree)
+        
+	return(interactive_tree)
 }
 
 
@@ -409,9 +414,13 @@ non.interactive.plot <- function(tree.obj, file) {
 
     tree <- ggtree(as.phylo(tree.obj$tree)) +
                 geom_point(data = valid_labels, aes(text = label, color = color)) +
-                geom_tiplab(data = valid_labels)
-    non.int <- svglite::xmlSVG(print(tree$tree), standalone = TRUE)
-    xml2::write_xml(x = non.int, file)
+                geom_tiplab(data = valid_labels, aes(color = color))
+    
+    # Write to an svg
+    svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
+    writeLines(as.character(svg), file)
+    
+    return(tree)
 }
 
 #' A wrapper around \code{apply} and \code{parApply} that allows them to be

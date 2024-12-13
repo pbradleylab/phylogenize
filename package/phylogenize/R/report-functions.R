@@ -1229,7 +1229,7 @@ plot.pheno.distributions <- function(phenotype,
 #' @param label Label to give to the phenotype.
 #' @param stroke.scale How thick to make the highlight.
 #' @param units A string appended to each label, used to give units of phenotype.
-#' @export plot.labeled.phenotype.trees
+#' @export list containing plot.labeled.phenotype.trees
 plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                                          phenotype,
                                          label='prevalence',
@@ -1244,17 +1244,19 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
         return(NULL)
     }
 
+    plots <- list()
     for (tree in 1:length(plotted.pheno.trees)) {
 	    plotted_tree <- plotted.pheno.trees[[tree]]
 	    fn <- knitr::fig_path('svg', number = tree)
-	    
+	   
 	    tryCatch(
-		     interactive.plot(new.tr, fn),
+		     plots[[tree]] <- interactive.plot(plotted_tree, fn),
 		     error = function(e) {
 			    pz.message(e)
-			    non.interactive.plot(new.tr, fn)
+			    plots[[tree]] <- non.interactive.plot(plotted_tree, fn)
 	    })
     }
+    return(plots)
 }
 
 

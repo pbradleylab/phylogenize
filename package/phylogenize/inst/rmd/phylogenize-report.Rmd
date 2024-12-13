@@ -163,9 +163,13 @@ write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
 ### All Taxa
 ```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=FALSE}
 
+plots <- list()
 if (!pz.options('skip_graphs')) {
-	plot.labeled.phenotype.trees(plotted.pheno.trees,
+	plots <- plot.labeled.phenotype.trees(plotted.pheno.trees,
 				     100*logistic(phenotype),
 				     label=pz.options('which_phenotype'))
 }
 
+```
+`for (plot in plots) {print(plot)}`
+```
