@@ -357,14 +357,19 @@ capwords <- function(words, USE.NAMES=FALSE) {
 #' @param file A filename where the final SVG output will be written.
 #' @export
 interactive.plot <- function(tree.obj, file) {
-	valid_labels <- subset(tree$data, !is.na(label))
+	valid_labels <- subset(tree.obj$data, !is.na(label))
+	low_color <- tree.obj$cols["low.col"]
+	high_color <- tree.obj$cols["high.col"]
+	
 	# Create the interactive tree with ggplotly
-	interactive_tree <- ggtree(as.phylo(tree)) +
-		geom_point(data = valid_labels, aes(text = label)) +  
+	tree <- ggtree(as.phylo(tree.obj)) +
+		geom_point(data = valid_labels, aes(text = label, color = color)) +  
 		geom_tiplab(data = valid_labels)  
 
-  interactive_tree <- ggplotly(interactive_tree, tooltip = "text")
-  #todo: add back in color
+        interactive_tree <- ggplotly(tree, tooltip = "text")
+        non.int <- svglite::xmlSVG(print(tree), standalone = TRUE)
+        xml2::write_xml(x = non.int, file)
+        return(interactive_tree)
 }
 
 
@@ -397,7 +402,15 @@ style.parse <- function(str) {
 #' @export
 non.interactive.plot <- function(tree.obj, file) {
     warning(paste0("replotting to: ", file))
-    non.int <- svglite::xmlSVG(print(tree.obj), standalone = TRUE)
+    
+    valid_labels <- subset(tree.obj$data, !is.na(label))
+    low_color <- tree.obj$cols["low.col"]
+    high_color <- tree.obj$cols["high.col"]
+
+    tree <- ggtree(as.phylo(tree.obj)) +
+                geom_point(data = valid_labels, aes(text = label, color = color)) +
+                geom_tiplab(data = valid_labels)
+    non.int <- svglite::xmlSVG(print(tree), standalone = TRUE)
     xml2::write_xml(x = non.int, file)
 }
 

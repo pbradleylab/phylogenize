@@ -58,21 +58,34 @@ tree.to.dist <- function(tree) {
 #' @return a graphed phylogenetic tree object with edited labels and color column
 change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
 	# Map the colors to the tree object directly to use ggplotly later for interactive trees
-        tax_filt <- taxonomy[taxonomy$cluster %in% reduced.phy$tip.label, c("species", "cluster")]
+        tax_filt <- taxonomy[taxonomy$cluster %in% ctree$data$label, c("species", "cluster")]
         ctree_data <- merge(ctree$data, tax_filt, by.x = "label", by.y = "species", all.x = TRUE)
         tax_colors <- data.frame(label = as.character(names(ctree$mapping$colour)),
                    color = ctree$mapping$colour
                    )
-        ctree_data <- merge(ctree_data, tax_colors, by = "label", all.x = TRUE)
+	ctree_data <- merge(ctree_data, tax_colors, by = "label", all.x = TRUE)
         ctree_data$color <- ifelse(is.na(ctree_data$color), 0, ctree_data$color)
 
-        # Make labels to be species name
+	# Make labels to be species name
         colnames(taxonomy)[colnames(taxonomy) == "cluster"] <- "label"
-        ctree_data <- merge(ctree_data, taxonomy[c("label", "species")], by = "label")
+        ctree_data <- merge(ctree_data, taxonomy[c("label", "species")], by = "label", all.x = TRUE)
         ctree_data$label <- ctree_data$species
 
         # Finally make the label switch for tree
-        ctree$data <- ctree_data
+	ctree$data <- ctree_data
+
+	#Change color section in tree to avoid error
+	swap <- tax_filt %>%
+		mutate(cluster = as.character(cluster)) %>%
+		select(cluster, species) 
+
+	color_head <- names(ctree$mapping$colour)
+	color_head <- data.frame(cluster = color_head, stringsAsFactors = FALSE)
+	color_head <- color_head %>%
+		left_join(swap, by = "cluster")
+
+	color_head$final_name <- ifelse(is.na(color_head$species), color_head$cluster, color_head$species)
+	names(ctree$mapping$colour) <- color_head$final_name
 
 	return(ctree)
 }

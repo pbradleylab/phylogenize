@@ -1129,12 +1129,12 @@ plot.phenotype.trees <- function(phenotype,
     }
 
     plotted.pheno.trees <- lapply(names(trees), function(tn) {
-					tryCatch(
-                                             gg.cont.tree(trees[[tn]], phenotype, taxonomy, cLimits=scale$phy.limits[[tn]], colors=scale$colors, cName=tn, plot=FALSE),
-					     error = function(e) {
-						message(paste("Error in tree", tn, ": ", e$message))
-					        return(NULL)
-					      })
+	#				tryCatch(
+                                             gg.cont.tree(trees[[tn]], phenotype, taxonomy, cLimits=scale$phy.limits[[tn]], colors=scale$colors, cName=tn, plot=FALSE)#,
+	#				     error = function(e) {
+	#					message(paste("Error in tree", tn, ": ", e$message))
+	#				        return(NULL)
+	#				     })
                                  })
 
     if(!is.null(plotted.pheno.trees)) {
@@ -1258,8 +1258,8 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 
 	    fn <- knitr::fig_path('svg', number = tree)
 
-	    pz.error(names(plotted_tree))
-	    interactive.plot(plotted_tree, fn)
+	    non.interactive.plot(tree, fn)
+	    #interactive.plot(plotted_tree, fn)
 	    #tryCatch(
 #		     interactive.plot(new.tr, fn),
 #		     error = function(e) {
