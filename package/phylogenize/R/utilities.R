@@ -403,14 +403,14 @@ style.parse <- function(str) {
 non.interactive.plot <- function(tree.obj, file) {
     warning(paste0("replotting to: ", file))
     
-    valid_labels <- subset(tree.obj$data, !is.na(label))
+    valid_labels <- subset(tree.obj$tree$data, !is.na(label))
     low_color <- tree.obj$cols["low.col"]
     high_color <- tree.obj$cols["high.col"]
 
-    tree <- ggtree(as.phylo(tree.obj)) +
+    tree <- ggtree(as.phylo(tree.obj$tree)) +
                 geom_point(data = valid_labels, aes(text = label, color = color)) +
                 geom_tiplab(data = valid_labels)
-    non.int <- svglite::xmlSVG(print(tree), standalone = TRUE)
+    non.int <- svglite::xmlSVG(print(tree$tree), standalone = TRUE)
     xml2::write_xml(x = non.int, file)
 }
 

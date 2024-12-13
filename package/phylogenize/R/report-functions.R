@@ -1246,26 +1246,14 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 
     for (tree in 1:length(plotted.pheno.trees)) {
 	    plotted_tree <- plotted.pheno.trees[[tree]]
-
-	    rp <- plotted_tree$rphy
-	    rp$tip.label <- paste0(rp$tip.label, " (phenotype = ...", units, ")")
-	    xlim <- plot(rp, plot=FALSE, no.margin=TRUE)$x.lim
-
-	    plotted_tree <- plotted_tree$tree +
-		    ggtree::geom_tiplab() +
-		    ggplot2::xlim(xlim[1], xlim[2])
-            plotted_tree + geom_tiplab() + xlim(NA, 5)
-
 	    fn <- knitr::fig_path('svg', number = tree)
-
-	    non.interactive.plot(tree, fn)
-	    #interactive.plot(plotted_tree, fn)
-	    #tryCatch(
-#		     interactive.plot(new.tr, fn),
-#		     error = function(e) {
-#			    pz.message(e)
-#			    non.interactive.plot(new.tr, fn)
-#	    })
+	    
+	    tryCatch(
+		     interactive.plot(new.tr, fn),
+		     error = function(e) {
+			    pz.message(e)
+			    non.interactive.plot(new.tr, fn)
+	    })
     }
 }
 
