@@ -1542,7 +1542,7 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
     # Figure out how many trees to retain
     pz.db <- adjust.db(pz.db, abd.meta, ...)
     if (pz.options('assume_below_LOD')) {
-        abd.meta <- add.below.LOD(pz.db, abd.meta)
+        abd.meta <- add.below.LOD(pz.db, abd.meta, ...)
         sanity.check.abundance(abd.meta$mtx, ...)
     }
     phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
