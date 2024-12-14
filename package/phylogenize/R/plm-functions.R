@@ -1030,7 +1030,7 @@ ashr.diff.abund <- function(abd.meta,
     named_metadata <- named_metadata %>%
 	    filter(!is.na(E) | !is.na(D))
     # Make sure they are in the same order
-    named_metadata <- named_metadata[match(colnames(abd.meta$mtx), rownames(named_metadata)), ]
+    # named_metadata <- named_metadata[match(colnames(abd.meta$mtx), rownames(named_metadata)), ]
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
       assays=S4Vectors::SimpleList(counts=abd.meta$mtx),
       colData=S4Vectors::DataFrame(named_metadata))
@@ -1059,14 +1059,22 @@ ashr.diff.abund <- function(abd.meta,
     sample_ashr <- as_tibble(ancom_ash$result, rownames = "species")
   } else if (M == "maaslin2") {
       ref_env_level <- levels(named_metadata[[E]])[1]
-      ref_dset_level <- levels(named_metadata[[D]])[1]
+      all_dset_level <- levels(named_metadata[[D]])
+      ref_dset_level <- all_dset_level[1]
+      if (length(all_dset_level) > 1) {
+          m_fixed_effects <- c(E, D)
+          m_reference <- paste0(ref_env_level, ",", ref_dset_level)
+      } else {
+          m_fixed_effects <- c(E)
+          m_reference <- ref_env_level
+      }
       maaslin_res <- Maaslin2::Maaslin2(
           input_data = as.data.frame(as.matrix(abd.meta$mtx)),
           input_metadata = named_metadata,
           # this is a vector of strings
-          fixed_effects = c(E, D),
+          fixed_effects = m_fixed_effects,
           # this has to be a single string
-          reference = paste0(ref_env_level, ",", ref_dset_level),
+          reference = m_reference,
           output = "temp/",
           plot_heatmap = FALSE,
           plot_scatter = FALSE
@@ -1093,6 +1101,23 @@ ashr.diff.abund <- function(abd.meta,
   sample_pheno <- sample_ashr %>%
     dplyr::select(species, PosteriorMean) %>%
     deframe
+  
+  # Fix automatic renaming of taxa that seem "numeric"
+  spn <- names(sample_pheno)
+  orign <- rownames(abd.meta$mtx)
+  numeric_names <- tibble(old_name = as.character(orign[which(!is.na(as.numeric(orign)))]),
+                          new_name = paste0("X", old_name))
+  # if the names didn't change, just keep them:
+  all_names <- bind_rows(numeric_names, tibble(old_name=orign,
+                                               new_name=orign))
+  sample_pheno_tbl <- left_join(
+      enframe(sample_pheno, name="new_name", value="pheno"),
+      all_names)
+  
+  sample_pheno <- sample_pheno_tbl %>%
+      select(old_name, pheno) %>%
+      deframe()
+
   return(sample_pheno)
 }
 

@@ -51,8 +51,6 @@ read.abd.metadata <- function(...) {
         pz.message("Binarizing input data...")
 	    # binarize to save memory usage since we care about pres/abs
     	abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
-    } else {
-        abd.meta$mtx <- as.matrix(abd.meta$mtx)
     }
     gc()
     return(abd.meta)
@@ -86,8 +84,10 @@ read.abd.metadata <- function(...) {
 #'     estimators.
 #' @export
 check.process.metadata <- function(metadata, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- clone_and_merge(phylogenize:::PZ_OPTIONS, ...)
+    orig_md <- metadata
     E <- opts('env_column')
+    S <- opts('sample_column')
     envir <- opts('which_envir')
     if (!(opts('env_column') %in% colnames(metadata))) {
         pz.error(paste0("environment column not found: ", opts('env_column')))
@@ -112,11 +112,6 @@ check.process.metadata <- function(metadata, ...) {
       env_factor <- factor(metadata[[E]])
       env_levels <- levels(env_factor)
 
-      order <- c(setdiff(env_levels, envir), envir)
-      metadata <- metadata %>%
-	      mutate(env = factor(env, levels = order)) %>%
-	      arrange(env)	    
-      
       if (!(envir %in% env_levels)) {
         pz.error(paste0("environment ", envir, " not found in metadata"))
       }
@@ -129,6 +124,18 @@ check.process.metadata <- function(metadata, ...) {
       }
     }
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
+
+    # One more sanity check before we return
+    compare_md <- full_join(orig_md[c(S, E)], metadata[c(S, E)], by=S)
+    wrong_rows <- compare_md[
+        compare_md[[paste0(E, ".x")]] != compare_md[[paste0(E, ".y")]],
+        ]
+    if (nrow(wrong_rows) > 0) {
+        print(wrong_rows)
+        pz.error(
+            "Something went wrong when loading metadata and environments no longer match; please report as a bug"
+        )
+    }
     
     return(metadata)
 }
@@ -209,11 +216,9 @@ read.abd.metadata.tabular <- function(...) {
     # can remain as tbl
     metadata <- readr::read_tsv(mf)
     metadata <- check.process.metadata(metadata, ...)
-    if (opts('which_phenotype') == "abundance"){
-    	return(list(mtx=abd.mtx, abund_mtx=abd.mtx, metadata=metadata))
-    } else {
-    	return(list(mtx=abd.mtx, metadata=metadata))
-    }
+
+    return(list(mtx=abd.mtx, metadata=metadata))
+
 }
 
 #' Sanity-check abundance data
@@ -372,9 +377,6 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "in sample ID column"))
     }
     abd.meta$mtx <- abd.meta$mtx[, samples.present, drop=FALSE]
-    if ("abund_mtx" %in% names(abd.meta)) {
-        abd.meta$abund_mtx <- abd.meta$abund_mtx[, samples.present, drop=FALSE]
-    }
     abd.meta$metadata <- abd.meta$metadata[
                             abd.meta$metadata[[opts('sample_column')]] %in%
                             samples.present, ]
@@ -686,54 +688,52 @@ create_matrix <- function(sub_df) {
 #' @return list of binary objects that are ready for use at the user given tax_level
 #' @export
 change.presence.tax.level <- function(binary, taxon, tax){
-	# Make a mapping file that is at the taxonomic level selected from the tax file.
-	clean <- tax %>%
-		select(cluster, taxon, phylum) %>%
-		distinct()
-        # Drop empty values from the taxonomic level selected if they are not 
-	clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
-        # Arrange them so that the runtime is slightly less in the lookup
-	clean <- clean %>%
-		group_by(across(all_of(taxon))) %>%
-		ungroup() %>%
-		arrange(phylum, !!sym(taxon)) %>%
-		mutate(cluster := as.character(cluster))
-        # Split the dataframe by phylum so that we only need to lookup the taxon associated with 
-	# each one.
-	clean <- clean %>% 
-		split(.$phylum)
-
-        # For every species in the dataframe, if the species is selected, pop the column and remove
-	# it from the sparse matrix.
-        binary_matrices <- list()
-	taxon <- sym(taxon)
-
-        for (i in 1:length(names(binary))){
-		name <- names(binary)[i]
-		b <- binary[[name]]
-		t <- clean[[name]]
-     
-                split_taxs <- t %>%
-			group_split(!!taxon) %>%
-			map(~ pull(.x, cluster))
-     
-        	split_names <- t %>%
-			group_split(!!taxon) %>%
-			map(~ pull(.x, !!taxon)) %>%
-			unlist() %>%
-			unique()
-       
-        	columns <- colnames(binary[[name]])
-     
-        	for (j in 1:length(split_names)){
-			union <- intersect(split_taxs[[j]], columns)
-			if (length(union) > 1){
-			   binary_matrices[[split_names[j]]] <- b[, union, drop = FALSE]
-			}
-        	}
+    # Make a mapping file that is at the taxonomic level selected from the tax file.
+    clean <- tax %>%
+        select(cluster, taxon, phylum) %>%
+        distinct()
+    # Drop empty values from the taxonomic level selected if they are not
+    clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
+    # Arrange them so that the runtime is slightly less in the lookup
+    clean <- clean %>%
+        arrange(phylum, !!sym(taxon)) %>%
+        mutate(cluster = as.character(cluster))
+    # Split the dataframe by phylum so that we only need to lookup the taxon associated with
+    # each one.
+    clean <- clean %>%
+        split(.$phylum)
+    
+    # For every species in the dataframe, if the species is selected, pop the column and remove
+    # it from the sparse matrix.
+    binary_matrices <- list()
+    taxon <- sym(taxon)
+    
+    for (i in 1:length(names(binary))){
+        name <- names(binary)[i]
+        b <- binary[[name]]
+        t <- clean[[name]]
+        
+        split_taxs <- t %>%
+            group_split(!!taxon) %>%
+            map(~ pull(.x, cluster))
+        
+        split_names <- t %>%
+            group_split(!!taxon) %>%
+            map(~ pull(.x, !!taxon)) %>%
+            unlist() %>%
+            unique()
+        
+        columns <- colnames(binary[[name]])
+        
+        for (j in 1:length(split_names)){
+            shared <- intersect(split_taxs[[j]], columns)
+            if (length(shared) > 1){
+                binary_matrices[[split_names[j]]] <- b[, shared, drop = FALSE]
+            }
         }
-	binary_matrices <- Filter(function(b) length(colnames(b)) > 1, binary_matrices)
-	return(binary_matrices)
+    }
+    binary_matrices <- Filter(function(b) length(colnames(b)) > 1, binary_matrices)
+    return(binary_matrices)
 }
 
 
@@ -761,7 +761,7 @@ change.tree.tax.level <- function(tree, taxon, tax){
   		group_by(across(all_of(taxon))) %>%
   		ungroup() %>%
   		arrange(phylum, !!sym(taxon)) %>%
-  		mutate(cluster := as.character(cluster))
+  		mutate(cluster = as.character(cluster))
 	# Split the dataframe by phylum so that we only need to lookup the taxon associated with 
 	# each one.
 	clean <- clean %>% 
