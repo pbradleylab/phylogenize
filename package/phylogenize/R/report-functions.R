@@ -1250,10 +1250,10 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 	    fn <- knitr::fig_path('svg', number = tree)
 	   
 	    tryCatch(
-		     plots[[tree]] <- interactive.plot(plotted_tree, fn),
+		     plots[[tree]] <- interactive.plot(plotted_tree, fn, tree),
 		     error = function(e) {
 			    pz.message(e)
-			    plots[[tree]] <- non.interactive.plot(plotted_tree, fn)
+			    plots[[tree]] <- non.interactive.plot(plotted_tree, fn, tree)
 	    })
     }
     return(plots)

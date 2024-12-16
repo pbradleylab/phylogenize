@@ -342,42 +342,6 @@ capwords <- function(words, USE.NAMES=FALSE) {
     }
 }
 
-###
-
-# Super gross XML hack follows to make SVGs of trees interactive
-
-#' XML hack to make interactive tree diagrams.
-#'
-#' This hack is very ugly but works most of the time. However, it is a good idea
-#' to wrap it in a tryCatch so that you can fall back to a less flashy
-#' implementation, because it relies on editing a poorly-annotated SVG file as
-#' if it were an XML document.
-#'
-#' @param tree.obj A ggtree representation of a tree.
-#' @param file A filename where the final SVG output will be written.
-#' @export
-interactive.plot <- function(tree.obj, file) {
-	valid_labels <- subset(tree.obj$tree$data, !is.na(label))
-	low_color <- tree.obj$cols["low.col"]
-	high_color <- tree.obj$cols["high.col"]
-
-	# Create the interactive tree with ggplotly
-	tree <- ggtree(as.phylo(tree.obj$tree)) +
-		geom_point(data = valid_labels, aes(text = label, color = color)) +  
-		geom_tiplab(data = valid_labels, aes(color = color))
-    
-	# Write to an svg for the non-interactive plot so the output is
-	# still semi-meaningful
-	svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
-	writeLines(as.character(svg), file) 
-
-	# Make interactive
-        interactive_tree <- ggplotly(tree, tooltip = "text")
-        
-	return(interactive_tree)
-}
-
-
 #' Helper function to parse SVG styles.
 #'
 #' @param str A style string to parse.
@@ -402,10 +366,10 @@ style.parse <- function(str) {
 #' to produce the same kind of output.
 #'
 #' @param tree.obj A ggtree object.
-#' @param file File to which an SVG representation of this tree object will be
-#'     written.
+#' @param file File to which an SVG representation of this tree object will be written.
+#' @param name. String. the name of the taxon being added. Used for title.
 #' @export
-non.interactive.plot <- function(tree.obj, file) {
+non.interactive.plot <- function(tree.obj, file, name) {
     warning(paste0("replotting to: ", file))
     
     valid_labels <- subset(tree.obj$tree$data, !is.na(label))
@@ -414,7 +378,8 @@ non.interactive.plot <- function(tree.obj, file) {
 
     tree <- ggtree(as.phylo(tree.obj$tree)) +
                 geom_point(data = valid_labels, aes(text = label, color = color)) +
-                geom_tiplab(data = valid_labels, aes(color = color))
+                geom_tiplab(data = valid_labels, aes(color = color)) +
+		ggtitle(name)
     
     # Write to an svg
     svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
@@ -422,6 +387,26 @@ non.interactive.plot <- function(tree.obj, file) {
     
     return(tree)
 }
+
+
+#' XML hack to make interactive tree diagrams.
+#'
+#' This hack is very ugly but works most of the time. However, it is a good idea
+#' to wrap it in a tryCatch so that you can fall back to a less flashy
+#' implementation, because it relies on editing a poorly-annotated SVG file as
+#' if it were an XML document.
+#'
+#' @param tree.obj A ggtree representation of a tree.
+#' @param file A filename where the final SVG output will be written.
+#' @param name. String. the name of the taxon being added. Used for title.
+#' @export
+interactive.plot <- function(tree.obj, file, name) {
+        tree <- non.interactive.plot(tree.obj, file, name)
+        interactive_tree <- ggplotly(tree, tooltip = "text")
+
+        return(interactive_tree)
+}
+
 
 #' A wrapper around \code{apply} and \code{parApply} that allows them to be
 #' called with a single syntax.
