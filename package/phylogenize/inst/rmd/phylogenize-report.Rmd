@@ -158,10 +158,10 @@ write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
             sep = '\t')
 
 ```
-`r knitr::knit(text = unlist(plots))`
+`r knitr::knit_child(text = unlist(plots), quiet = TRUE)`
 ## Phenotype Mapped Across Trees {.tabset}
 ### All Taxa
-```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=FALSE}
+```{r plot_pheno_trees, echo=FALSE, warning = FALSE, results='asis'}
 
 plots <- list()
 if (!pz.options('skip_graphs')) {
@@ -170,6 +170,10 @@ if (!pz.options('skip_graphs')) {
 				     label=pz.options('which_phenotype'))
 }
 
-```
-`for (plot in plots) {print(plot)}`
-```
+# with titles
+clinUtils::knitPrintListPlots(
+	plotsList = plots, 
+	type = "plotly", 
+	titles = names(plots), 
+	titleLevel = 3
+)

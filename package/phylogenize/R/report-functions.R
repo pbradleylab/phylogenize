@@ -1245,15 +1245,16 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
     }
 
     plots <- list()
+    taxon_names <- names(plotted.pheno.trees)
     for (tree in 1:length(plotted.pheno.trees)) {
 	    plotted_tree <- plotted.pheno.trees[[tree]]
 	    fn <- knitr::fig_path('svg', number = tree)
-	   
+	    name <- taxon_names[[tree]]
 	    tryCatch(
-		     plots[[tree]] <- interactive.plot(plotted_tree, fn, tree),
+		     plots[[name]] <- interactive.plot(plotted_tree, fn, name),
 		     error = function(e) {
 			    pz.message(e)
-			    plots[[tree]] <- non.interactive.plot(plotted_tree, fn, tree)
+			    plots[[name]] <- non.interactive.plot(plotted_tree, fn, name)
 	    })
     }
     return(plots)
