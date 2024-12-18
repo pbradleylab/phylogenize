@@ -1799,6 +1799,7 @@ get_enrichment_tbls <- function(signif,
 #' @export
 phylogenize_core <- function(do_POMS=FALSE,
                              override_save_data=FALSE,
+                             override_options=NULL,
                              p.method=phylogenize:::phylolm.fx.pv,
                              ...) {
     list_pheno <- data_to_phenotypes(

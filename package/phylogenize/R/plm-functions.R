@@ -421,7 +421,7 @@ matrix.plm <- function(tree,
                        ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     cores <- opts('ncl')
-    message("phylogenetic linear model")
+    message(paste0("fitting models with method ", rlang::enexpr(method)))
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     if (opts('separate_process') || (cores > 1)) {
