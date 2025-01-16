@@ -4,11 +4,22 @@
 \alias{gg.cont.tree}
 \title{Plot continuous trait on a tree.}
 \usage{
-gg.cont.tree(phy, ctrait, cAnc = NULL, model = "ARD",
-  cLimits = logit(c(0.025, 0.1)), n = NULL, reduced.phy = NULL,
-  colors = c(low.col = "slateblue", mid.col = "black", high.col =
-  "orange2"), plot = T, restrict = NULL, cName = "prevalence",
-  reverse = F, ladderize = T, ...)
+gg.cont.tree(
+  phy,
+  ctrait,
+  cAnc = NULL,
+  model = "ARD",
+  cLimits = logit(c(0.025, 0.1)),
+  n = NULL,
+  reduced.phy = NULL,
+  colors = c(low.col = "slateblue", mid.col = "black", high.col = "orange2"),
+  plot = T,
+  restrict = NULL,
+  cName = "prevalence",
+  reverse = F,
+  ladderize = T,
+  ...
+)
 }
 \arguments{
 \item{phy}{A \code{phylo} object.}

@@ -4,10 +4,15 @@
 \alias{simulate.binom.mtx}
 \title{Simulate a presence/absence matrix.}
 \usage{
-\method{simulate}{binom.mtx}(effect.size = 2,
-  baseline.distro = c(shape1 = 0.66, shape2 = 2.62), samples = c(H =
-  38, D = 13), which.env = "D", taxa = 2000, tpr = 0.25,
-  sign.pos.prob = 0.5)
+\method{simulate}{binom.mtx}(
+  effect.size = 2,
+  baseline.distro = c(shape1 = 0.66, shape2 = 2.62),
+  samples = c(H = 38, D = 13),
+  which.env = "D",
+  taxa = 2000,
+  tpr = 0.25,
+  sign.pos.prob = 0.5
+)
 }
 \arguments{
 \item{effect.size}{A number giving the shift in logit-prevalence between

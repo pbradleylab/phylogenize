@@ -22,8 +22,6 @@ of the abundance matrix are now MIDAS IDs.
 \details{
 Some particularly relevant global options are:
 \describe{
-  \item{in_dir}{String. Path to input directory (i.e., where to look for
-  input files).}
   \item{vsearch_infile}{String. File name of the sequences written to disk and
   then read into vsearch.}
 }

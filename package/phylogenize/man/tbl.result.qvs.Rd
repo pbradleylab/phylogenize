@@ -7,7 +7,7 @@
 \method{tbl}{result.qvs}(results, method = qvals, ...)
 }
 \arguments{
-\item{results}{A tbl of results with columns for "phylum" and "p.value".}
+\item{results}{A tbl of results with columns for "taxon" and "p.value".}
 
 \item{method}{A function: method for obtaining q-values from p-values.}
 

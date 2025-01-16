@@ -9,7 +9,7 @@ dummy.trees(trees, n = 50)
 \arguments{
 \item{trees}{List of trees.}
 
-\item{n}{Number of taxa to retain (maximum)}
+\item{n}{Number of species to retain (maximum)}
 }
 \description{
 Downsample trees.

@@ -9,7 +9,7 @@ import.pz.db(...)
 \value{
 A list of the data objects required to perform a *phylogenize*
     analysis, with components \code{gene.presence}, \code{trees},
-    \code{phyla}, \code{taxonomy}, \code{g.mappings}, and \code{gene.to.fxn}.
+    \code{taxonomy}, \code{g.mappings}, and \code{gene.to.fxn}.
 }
 \description{
 \code{import.pz.db} decides based on global options which data files to import.
@@ -17,10 +17,8 @@ A list of the data objects required to perform a *phylogenize*
 \details{
 Some particularly relevant global options are:
 \describe{
-  \item{type}{String. Type of data to use, either "midas" (shotgun) or "16S"
-  (amplicon).}
-  \item{db_version}{String. Which version of the MIDAS database to use
-  ("midas_v1.2" or "midas_v1.0").}
+  \item{type_16S}{Boolean. If 16S data, TRUE, otherwise shotgun data is assumed. Default: FALSE}
+  \item{db}{String. Which database to use ("gtdb" or "uhgp")).}
   \item{data_dir}{String. Path to directory containing the data files
   required to perform a \emph{phylogenize} analysis.}
 }

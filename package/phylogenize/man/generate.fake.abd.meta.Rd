@@ -4,17 +4,29 @@
 \alias{generate.fake.abd.meta}
 \title{Wrapper script to generate fake data and metadata.}
 \usage{
-generate.fake.abd.meta(n.samples = 100, n.taxa = 1000, n.envs = 3,
-  n.dsets = 2, n.reads = 1e+06, env.fx.sizes = c(0, 1, -1),
-  dset.fx.sizes = c(0, 0.1, -0.1), env.frac.affected = 0.25,
-  dset.frac.affected = 0.1, env.sd = 0, dset.sd = 0,
-  prev.dist = c(-4, 2), make.16s = FALSE, tag.length = 100,
-  t.names = NULL, ...)
+generate.fake.abd.meta(
+  n.samples = 100,
+  n.species = 1000,
+  n.envs = 3,
+  n.dsets = 2,
+  n.reads = 1e+06,
+  env.fx.sizes = c(0, 1, -1),
+  dset.fx.sizes = c(0, 0.1, -0.1),
+  env.frac.affected = 0.25,
+  dset.frac.affected = 0.1,
+  env.sd = 0,
+  dset.sd = 0,
+  prev.dist = c(-4, 2),
+  make.16s = FALSE,
+  tag.length = 100,
+  t.names = NULL,
+  ...
+)
 }
 \arguments{
 \item{n.samples}{Positive integer: how many samples should be simulated?}
 
-\item{n.taxa}{Positive integer: how many taxa should be simulated?}
+\item{n.species}{Positive integer: how many species should be simulated?}
 
 \item{n.envs}{Positive integer: how many environments should be simulated?}
 
@@ -26,10 +38,10 @@ generate.fake.abd.meta(n.samples = 100, n.taxa = 1000, n.envs = 3,
 
 \item{dset.fx.sizes}{A numeric vector of effect sizes, one per dataset.}
 
-\item{env.frac.affected}{Proportion of taxa that will be affected by an
+\item{env.frac.affected}{Proportion of species that will be affected by an
 environment.}
 
-\item{dset.frac.affected}{Proportion of taxa that will be affected by a
+\item{dset.frac.affected}{Proportion of species that will be affected by a
 dataset effect.}
 
 \item{env.sd}{Number: when sampling environment effect sizes, use this
@@ -39,7 +51,7 @@ standard deviation.}
 deviation.}
 
 \item{prev.dist}{Numeric vector of length 2 giving beta parameters for the
-distribution of taxon prevalences.}
+distribution of species prevalences.}
 
 \item{make.16s}{Simulate a 16S dataset instead of a WGS-MIDAS dataset.}
 

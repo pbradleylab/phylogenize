@@ -9,7 +9,7 @@ threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig, ...)
 \arguments{
 \item{pz.db}{A database for use with *phylogenize* analyses.}
 
-\item{phy.with.sigs}{A vector of strings giving which phyla had significant
+\item{phy.with.sigs}{A vector of strings giving which taxa had significant
 results.}
 }
 \value{

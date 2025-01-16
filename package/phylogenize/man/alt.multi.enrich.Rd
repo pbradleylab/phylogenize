@@ -5,12 +5,17 @@
 \title{An alternative way to get the enrichment table, using a tbl of results
 instead of separate inputs for significant results, effect signs, etc.}
 \usage{
-alt.multi.enrich(results, mappings, dirxn = 1, qcuts = c(strong = 0.05,
-  med = 0.1, weak = 0.25), future = FALSE)
+alt.multi.enrich(
+  results,
+  mappings,
+  dirxn = 1,
+  qcuts = c(strong = 0.05, med = 0.1, weak = 0.25),
+  future = FALSE
+)
 }
 \arguments{
 \item{results}{A tidyverse tbl of results with at least the following
-columns: "phylum", "gene", "effect.size", and "q.value" (if only
+columns: "taxon", "gene", "effect.size", and "q.value" (if only
 "p.value" is present, first apply function \code{tbl.result.qvs}).}
 
 \item{mappings}{List of data.frames giving gene-to-gene-set mappings.}

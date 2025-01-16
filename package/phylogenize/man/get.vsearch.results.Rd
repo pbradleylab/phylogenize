@@ -13,15 +13,13 @@ List containing a vector of hits, a vector of MIDAS ID targets, and a
 \description{
 \code{get.vsearch.results} reads and parses the output of vsearch to get the
 best-hit MIDAS species identifier for any 16S hit. Note that the reference
-16S FASTA database file must describe entries in the format: ">gene
-species_or_genus_ID MIDAS_ID". Only MIDAS_ID is used so the contents of
+16S FASTA database file must describe entries in the format: ">gene;;
+species_or_genus_ID;;MIDAS_ID". Only MIDAS_ID is used so the contents of
 "gene" and "species_or_genus_ID" can be arbitrary.
 }
 \details{
 Some particularly relevant global options are:
 \describe{
-  \item{in_dir}{String. Path to input directory (i.e., where to look for
-  input files).}
   \item{vsearch_outfile}{String. File name where vsearch writes output which is
   then read back into \emph{phylogenize}.}
 }

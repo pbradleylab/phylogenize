@@ -4,8 +4,13 @@
 \alias{make.sigs}
 \title{Get vectors of significant genes from result tables.}
 \usage{
-make.sigs(results, cuts = c(strong = 0.05, med = 0.1, weak = 0.25),
-  method = qvals, exclude = NULL, min.fx = 0)
+make.sigs(
+  results,
+  cuts = c(strong = 0.05, med = 0.1, weak = 0.25),
+  method = qvals,
+  exclude = NULL,
+  min.fx = 0
+)
 }
 \arguments{
 \item{results}{List of result matrices with two rows (effect size and
@@ -21,7 +26,7 @@ p-value) and one column per gene tested.}
 \item{min.fx}{Minimum effect size for calling something significant.}
 }
 \value{
-List (per phylum) of string vectors of significant hits.
+List (per taxon) of string vectors of significant hits.
 }
 \description{
 Get vectors of significant genes from result tables.

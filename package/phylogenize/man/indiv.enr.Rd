@@ -4,8 +4,17 @@
 \alias{indiv.enr}
 \title{Internal function to perform an individual enrichment.}
 \usage{
-indiv.enr(phylum, cutoff, termset, term, data, results, qcuts = c(strong
-  = 0.05), dirxn = 1, bg = NULL)
+indiv.enr(
+  taxon,
+  cutoff,
+  termset,
+  term,
+  data,
+  results,
+  qcuts = c(strong = 0.05),
+  dirxn = 1,
+  bg = NULL
+)
 }
 \description{
 Internal function to perform an individual enrichment.

@@ -4,8 +4,17 @@
 \alias{score.regularization}
 \title{Score a simulated regularization by how well it recapitulates the ground truth.}
 \usage{
-score.regularization(mtx, ids, real.fx, which.env = 2, prior = 0.002,
-  b = 0.1, add.pc = FALSE, tol = prior * 0.005, ...)
+score.regularization(
+  mtx,
+  ids,
+  real.fx,
+  which.env = 2,
+  prior = 0.002,
+  b = 0.1,
+  add.pc = FALSE,
+  tol = prior * 0.005,
+  ...
+)
 }
 \arguments{
 \item{mtx}{A simulated matrix of presence/absences.}

@@ -4,8 +4,14 @@
 \alias{nonequiv.pos.sig}
 \title{Get vectors of significant genes with positive effect sizes.}
 \usage{
-nonequiv.pos.sig(results, method = qvals, qcut_sig = 0.05,
-  qcut_eq = 0.05, min_fx = 0.25, exclude = NULL)
+nonequiv.pos.sig(
+  results,
+  method = qvals,
+  qcut_sig = 0.05,
+  qcut_eq = 0.05,
+  min_fx = 0.25,
+  exclude = NULL
+)
 }
 \arguments{
 \item{results}{List of result matrices (4 x N).}

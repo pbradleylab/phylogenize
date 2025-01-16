@@ -20,7 +20,6 @@ This function uses package-wide options (see \code{?pz.options}),
     relevant options are:
 
 \describe{
-  \item{in_dir}{String. Path to input directory (i.e., where to look for input files). Default: "."}
   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
 }
 }

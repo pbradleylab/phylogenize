@@ -421,7 +421,7 @@ matrix.plm <- function(tree,
                        ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     cores <- opts('ncl')
-    message("phylogenetic linear model")
+    message(paste0("fitting models with method ", rlang::enexpr(method)))
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     if (opts('separate_process') || (cores > 1)) {
@@ -904,7 +904,7 @@ calc.ess <- function(abd.meta,
     }
     ids <- sapply(colnames(abd.meta$mtx),
                   function (sn) abd.meta$meta[(abd.meta$meta[[S]] == sn), E])
-    if (length(unique(ids)) < 2) {
+    if (length(unique(ids)) < 2) { 
         stop("error: only one environment found")
     }
     names(ids) <- colnames(abd.meta$mtx)
@@ -1030,54 +1030,94 @@ ashr.diff.abund <- function(abd.meta,
     named_metadata <- named_metadata %>%
 	    filter(!is.na(E) | !is.na(D))
     # Make sure they are in the same order
-    named_metadata <- named_metadata[match(colnames(abd.meta$mtx), rownames(named_metadata)), ]
+    # named_metadata <- named_metadata[match(colnames(abd.meta$mtx), rownames(named_metadata)), ]
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
       assays=S4Vectors::SimpleList(counts=abd.meta$mtx),
       colData=S4Vectors::DataFrame(named_metadata))
     
     ancom_results <- ANCOMBC::ancombc2(ancom_tse,
                               assay_name="counts",
-                              fix_formula=ancom_formula)
+                              fix_formula=ancom_formula,
+                              n_cl=opts('ncl'))
     ancom_results_tbl <- ancom_results$res %>% tibble()
     envir_stem <- paste0("env", envir)
     lfc_col <- paste0("lfc_", envir_stem)
     se_col <- paste0("se_", envir_stem)
+    for (ctest in c(lfc_col, se_col)) {
+        if (!(ctest %in% colnames(ancom_results_tbl))) {
+            pz.error(paste0("The column ", ctest, " was not found in the ",
+                            "ANCOMBC2 results. This should never happen and ",
+                            "should be reported as a bug."))
+        } 
+    }
     ancom_ash <- ash_wrapper(dplyr::select(ancom_results_tbl,
                                            taxon,
                                            !!(lfc_col)) %>% deframe,
                              dplyr::select(ancom_results_tbl,
                                            taxon,
                                            !!(se_col)) %>% deframe)
-    sample_ashr <- as_tibble(ancom_ash$result, rownames="species")
-  } else if (M=="maaslin2") {
-    # Note:: This method is not working for ANY of the datasets we have as Maaslin2 is
-    # constructing the complex models we need. Due to this, I have set an error to be 
-    # thrown if this option is selected and it fails. Not sure how else to handle this
-    tryCatch({
-	    maaslin_res <- Maaslin2::Maaslin2(input_data=as.data.frame(as.matrix(abd.meta$mtx)),
-                            input_metadata=as.data.frame(named_metadata),
-                            fixed_effects=paste0(E, ",", D),
-                            output="temp/",
-                            plot_heatmap = FALSE,
-                            plot_scatter = FALSE)
-            maaslin_results_tbl <- maaslin_res$results %>% tibble() %>%
-		    dplyr::filter(metadata==E, value==envir) 
-  
-            if (any(is.na(maaslin_results_tbl$coef)) || any(is.na(maaslin_results_tbl$stderr))) {
-		    pz.error("Error: Missing values found in coef or stderr columns.")
-            }
-            maaslin_ash <- ash_wrapper(dplyr::select(maaslin_results_tbl, feature, coef) %>% deframe,
-                               dplyr::select(maaslin_results_tbl, feature, stderr) %>% deframe)
-            sample_ashr <- as_tibble(maaslin_ash$result, rownames="species")
-    }, error = function(e) {
-	    pz.error("Something went wrong with Maaslin2. Normally this is because the data is ill suited for this method; however, if you believe this to not be the case please file a bug report.")
-    })
+    sample_ashr <- as_tibble(ancom_ash$result, rownames = "species")
+  } else if (M == "maaslin2") {
+      ref_env_level <- levels(named_metadata[[E]])[1]
+      all_dset_level <- levels(named_metadata[[D]])
+      ref_dset_level <- all_dset_level[1]
+      if (length(all_dset_level) > 1) {
+          m_fixed_effects <- c(E, D)
+          m_reference <- paste0(ref_env_level, ",", ref_dset_level)
+      } else {
+          m_fixed_effects <- c(E)
+          m_reference <- ref_env_level
+      }
+      maaslin_res <- Maaslin2::Maaslin2(
+          input_data = as.data.frame(as.matrix(abd.meta$mtx)),
+          input_metadata = named_metadata,
+          # this is a vector of strings
+          fixed_effects = m_fixed_effects,
+          # this has to be a single string
+          reference = m_reference,
+          output = "temp/",
+          plot_heatmap = FALSE,
+          plot_scatter = FALSE
+      )
+      maaslin_results_tbl <- maaslin_res$results %>% tibble() %>%
+          dplyr::filter(metadata == E, value == envir)
+      if (any(is.na(maaslin_results_tbl$coef)) ||
+          any(is.na(maaslin_results_tbl$stderr))) {
+          pz.error("Error: Missing values found in coef or stderr columns.")
+      }
+      maaslin_ash <- ash_wrapper(
+          dplyr::select(maaslin_results_tbl, feature, coef) %>% deframe,
+          dplyr::select(maaslin_results_tbl, feature, stderr) %>% deframe
+      )
+      sample_ashr <- as_tibble(maaslin_ash$result, rownames = "species")
   } else {
-    pz.error("This shouldn't be possible, but somehow an incorrect differential abundance method was selected")
+      pz.error(
+          paste0(
+              "This shouldn't be possible, but somehow an incorrect ",
+              "differential abundance method was selected"
+          )
+      )
   }
   sample_pheno <- sample_ashr %>%
     dplyr::select(species, PosteriorMean) %>%
     deframe
+  
+  # Fix automatic renaming of taxa that seem "numeric"
+  spn <- names(sample_pheno)
+  orign <- rownames(abd.meta$mtx)
+  numeric_names <- tibble(old_name = as.character(orign[which(!is.na(as.numeric(orign)))]),
+                          new_name = paste0("X", old_name))
+  # if the names didn't change, just keep them:
+  all_names <- bind_rows(numeric_names, tibble(old_name=orign,
+                                               new_name=orign))
+  sample_pheno_tbl <- left_join(
+      enframe(sample_pheno, name="new_name", value="pheno"),
+      all_names)
+  
+  sample_pheno <- sample_pheno_tbl %>%
+      select(old_name, pheno) %>%
+      deframe()
+
   return(sample_pheno)
 }
 

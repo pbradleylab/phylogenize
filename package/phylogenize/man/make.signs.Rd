@@ -11,7 +11,7 @@ make.signs(results)
 p-value) and one column per gene tested.}
 }
 \value{
-List (per phylum) of numeric vectors of signs of hits.
+List (per taxon) of numeric vectors of signs of hits.
 }
 \description{
 Get effect sizes of genes from result tables.

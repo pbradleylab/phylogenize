@@ -2,7 +2,7 @@
 % Please edit documentation in R/plm-functions.R
 \name{calc.ess}
 \alias{calc.ess}
-\title{Master function to calculate environmental specificity scores.}
+\title{Main function to calculate environmental specificity scores.}
 \usage{
 calc.ess(abd.meta, pdata = NULL, b.optim = NULL, ...)
 }
@@ -15,7 +15,14 @@ calc.ess(abd.meta, pdata = NULL, b.optim = NULL, ...)
 $b$, otherwise optimize it.}
 }
 \value{
-An additively-smoothed estimate of taxon prevalences.
+A list with the following components:
+\describe{
+  \item{b.optim}{Shrinkage parameter b obtained through optimization}
+  \item{ess}{Logit-transformed, shrunken estimates of specificity.}
+  \item{regularized}{Non-transformed regularized values.}
+  \item{priors}{Values of priors.}
+  \item{phenoP}{Prior for environment of interest.}
+}
 }
 \description{
 Some particularly relevant global options are:

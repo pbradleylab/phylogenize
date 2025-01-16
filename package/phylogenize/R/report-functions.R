@@ -48,10 +48,9 @@ read.abd.metadata <- function(...) {
     }
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
     if (opts('which_phenotype') != 'abundance') {
-	# binarize to save memory usage since we care about pres/abs
-	abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
-    } else {
-        abd.meta$mtx <- abd.meta$mtx
+        pz.message("Binarizing input data...")
+	    # binarize to save memory usage since we care about pres/abs
+    	abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
     }
     gc()
     return(abd.meta)
@@ -85,8 +84,10 @@ read.abd.metadata <- function(...) {
 #'     estimators.
 #' @export
 check.process.metadata <- function(metadata, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- clone_and_merge(phylogenize:::PZ_OPTIONS, ...)
+    orig_md <- metadata
     E <- opts('env_column')
+    S <- opts('sample_column')
     envir <- opts('which_envir')
     if (!(opts('env_column') %in% colnames(metadata))) {
         pz.error(paste0("environment column not found: ", opts('env_column')))
@@ -111,15 +112,11 @@ check.process.metadata <- function(metadata, ...) {
       env_factor <- factor(metadata[[E]])
       env_levels <- levels(env_factor)
 
-      order <- c(setdiff(env_levels, envir), envir)
-      metadata <- metadata %>%
-	      mutate(env = factor(env, levels = order)) %>%
-	      arrange(env)	    
-      
       if (!(envir %in% env_levels)) {
         pz.error(paste0("environment ", envir, " not found in metadata"))
       }
-
+      env_factor <- forcats::fct_relevel(env_factor, envir, after=Inf)
+      metadata[[E]] <- env_factor
     } else {
       metadata[[E]] <- as.numeric(metadata[[E]])
       if (all(is.na(abd.meta$metadata[[E]]))) {
@@ -127,6 +124,18 @@ check.process.metadata <- function(metadata, ...) {
       }
     }
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
+
+    # One more sanity check before we return
+    compare_md <- full_join(orig_md[c(S, E)], metadata[c(S, E)], by=S)
+    wrong_rows <- compare_md[
+        compare_md[[paste0(E, ".x")]] != compare_md[[paste0(E, ".y")]],
+        ]
+    if (nrow(wrong_rows) > 0) {
+        print(wrong_rows)
+        pz.error(
+            "Something went wrong when loading metadata and environments no longer match; please report as a bug"
+        )
+    }
     
     return(metadata)
 }
@@ -200,14 +209,17 @@ read.abd.metadata.tabular <- function(...) {
     if (!(file.exists(mf))) {
         pz.error(paste0("file not found: ", mf))
     } else { pz.message(paste0("located metadata file: ", mf)) }
-    abd.mtx <- readr::read_tsv(af)
+
+    abd.df <- readr::read_tsv(af)
+    # convert to matrix
+    abd.mtx <- data.matrix(abd.df[, -1])
+    rownames(abd.mtx) <- abd.df[[1]]
+    # can remain as tbl
     metadata <- readr::read_tsv(mf)
     metadata <- check.process.metadata(metadata, ...)
-    if (opts('which_phenotype') == "abundance"){
-    	return(list(mtx=abd.mtx, abund_mtx=abd.mtx, metadata=metadata))
-    } else {
-    	return(list(mtx=abd.mtx, metadata=metadata))
-    }
+
+    return(list(mtx=abd.mtx, metadata=metadata))
+
 }
 
 #' Sanity-check abundance data
@@ -445,7 +457,6 @@ harmonize.abd.meta <- function(abd.meta, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk and
 #'   then read into vsearch/vsearch.}
 #' }
@@ -493,7 +504,6 @@ prepare.vsearch.input <- function(mtx, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#' input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences to be read into
 #' vsearch.}
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output which is
@@ -568,7 +578,6 @@ run.vsearch <- function(...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   input files).}
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output which is
 #'   then read back into \emph{phylogenize}.}
 #' }
@@ -597,7 +606,6 @@ get.vsearch.results <- function(...) {
 #' Some particularly relevant global options are:
 #' \describe{
 #'   \item{out_dir}{String. Path to output directory. Default: "output"}
-#'   input files).}
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis. Default: on package
 #'   load, this default is set to the result of \code{system.file("extdata",
@@ -633,7 +641,6 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk and
 #'   then read into vsearch.}
 #' }
@@ -682,54 +689,52 @@ create_matrix <- function(sub_df) {
 #' @return list of binary objects that are ready for use at the user given tax_level
 #' @export
 change.presence.tax.level <- function(binary, taxon, tax){
-	# Make a mapping file that is at the taxonomic level selected from the tax file.
-	clean <- tax %>%
-		select(cluster, taxon, phylum) %>%
-		distinct()
-        # Drop empty values from the taxonomic level selected if they are not 
-	clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
-        # Arrange them so that the runtime is slightly less in the lookup
-	clean <- clean %>%
-		group_by(across(all_of(taxon))) %>%
-		ungroup() %>%
-		arrange(phylum, !!sym(taxon)) %>%
-		mutate(cluster := as.character(cluster))
-        # Split the dataframe by phylum so that we only need to lookup the taxon associated with 
-	# each one.
-	clean <- clean %>% 
-		split(.$phylum)
-
-        # For every species in the dataframe, if the species is selected, pop the column and remove
-	# it from the sparse matrix.
-        binary_matrices <- list()
-	taxon <- sym(taxon)
-
-        for (i in 1:length(names(binary))){
-		name <- names(binary)[i]
-		b <- binary[[name]]
-		t <- clean[[name]]
-     
-                split_taxs <- t %>%
-			group_split(!!taxon) %>%
-			map(~ pull(.x, cluster))
-     
-        	split_names <- t %>%
-			group_split(!!taxon) %>%
-			map(~ pull(.x, !!taxon)) %>%
-			unlist() %>%
-			unique()
-       
-        	columns <- colnames(binary[[name]])
-     
-        	for (j in 1:length(split_names)){
-			union <- intersect(split_taxs[[j]], columns)
-			if (length(union) > 1){
-			   binary_matrices[[split_names[j]]] <- b[, union, drop = FALSE]
-			}
-        	}
+    # Make a mapping file that is at the taxonomic level selected from the tax file.
+    clean <- tax %>%
+        select(cluster, taxon, phylum) %>%
+        distinct()
+    # Drop empty values from the taxonomic level selected if they are not
+    clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
+    # Arrange them so that the runtime is slightly less in the lookup
+    clean <- clean %>%
+        arrange(phylum, !!sym(taxon)) %>%
+        mutate(cluster = as.character(cluster))
+    # Split the dataframe by phylum so that we only need to lookup the taxon associated with
+    # each one.
+    clean <- clean %>%
+        split(.$phylum)
+    
+    # For every species in the dataframe, if the species is selected, pop the column and remove
+    # it from the sparse matrix.
+    binary_matrices <- list()
+    taxon <- sym(taxon)
+    
+    for (i in 1:length(names(binary))){
+        name <- names(binary)[i]
+        b <- binary[[name]]
+        t <- clean[[name]]
+        
+        split_taxs <- t %>%
+            group_split(!!taxon) %>%
+            map(~ pull(.x, cluster))
+        
+        split_names <- t %>%
+            group_split(!!taxon) %>%
+            map(~ pull(.x, !!taxon)) %>%
+            unlist() %>%
+            unique()
+        
+        columns <- colnames(binary[[name]])
+        
+        for (j in 1:length(split_names)){
+            shared <- intersect(split_taxs[[j]], columns)
+            if (length(shared) > 1){
+                binary_matrices[[split_names[j]]] <- b[, shared, drop = FALSE]
+            }
         }
-	binary_matrices <- Filter(function(b) length(colnames(b)) > 1, binary_matrices)
-	return(binary_matrices)
+    }
+    binary_matrices <- Filter(function(b) length(colnames(b)) > 1, binary_matrices)
+    return(binary_matrices)
 }
 
 
@@ -757,7 +762,7 @@ change.tree.tax.level <- function(tree, taxon, tax){
   		group_by(across(all_of(taxon))) %>%
   		ungroup() %>%
   		arrange(phylum, !!sym(taxon)) %>%
-  		mutate(cluster := as.character(cluster))
+  		mutate(cluster = as.character(cluster))
 	# Split the dataframe by phylum so that we only need to lookup the taxon associated with 
 	# each one.
 	clean <- clean %>% 
@@ -877,7 +882,8 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     })
     tL <- vapply(species.per.tree, length, 1L)
     if (all(tL < opts('treemin'))) {
-        pz.error("Too few species found. Was the right database used?")
+        pz.error(paste0("Too few species found. Was the right database used? ",
+        "Are taxa named properly for this database?"))
     }
     passed.min <- nw(tL >= opts('treemin'))
     totalL <- vapply(pz.db$trees, function(tr) { length(tr$tip.label) }, 1L)
@@ -1517,4 +1523,304 @@ pheno_nonzero_var <- function(phenotype,taxa) {
                return((var(p) > 0))
            },
            TRUE)
+}
+
+###
+### Wrapper functions actually called by the phylogenize report
+###
+
+#' Read in data and metadata and calculate a phenotype (differential abundance, specificity, or prevalence).
+#'
+#' @param save_data Return processed data/metadata. Default is FALSE to save memory. Must set to TRUE if running POMS.
+#' @param ... Parameters to override defaults.
+#' @export
+data_to_phenotypes <- function(save_data=FALSE, ...) {
+    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+    # Read in user-supplied data and metadata
+    abd.meta <- read.abd.metadata(...)
+    # Read in trees, gene presence/absence, taxonomy
+    pz.db <- import.pz.db(...)
+    # Figure out how many trees to retain
+    pz.db <- adjust.db(pz.db, abd.meta, ...)
+    if (pz.options('assume_below_LOD')) {
+        abd.meta <- add.below.LOD(pz.db, abd.meta, ...)
+        sanity.check.abundance(abd.meta$mtx, ...)
+    }
+    phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
+    if (pz.options('which_phenotype') %in% c("specificity", "abundance")) {
+        # only retain observed taxa
+        pz.db$trees <- retain.observed.taxa(pz.db$trees,
+                                            phenotype_results$phenotype,
+                                            phenotype_results$phenoP,
+                                            phenotype_results$mapped.observed)
+        pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
+        pz.db$ntaxa <- length(pz.db$trees)
+    }
+    if (save_data) return(list(
+        abd.meta=abd.meta,
+        pz.db=pz.db,
+        phenotype_results=phenotype_results
+    ))
+    # otherwise, don't need to save the original data beyond this point
+    return(list(pz.db=pz.db, phenotype_results=phenotype_results))
+}
+
+#' Determine which phenotype to calculate and then calculate it.
+#'
+#' @param pz.db A database (typically obtained with \code{import.pz.db}).
+#' @param abd.meta A list consisting of a species abundance matrix and the
+#'     metadata (from read.abd.metadata or data_to_phenotypes).
+#' @param ... Parameters to override defaults.
+#' @export
+calculate_phenotypes <- function(abd.meta, pz.db, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
+    if (tolower(opts('core_method')) == "poms") {
+        pz.warning('POMS will ignore this phenotype as it computes its own on balances')
+    }
+    if (opts('which_phenotype') == "prevalence") {
+        phenotype <- prev.addw(abd.meta, ...)
+        phenoP <- NULL
+    } else if (opts('which_phenotype') == "specificity") {
+        if (opts('prior_type') == "file") {
+            prior.data <- read.table(file.path(opts('input_dir'),
+                                               opts('prior_file')))
+        } else {
+            prior.data <- NULL
+        }
+        ess <- calc.ess(abd.meta,
+                        prior.data,
+                        ...)
+        phenotype <- ess$ess
+        phenoP <- ess$phenoP
+    } else if (pz.options("which_phenotype") == "provided") {
+        p_tbl <- read_tsv(pz.options("phenotype_file"))
+        if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
+            phenotype <- deframe(p_tbl)
+        } else { # perform shrinkage on the provided values w/ their stderrs
+            p_est <- as.numeric(p_tbl[["estimate"]])
+            p_se <- as.numeric(p_tbl[["stderr"]])
+            names(p_est) <- p_tbl[[1]]
+            names(p_se) <- p_tbl[[1]]
+            ashr_res <- ash_wrapper(p_est, p_se)
+            phenotype <- ashr_res$result %>%
+                as_tibble(rownames="species") %>%
+                dplyr::select(species, PosteriorMean) %>%
+                deframe
+        }
+        phenoP <- 0
+    } else if (opts("which_phenotype") == "abundance") {
+        phenotype <- ashr.diff.abund(abd.meta, ...)
+        phenoP <- 0
+    } else {
+        pz.error(paste0("don't know how to calculate the phenotype ",
+                        opts('which_phenotype')))
+    }
+    phenotype <- clean.pheno(phenotype, pz.db)
+    list(phenotype=phenotype, phenoP=phenoP, mapped.observed=mapped.observed)
+}
+
+#' Perform either phylogenetic regression or POMS.
+#'
+#' @param pz.db A database (typically obtained with \code{import.pz.db}).
+#' @param abd.meta A list consisting of a species abundance matrix and the
+#'     metadata (from read.abd.metadata or data_to_phenotypes).
+#' @param ... Parameters to override defaults.
+#' @export
+get_signif_associated_genes <- function(pz.db,
+                                        phenotype,
+                                        do_POMS=FALSE,
+                                        p.method=phylolm.fx.pv,
+                                        ...) {
+    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+    taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$species)))
+    if (!do_POMS) {
+        if (pz.options('ncl') > 1) {
+            results <- result.wrapper.plm(taxa=taxaN,
+                                          pheno=phenotype,
+                                          tree=pz.db$trees[taxaN],
+                                          clusters=pz.db$species[taxaN],
+                                          proteins=pz.db$gene.presence[taxaN],
+                                          method=p.method,
+                                          do_POMS=do_POMS,
+                                          ncl=pz.options('ncl'))
+        } else {
+            results <- mapply(nonparallel.results.generator,
+                              pz.db$gene.presence[taxaN],
+                              pz.db$trees[taxaN],
+                              pz.db$species[taxaN],
+                              as.list(taxaN),
+                              MoreArgs=list(pheno=phenotype,
+                                            method=p.method,
+                                            use.for.loop=FALSE),
+                              SIMPLIFY=FALSE)
+        }
+    } else {
+        results <- result.wrapper.poms(taxa=taxaN,
+                                       pheno=phenotype,
+                                       tree=pz.db$trees[taxaN],
+                                       clusters=pz.db$species[taxaN],
+                                       proteins=pz.db$gene.presence[taxaN],
+                                       method=p.method)
+    }
+    
+    signif <- make.sigs(results)
+    signs <- make.signs(results)
+    pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
+    results.matrix <- make.results.matrix(results)
+    phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
+    pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
+    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig)
+    pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs, pos.sig.thresh, pz.db$gene.to.fxn)
+    # recalculate, since some of these may go away
+    phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
+    
+    return(list(
+        results=results,
+        signif=signif,
+        signs=signs,
+        pos.sig=pos.sig,
+        results.matrix=results.matrix,
+        phy.with.sigs=phy.with.sigs,
+        pos.sig.descs=pos.sig.descs,
+        pos.sig.thresh=pos.sig.thresh,
+        pos.sig.thresh.descs=pos.sig.thresh.descs
+    ))
+}
+
+#' Get enrichment tables.
+#'
+#' @param signif Significant genes.
+#' @param signs Signs of effect sizes.
+#' @param pz.db A database (typically obtained with \code{import.pz.db}).
+#' @param results.matrix Matrix of full results.
+#' @param export Write enrichment tables to disk? (Default: FALSE)
+#' @param print_out Display enrichment tables on screen? (Default: FALSE)
+#' @param ... Parameters to override defaults.
+#' @export
+get_enrichment_tbls <- function(signif,
+                                signs,
+                                pz.db,
+                                results.matrix,
+                                export=FALSE,
+                                print_out=FALSE, 
+                                ...) {
+    pretty.enr.tbl <- NULL
+    enr.overlap <- NULL
+    enrichment.tbl <- multi.kegg.enrich(signif,
+                                        signs,
+                                        pz.db$gene.to.fxn)
+    if (!is.null(enrichment.tbl)) {
+        enrichment.tbl <- filter(enrichment.tbl,
+                                 qvalue <= 0.25, enr.estimate > 1)
+        pretty.enr.tbl <- select(enrichment.tbl,
+                                 taxon,
+                                 cutoff,
+                                 ID,
+                                 Description,
+                                 qvalue,
+                                 enr.estimate) %>%
+            rename(Gene_significance=cutoff,
+                   Taxon=taxon,
+                   Description=Description,
+                   q_value=qvalue,
+                   Enrichment_odds_ratio=enr.estimate) %>%
+            arrange(factor(Gene_significance, levels=names(signif[[1]])),
+                    Taxon,
+                    q_value)
+        if (export) {
+            write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
+        }
+    }
+    if (!is.null(pretty.enr.tbl)) {
+        if (print_out) cat(output.enr.table(pretty.enr.tbl))
+        accession_to_fxn <- pz.db$gene.to.fxn %>%
+            select(accession, `function`) %>%
+            distinct()
+        if (nrow(enrichment.tbl) > 0) {
+            enr.overlap <- select(enrichment.tbl,
+                                  taxon,
+                                  cutoff,
+                                  ID,
+                                  Description,
+                                  geneID) %>%
+                separate_longer_delim(geneID, delim="/") %>%
+                left_join(.,
+                          accession_to_fxn,
+                          by=c("geneID"="accession")) %>%
+                rename(gene=geneID, description=`function`) %>%
+                mutate(effectsize=map2_dbl(
+                    taxon,
+                    gene,
+                    ~ {
+                        tryCatch({
+                            value <- results.matrix[[.x]][1, .y]
+                            if (length(value) == 0) {
+                                return(NA_real_)
+                            }
+                            return(value)
+                        }, error = function(e) {
+                            return(NA_real_)
+                        })
+                    }))
+            if (export) {
+                write.csv(file=file.path(pz.options('out_dir'),
+                                         "enr-overlaps.csv"),
+                          enr.overlap)
+                write.csv(file=file.path(pz.options('out_dir'),
+                                         "enr-overlaps-sorted.csv"),
+                          arrange(enr.overlap,
+                                  taxon,
+                                  factor(cutoff, levels=names(signif[[1]])),
+                                  desc(effectsize)))
+            }
+        }
+    }
+    return(list(pretty.enr.tbl=pretty.enr.tbl,
+                enr.overlap=enr.overlap))
+}  
+
+#--- Alternative to full report generation ---#
+
+#' Run just the core of the *phylogenize* pipeline start to finish, without
+#' making all of the plots. Useful when incorporating phylogenize into a longer
+#' analysis, or when you don't want to wait for everything to render.
+#'
+#' @details Note: this function uses package-wide options (see
+#'   \code{?pz.options}), which can be overridden using the \code{...} argument.
+#'
+#' @param do_POMS Run the POMS algorithm instead of phylogenetic regression
+#'   (default: FALSE).
+#' @param override_save_data Return the input data and metadata, even if not
+#'   using POMS (default: FALSE).
+#' @param p.method Function that returns the effect size and p-value per gene
+#'   (default: phylolm.fx.pv). Can be overridden to use (for example) a plain
+#'   linear model instead, for the sake of comparison.
+#' @param ... Parameters to override defaults.
+#' @export
+phylogenize_core <- function(do_POMS=FALSE,
+                             override_save_data=FALSE,
+                             override_options=NULL,
+                             p.method=phylogenize:::phylolm.fx.pv,
+                             ...) {
+    list_pheno <- data_to_phenotypes(
+        save_data = (!do_POMS || override_save_data),
+        ...
+    )
+    list_signif <- get_signif_associated_genes(
+        list_pheno$pz.db,
+        list_pheno$phenotype_results$phenotype,
+        do_POMS,
+        p.method,
+        ...)
+    enr_tbls <- get_enrichment_tbls(signif,
+                                    signs,
+                                    pz.db,
+                                    results.matrix,
+                                    export=TRUE,
+                                    print_out=TRUE,
+                                    ...)
+    return(list(list_pheno=list_pheno,
+                list_signif=list_signif,
+                enr_tbls=enr_tbls))
 }
