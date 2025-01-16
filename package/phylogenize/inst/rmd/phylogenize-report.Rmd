@@ -18,6 +18,7 @@ params:
   biom_file: ""
   input_format: "tabular"
   env_column: "env"
+  taxon_level: "phylum"
   dset_column: "dataset"
   phenotype_file: ""
   db: "gtdb"
@@ -100,6 +101,9 @@ abd.meta <- read.abd.metadata()
 pz.db <- import.pz.db()
 # Figure out how many trees to retain
 pz.db <- adjust.db(pz.db, abd.meta)
+
+pz.db$trees <- Filter(function(tr) length(tr$tip.label) > 1, pz.db$tree)
+
 if (pz.options('assume_below_LOD')) {
   abd.meta <- add.below.LOD(pz.db, abd.meta)
   sanity.check.abundance(abd.meta$mtx)
@@ -186,9 +190,9 @@ if (pz.options('which_phenotype') == "prevalence") {
 }
 
 phenotype <- clean.pheno(phenotype, pz.db)
+pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
 pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
 plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pheno.scale)
-pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
 
 # Template for plots
 template <- c(

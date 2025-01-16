@@ -107,32 +107,38 @@ gg.cont.tree <- function(phy,
                                                 midpoint = mean(cLimits),
                                                 guide = "colorbar",
                                                 name = cName)
-  } else {
-      cColors <- ggplot2::scale_color_gradient(low = colors["low.col"],
+        } else {
+          cColors <- ggplot2::scale_color_gradient(low = colors["low.col"],
                                                high = colors["high.col"],
                                                guide = "colorbar",
                                                name = cName)
-  }
-  # plot trees
-  if (reverse) {
-      ctree <- ggtree::ggtree(reduced.phy,
+        }
+        # plot trees
+        if (reverse) {
+           ctree <- ggtree::ggtree(reduced.phy,
                               ladderize = ladderize,
                               ggplot2::aes_string(color = cDisplay), ...) +
-          cColors + ggplot2::scale_x_reverse() + ggplot2::theme(legend.position = "bottom")
-  } else {
-      ctree <- ggtree::ggtree(reduced.phy,
+           cColors + ggplot2::scale_x_reverse() + ggplot2::theme(legend.position = "bottom")
+        } else {
+           ctree <- ggtree::ggtree(reduced.phy,
                               ladderize = ladderize,
                               ggplot2::aes_string(color = cDisplay), ...) +
-          cColors + ggplot2::theme(legend.position = "bottom")
-  }
-  if (plot) print(ctree)
-  return(list(tree = ctree,
+           cColors + ggplot2::theme(legend.position = "bottom")
+        }
+
+        if (plot) print(ctree)
+        
+        return(list(tree = ctree,
               cAnc = cAnc,
               rphy = reduced.phy,
               n = n,
               cols = colors,
               lims = cLimits,
               disp = cDisplay))
+    } else {
+        pz.message(paste0(cName, " has been removed from the phylogenetic trees: No phenotype found associated"))
+        return(NA)
+  }
 }
 
 
