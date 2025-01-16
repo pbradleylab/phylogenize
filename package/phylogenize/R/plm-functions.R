@@ -1,20 +1,24 @@
-#' Fit phylogenetic (or linear) models.
+#' Fit phylogenetic (or linear) models, or perform POMS.
 #'
 #' @param taxa Character vector giving the names of the taxa.
-#' @param pheno Named numeric vector giving phenotype values per species.
+#' @param pheno Named numeric vector giving phenotype values per species. Can be
+#'   NULL for POMS.
 #' @param tree Either a single tree covering all species, or a list of per-taxon
-#'     trees.
+#'   trees.
 #' @param proteins Named list of gene presence/absence matrices, per taxon.
 #' @param clusters Named list of character vectors of species IDs, per taxon.
 #' @param method A function that returns a length-2 numeric vector of
-#'     effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
-#'     \code{lm.fx.pv}).
+#'   effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
+#'   \code{lm.fx.pv}). Can be NULL for POMS.
+#' @param do_POMS Perform POMS instead of (phylogenetic) linear modeling.
 #' @param restrict.figfams Optionally, a character vector giving a subset of
-#'     genes to test.
+#'   genes to test.
 #' @param drop.zero.var Boolean giving whether to drop genes that are always
-#'     present or always absent in a particular taxon.
+#'   present or always absent in a particular taxon.
 #' @param only.return.names Boolean giving whether to just return the names of
-#'     genes to be tested (for debugging).
+#'   genes to be tested (for debugging).
+#' @param abd.meta List containing abundances and metadata (only required for
+#'   POMS)
 #' @return Named list of p-value and effect-size matrices, one per taxon.
 #' @export result.wrapper.plm
 result.wrapper.plm <- function(taxa,
@@ -23,9 +27,11 @@ result.wrapper.plm <- function(taxa,
                                proteins,
                                clusters,
                                method = phylolm.fx.pv,
+                               do_POMS = FALSE,
                                restrict.figfams = NULL,
                                drop.zero.var = FALSE,
                                only.return.names = FALSE,
+                               abd.meta = FALSE,
                                ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     lapply.across.names(taxa, function(p) {
@@ -40,9 +46,10 @@ result.wrapper.plm <- function(taxa,
         valid <- Reduce(intersect,
                         list(colnames(proteins[[p]]),
                              clusters[[p]],
-                             names(pheno),
                              tr$tip.label))
-        vclusters <- lapply(clusters, function(x) intersect(x, valid))
+        if (!is.null(pheno)) {
+            valid <- intersect(valid, names(pheno))
+        }
         if (is.null(restrict.figfams)) {
             restrict.figfams <- rownames(proteins[[p]])
         } else {
@@ -59,6 +66,7 @@ result.wrapper.plm <- function(taxa,
                                               which(fvar > 0)])
         }
         if (!only.return.names) {
+            if (!do_POMS) {
             matrix.plm(tr,
                        proteins[[p]],
                        pheno,
@@ -66,10 +74,90 @@ result.wrapper.plm <- function(taxa,
                        restrict.taxa = valid,
                        restrict.ff = restrict.figfams,
                        ...)
+            } else {
+                matrix.POMS(tr,
+                            proteins[[p]],
+                            abd.meta,
+                            restrict.taxa=valid,
+                            restrict.ff=restrict.figfams,
+                            ...)
+            }
         } else {
             restrict.figfams
         }
     })
+}
+
+#' Perform POMS modeling for a single clade.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{ncl}{Integer. Number of cores to use for parallel computation.
+#'   Default: 1}
+#'   \item{env_column}{String. Name of column in metadata file containing the
+#'   environment annotations.}
+#'   \item{sample_column}{String. Name of column in metadata file containing the
+#'   sample names.}
+#'   \item{which_envir}{String. Environment in which to calculate prevalence,
+#'   specificity, or differential abundance. Must match annotations in metadata.}
+#' }
+#'
+#' @param tree A tree relating taxa within a clade.
+#' @param mtx Gene presence/absence matrix.
+#' @param abd.meta A list giving an abundance matrix and metadata.
+#' @param restrict.ff Optionally, a character vector giving a subset of genes to
+#'   test.
+#' @param restrict.taxa Optionally, a character vector giving a subset of taxa
+#'   to test.
+#' @param poms_min_tips Minimum number of tips (min_num_tips); default 2.
+#' @param poms_min_func Minimum number of function instances
+#'   (min_func_instances); default 2.
+#' @param poms_pseudocount Pseudocount value for POMS; default 0.5.
+#' @return Matrix of p-values (row 1) and "effect-sizes" (row 2) per gene
+#'   (columns). Here, we "fake" effect sizes by taking the log2-ratio of
+#'   num_FSNs_group1_enrich and num_FSNs_group2_enrich with a 0.5 pseudocount.
+#' @export
+matrix.POMS <- function(tree,
+                        mtx,
+                        abd.meta,
+                        restrict.taxa=NULL,
+                        restrict.ff=NULL,
+                        poms_min_tips=2,
+                        poms_min_func=2,
+                        poms_pseudocount=0.5,
+                        ...) {
+    message("POMS")
+    
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    E <- opts('env_column')
+    S <- opts('sample_column')
+    envir <- opts('which_envir')
+    cores <- opts('ncl')
+    
+    # Note: dataset column is ignored
+    poms_group1 <- abd.meta$meta[[S]][abd.meta$meta[[E]] == envir]
+    poms_group2 <- abd.meta$meta[[S]][abd.meta$meta[[E]] != envir]
+    
+    if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
+    if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
+    
+    phylotype_df <- data.frame(t(mtx[restrict.ff, ]))
+    tree_nodes <- makeNodeLabel(tree)
+    poms_output <- POMS::POMS_pipeline(abun=data.frame(abd.meta$abd),
+                                       func=phylotype_df,
+                                       tree=tree_nodes,
+                                       group1_samples=poms_group1,
+                                       group2_samples=poms_group2,
+                                       ncores=cores,
+                                       min_num_tips=poms_min_tips,
+                                       min_func_instances=poms_min_func,
+                                       pseudocount=poms_pseudocount)
+    poms_enrichments <- (log2(
+        (poms_output$results[, "num_FSNs_group1_enrich"] + 0.5) /
+            (poms_output$results[, "num_FSNs_group2_enrich"] + 0.5)))
+    poms_pvals <- poms_output$results[, "multinomial_p"]
+    return(rbind(p.value = poms_pvals, Estimate = poms_enrichments,
+                 StdErr = NA, df = NA))
 }
 
 #' Fit phylogenetic (or linear) models (single core version, single taxon).

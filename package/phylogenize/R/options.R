@@ -14,7 +14,6 @@ default_params <- list(
     gene_color_absent = 'black',
     gene_color_present = 'slateblue2',
     input_format = "tabular",
-    linearize = FALSE,
     metadata_file = "",
     meas_err = TRUE,
     minimum = 3,
@@ -49,7 +48,8 @@ default_params <- list(
     phenotype_file = "phenotype.tsv",
     categorical = TRUE,
     diff_abund_method = "maaslin2",
-    working_dir = '.'
+    working_dir = '.',
+    core_method = "phylogenize"
 )
 
 
@@ -81,12 +81,12 @@ PZ_OPTIONS <- options_manager(.list=default_params)
 #'   \item{vsearch_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
 #' }
 #'
-#' @section Computing phenotypes:
+#' @section Computing phenotypes and results:
 #' \describe{
 #'   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
 #'   \item{db}{String. Which database to use. Can be "gtdb" or "uhgp." Default: "gtdb"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
-#'   \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}
+#'   \item{env_column}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
 #'   \item{taxon_level}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
 #'   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
 #'   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: TRUE}
@@ -104,6 +104,7 @@ PZ_OPTIONS <- options_manager(.list=default_params)
 #'   \item{phenotype_file}{String. If phenotype is provided, what is the path to the file? Default: "phenotype.tsv"}
 #'   \item{categorical}{Boolean. For abundance estimates, is the environment in env_column a categorical variable (TRUE) or continuous (FALSE)? Default: TRUE}
 #'   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "Maaslin2"}
+#'   \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "phylogenize" or "POMS" (case insensitive). Default: "phylogenize"}
 #' }
 #'
 #' @section Graphing:

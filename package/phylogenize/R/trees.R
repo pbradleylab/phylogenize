@@ -88,22 +88,20 @@ gg.cont.tree <- function(phy,
     ctrait <- ctrait[intersect(names(ctrait), restrict)]
   }
   if (is.null(n)) { n <- intersect(phy$tip.label, names(ctrait)) }
-  kept_tips <- keep.tips(phy, n)
-
-  if(!is.null(kept_tips)) {
-     if(is.null(reduced.phy)) {reduced.phy <- fix.tree(kept_tips)}
-        pz.message("getting continuous trait ancestry")
-        if (is.null(reduced.phy)) {
-           pz.error("all tips were dropped")
-        }
-        if (length(reduced.phy$tip.label) < 2) {
-           pz.error("need at least two tips for a tree")
-        }
-        if (is.null(cAnc)) cAnc <- phytools::fastAnc(reduced.phy, ctrait[n])
-        cDisplay <- truncated(c(unlist(ctrait[n]), unlist(cAnc)), unlist(cLimits))
-        
-        if ("mid.col" %in% names(colors)) {
-            cColors <- ggplot2::scale_color_gradient2(low = colors["low.col"],
+  if (is.null(reduced.phy)) { reduced.phy <- fix.tree(keep.tips(phy, n)) }
+  pz.message("getting continuous trait ancestry")
+  if (is.null(reduced.phy)) {
+      stop("all tips were dropped")
+  }
+  if (length(reduced.phy$tip.label) < 2) {
+      stop("need at least two tips for a tree")
+  }
+  if (is.null(cAnc)) cAnc <- phytools::fastAnc(reduced.phy, ctrait[n])
+  # concatenate tip values and node values
+  cDisplay <- truncated(c(ctrait[n], cAnc), cLimits)
+  # make color scales
+  if ("mid.col" %in% names(colors)) {
+      cColors <- ggplot2::scale_color_gradient2(low = colors["low.col"],
                                                 high = colors["high.col"],
                                                 mid = colors["mid.col"],
                                                 midpoint = mean(cLimits),

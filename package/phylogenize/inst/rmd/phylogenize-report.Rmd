@@ -31,7 +31,7 @@ params:
   assume_below_LOD: TRUE
   skip_graphs: FALSE
   vsearch_dir: "./bin"
-  linearize: FALSE
+  core_method: "phylogenize"
   use_rmd_params: TRUE
   error_to_file: TRUE
 ---
@@ -84,6 +84,17 @@ if (!pz.options('skip_graphs')) {
 # Only load lobstr to track memory usage if debugging
 dir.create(pz.options('out_dir'))
 
+if (tolower(pz.options('core_method'))=="phylogenize") {
+  p.method <- phylolm.fx.pv
+} else if (tolower(pz.options('core_method'))=="poms") {
+  p.method <- NULL
+  do_POMS <- TRUE
+} else if (tolower(pz.options('core_method'))=="linear") {
+  p.method <- lm.fx.pv
+} else {
+  pz.error("core_method must be phylogenize, poms, or linear")
+}
+
 # Read in user-supplied
 abd.meta <- read.abd.metadata()
 # Read in trees, gene presence/absence, taxonomy
@@ -129,6 +140,10 @@ taxa that are neither.
 # Calculate the phenotype of interest
 
 mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
+
+if (tolower(pz.options('core_method')) == "poms") {
+  pz.warning('POMS will ignore this phenotype as it computes its own on balances')
+}
 
 if (pz.options('which_phenotype') == "prevalence") {
   phenotype <- prev.addw(abd.meta)
@@ -257,22 +272,20 @@ an FDR of 5%.
 
 ```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
 
-if (pz.options('linearize')) { # mostly for testing
-  p.method <- lm.fx.pv
-} else {
-  p.method <- phylolm.fx.pv
-}
-
 
 taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$species)))
-if (pz.options('ncl') > 1) {
+
+if (!do_POMS) {
+  if (pz.options('ncl') > 1) {
     results <- result.wrapper.plm(taxa=taxaN,
                                   pheno=phenotype,
                                   tree=pz.db$trees[taxaN],
                                   clusters=pz.db$species[taxaN],
                                   proteins=pz.db$gene.presence[taxaN],
-                                  method=p.method)
-} else {
+                                  method=p.method,
+                                  do_POMS=do_POMS,
+                                  ncl=pz.options('ncl'))
+  } else {
     results <- mapply(nonparallel.results.generator,
                       pz.db$gene.presence[taxaN],
                       pz.db$trees[taxaN],
@@ -282,7 +295,16 @@ if (pz.options('ncl') > 1) {
                                     method=p.method,
                                     use.for.loop=FALSE),
                       SIMPLIFY=FALSE)
+  }
+} else {
+  results <- result.wrapper.poms(taxa=taxaN,
+                                 pheno=phenotype,
+                                 tree=pz.db$trees[taxaN],
+                                 clusters=pz.db$species[taxaN],
+                                 proteins=pz.db$gene.presence[taxaN],
+                                 method=p.method)
 }
+
 signif <- make.sigs(results)
 signs <- make.signs(results)
 
