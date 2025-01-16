@@ -209,6 +209,7 @@ read.abd.metadata.tabular <- function(...) {
     if (!(file.exists(mf))) {
         pz.error(paste0("file not found: ", mf))
     } else { pz.message(paste0("located metadata file: ", mf)) }
+
     abd.df <- readr::read_tsv(af)
     # convert to matrix
     abd.mtx <- data.matrix(abd.df[, -1])

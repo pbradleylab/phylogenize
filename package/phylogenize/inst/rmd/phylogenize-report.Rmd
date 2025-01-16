@@ -95,7 +95,12 @@ if (tolower(pz.options('core_method'))=="phylogenize") {
   pz.error("core_method must be phylogenize, poms, or linear")
 }
 
-
+# Read in user-supplied
+abd.meta <- read.abd.metadata()
+# Read in trees, gene presence/absence, taxonomy
+pz.db <- import.pz.db()
+# Figure out how many trees to retain
+pz.db <- adjust.db(pz.db, abd.meta)
 ```
 
 # Settings
@@ -129,7 +134,6 @@ taxa that are neither.
 list2env(data_to_phenotypes(save_data = !do_POMS), environment())
 # Also unpack "phenotype, phenoP, ..." into current environment
 list2env(phenotype_results, environment())
-
 
 pheno.scale <- get.pheno.plotting.scales(phenotype,
                                          pz.db$trees,
