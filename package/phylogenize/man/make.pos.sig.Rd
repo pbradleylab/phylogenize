@@ -14,7 +14,7 @@ make.pos.sig(sigs, signs, cut = "strong")
 \item{cut}{String giving named significance level to use.}
 }
 \value{
-List (per phylum) of string vectors of positive significant hits.
+List (per taxon) of string vectors of positive significant hits.
 }
 \description{
 Get vectors of significant genes with positive effect sizes.

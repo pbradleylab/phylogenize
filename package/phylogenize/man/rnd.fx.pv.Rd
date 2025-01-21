@@ -4,8 +4,7 @@
 \alias{rnd.fx.pv}
 \title{Wrapper to return random effect sizes and p-values; useful for testing.}
 \usage{
-rnd.fx.pv(m, p, tr, coefname = "mTRUE", restrict = NULL,
-  meas_err = FALSE)
+rnd.fx.pv(m, p, tr, coefname = "mTRUE", restrict = NULL, meas_err = FALSE)
 }
 \arguments{
 \item{m}{Named numeric vector of gene presence/absences per taxon.}

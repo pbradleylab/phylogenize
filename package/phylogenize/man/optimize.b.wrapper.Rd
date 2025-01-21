@@ -5,10 +5,22 @@
 \title{Based on a real presence/absence matrix, optimize the value of the
 regularization parameter $b$.}
 \usage{
-optimize.b.wrapper(real.mtx, real.ids, which.real.env = 2,
-  which.shape = 1, prior = 0.002, effect.size = 2, bounds = c(0.01,
-  5), add.pc = FALSE, tol = prior * 0.005, a = 0.05,
-  verbose = FALSE, optim.fxn = b.scorer, pos.prop = 0.5, ...)
+optimize.b.wrapper(
+  real.mtx,
+  real.ids,
+  which.real.env = 2,
+  which.shape = 1,
+  prior = 0.002,
+  effect.size = 2,
+  bounds = c(0.01, 5),
+  add.pc = FALSE,
+  tol = prior * 0.005,
+  a = 0.05,
+  verbose = FALSE,
+  optim.fxn = b.scorer,
+  pos.prop = 0.5,
+  ...
+)
 }
 \arguments{
 \item{real.mtx}{Presence/absence matrix.}

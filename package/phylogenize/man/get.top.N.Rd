@@ -4,17 +4,26 @@
 \alias{get.top.N}
 \title{Return the significant hits with the N smallest p-values.}
 \usage{
-get.top.N(p, sigs, signs, results, level = "strong", exclude = NULL,
-  N = 25, total.n.cutoff = 0, genomes.per.protein = NULL)
+get.top.N(
+  p,
+  sigs,
+  signs,
+  results,
+  level = "strong",
+  exclude = NULL,
+  N = 25,
+  total.n.cutoff = 0,
+  genomes.per.protein = NULL
+)
 }
 \arguments{
-\item{p}{A phylum}
+\item{p}{A taxon}
 
 \item{sigs}{The output of \code{make.sigs}.}
 
 \item{signs}{The output of \code{make.signs}.}
 
-\item{results}{List of result matrices, one per phylum.}
+\item{results}{List of result matrices, one per taxon.}
 
 \item{level}{Significance level (must be in \code{sigs[[1]]}).}
 
@@ -25,7 +34,7 @@ get.top.N(p, sigs, signs, results, level = "strong", exclude = NULL,
 \item{total.n.cutoff}{Optional: if \code{genomes.per.protein} provided, only
 return hits found in at least this many genomes.}
 
-\item{genomes.per.protein}{Optional: list (one per phylum) of named numeric
+\item{genomes.per.protein}{Optional: list (one per taxon) of named numeric
 vectors giving the number of genomes that each protein was found in.}
 }
 \value{

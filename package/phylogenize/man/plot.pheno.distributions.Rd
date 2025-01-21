@@ -2,17 +2,17 @@
 % Please edit documentation in R/report-functions.R
 \name{plot.pheno.distributions}
 \alias{plot.pheno.distributions}
-\title{Plot distributions of a phenotype across phyla.}
+\title{Plot distributions of a phenotype across taxa.}
 \usage{
 \method{plot}{pheno.distributions}(phenotype, pz.db, ...)
 }
 \arguments{
-\item{phenotype}{A named vector with the phenotype values for each taxon.}
+\item{phenotype}{A named vector with the phenotype values for each species.}
 
 \item{pz.db}{A database containing a \code{taxonomy} and \code{trees}.}
 }
 \value{
-A ggplot object with the phenotype distribution plotted per phylum.
+A ggplot object with the phenotype distribution plotted per taxon.
 }
 \description{
 Some particularly relevant global options are:

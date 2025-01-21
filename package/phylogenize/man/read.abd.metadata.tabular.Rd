@@ -17,7 +17,6 @@ annotations) from two tab-delimited files.
 \details{
 Some particularly relevant global options are:
 \describe{
-  \item{in_dir}{Input data/metadata directory.}
   \item{dset_column}{Name of metadata column containing dataset annotations.}
 }
 }

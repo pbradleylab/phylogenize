@@ -4,11 +4,17 @@
 \alias{make.sim}
 \title{Construct a simulation of microbial sequencing data.}
 \usage{
-make.sim(n.taxa, n.samples, avg.reads, prev.dist = c(-4, 2),
-  effect.size.mtx = 0, alphas = NULL)
+make.sim(
+  n.species,
+  n.samples,
+  avg.reads,
+  prev.dist = c(-4, 2),
+  effect.size.mtx = 0,
+  alphas = NULL
+)
 }
 \arguments{
-\item{n.taxa}{Integer; number of taxa to simulate.}
+\item{n.species}{Integer; number of species to simulate.}
 
 \item{n.samples}{Integer; number of samples to simulate.}
 
@@ -27,7 +33,7 @@ use for Dirichlet-Multinomial simulation.}
 A list:
   \item{sim}{A simulated abundance matrix}
   \item{com}{Multinomial distribution used to simulate abundances}
-  \item{prev}{Distribution of taxon prevalences.}
+  \item{prev}{Distribution of species prevalences.}
 }
 \description{
 Construct a simulation of microbial sequencing data.

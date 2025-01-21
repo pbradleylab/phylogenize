@@ -2,40 +2,57 @@
 % Please edit documentation in R/plm-functions.R
 \name{result.wrapper.plm}
 \alias{result.wrapper.plm}
-\title{Fit phylogenetic (or linear) models.}
+\title{Fit phylogenetic (or linear) models, or perform POMS.}
 \usage{
-\method{result}{wrapper.plm}(phyla, pheno, tree, proteins, clusters,
-  method = phylolm.fx.pv, restrict.figfams = NULL,
-  drop.zero.var = FALSE, only.return.names = FALSE, ...)
+\method{result}{wrapper.plm}(
+  taxa,
+  pheno,
+  tree,
+  proteins,
+  clusters,
+  method = phylolm.fx.pv,
+  do_POMS = FALSE,
+  restrict.figfams = NULL,
+  drop.zero.var = FALSE,
+  only.return.names = FALSE,
+  abd.meta = FALSE,
+  ...
+)
 }
 \arguments{
-\item{phyla}{Character vector giving the names of the phyla.}
+\item{taxa}{Character vector giving the names of the taxa.}
 
-\item{pheno}{Named numeric vector giving phenotype values per taxon.}
+\item{pheno}{Named numeric vector giving phenotype values per species. Can be
+NULL for POMS.}
 
-\item{tree}{Either a single tree covering all taxa, or a list of per-phylum
+\item{tree}{Either a single tree covering all species, or a list of per-taxon
 trees.}
 
-\item{proteins}{Named list of gene presence/absence matrices, per phylum.}
+\item{proteins}{Named list of gene presence/absence matrices, per taxon.}
 
-\item{clusters}{Named list of character vectors of taxon IDs, per phylum.}
+\item{clusters}{Named list of character vectors of species IDs, per taxon.}
 
 \item{method}{A function that returns a length-2 numeric vector of
 effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
-\code{lm.fx.pv}).}
+\code{lm.fx.pv}). Can be NULL for POMS.}
+
+\item{do_POMS}{Perform POMS instead of (phylogenetic) linear modeling.}
 
 \item{restrict.figfams}{Optionally, a character vector giving a subset of
 genes to test.}
 
 \item{drop.zero.var}{Boolean giving whether to drop genes that are always
-present or always absent in a particular phylum.}
+present or always absent in a particular taxon.}
 
 \item{only.return.names}{Boolean giving whether to just return the names of
 genes to be tested (for debugging).}
+
+\item{abd.meta}{List containing abundances and metadata (only required for
+POMS)}
 }
 \value{
-Named list of p-value and effect-size matrices, one per phylum.
+Named list of p-value and effect-size matrices, one per taxon.
 }
 \description{
-Fit phylogenetic (or linear) models.
+Fit phylogenetic (or linear) models, or perform POMS.
 }

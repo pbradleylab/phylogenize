@@ -40,14 +40,18 @@ read.abd.metadata <- function(...) {
     } else {
         pz.error(paste0("Invalid input format: ", opts('input_format')))
     }
+   
     sanity.check.abundance(abd.meta$mtx, ...)
     sanity.check.metadata(abd.meta$metadata, ...)
     if (opts('type_16S') == TRUE) {
         abd.meta <- process.16s(abd.meta, ...)
     }
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
-    # binarize to save memory usage since we care about pres/abs
-    abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+    if (opts('which_phenotype') != 'abundance') {
+        pz.message("Binarizing input data...")
+	    # binarize to save memory usage since we care about pres/abs
+    	abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+    }
     gc()
     return(abd.meta)
 }
@@ -62,6 +66,7 @@ read.abd.metadata <- function(...) {
 #' Some particularly relevant global options are:
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment annotations.}
+#'   \item{envir}{Environment of interest.}
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #'   \item{single_dset}{Boolean. If true, will assume that all samples come from
 #'   a single dataset called \code{dset1} no matter what, if anything, is in
@@ -73,10 +78,17 @@ read.abd.metadata <- function(...) {
 #'     \?pz.options).
 #' @return A data frame of metadata, with environment and
 #'     dataset columns converted to factors, *unless* calculating correlation
-#'     in which case environment column will be cast as numeric.
+#'     in which case environment column will be cast as numeric. The environment
+#'     factor will be automatically re-leveled so that \code{envir} is last, so
+#'     that it is guaranteed to appear in the output of differential abundance 
+#'     estimators.
 #' @export
 check.process.metadata <- function(metadata, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- clone_and_merge(phylogenize:::PZ_OPTIONS, ...)
+    orig_md <- metadata
+    E <- opts('env_column')
+    S <- opts('sample_column')
+    envir <- opts('which_envir')
     if (!(opts('env_column') %in% colnames(metadata))) {
         pz.error(paste0("environment column not found: ", opts('env_column')))
     }
@@ -96,10 +108,35 @@ check.process.metadata <- function(metadata, ...) {
             pz.error(paste0("sample column not found: ", opts('sample_column')))
         }
     }
-    if (!(opts('which_phenotype') == "correlation")) {
-        metadata[[opts('env_column')]] <- as.factor(metadata[[opts('env_column')]])
+    if (opts('categorical')) {   # i.e., env not continuous
+      env_factor <- factor(metadata[[E]])
+      env_levels <- levels(env_factor)
+
+      if (!(envir %in% env_levels)) {
+        pz.error(paste0("environment ", envir, " not found in metadata"))
+      }
+      env_factor <- forcats::fct_relevel(env_factor, envir, after=Inf)
+      metadata[[E]] <- env_factor
+    } else {
+      metadata[[E]] <- as.numeric(metadata[[E]])
+      if (all(is.na(abd.meta$metadata[[E]]))) {
+        pz.error("Environment failed conversion to numeric; is this supposed to be a categorical variable?")
+      }
     }
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
+
+    # One more sanity check before we return
+    compare_md <- full_join(orig_md[c(S, E)], metadata[c(S, E)], by=S)
+    wrong_rows <- compare_md[
+        compare_md[[paste0(E, ".x")]] != compare_md[[paste0(E, ".y")]],
+        ]
+    if (nrow(wrong_rows) > 0) {
+        print(wrong_rows)
+        pz.error(
+            "Something went wrong when loading metadata and environments no longer match; please report as a bug"
+        )
+    }
+    
     return(metadata)
 }
 
@@ -142,7 +179,7 @@ read.abd.metadata.biom <- function(...) {
         if (!(file.exists(mf))) {
             pz.error(paste0("file not found: ", mf))
         } else { pz.message(paste0("located metadata file: ", mf)) }
-        metadata <- data.frame(data.table::fread(mf))
+        metadata <- readr::read_tsv(mf)
         metadata <- check.process.metadata(metadata, ...)
     }
     rm(biomf); gc()
@@ -172,11 +209,17 @@ read.abd.metadata.tabular <- function(...) {
     if (!(file.exists(mf))) {
         pz.error(paste0("file not found: ", mf))
     } else { pz.message(paste0("located metadata file: ", mf)) }
-    abd.mtx <- fastread(af, cn=FALSE)
-    #gc()
-    metadata <- data.frame(data.table::fread(mf))
+
+    abd.df <- readr::read_tsv(af)
+    # convert to matrix
+    abd.mtx <- data.matrix(abd.df[, -1])
+    rownames(abd.mtx) <- abd.df[[1]]
+    # can remain as tbl
+    metadata <- readr::read_tsv(mf)
     metadata <- check.process.metadata(metadata, ...)
+
     return(list(mtx=abd.mtx, metadata=metadata))
+
 }
 
 #' Sanity-check abundance data
@@ -244,6 +287,7 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
     cs <- Matrix::colSums(abd.mtx)
     nz.cols <- which(cs > 0)
     z.col.logical <- (cs == 0)
+    
     if (sum(z.col.logical) > 0) {
         pz.warning(paste0("Dropping ", sum(z.col.logical),
                           " column(s), since no mapped taxa had observations"))
@@ -326,11 +370,8 @@ sanity.check.metadata <- function(metadata, ...) {
 #' @export
 harmonize.abd.meta <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    samples.present <- intersect(abd.meta$metadata[[opts('sample_column')]],
-                                 colnames(abd.meta$mtx))
-    #pz.error(opts('sample_column'))
-    #pz.error(colnames(abd.meta$metadata))
-    #pz.error(abd.meta$metadata[[opts('sample_column')]])
+    samples.present <- intersect(trimws(abd.meta$metadata[[opts('sample_column')]]),
+                                 trimws(colnames(abd.meta$mtx)))
     if (length(samples.present) == 0) {
         pz.error(paste0("No samples found in both metadata and ",
                         "abundance matrix; check for illegal characters ",
@@ -341,14 +382,14 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                             abd.meta$metadata[[opts('sample_column')]] %in%
                             samples.present, ]
 
-    if (opts('which_phenotype') %in% c("specificity", "prevalence")) {
+    if (opts('which_phenotype') %in% c("specificity", "prevalence", "abundance")) {
         all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
         env.number <- sapply(all.envs, function(e) {
             sum(abd.meta$metadata[[opts('env_column')]] == e)
         })
         names(env.number) <- all.envs
         singleton.envs <- names(which(env.number == 1))
-        if (length(singleton.envs) > 0) {
+	if (length(singleton.envs) > 0) {
             pz.warning(paste0("Warning: each environment requires at least two samples."))
             pz.warning("Dropped the following environment(s) from the analysis: ")
             for (s in singleton.envs) {
@@ -404,7 +445,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     }
     abd.meta$mtx <- abd.meta$mtx[, wcols, drop=FALSE]
     abd.meta$mtx <- remove.allzero.abundances(abd.meta$mtx)
-    abd.meta
+    return(abd.meta)
 }
 
 #--- Process 16S data---#
@@ -416,7 +457,6 @@ harmonize.abd.meta <- function(abd.meta, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk and
 #'   then read into vsearch/vsearch.}
 #' }
@@ -426,7 +466,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
 #' @export
 prepare.vsearch.input <- function(mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    binary = basename(opts('vsearch_bin'))
+    binary = basename(opts('vsearch_dir'))
     check.dna <- is.dna(rownames(mtx))
     if (!(all(check.dna))) {
         pz.error(paste0(
@@ -456,7 +496,7 @@ prepare.vsearch.input <- function(mtx, ...) {
 #'
 #' \code{run.vsearch} runs, by default, the optimal sequence aligner vsearch
 #' (doi.org/10.5281/zenodo.806850) on a FASTA file, typically one generated by
-#' \code{prepare.vsearch.input}. By changing the \code{vsearch_bin}
+#' \code{prepare.vsearch.input}. By changing the \code{vsearch_dir}
 #' option, the aligner vsearch can also be used. If the provided binary name
 #' is not"vsearch", \emph{phylogenize} will assume
 #' an old version of vsearch is being called that doesn't have the ability to 
@@ -464,13 +504,11 @@ prepare.vsearch.input <- function(mtx, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#' input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences to be read into
 #' vsearch.}
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output which is
 #' then read back into \emph{phylogenize}.}
 #'   \item{vsearch_dir}{String. Path where the binary of vsearch is found.}
-#'   \item{vsearch_bin}{String. File name of the binary of vsearch.}
 #'   \item{vsearch_cutoff}{Float. Between 0.95 and 1.00; percent identity minimum
 #'   for alignment results.}
 #'   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back
@@ -483,7 +521,7 @@ prepare.vsearch.input <- function(mtx, ...) {
 #' @export run.vsearch
 run.vsearch <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    binary = basename(opts('vsearch_bin'))
+    binary = basename(opts('vsearch_dir'))
     pid = opts('vsearch_cutoff')
     if (binary %in% c("vsearch")) {
       vsearch_args = c("--db",
@@ -522,7 +560,7 @@ run.vsearch <- function(...) {
     }
     pz.message(paste0("Calling aligner ", binary, " with arguments: ",
                       paste(vsearch_args, sep=" ", collapse=" ")))
-    r <- system2(file.path(opts('vsearch_dir'), opts('vsearch_bin')),
+    r <- system2(opts('vsearch_dir'),
                  args = vsearch_args)
     if (r != 0) {
         pz.error(paste0("Aligner failed with error code ", r))
@@ -540,7 +578,6 @@ run.vsearch <- function(...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   input files).}
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output which is
 #'   then read back into \emph{phylogenize}.}
 #' }
@@ -552,7 +589,7 @@ get.vsearch.results <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     # map to MIDAS IDs using vsearch
     assignments <- data.frame(
-        data.table::fread(opts('vsearch_outfile')))
+        readr::read_tsv(opts('vsearch_outfile')))
     row.hits <- as.numeric(gsub("Row", "", assignments[, 1]))
     row.targets <- sapply(assignments[, 2],
                           function(x) strsplit(x, ";;")[[1]][3])
@@ -569,7 +606,6 @@ get.vsearch.results <- function(...) {
 #' Some particularly relevant global options are:
 #' \describe{
 #'   \item{out_dir}{String. Path to output directory. Default: "output"}
-#'   input files).}
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis. Default: on package
 #'   load, this default is set to the result of \code{system.file("extdata",
@@ -605,7 +641,6 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   input files).}
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk and
 #'   then read into vsearch.}
 #' }
@@ -640,6 +675,138 @@ create_matrix <- function(sub_df) {
   return(mat)
 }
 
+
+#' Changes the presence / absence binary for the desired taxonomic level given by the user.
+#'
+#' \code{import.pz.db} filters down the binary file for database
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{binary}{Matrix. Object that represent a phylogenize prepared internal database}
+#'   \item{taxon}{String. Can be either be 'phylum','class',''order','family', or 'genus'}
+#'   \item{tax}{dataframe. Object with all the taxonomy for the given database. Has column mathcing the taxon parameter}
+#' }
+#' @return list of binary objects that are ready for use at the user given tax_level
+#' @export
+change.presence.tax.level <- function(binary, taxon, tax){
+    # Make a mapping file that is at the taxonomic level selected from the tax file.
+    clean <- tax %>%
+        select(cluster, taxon, phylum) %>%
+        distinct()
+    # Drop empty values from the taxonomic level selected if they are not
+    clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
+    # Arrange them so that the runtime is slightly less in the lookup
+    clean <- clean %>%
+        arrange(phylum, !!sym(taxon)) %>%
+        mutate(cluster = as.character(cluster))
+    # Split the dataframe by phylum so that we only need to lookup the taxon associated with
+    # each one.
+    clean <- clean %>%
+        split(.$phylum)
+    
+    # For every species in the dataframe, if the species is selected, pop the column and remove
+    # it from the sparse matrix.
+    binary_matrices <- list()
+    taxon <- sym(taxon)
+    
+    for (i in 1:length(names(binary))){
+        name <- names(binary)[i]
+        b <- binary[[name]]
+        t <- clean[[name]]
+       
+        split_taxs <- t %>%
+            group_split(!!taxon) %>%
+            map(~ pull(.x, cluster))
+        
+        split_names <- t %>%
+            group_split(!!taxon) %>%
+            map(~ pull(.x, !!taxon)) %>%
+            unlist() %>%
+            unique()
+        
+        columns <- colnames(binary[[name]])
+        
+        for (j in 1:length(split_names)){
+            shared <- intersect(split_taxs[[j]], columns)
+            if (length(shared) > 1){
+                binary_matrices[[split_names[j]]] <- b[, shared, drop = FALSE]
+            }
+        }
+    }
+    binary_matrices <- Filter(function(b) length(colnames(b)) > 1, binary_matrices)
+    return(binary_matrices)
+}
+
+
+#' Changes the internal database tree for the desired taxonomic level given by the user.
+#'
+#' \code{import.pz.db} filters down the binary file for database
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{tree}{List. Object that represent a phylogenize prepared internal database}
+#'   \item{taxon}{String. Can be either be 'phylum','class',''order','family', or 'genus'}
+#'   \item{tax}{dataframe. Object with all the taxonomy for the given database. Has column mathcing the taxon parameter}
+#' }
+#' @return list of tree objects that are ready for use at the user given tax_level
+#' @export
+change.tree.tax.level <- function(tree, taxon, tax){
+	# Make a mapping file that is at the taxonomic level selected from the tax file.
+	clean <- tax %>%
+  		select(cluster, taxon, phylum) %>%
+  		distinct()
+	pz.message(head(clean))
+	# Drop empty values from the taxonomic level selected if they are not 
+	clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
+	# Arrange them so that the runtime is slightly less in the lookup
+	clean <- clean %>%
+  		group_by(across(all_of(taxon))) %>%
+  		ungroup() %>%
+  		arrange(phylum, !!sym(taxon)) %>%
+  		mutate(cluster = as.character(cluster))
+	# Split the dataframe by phylum so that we only need to lookup the taxon associated with 
+	# each one.
+	clean <- clean %>% 
+		split(.$phylum)
+
+	tree_matrices <- list()
+	names <- names(tree)
+	for (i in seq_along(tree)) {
+  		name <- names[i]
+  		tr <- tree[[name]]
+  		t <- clean[[name]]
+		
+    		if (is.null(clean[[name]])) {
+			pz.message(names(clean))
+			pz.message(paste("Warning: No data found for taxon classification", name))
+			next 
+		} else {
+			pz.message(paste("Good news: Data found for taxon classification", name))
+		}	
+  		# Generate a list of unique split names based on taxon
+  		split_names <- t %>%
+    			group_split(!!sym(taxon)) %>%
+    			map(~ pull(.x, !!sym(taxon))) %>%
+    			unlist() %>%
+    			unique()
+  
+ 	 	# Process each split name
+ 		for (j in seq_along(split_names)) {
+			tips <- tr$tip.label
+    			split_tips <- t %>%
+				filter(family == split_names[[j]])
+    			tips <- intersect(tips, split_tips[["cluster"]])
+			subtree <- ape::keep.tip(tr, tips)
+    			if (!is.null(subtree) && length(subtree$tip.label) > 1) {
+			   tree_matrices[[split_names[j]]] <- subtree    
+			}
+		}
+	}
+	tree_matrices <- Filter(function(tr) length(tr$tip.label) > 1, tree_matrices)
+	return(tree_matrices)
+}
+
+
 #--- Import data necessary for analyses ---#
 
 #' Import the data necessary for *phylogenize* analysis.
@@ -648,36 +815,54 @@ create_matrix <- function(sub_df) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   \item{type}{String. Type of data to use, either "midas" (shotgun) or "16S"
-#'   (amplicon).}
-#'   \item{db_version}{String. Which version of the MIDAS database to use
-#'   ("midas_v1.2", "midas_v1.0", "gtdb_v214", "midas2_uhgg_fam").}
+#'   \item{type_16S}{Boolean. If 16S data, TRUE, otherwise shotgun data is assumed. Default: FALSE}
+#'   \item{db}{String. Which database to use ("gtdb" or "uhgp")).}
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis.}
 #' }
 #' @return A list of the data objects required to perform a *phylogenize*
 #'     analysis, with components \code{gene.presence}, \code{trees},
-#'     \code{phyla}, \code{taxonomy}, \code{g.mappings}, and \code{gene.to.fxn}.
+#'     \code{taxonomy}, \code{g.mappings}, and \code{gene.to.fxn}.
 #' @export
 import.pz.db <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     
     if (opts('db') == "gtdb") {
-            # Read in gene presence and the functions file 
+	    # Read in gene presence and the functions file
             gene.presence <- readRDS(file.path(opts('data_dir'), "gtdb-gene-presence-binary.rds"))
-	    # Read in the phylogenitic tree
+	    # Read in the phylogenetic trees
             trees <- readRDS(file.path(opts('data_dir'), "gtdb_214-trees.rds"))
-            # Add in the species column from the cluster column *This can be removed later on so that the external db is format fully
-            taxonomy <- data.frame(data.table::fread(file.path(opts('data_dir'),"gtdb_214-taxonomy.csv")), stringsAsFactors = FALSE)
-	    # Read in the KO annotations file
-            gene.to.fxn <- data.table::fread(file.path(opts('data_dir'), "gtdb.functions"), header = F)
+	    # Add in the species column from the cluster column *This can be removed later on so that the external db is format fully
+            taxonomy <- read_csv(file.path(opts('data_dir'),"gtdb_214-taxonomy.csv"))
+            # Read in the KO annotations file
+            gene.to.fxn <- read_csv(file.path(opts('data_dir'), "gtdb.functions"))
+    } else if (opts('db') == "uhgp") {
+	    gene.presence <- readRDS(file.path(opts('data_dir'), "uhgp-gene-presence-binary.rds"))
+	    trees <- readRDS(file.path(opts('data_dir'), "uhgp-trees.rds"))
+	    taxonomy <- read_csv(file.path(opts('data_dir'),"uhgp-taxonomy.csv"))
+	    gene.to.fxn <- read_csv(file.path(opts('data_dir'), "uhgp.functions"))
+    }   else if (opts('db') == "midas1.2") {
+	    gene.presence <- readRDS(file.path(opts('data_dir'), "MIDAS-gene-presence-binary-1.2.rds"))
+	    trees <- readRDS(file.path(opts('data_dir'), "MIDAS_1.2-trees.rds"))
+	    taxonomy <- read_csv(file.path(opts('data_dir'),"MIDAS_1.2-taxonomy.csv"))
+	    gene.to.fxn <- read_csv(file.path(opts('data_dir'), "midas_v1.2.functions"))
     } else {
-#'   \item{type_16S}{String. Which  Default: "gtdb"}
-        pz.error(paste0("Unknown data type ", opts('db')))
+            pz.error(paste0("Unknown data type ", opts('db')))
     }
-    colnames(gene.to.fxn) <- c("gene", "function")
+    # Check if the files exist instead of throwing a null error
+    if (is.null(gene.presence) | is.null(trees) | is.null(taxonomy) | is.null(gene.to.fxn)) {
+	    pz.error(paste0("One or more of the database files used in phylogenize is not found. Please check these have been downloaded and are in the expected location"))
+    }
 
-    # finished
+    gene.to.fxn$gene <- gene.to.fxn$node_head
+    # Make the files at the user requested taxon level. Here we adjust the classification level to look at
+    # i.e family, class, order, etc.
+    if(opts('taxon_level') != "phylum"){
+	    gene.presence <- change.presence.tax.level(gene.presence, opts('taxon_level'), taxonomy)
+	    trees <- change.tree.tax.level(trees, opts('taxon_level'), taxonomy)
+	    trees <- Filter(function(tr) length(tr$tip.label) > 1, trees)
+    }
+    
     return(list(gene.presence = gene.presence,
                 trees = trees,
                 taxonomy = taxonomy,
@@ -686,41 +871,33 @@ import.pz.db <- function(...) {
 
 #' Clean up imported database.
 #'
-#' \code{adjust.db} removes any phyla with fewer than \code{opts('treemin')}
+#' \code{adjust.db} removes any species with fewer than \code{opts('treemin')}
 #' representatives, removes tips from trees that were not observed in the data,
 #' and resolves polytomies. It also adds a couple of variables into the database
-#' that give lists of taxa per tree and the total number of remaining phyla.
+#' that give lists of species per tree and the total number of remaining taxa
 #'
 #' @param pz.db A database (typically obtained with \code{import.pz.db}).
-#' @param abd.meta A list consisting of a taxon abundance matrix and the
+#' @param abd.meta A list consisting of a species abundance matrix and the
 #'     metadata.
 #' @return An updated database.
 #' @export
 adjust.db <- function(pz.db, abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    taxa.observed <- rownames(abd.meta$mtx)
-
-    # Since midas ID are inclded in the database, we remove them
-    # and match on a species level 
-    taxa.per.tree <- lapply(pz.db$trees, function(tr) {
-	#truncated_tips <- sapply(tr$tip.label, function(label) {
-        #	sub("_(?!.*_).*", "", label, perl = TRUE)
-        #}
-	#pz.error(taxa.observed[1])
-	pz.error(tr$tip.label[1])
-	pz.error(intersect(tr$tip.label, taxa.observed))
-	intersect(tr$tip.label, taxa.observed)
-    })
+    species.observed <- rownames(abd.meta$mtx)
     
-    tL <- vapply(taxa.per.tree, length, 1L)
+    species.per.tree <- lapply(pz.db$trees, function(tr) {
+	intersect(tr$tip.label, species.observed)
+    })
+    tL <- vapply(species.per.tree, length, 1L)
     if (all(tL < opts('treemin'))) {
-        pz.error("Too few taxa found. Was the right database used?")
+        pz.error(paste0("Too few species found. Was the right database used? ",
+        "Are taxa named properly for this database?"))
     }
     passed.min <- nw(tL >= opts('treemin'))
     totalL <- vapply(pz.db$trees, function(tr) { length(tr$tip.label) }, 1L)
     pct.obs <- mapply(function(x, y) x / y, tL, totalL)
     passed.pct <- nw(pct.obs >= opts('pctmin'))
-    pz.message("Determining which phyla to test...")
+    pz.message("Determining which taxa to test...")
     for (tn in 1:length(pz.db$trees)) {
         pz.message(paste0(names(pz.db$trees)[tn],
                           " (pct): ", format(pct.obs[tn] * 100, digits=2),
@@ -729,21 +906,21 @@ adjust.db <- function(pz.db, abd.meta, ...) {
                                         tL[tn] >= opts('treemin')),
                                        yes="kept",
                                        no="dropped")
-		  ))
-}
-    saved.phyla <- intersect(passed.min, passed.pct)
-    if (length(saved.phyla) == 0) {
+                          ))
+    }
+    saved.taxa <- intersect(passed.min, passed.pct)
+    if (length(saved.taxa) == 0) {
         pz.error(paste0("All trees had less than ",
                         format(opts('pctmin') * 100, digits=2),
-                        "% of taxa observed. Either a very small ASV ",
+                        "% of species observed. Either a very small ASV ",
                         "table was provided, read depth was very shallow, ",
                         "the right database was not selected or very few ASVs ",
                         "mapped to entries in the database."))
     }
-    pz.db$trees <- pz.db$trees[saved.phyla]
-    pz.db$taxa <- lapply(pz.db$trees, function(x) x$tip.label)
-    pz.db$nphyla <- length(pz.db$trees)
-    pz.db$trees <- lapply(pz.db$trees, function(phy) fix.tree(phy))
+    pz.db$trees <- pz.db$trees[saved.taxa]
+    pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
+    pz.db$ntaxa <- length(pz.db$trees)
+    pz.db$trees <- lapply(pz.db$trees, fix.tree)
     pz.db
 }
 
@@ -759,10 +936,10 @@ adjust.db <- function(pz.db, abd.meta, ...) {
 #' @export
 add.below.LOD <- function(pz.db, abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    taxa.observed <- rownames(abd.meta$mtx)
+    species.observed <- rownames(abd.meta$mtx)
     all.possible.taxa <- Reduce(union,
                                 lapply(pz.db$gene.presence, colnames))
-    not.observed.taxa <- setdiff(all.possible.taxa, taxa.observed)
+    not.observed.taxa <- setdiff(all.possible.taxa, species.observed)
     if (length(not.observed.taxa) > 0) {
         taxa.zero <- matrix(rep(0, length(not.observed.taxa) *
                                    ncol(abd.meta$mtx)),
@@ -773,8 +950,10 @@ add.below.LOD <- function(pz.db, abd.meta, ...) {
         abd.meta$mtx <- rbind(abd.meta$mtx, taxa.zero)
     }
     # Make sure still binary
-    abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
-    abd.meta
+    if(opts('which_phenotype') != 'abundance'){
+        abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
+    }
+    return(abd.meta)
 }
 
 #' Modify trees to retain only observed taxa (for use with specificity only).
@@ -840,18 +1019,18 @@ clean.pheno <- function(phenotype, pz.db) {
 #' @param trees A list of tree objects.
 #' @param phenoP An optional value giving the prior probability for the
 #'     environment of interest.
-#' @return A list of overall limits (\code{limits}), phylum-specific limits
+#' @return A list of overall limits (\code{limits}), taxon-specific limits
 #'     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
 #'     (\code{zero}).
 #' @export
-get.pheno.plotting.scales <- function(phenotype, trees, phenoP=NULL, ...) {
+get.pheno.plotting.scales <- function(phenotype, trees, phenoP=0, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (opts('which_phenotype') == 'prevalence') {
         get.pheno.plotting.scales.prevalence(phenotype,
                                              trees,
                                              phenoP,
                                              ...)
-    } else if (opts('which_phenotype') %in% c('specificity', 'correlation')) {
+    } else if (opts('which_phenotype') %in% c('specificity', 'abundance')) {
         get.pheno.plotting.scales.specificity(phenotype,
                                               trees,
                                               phenoP,
@@ -873,31 +1052,36 @@ get.pheno.plotting.scales <- function(phenotype, trees, phenoP=NULL, ...) {
 #' @param trees A list of tree objects.
 #' @param phenoP An optional value giving the prior probability for the
 #'     environment of interest.
-#' @return A list of overall limits (\code{limits}), phylum-specific limits
+#' @return A list of overall limits (\code{limits}), taxon-specific limits
 #'     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
 #'     (\code{zero}).
 #' @keywords internal
 get.pheno.plotting.scales.prevalence <- function(phenotype,
                                                  trees,
-                                                 phenoP=NULL,
+                                                 phenoP=0,
                                                  ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     phenoLimits <- quantile(unique(phenotype), c(0.2, 0.8))
-    phenoLimitsPhylum <- lapply(trees, function(tr) {
-        phi <- phenotype[intersect(unlist(names(phenotype)), unlist(tr$tip.label))] %>%
+    phenoLimitsTaxon <- lapply(trees, function(tr) {
+        phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>%
             na.omit
-        quantile(unique(phi), c(0.2, 0.8))
+	if (length(unique(phi)) > 1) {
+		quantile(unique(phi), c(0.2, 0.8))
+        } else {
+                return(NULL)
+        }
     })
+    #phenoLimitsTaxon[!sapply(phenoLimitsTaxon, is.null)]
     phenoColors <- c(low.col=opts('prev_color_low'),
                      high.col=opts('prev_color_high'))
     return(list(limits=phenoLimits,
-                phy.limits=phenoLimitsPhylum,
+                phy.limits=phenoLimitsTaxon,
                 colors=phenoColors,
                 zero=0))
 }
 
 
-#' Get phenotype plotting scales (specificity-specific).
+#' Get phenotype plotting scales (specificity or abundance).
 #'
 #' Some particularly relevant global options are:
 #' \describe{
@@ -912,18 +1096,18 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
 #' @param trees A list of tree objects.
 #' @param phenoP An optional value giving the prior probability for the
 #'     environment of interest.
-#' @return A list of overall limits (\code{limits}), phylum-specific limits
+#' @return A list of overall limits (\code{limits}), taxon-specific limits
 #'     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
 #'     (\code{zero}).
 #' @keywords internal
 get.pheno.plotting.scales.specificity <- function(phenotype,
                                                   trees,
-                                                  phenoP=NULL,
+                                                  phenoP=0,
                                                   ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     phenoLimits <- c(phenoP - 1 * sd(phenotype),
                      phenoP + 1 * sd(phenotype))
-    phenoLimitsPhylum <- lapply(trees, function(tr) {
+    phenoLimitsTaxon <- lapply(trees, function(tr) {
         phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>%
             na.omit %>%
             unique
@@ -933,7 +1117,7 @@ get.pheno.plotting.scales.specificity <- function(phenotype,
                      mid.col=opts('spec_color_mid'),
                      high.col=opts('spec_color_high'))
     return(list(limits=phenoLimits,
-                phy.limits=phenoLimitsPhylum,
+                phy.limits=phenoLimitsTaxon,
                 colors=phenoColors,
                 zero=phenoP))
 }
@@ -958,68 +1142,91 @@ plot.phenotype.trees <- function(phenotype,
                                  ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (any(!(names(trees) %in% names(scale$phy.limits)))) {
-        pz.error("phylum-specific limits must be calculated for every tree")
+        pz.error("taxon-specific limits must be calculated for every tree")
     }
     plotted.pheno.trees <- lapply(names(trees), function(tn) {
-        tryCatch({gg.cont.tree(trees[[tn]],
-                               phenotype,
-                               cLimits=scale$phy.limits[[tn]],
-                               colors=scale$colors,
-                               cName=paste0(tn,
-                                            ": ",
-                                            opts('which_phenotype')),
-                               plot=FALSE)},
-                 error=function(e) {
-		     #pz.error(scale$phy.limits[[tn]])
-                     pz.warning(e)
-                     NA
-                 })
-    })
-    names(plotted.pheno.trees) <- names(trees)
-    plotted.pheno.trees <- plotted.pheno.trees[vapply(plotted.pheno.trees, is.list, TRUE)]
-    if (length(plotted.pheno.trees) == 0) {
-        pz.warning("No trees were plotted: too few taxa for any phylum?")
+					  tryCatch(
+                                              gg.cont.tree(trees[[tn]], phenotype, cLimits=scale$phy.limits[[tn]],colors=scale$colors,cName=tn,plot=FALSE),
+					      error = function(e) {
+						message(paste("Error in tree", tn, ": ", e$message))
+					        return(NULL)
+					      })
+                                 })
+    if(!is.null(plotted.pheno.trees)) {
+       names(plotted.pheno.trees) <- names(trees)
+       plotted.pheno.trees <- plotted.pheno.trees[vapply(plotted.pheno.trees, is.list, TRUE)]
+       if (length(plotted.pheno.trees) == 0) {
+          pz.warning("No trees were plotted: too few taxa for any taxon?")
+       }
+       return(plotted.pheno.trees)
     }
-    plotted.pheno.trees
 }
+    
 
-#' Plot distributions of a phenotype across phyla.
+#' Plot distributions of a phenotype across taxa.
 #'
 #' Some particularly relevant global options are:
 #' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
 #'   or "specificity").}
 #' }
-#' @param phenotype A named vector with the phenotype values for each taxon.
+#' @param phenotype A named vector with the phenotype values for each species.
 #' @param pz.db A database containing a \code{taxonomy} and \code{trees}.
-#' @return A ggplot object with the phenotype distribution plotted per phylum.
+#' @return A ggplot object with the phenotype distribution plotted per taxon.
 #' @export plot.pheno.distributions
 plot.pheno.distributions <- function(phenotype,
                                      pz.db,
                                      ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     kept.species <- Reduce(c, lapply(pz.db$trees, function(x) x$tip.label))
-    pheno.phylum <- pz.db$taxonomy[match(names(phenotype),
-                                         pz.db$taxonomy$cluster),
-                                   "phylum",
+    pheno.taxon <- pz.db$taxonomy[match(names(phenotype), pz.db$taxonomy$cluster),
+                                   pz.options("taxon_level"),
                                    drop=TRUE]
     pheno.characteristics <- data.frame(pheno=phenotype,
-                                        phylum=pheno.phylum,
+                                        taxon=pheno.taxon,
                                         cluster=names(phenotype))
     sub.pheno <- subset(pheno.characteristics, cluster %in% kept.species)
-    distros <- ggplot2::ggplot(sub.pheno,
-                               ggplot2::aes(pheno,
-                                            color = phylum,
-                                            fill = phylum)) +
-        ggplot2::geom_density() +
-        ggplot2::xlab(opts('which_phenotype')) +
-        ggplot2::ggtitle(paste0("Distributions of phenotype (",
-                                opts('which_phenotype'), ")"))
-    if (length(unique(sub.pheno$phylum)) > 1) { # don't assume >1 phylum
-        distros <- distros + ggplot2::facet_grid(phylum ~ .)
+    taxon_uniq <- unique(sub.pheno$taxon)
+    # Get color pallet
+    color_palette <- scales::hue_pal()(length(taxon_uniq))
+
+    # Remove any rows with NA as they were unable to be found by by that
+    # taxonomic classification in the codebase
+    sub.pheno <- sub.pheno[!(sub.pheno$taxon == "" | is.na(sub.pheno$taxon)), ]
+
+    distros <- sub.pheno %>%
+	    dplyr::group_by(taxon) %>%
+	    nest() %>%
+	    mutate(n_datapoints = map_dbl(data, nrow)) %>%
+	    dplyr::filter(n_datapoints >= 3) %>%
+	    arrange(-n_datapoints) %>%
+	    mutate(plots = map2(data, taxon, ~ {
+            	p <- ggplot2::ggplot(.x, ggplot2::aes(pheno, fill=.y)) +
+		    ggplot2::geom_density() +  
+                    ggplot2::xlab(opts('which_phenotype')) +
+                    ggplot2::ggtitle(.y) +
+                    ggplot2::theme_minimal() + 
+		    ggplot2::scale_fill_manual(values = setNames(color_palette, taxon_uniq)) + 
+		    ggplot2::guides(fill = "none")
+            	return(p)
+		 })) %>%
+	    ungroup() %>%
+	    dplyr::select(plots) %>%
+	    tibble::deframe()
+
+    # Group the ggplots into sets of 10 with them already being ordered from the
+    # groups with the most individuals to the least for node tips in the kept taxon
+    combine_plots <- function(plots, ncol = 2) {
+	    patchwork::wrap_plots(plots, ncol = ncol)
     }
+    # This number can be adjusted for how many plots per facet.
+    # Anything above 6 starts to squish the axis however.
+    grouped_plots <- split(distros, ceiling(seq_along(distros) / 6)) 
+    distros <- lapply(grouped_plots, combine_plots)
+
     return(distros)
 }
+
 
 #' Edit a list of plotted trees to add fancy highlight labels.
 #'
@@ -1032,7 +1239,7 @@ plot.pheno.distributions <- function(phenotype,
 #'   or "specificity").}
 #' }
 #'
-#' @param plotted.pheno.trees A named list of ggtree plots (per phylum).
+#' @param plotted.pheno.trees A named list of ggtree plots (per taxon).
 #' @param phenotype Phenotype to plot/label.
 #' @param label Label to give to the phenotype.
 #' @param stroke.scale How thick to make the highlight.
@@ -1051,101 +1258,33 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
         pz.message("warning: no trees found")
         return(NULL)
     }
-    pl <- length(plotted.pheno.trees)
+
     for (pn in 1:length(plotted.pheno.trees)) {
-        p <- plotted.pheno.trees[[pn]]
-        rp <- p$rphy
-        tr <- p$tree
-        rp2 <- rp
-        # pad tip labels so the additional stuff doesn't get cut off when
-        # calculating x limits
-        rp2$tip.label <- paste0(rp2$tip.label, " (phenotype = ...", units, ")")
-        xlim <- plot(rp2, plot=FALSE, no.margin=TRUE)$x.lim
-        new.tr <- tr +
-            ggtree::geom_tiplab() +
-            ggplot2::xlim(xlim[1], xlim[2])
-        fn <- knitr::fig_path('svg', number = pn)
-        tryCatch(
-            hack.tree.labels(new.tr,
-                             fn,
-                             stroke.scale=stroke.scale,
-                             pheno=phenotype,
-                             units=units,
-                             pheno.name=label),
-            error = function(e) {
-                pz.message(e)
-                # Fall back to non-interactive
-                non.interactive.plot(new.tr, fn)
-            })
+	    p <- plotted.pheno.trees[[pn]]
+	    rp <- p$rphy
+	    tr <- p$tree
+	    rp2 <- rp
+	    rp2$tip.label <- paste0(rp2$tip.label, " (phenotype = ...", units, ")")
+	    xlim <- plot(rp2, plot=FALSE, no.margin=TRUE)$x.lim
+	    new.tr <- tr +
+		    ggtree::geom_tiplab() +
+		    ggplot2::xlim(xlim[1], xlim[2])
+	    fn <- knitr::fig_path('svg', number = pn)
+
+	    #new.tr + geom_tiplab() + xlim(NA, 5)
+            # Make the labels as species not the midas id
+	    non.interactive.plot(new.tr, fn)
     }
+    #tree_list <- lapply(plotted.pheno.trees, function(tree) {
+    #    pz.error(tree)        
+    #})
+
+    #interactive_plot_list <- lapply(plotted.pheno.trees, plot.interactive.tree, phenotype)
+    #for (i in seq_along(interactive_plot_list)) {
+    #    plot.tree.with.phenotype(tree_list[[i]], phenotype_data, paste0("tree_plot_", i, ".svg"))
+    #}
 }
 
-# IN PROGRESS
-plotly.labeled.phenotype.trees <- function(plotted.pheno.trees,
-                                           phenotype,
-                                           label='prevalence',
-                                           stroke.scale=0.3,
-                                           units='%') {
-    if (is.null(plotted.pheno.trees)) {
-        pz.message("warning: no trees found")
-        return(NULL)
-    }
-    if (length(plotted.pheno.trees) == 0) {
-        pz.message("warning: no trees found")
-        return(NULL)
-    }
-    pl <- length(plotted.pheno.trees)
-    for (pn in 1:length(plotted.pheno.trees)) {
-        p <- plotted.pheno.trees[[pn]]
-        rp <- p$rphy
-        tr <- p$tree
-        rp2 <- rp
-        # pad tip labels so the additional stuff doesn't get cut off when
-        # calculating x limits
-        # rp2$tip.label <- paste0(rp2$tip.label, " (phenotype = ...", units, ")")
-        # xlim <- plot(rp2, plot=FALSE, no.margin=TRUE)$x.lim
-        tr_data <- filter(tr$data, isTip) %>%
-            left_join()
-            mutate(label=paste(
-
-                   ))
-        new.tr <- tr +
-            ggtree::geom_tiplab() +
-            ggplot2::xlim(xlim[1], xlim[2])
-        fn <- knitr::fig_path('svg', number = pn)
-        plotly
-        tryCatch(
-            hack.tree.labels(new.tr,
-                             fn,
-                             stroke.scale=stroke.scale,
-                             pheno=phenotype,
-                             units=units,
-                             pheno.name=label),
-            error = function(e) {
-                pz.message(e)
-                # Fall back to non-interactive
-                non.interactive.plot(new.tr, fn)
-            })
-    }
-    tip_data <- filter(p$data, isTip) %>%
-        mutate(label=paste(
-                   protein_type,
-                   class,
-                   family,
-                   species,
-                   label,
-                   sep="::"
-               ))
-    gp <- (p + geom_point(data=tip_data,
-                          aes(x=x, y=y, color=clade,
-                              shape=protein_type, label=label),
-                          size=3) +
-           scale_shape_manual(values=c(15, 2)) +
-           scale_color_manual(values=clade_cols)) %>% ggplotly
-    if (!is.null(path)) {
-        htmlwidgets::saveWidget(gp, path)
-    } else {gp}
-}
 
 #' Make a hybrid tree-heatmap plot showing the taxon distribution of significant
 #' hits.
@@ -1158,14 +1297,14 @@ plotly.labeled.phenotype.trees <- function(plotted.pheno.trees,
 #' @param sig.genes Character vector of the significant genes.
 #' @param tree A tree object.
 #' @param plotted.tree A ggtree plot of \code{tree}.
-#' @param phylum Name of the phylum represented by \code{tree}
+#' @param taxon Name of the taxon represented by \code{tree}
 #' @param verbose Whether to report debugging information (boolean).
 #' @export do.clust.plot
 do.clust.plot <- function(gene.presence,
                           sig.genes,
                           tree,
                           plotted.tree,
-                          phylum,
+                          taxon,
                           verbose=FALSE,
                           ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -1177,7 +1316,7 @@ do.clust.plot <- function(gene.presence,
                     "sig.genes",
                     "tree",
                     "plotted.tree",
-                    "phylum",
+                    "taxon",
                     "verbose",
                     "PZ_OPTIONS"),
                   envir=environment())
@@ -1191,7 +1330,7 @@ do.clust.plot <- function(gene.presence,
                         sig.genes,
                         tree,
                         plotted.tree,
-                        phylum,
+                        taxon,
                         verbose,
                         ...)
     print(tmpL[[1]])
@@ -1216,7 +1355,7 @@ do.clust.plot <- function(gene.presence,
 #' @param sig.genes Character vector of the significant genes.
 #' @param tree A tree object.
 #' @param plotted.tree A ggtree plot of \code{tree}.
-#' @param phylum Name of the phylum represented by \code{tree}
+#' @param taxon Name of the taxon represented by \code{tree}
 #' @param verbose Whether to report debugging information (boolean).
 #' @return A faceted ggplot object.
 #' @export
@@ -1224,7 +1363,7 @@ single.cluster.plot <- function(gene.presence,
                                 sig.genes,
                                 tree,
                                 plotted.tree,
-                                phylum,
+                                taxon,
                                 verbose=FALSE,
                                 ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
@@ -1260,7 +1399,7 @@ single.cluster.plot <- function(gene.presence,
         sig.ord <- sig.ord[order(sig.ord[, 3]), , drop=FALSE]
     }
     tmp <- ggtree::facet_plot(p,
-                              panel=paste0('heatmap: ', phylum),
+                              panel=paste0('heatmap: ', taxon),
                               data=sig.ord,
                               geom=ggplot2::geom_tile,
                               mapping=ggplot2::aes(x = as.numeric(as.factor(gene)),
@@ -1328,9 +1467,7 @@ output.enr.table <- function(enr.table) {
     enr.table %>%
         dplyr::mutate(
             Gene_significance=capwords(Gene_significance),
-            Subsystem_level=toupper(Subsystem_level),
-            Phylum=capwords(Phylum),
-            Subsystem=gsub("_", " ", enr.table$Subsystem)
+            Taxon=capwords(Taxon)
         ) %>%
         dplyr::mutate(
               q_value=kableExtra::cell_spec(
@@ -1380,19 +1517,317 @@ install.data.figshare <- function(data_path=NULL,
     untar(data_path, exdir = system.file("", package="phylogenize"))
 }
 
-#' Return a boolean telling whether a phenotype has nonzero variance in different phyla.
+#' Return a boolean telling whether a phenotype has nonzero variance in different taxa.
 #'
 #' @param phenotype A quantitative phenotype.
 #' @param taxa From `pz.db$taxa`.
 #' @return A boolean vector with length equal to `length(taxa)`.
 #' @export
-pheno_nonzero_var <- function(phenotype,
-                              taxa) {
+pheno_nonzero_var <- function(phenotype,taxa) {
     vapply(taxa,
            function(tx) {
-               p <- phenotype[intersect(names(phenotype),
-                                        tx)]
+               p <- phenotype[intersect(names(phenotype),tx)]
                return((var(p) > 0))
            },
            TRUE)
+}
+
+###
+### Wrapper functions actually called by the phylogenize report
+###
+
+#' Read in data and metadata and calculate a phenotype (differential abundance, specificity, or prevalence).
+#'
+#' @param save_data Return processed data/metadata. Default is FALSE to save memory. Must set to TRUE if running POMS.
+#' @param ... Parameters to override defaults.
+#' @export
+data_to_phenotypes <- function(save_data=FALSE, ...) {
+    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+    # Read in user-supplied data and metadata
+    abd.meta <- read.abd.metadata(...)
+    # Read in trees, gene presence/absence, taxonomy
+    pz.db <- import.pz.db(...)
+    # Figure out how many trees to retain
+    pz.db <- adjust.db(pz.db, abd.meta, ...)
+    if (pz.options('assume_below_LOD')) {
+        abd.meta <- add.below.LOD(pz.db, abd.meta, ...)
+        sanity.check.abundance(abd.meta$mtx, ...)
+    }
+    phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
+    if (pz.options('which_phenotype') %in% c("specificity", "abundance")) {
+        # only retain observed taxa
+        pz.db$trees <- retain.observed.taxa(pz.db$trees,
+                                            phenotype_results$phenotype,
+                                            phenotype_results$phenoP,
+                                            phenotype_results$mapped.observed)
+        pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
+        pz.db$ntaxa <- length(pz.db$trees)
+    }
+    if (save_data) return(list(
+        abd.meta=abd.meta,
+        pz.db=pz.db,
+        phenotype_results=phenotype_results
+    ))
+    # otherwise, don't need to save the original data beyond this point
+    return(list(pz.db=pz.db, phenotype_results=phenotype_results))
+}
+
+#' Determine which phenotype to calculate and then calculate it.
+#'
+#' @param pz.db A database (typically obtained with \code{import.pz.db}).
+#' @param abd.meta A list consisting of a species abundance matrix and the
+#'     metadata (from read.abd.metadata or data_to_phenotypes).
+#' @param ... Parameters to override defaults.
+#' @export
+calculate_phenotypes <- function(abd.meta, pz.db, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
+    if (tolower(opts('core_method')) == "poms") {
+        pz.warning('POMS will ignore this phenotype as it computes its own on balances')
+    }
+    if (opts('which_phenotype') == "prevalence") {
+        phenotype <- prev.addw(abd.meta, ...)
+        phenoP <- NULL
+    } else if (opts('which_phenotype') == "specificity") {
+        if (opts('prior_type') == "file") {
+            prior.data <- read.table(file.path(opts('input_dir'),
+                                               opts('prior_file')))
+        } else {
+            prior.data <- NULL
+        }
+        ess <- calc.ess(abd.meta,
+                        prior.data,
+                        ...)
+        phenotype <- ess$ess
+        phenoP <- ess$phenoP
+    } else if (pz.options("which_phenotype") == "provided") {
+        p_tbl <- read_tsv(pz.options("phenotype_file"))
+        if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
+            phenotype <- deframe(p_tbl)
+        } else { # perform shrinkage on the provided values w/ their stderrs
+            p_est <- as.numeric(p_tbl[["estimate"]])
+            p_se <- as.numeric(p_tbl[["stderr"]])
+            names(p_est) <- p_tbl[[1]]
+            names(p_se) <- p_tbl[[1]]
+            ashr_res <- ash_wrapper(p_est, p_se)
+            phenotype <- ashr_res$result %>%
+                as_tibble(rownames="species") %>%
+                dplyr::select(species, PosteriorMean) %>%
+                deframe
+        }
+        phenoP <- 0
+    } else if (opts("which_phenotype") == "abundance") {
+        phenotype <- ashr.diff.abund(abd.meta, ...)
+        phenoP <- 0
+    } else {
+        pz.error(paste0("don't know how to calculate the phenotype ",
+                        opts('which_phenotype')))
+    }
+    phenotype <- clean.pheno(phenotype, pz.db)
+    list(phenotype=phenotype, phenoP=phenoP, mapped.observed=mapped.observed)
+}
+
+#' Perform either phylogenetic regression or POMS.
+#'
+#' @param pz.db A database (typically obtained with \code{import.pz.db}).
+#' @param abd.meta A list consisting of a species abundance matrix and the
+#'     metadata (from read.abd.metadata or data_to_phenotypes).
+#' @param ... Parameters to override defaults.
+#' @export
+get_signif_associated_genes <- function(pz.db,
+                                        phenotype,
+                                        do_POMS=FALSE,
+                                        p.method=phylolm.fx.pv,
+                                        ...) {
+    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+    taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$species)))
+    if (!do_POMS) {
+        if (pz.options('ncl') > 1) {
+            results <- result.wrapper.plm(taxa=taxaN,
+                                          pheno=phenotype,
+                                          tree=pz.db$trees[taxaN],
+                                          clusters=pz.db$species[taxaN],
+                                          proteins=pz.db$gene.presence[taxaN],
+                                          method=p.method,
+                                          do_POMS=do_POMS,
+                                          ncl=pz.options('ncl'))
+        } else {
+            results <- mapply(nonparallel.results.generator,
+                              pz.db$gene.presence[taxaN],
+                              pz.db$trees[taxaN],
+                              pz.db$species[taxaN],
+                              as.list(taxaN),
+                              MoreArgs=list(pheno=phenotype,
+                                            method=p.method,
+                                            use.for.loop=FALSE),
+                              SIMPLIFY=FALSE)
+        }
+    } else {
+        results <- result.wrapper.poms(taxa=taxaN,
+                                       pheno=phenotype,
+                                       tree=pz.db$trees[taxaN],
+                                       clusters=pz.db$species[taxaN],
+                                       proteins=pz.db$gene.presence[taxaN],
+                                       method=p.method)
+    }
+    
+    signif <- make.sigs(results)
+    signs <- make.signs(results)
+    pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
+    results.matrix <- make.results.matrix(results)
+    phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
+    pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
+    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig)
+    pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs, pos.sig.thresh, pz.db$gene.to.fxn)
+    # recalculate, since some of these may go away
+    phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
+    
+    return(list(
+        results=results,
+        signif=signif,
+        signs=signs,
+        pos.sig=pos.sig,
+        results.matrix=results.matrix,
+        phy.with.sigs=phy.with.sigs,
+        pos.sig.descs=pos.sig.descs,
+        pos.sig.thresh=pos.sig.thresh,
+        pos.sig.thresh.descs=pos.sig.thresh.descs
+    ))
+}
+
+#' Get enrichment tables.
+#'
+#' @param signif Significant genes.
+#' @param signs Signs of effect sizes.
+#' @param pz.db A database (typically obtained with \code{import.pz.db}).
+#' @param results.matrix Matrix of full results.
+#' @param export Write enrichment tables to disk? (Default: FALSE)
+#' @param print_out Display enrichment tables on screen? (Default: FALSE)
+#' @param ... Parameters to override defaults.
+#' @export
+get_enrichment_tbls <- function(signif,
+                                signs,
+                                pz.db,
+                                results.matrix,
+                                export=FALSE,
+                                print_out=FALSE, 
+                                ...) {
+    pretty.enr.tbl <- NULL
+    enr.overlap <- NULL
+    enrichment.tbl <- multi.kegg.enrich(signif,
+                                        signs,
+                                        pz.db$gene.to.fxn)
+    if (!is.null(enrichment.tbl)) {
+        enrichment.tbl <- filter(enrichment.tbl,
+                                 qvalue <= 0.25, enr.estimate > 1)
+        pretty.enr.tbl <- select(enrichment.tbl,
+                                 taxon,
+                                 cutoff,
+                                 ID,
+                                 Description,
+                                 qvalue,
+                                 enr.estimate) %>%
+            rename(Gene_significance=cutoff,
+                   Taxon=taxon,
+                   Description=Description,
+                   q_value=qvalue,
+                   Enrichment_odds_ratio=enr.estimate) %>%
+            arrange(factor(Gene_significance, levels=names(signif[[1]])),
+                    Taxon,
+                    q_value)
+        if (export) {
+            write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
+        }
+    }
+    if (!is.null(pretty.enr.tbl)) {
+        if (print_out) cat(output.enr.table(pretty.enr.tbl))
+        accession_to_fxn <- pz.db$gene.to.fxn %>%
+            select(accession, `function`) %>%
+            distinct()
+        if (nrow(enrichment.tbl) > 0) {
+            enr.overlap <- select(enrichment.tbl,
+                                  taxon,
+                                  cutoff,
+                                  ID,
+                                  Description,
+                                  geneID) %>%
+                separate_longer_delim(geneID, delim="/") %>%
+                left_join(.,
+                          accession_to_fxn,
+                          by=c("geneID"="accession")) %>%
+                rename(gene=geneID, description=`function`) %>%
+                mutate(effectsize=map2_dbl(
+                    taxon,
+                    gene,
+                    ~ {
+                        tryCatch({
+                            value <- results.matrix[[.x]][1, .y]
+                            if (length(value) == 0) {
+                                return(NA_real_)
+                            }
+                            return(value)
+                        }, error = function(e) {
+                            return(NA_real_)
+                        })
+                    }))
+            if (export) {
+                write.csv(file=file.path(pz.options('out_dir'),
+                                         "enr-overlaps.csv"),
+                          enr.overlap)
+                write.csv(file=file.path(pz.options('out_dir'),
+                                         "enr-overlaps-sorted.csv"),
+                          arrange(enr.overlap,
+                                  taxon,
+                                  factor(cutoff, levels=names(signif[[1]])),
+                                  desc(effectsize)))
+            }
+        }
+    }
+    return(list(pretty.enr.tbl=pretty.enr.tbl,
+                enr.overlap=enr.overlap))
+}  
+
+#--- Alternative to full report generation ---#
+
+#' Run just the core of the *phylogenize* pipeline start to finish, without
+#' making all of the plots. Useful when incorporating phylogenize into a longer
+#' analysis, or when you don't want to wait for everything to render.
+#'
+#' @details Note: this function uses package-wide options (see
+#'   \code{?pz.options}), which can be overridden using the \code{...} argument.
+#'
+#' @param do_POMS Run the POMS algorithm instead of phylogenetic regression
+#'   (default: FALSE).
+#' @param override_save_data Return the input data and metadata, even if not
+#'   using POMS (default: FALSE).
+#' @param p.method Function that returns the effect size and p-value per gene
+#'   (default: phylolm.fx.pv). Can be overridden to use (for example) a plain
+#'   linear model instead, for the sake of comparison.
+#' @param ... Parameters to override defaults.
+#' @export
+phylogenize_core <- function(do_POMS=FALSE,
+                             override_save_data=FALSE,
+                             override_options=NULL,
+                             p.method=phylogenize:::phylolm.fx.pv,
+                             ...) {
+    list_pheno <- data_to_phenotypes(
+        save_data = (!do_POMS || override_save_data),
+        ...
+    )
+    list_signif <- get_signif_associated_genes(
+        list_pheno$pz.db,
+        list_pheno$phenotype_results$phenotype,
+        do_POMS,
+        p.method,
+        ...)
+    enr_tbls <- get_enrichment_tbls(signif,
+                                    signs,
+                                    pz.db,
+                                    results.matrix,
+                                    export=TRUE,
+                                    print_out=TRUE,
+                                    ...)
+    return(list(list_pheno=list_pheno,
+                list_signif=list_signif,
+                enr_tbls=enr_tbls))
 }

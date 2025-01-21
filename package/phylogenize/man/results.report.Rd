@@ -7,14 +7,14 @@
 results.report(results, sigs, signs)
 }
 \arguments{
-\item{results}{List of result matrices, one per phylum.}
+\item{results}{List of result matrices, one per taxon.}
 
 \item{sigs}{The output of \code{make.sigs}.}
 
 \item{signs}{The output of \code{make.signs}.}
 }
 \value{
-A table with the number of positive significant results per phylum at
+A table with the number of positive significant results per taxon at
     each significance level in \code{sigs}.
 }
 \description{
