@@ -4,9 +4,13 @@
 \alias{render.report}
 \title{Run *phylogenize* start to finish.}
 \usage{
-render.report(output_file = "report_output.html",
-  report_input = "phylogenize-report.Rmd", do_cache = TRUE,
-  reset_after = TRUE, ...)
+render.report(
+  output_file = "report_output.html",
+  report_input = "phylogenize-report.Rmd",
+  do_cache = TRUE,
+  reset_after = TRUE,
+  ...
+)
 }
 \arguments{
 \item{output_file}{Path giving what to name the resulting HTML file.}

@@ -4,7 +4,7 @@ default_params <- list(
     assume_below_LOD = TRUE,
     biom_file = "",
     db = "gtdb",
-    data_dir = "./data",
+    data_dir = "",
     devel = FALSE,
     devel_pkgdir = 'package/phylogenize',
     dset_column = "dataset",
@@ -14,7 +14,6 @@ default_params <- list(
     gene_color_absent = 'black',
     gene_color_present = 'slateblue2',
     input_format = "tabular",
-    linearize = FALSE,
     metadata_file = "",
     meas_err = TRUE,
     minimum = 3,
@@ -38,6 +37,7 @@ default_params <- list(
     spec_color_mid = 'gray50',
     treemin = 5,
     type_16S = FALSE,
+    tax_level = "family",
     use_rmd_params = FALSE,
     vsearch_16sfile = "16s_gtdb.frn",
     vsearch_cutoff = 0.985,
@@ -49,7 +49,8 @@ default_params <- list(
     phenotype_file = "phenotype.tsv",
     categorical = TRUE,
     diff_abund_method = "maaslin2",
-    working_dir = '.'
+    working_dir = '.',
+    core_method = "phylogenize"
 )
 
 
@@ -67,7 +68,7 @@ PZ_OPTIONS <- options_manager(.list=default_params)
 #' \describe{
 #'   \item{abundance_file}{String. Name of abundance tabular file. Default: "test-abundance.tab"}
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
-#'   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: "./data", but on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
+#'   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: empty string, but on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message output to an error message file? Default: FALSE}
 #'   \item{input_format}{String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). Default: "tabular"}
 #'   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
@@ -81,12 +82,12 @@ PZ_OPTIONS <- options_manager(.list=default_params)
 #'   \item{vsearch_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
 #' }
 #'
-#' @section Computing phenotypes:
+#' @section Computing phenotypes and results:
 #' \describe{
 #'   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
 #'   \item{db}{String. Which database to use. Can be "gtdb" or "uhgp." Default: "gtdb"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
-#'   \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}
+#'   \item{env_column}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
 #'   \item{taxon_level}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
 #'   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
 #'   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: TRUE}
@@ -104,6 +105,7 @@ PZ_OPTIONS <- options_manager(.list=default_params)
 #'   \item{phenotype_file}{String. If phenotype is provided, what is the path to the file? Default: "phenotype.tsv"}
 #'   \item{categorical}{Boolean. For abundance estimates, is the environment in env_column a categorical variable (TRUE) or continuous (FALSE)? Default: TRUE}
 #'   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "Maaslin2"}
+#'   \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "phylogenize" or "POMS" (case insensitive). Default: "phylogenize"}
 #' }
 #'
 #' @section Graphing:
@@ -174,7 +176,35 @@ set_data_internal <- function(fail=FALSE, startup=FALSE) {
     if (success) pz.options(data_dir=dd)
 }
 
+#' Test whether data is installed and warn user if not.
+#'
+#' @param startup Boolean. Is this function being called by .onLoad?
+#' @export
+check_data_found <- function(fail=FALSE, startup=FALSE) {
+    if (startup) {
+        M <- packageStartupMessage
+    } else {
+        M <- message
+    }
+    
+    dd <- system.file("extdata", package="phylogenize")
+    instdir <- system.file("", package="phylogenize")
+    success <- FALSE
+    if (dd == "") {
+        M(paste("Data not found; *phylogenize* will not run",
+                "properly. Please try",
+                "phylogenize::install.data.figshare()",
+                "later or install the data manually into",
+                file.path(system.file("", package="phylogenize"),
+                          "extdata"),
+                "."))
+    } else {
+        success <- TRUE
+    }
+    if (success && pz.options('data_dir')=="") pz.options(data_dir=dd)
+}
+
 .onLoad <- function(libname, pkgname) {
-    set_data_internal(startup=TRUE)
+    check_data_found(startup=TRUE)
 }
 

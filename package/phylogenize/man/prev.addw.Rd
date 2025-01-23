@@ -2,7 +2,7 @@
 % Please edit documentation in R/plm-functions.R
 \name{prev.addw}
 \alias{prev.addw}
-\title{Master function to calculate taxon prevalences with additive smoothing.}
+\title{Main function to calculate taxon prevalences with additive smoothing.}
 \usage{
 prev.addw(abd.meta, ...)
 }

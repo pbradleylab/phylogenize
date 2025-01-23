@@ -18,7 +18,7 @@ A list:
   \item{mtx}{The input matrix, with renamed rows.}
   \item{map}{String vector of ASVs, named with the original row names of
     \code{mtx}.}
-  \item{n}{Names of the MIDAS taxa to which the rows of \code{mtx} "should"
+  \item{n}{Names of the MIDAS species to which the rows of \code{mtx} "should"
     map.}
 }
 \description{

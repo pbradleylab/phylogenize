@@ -2,17 +2,25 @@
 % Please edit documentation in R/dummy.R
 \name{pick.env.dset.fx}
 \alias{pick.env.dset.fx}
-\title{Function for picking taxa to simulate.}
+\title{Function for picking species to simulate.}
 \usage{
-pick.env.dset.fx(n.taxa, env.n.affected, dset.n.affected, divided,
-  env.mean = 0, env.sd = 0, dset.mean = 0, dset.sd = 0)
+pick.env.dset.fx(
+  n.species,
+  env.n.affected,
+  dset.n.affected,
+  divided,
+  env.mean = 0,
+  env.sd = 0,
+  dset.mean = 0,
+  dset.sd = 0
+)
 }
 \arguments{
-\item{n.taxa}{Number of taxa to simulate}
+\item{n.species}{Number of species to simulate}
 
-\item{env.n.affected}{Number of taxa to be affected by environment effects.}
+\item{env.n.affected}{Number of species to be affected by environment effects.}
 
-\item{dset.n.affected}{Number of taxa to be affected by dataset effects.}
+\item{dset.n.affected}{Number of species to be affected by dataset effects.}
 
 \item{divided}{Output of \code{divide.samples}}
 }
@@ -23,6 +31,6 @@ A list:
     \code{pick.env.dset.fx}.}
 }
 \description{
-Function for picking taxa to simulate.
+Function for picking species to simulate.
 }
 \keyword{internal}

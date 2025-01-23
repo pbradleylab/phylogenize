@@ -2,12 +2,20 @@
 % Please edit documentation in R/plm-functions.R
 \name{nonparallel.results.generator}
 \alias{nonparallel.results.generator}
-\title{Fit phylogenetic (or linear) models (single core version, single phylum).}
+\title{Fit phylogenetic (or linear) models (single core version, single taxon).}
 \usage{
-nonparallel.results.generator(gene.matrix, tree, taxa, pheno,
-  phylum.name = "TestPhylum", method = phylolm.fx.pv,
-  restrict.ff = NULL, remove.low.variance = TRUE,
-  use.for.loop = TRUE, ...)
+nonparallel.results.generator(
+  gene.matrix,
+  tree,
+  taxa,
+  pheno,
+  taxon.name = "TestFamily",
+  method = phylolm.fx.pv,
+  restrict.ff = NULL,
+  remove.low.variance = TRUE,
+  use.for.loop = TRUE,
+  ...
+)
 }
 \arguments{
 \item{gene.matrix}{Gene presence/absence matrix.}
@@ -16,7 +24,7 @@ nonparallel.results.generator(gene.matrix, tree, taxa, pheno,
 
 \item{pheno}{Named numeric vector giving phenotype values per taxon.}
 
-\item{phylum.name}{Name of phylum being considered.}
+\item{taxon.name}{Name of taxon being considered.}
 
 \item{method}{A function that returns a length-2 numeric vector of
 effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
@@ -26,14 +34,14 @@ effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
 genes to test.}
 
 \item{remove.low.variance}{Boolean giving whether to drop genes that are
-always present or always absent in a particular phylum.}
+always present or always absent in a particular taxon.}
 
 \item{use.for.loop}{Boolean giving whether to use a for loop instead of a
 pbapply.}
 }
 \value{
-Named list of p-value and effect-size matrices, one per phylum.
+Named list of p-value and effect-size matrices, one per taxon.
 }
 \description{
-Fit phylogenetic (or linear) models (single core version, single phylum).
+Fit phylogenetic (or linear) models (single core version, single taxon).
 }

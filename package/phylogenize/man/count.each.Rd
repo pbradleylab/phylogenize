@@ -4,7 +4,7 @@
 \alias{count.each}
 \title{Count the number of instances of every unique value of a vector.}
 \usage{
-count.each(x, na.rm = FALSE)
+\method{count}{each}(x, na.rm = FALSE)
 }
 \arguments{
 \item{x}{Vector to be counted.}

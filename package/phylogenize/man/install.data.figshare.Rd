@@ -5,8 +5,11 @@
 \title{Download data from figshare (or provide it locally) and un-gzip it into the
 package directory so that it can be imported.}
 \usage{
-install.data.figshare(data_path = NULL,
-  figshare_url = "https://ndownloader.figshare.com/files/43599432?private_link=987aeecdfebd2da02302")
+install.data.figshare(
+  data_path = NULL,
+  figshare_url =
+    "https://ndownloader.figshare.com/files/43692576?private_link=987aeecdfebd2da02302"
+)
 }
 \arguments{
 \item{data_path}{Optional: provide a path to a local file containing a

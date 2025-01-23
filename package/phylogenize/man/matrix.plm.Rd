@@ -2,17 +2,24 @@
 % Please edit documentation in R/plm-functions.R
 \name{matrix.plm}
 \alias{matrix.plm}
-\title{Perform phylogenetic (or linear) modeling for a single phylum.}
+\title{Perform phylogenetic (or linear) modeling for a single taxon.}
 \usage{
-matrix.plm(tree, mtx, pheno, method = phylolm.fx.pv,
-  restrict.taxa = NULL, restrict.ff = NULL, ...)
+matrix.plm(
+  tree,
+  mtx,
+  pheno,
+  method = phylolm.fx.pv,
+  restrict.taxa = NULL,
+  restrict.ff = NULL,
+  ...
+)
 }
 \arguments{
-\item{tree}{A tree relating taxa within a phylum.}
+\item{tree}{A tree relating taxa within a taxon.}
 
 \item{mtx}{Gene presence/absence matrix.}
 
-\item{pheno}{Named numeric vector giving phenotype values per taxon.}
+\item{pheno}{Named numeric vector giving phenotype values per species.}
 
 \item{method}{A function that returns a length-2 numeric vector of
 effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
@@ -29,5 +36,5 @@ Matrix of p-values (row 1) and effect-sizes (row 2) per gene
     (columns).
 }
 \description{
-Perform phylogenetic (or linear) modeling for a single phylum.
+Perform phylogenetic (or linear) modeling for a single taxon.
 }

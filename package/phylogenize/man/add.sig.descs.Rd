@@ -7,9 +7,9 @@
 add.sig.descs(phy.with.sigs, pos.sig, gene.to.fxn)
 }
 \arguments{
-\item{phy.with.sigs}{Character vector giving the phyla with significant hits.}
+\item{phy.with.sigs}{Character vector giving the taxa with significant hits.}
 
-\item{pos.sig}{List of character vectors, one per phylum, of significant hits.}
+\item{pos.sig}{List of character vectors, one per species, of significant hits.}
 
 \item{gene.to.fxn}{Data frame used to annotate genes to functions.}
 }

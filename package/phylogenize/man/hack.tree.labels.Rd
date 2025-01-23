@@ -4,8 +4,16 @@
 \alias{hack.tree.labels}
 \title{XML hack to make interactive tree diagrams.}
 \usage{
-hack.tree.labels(tree.obj, file, stroke.scale = 0.7, pheno = NULL,
-  pheno.name = NULL, native.tooltip = FALSE, units = "", ...)
+hack.tree.labels(
+  tree.obj,
+  file,
+  stroke.scale = 0.7,
+  pheno = NULL,
+  pheno.name = NULL,
+  native.tooltip = FALSE,
+  units = "",
+  ...
+)
 }
 \arguments{
 \item{tree.obj}{A ggtree representation of a tree.}

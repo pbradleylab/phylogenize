@@ -5,9 +5,18 @@
 \title{Wrapper to return random effect sizes and p-values with a bias; useful for
 testing.}
 \usage{
-rndpos.fx.pv(m, p, tr, coefname = "m", restrict = NULL,
-  pos.pct = 0.1, pos.fx = 2, pos.beta = c(shape1 = 1, shape2 = 20),
-  meas_err = FALSE, se = 0.1)
+rndpos.fx.pv(
+  m,
+  p,
+  tr,
+  coefname = "m",
+  restrict = NULL,
+  pos.pct = 0.1,
+  pos.fx = 2,
+  pos.beta = c(shape1 = 1, shape2 = 20),
+  meas_err = FALSE,
+  se = 0.1
+)
 }
 \arguments{
 \item{m}{Named numeric vector of gene presence/absences per taxon.}

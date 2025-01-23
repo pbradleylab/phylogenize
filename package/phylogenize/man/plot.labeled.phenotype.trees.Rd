@@ -4,11 +4,16 @@
 \alias{plot.labeled.phenotype.trees}
 \title{Edit a list of plotted trees to add fancy highlight labels.}
 \usage{
-\method{plot}{labeled.phenotype.trees}(plotted.pheno.trees, phenotype,
-  label = "prevalence", stroke.scale = 0.3, units = "\%")
+\method{plot}{labeled.phenotype.trees}(
+  plotted.pheno.trees,
+  phenotype,
+  label = "prevalence",
+  stroke.scale = 0.3,
+  units = "\%"
+)
 }
 \arguments{
-\item{plotted.pheno.trees}{A named list of ggtree plots (per phylum).}
+\item{plotted.pheno.trees}{A named list of ggtree plots (per taxon).}
 
 \item{phenotype}{Phenotype to plot/label.}
 
