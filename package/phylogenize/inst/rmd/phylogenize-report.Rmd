@@ -135,14 +135,17 @@ list2env(data_to_phenotypes(save_data = !do_POMS), environment())
 # Also unpack "phenotype, phenoP, ..." into current environment
 list2env(phenotype_results, environment())
 
-pheno.scale <- get.pheno.plotting.scales(phenotype,
-                                         pz.db$trees,
-                                         phenoP)
-plotted.pheno.trees <- plot.phenotype.trees(phenotype,
-                                            pz.db$trees,
-                                            pheno.scale)
-pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
+mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
 
+phenotype_info <- calc.phenotype.interest(abd.meta, pz.db)
+pz.db <- phenotype_info[[1]]
+phenotype <- phenotype_info[[2]]
+phenoP <- phenotype_info[[3]]
+
+phenotype <- clean.pheno(phenotype, pz.db)
+pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
+pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
+plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pz.db$taxonomy, pheno.scale)
 
 # Template for plots
 template <- c(
@@ -164,18 +167,25 @@ write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
 # be a little parsimonious with memory here
 gc()
 ```
-`r knitr::knit(text = unlist(plots))`
+`r knitr::knit_child(text = unlist(plots), quiet = TRUE)`
 ## Phenotype Mapped Across Trees {.tabset}
 ### All Taxa
-```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=FALSE}
+```{r plot_pheno_trees, echo=FALSE, warning = FALSE, results='asis'}
 
+plots <- list()
 if (!pz.options('skip_graphs')) {
-	plot.labeled.phenotype.trees(plotted.pheno.trees,
+	plots <- plot.labeled.phenotype.trees(plotted.pheno.trees,
 				     100*logistic(phenotype),
 				     label=pz.options('which_phenotype'))
 }
 
-```
+# with titles
+clinUtils::knitPrintListPlots(
+	plotsList = plots, 
+	type = "plotly", 
+	titles = names(plots), 
+	titleLevel = 3
+)
 
 ### Only mapped/observed taxa {.tabset}
 

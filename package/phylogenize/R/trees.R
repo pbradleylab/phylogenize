@@ -56,12 +56,57 @@ tree.to.dist <- function(tree) {
   ((1 - (ape::vcv(tree, TRUE))) / 2) %>% as.dist
 }
 
+
+#' Helper function for gg.cont.tree
+#'
+#' \code{gg.cont.tree} generates the right internals for later use in plotting interactive trees.
+#'
+#' @param taxonomy A dataframe with the taxonomic information.
+#' @param reduced.phy A reduced phylogenetic tree (phylo)
+#' @param ctree a graphed phylogenetic tree object
+#' @return a graphed phylogenetic tree object with edited labels and color column
+change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
+	# Map the colors to the tree object directly to use ggplotly later for interactive trees
+        tax_filt <- taxonomy[taxonomy$cluster %in% ctree$data$label, c("species", "cluster")]
+        ctree_data <- merge(ctree$data, tax_filt, by.x = "label", by.y = "species", all.x = TRUE)
+        tax_colors <- data.frame(label = as.character(names(ctree$mapping$colour)),
+                   color = ctree$mapping$colour
+                   )
+	ctree_data <- merge(ctree_data, tax_colors, by = "label", all.x = TRUE)
+        ctree_data$color <- ifelse(is.na(ctree_data$color), 0, ctree_data$color)
+
+	# Make labels to be species name
+        colnames(taxonomy)[colnames(taxonomy) == "cluster"] <- "label"
+        ctree_data <- merge(ctree_data, taxonomy[c("label", "species")], by = "label", all.x = TRUE)
+        ctree_data$label <- ctree_data$species
+
+        # Finally make the label switch for tree
+	ctree$data <- ctree_data
+
+	#Change color section in tree to avoid error
+	swap <- tax_filt %>%
+		mutate(cluster = as.character(cluster)) %>%
+		select(cluster, species) 
+
+	color_head <- names(ctree$mapping$colour)
+	color_head <- data.frame(cluster = color_head, stringsAsFactors = FALSE)
+	color_head <- color_head %>%
+		left_join(swap, by = "cluster")
+
+	color_head$final_name <- ifelse(is.na(color_head$species), color_head$cluster, color_head$species)
+	names(ctree$mapping$colour) <- color_head$final_name
+
+	return(ctree)
+}
+
+
 #' Plot continuous trait on a tree.
 #'
 #' \code{gg.cont.tree} paints a continuous trait along a tree.
 #'
 #' @param phy A \code{phylo} object.
 #' @param ctrait A named numeric vector assigning trait values to tree tips.
+#' @param taxonomy A dataframe with the taxonomic information.
 #' @param cAnc Calculated ancestry for continuous trait; if this is NULL, it is calculated.
 #' @param model Model for calculating ancestry (see phytools::fastAnc).
 #' @param cLimits Scale bar limits for plotting continuous trait.
@@ -78,6 +123,7 @@ tree.to.dist <- function(tree) {
 #' @export
 gg.cont.tree <- function(phy,
                          ctrait,
+			 taxonomy,
                          cAnc = NULL,
                          model = "ARD",
                          cLimits = logit(c(0.025, 0.1)),
@@ -96,10 +142,11 @@ gg.cont.tree <- function(phy,
   if (!is.null(restrict)) {
       ctrait <- ctrait[intersect(names(ctrait), restrict)]
   }
+
   if (is.null(n)) { n <- intersect(phy$tip.label, names(ctrait)) }
 
   kept_tips <- keep.tips(phy, n)
-
+   
   if(!is.null(kept_tips)) {
      if(is.null(reduced.phy)) {reduced.phy <- fix.tree(kept_tips)}
         pz.message("getting continuous trait ancestry")
@@ -125,7 +172,8 @@ gg.cont.tree <- function(phy,
                                                guide = "colorbar",
                                                name = cName)
         }
-        # plot trees
+
+	# plot trees
         if (reverse) {
            ctree <- ggtree::ggtree(reduced.phy,
                               ladderize = ladderize,
@@ -138,8 +186,11 @@ gg.cont.tree <- function(phy,
            cColors + ggplot2::theme(legend.position = "bottom")
         }
 
-        if (plot) print(ctree)
-        
+        # Make the plots so that they can be graphed interactively or non-interactively later on
+	ctree <- change_tree_plot_internals(taxonomy, reduced.phy, ctree)
+
+        if (plot) {ctree}
+
         return(list(tree = ctree,
               cAnc = cAnc,
               rphy = reduced.phy,

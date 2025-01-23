@@ -1132,25 +1132,28 @@ get.pheno.plotting.scales.specificity <- function(phenotype,
 #'
 #' @param phenotype A named vector with the phenotype values for each taxon.
 #' @param trees A list of trees.
+#' @param taxonomy A dataframe with the taxonomix information.
 #' @param scale A list returned from \code{get.pheno.plotting.scales}.
 #' @return A list of ggtree objects in which the phenotype has been plotted
 #'     across each tree in \code{trees}.
 #' @export plot.phenotype.trees
 plot.phenotype.trees <- function(phenotype,
                                  trees,
+				 taxonomy,
                                  scale,
                                  ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (any(!(names(trees) %in% names(scale$phy.limits)))) {
         pz.error("taxon-specific limits must be calculated for every tree")
     }
+
     plotted.pheno.trees <- lapply(names(trees), function(tn) {
-					  tryCatch(
-                                              gg.cont.tree(trees[[tn]], phenotype, cLimits=scale$phy.limits[[tn]],colors=scale$colors,cName=tn,plot=FALSE),
-					      error = function(e) {
-						message(paste("Error in tree", tn, ": ", e$message))
-					        return(NULL)
-					      })
+	#				tryCatch(
+                                             gg.cont.tree(trees[[tn]], phenotype, taxonomy, cLimits=scale$phy.limits[[tn]], colors=scale$colors, cName=tn, plot=FALSE)#,
+	#				     error = function(e) {
+	#					message(paste("Error in tree", tn, ": ", e$message))
+	#				        return(NULL)
+	#				     })
                                  })
     if(!is.null(plotted.pheno.trees)) {
        names(plotted.pheno.trees) <- names(trees)
@@ -1244,7 +1247,7 @@ plot.pheno.distributions <- function(phenotype,
 #' @param label Label to give to the phenotype.
 #' @param stroke.scale How thick to make the highlight.
 #' @param units A string appended to each label, used to give units of phenotype.
-#' @export plot.labeled.phenotype.trees
+#' @export list containing plot.labeled.phenotype.trees
 plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                                          phenotype,
                                          label='prevalence',
@@ -1259,32 +1262,82 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
         return(NULL)
     }
 
-    for (pn in 1:length(plotted.pheno.trees)) {
-	    p <- plotted.pheno.trees[[pn]]
-	    rp <- p$rphy
-	    tr <- p$tree
-	    rp2 <- rp
-	    rp2$tip.label <- paste0(rp2$tip.label, " (phenotype = ...", units, ")")
-	    xlim <- plot(rp2, plot=FALSE, no.margin=TRUE)$x.lim
-	    new.tr <- tr +
-		    ggtree::geom_tiplab() +
-		    ggplot2::xlim(xlim[1], xlim[2])
-	    fn <- knitr::fig_path('svg', number = pn)
-
-	    #new.tr + geom_tiplab() + xlim(NA, 5)
-            # Make the labels as species not the midas id
-	    non.interactive.plot(new.tr, fn)
+    plots <- list()
+    taxon_names <- names(plotted.pheno.trees)
+    for (tree in 1:length(plotted.pheno.trees)) {
+	    plotted_tree <- plotted.pheno.trees[[tree]]
+	    fn <- knitr::fig_path('svg', number = tree)
+	    name <- taxon_names[[tree]]
+	    tryCatch(
+		     plots[[name]] <- interactive.plot(plotted_tree, fn, name),
+		     error = function(e) {
+			    pz.message(e)
+			    plots[[name]] <- non.interactive.plot(plotted_tree, fn, name)
+	    })
     }
-    #tree_list <- lapply(plotted.pheno.trees, function(tree) {
-    #    pz.error(tree)        
-    #})
-
-    #interactive_plot_list <- lapply(plotted.pheno.trees, plot.interactive.tree, phenotype)
-    #for (i in seq_along(interactive_plot_list)) {
-    #    plot.tree.with.phenotype(tree_list[[i]], phenotype_data, paste0("tree_plot_", i, ".svg"))
-    #}
+    return(plots)
 }
 
+
+#' Calculate the phenotype of interest
+#'
+#' This function generates the phenotype of interest based on user input 
+#' and returns three objects used in the report.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{abd.meta}{dataframe. holds the use derived abundance data}
+#' }
+#'
+#' @param abd.meta.scale user derived abundance data
+#' @param pz.db phylogenize in house taxonomy data 
+#' @export list of three objects - [pz.db, phenotype, phenoP]
+calc.phenotype.interest <- function(abd.meta, pz.db) {
+  if (pz.options('which_phenotype') == "prevalence") {
+    phenotype <- prev.addw(abd.meta)
+    phenoP <- NULL
+  } else if (pz.options('which_phenotype') == "specificity") {
+    if (pz.options('prior_type') == "file") {
+      prior.data <- read.table(file.path(pz.options('input_dir'),
+                                        pz.options('prior_file')))
+    } else {
+      prior.data <- NULL
+    }
+    ess <- calc.ess(abd.meta,
+                    prior.data)
+    phenotype <- ess$ess
+    phenoP <- ess$phenoP
+    # Specifically for specificity, only retain observed taxa
+    pz.db$trees <- retain.observed.taxa(pz.db$trees,
+                                        phenotype,
+                                        phenoP,
+                                        mapped.observed)
+    pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
+    pz.db$ntaxa <- length(pz.db$trees)
+  } else if (pz.options("which_phenotype") == "provided") {
+    p_tbl <- read_tsv(pz.options("phenotype_file"))
+    if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
+      phenotype <- deframe(p_tbl)
+    } else { # perform shrinkage on the provided values w/ their stderrs
+      p_est <- as.numeric(p_tbl[["estimate"]])
+      p_se <- as.numeric(p_tbl[["stderr"]])
+      names(p_est) <- p_tbl[[1]]
+      names(p_se) <- p_tbl[[1]]
+      ashr_res <- ashr_wrapper(p_est, p_se)
+      phenotype <- ashr_res$result %>%
+        as_tibble(rownames="species") %>%
+        dplyr::select(species, PosteriorMean) %>%
+        deframe
+    }
+  } else if (pz.options("which_phenotype") == "abundance") {
+    phenotype <- ashr.diff.abund(abd.meta)
+    phenoP <- 0
+  } else {
+    pz.error(paste0("don't know how to calculate the phenotype ",
+                    pz.options('which_phenotype')))
+  }
+  return(list(pz.db, phenotype, phenoP))
+}
 
 #' Make a hybrid tree-heatmap plot showing the taxon distribution of significant
 #' hits.
