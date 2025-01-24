@@ -1148,12 +1148,7 @@ plot.phenotype.trees <- function(phenotype,
     }
 
     plotted.pheno.trees <- lapply(names(trees), function(tn) {
-	#				tryCatch(
                                              gg.cont.tree(trees[[tn]], phenotype, taxonomy, cLimits=scale$phy.limits[[tn]], colors=scale$colors, cName=tn, plot=FALSE)#,
-	#				     error = function(e) {
-	#					message(paste("Error in tree", tn, ": ", e$message))
-	#				        return(NULL)
-	#				     })
                                  })
     if(!is.null(plotted.pheno.trees)) {
        names(plotted.pheno.trees) <- names(trees)
@@ -1291,8 +1286,9 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 #'
 #' @param abd.meta.scale user derived abundance data
 #' @param pz.db phylogenize in house taxonomy data 
+#' @param mapped.observed A character vector giving which tips to retain.
 #' @export list of three objects - [pz.db, phenotype, phenoP]
-calc.phenotype.interest <- function(abd.meta, pz.db) {
+calc.phenotype.interest <- function(abd.meta, pz.db, mapped.observed) {
   if (pz.options('which_phenotype') == "prevalence") {
     phenotype <- prev.addw(abd.meta)
     phenoP <- NULL

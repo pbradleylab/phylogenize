@@ -75,13 +75,20 @@ change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
 	ctree_data <- merge(ctree_data, tax_colors, by = "label", all.x = TRUE)
         ctree_data$color <- ifelse(is.na(ctree_data$color), 0, ctree_data$color)
 
-	# Make labels to be species name
-        colnames(taxonomy)[colnames(taxonomy) == "cluster"] <- "label"
+	colnames(taxonomy)[colnames(taxonomy) == "cluster"] <- "label"
         ctree_data <- merge(ctree_data, taxonomy[c("label", "species")], by = "label", all.x = TRUE)
         ctree_data$label <- ctree_data$species
 
-        # Finally make the label switch for tree
-	ctree$data <- ctree_data
+        ctree_data <- merge(ctree$data, ctree_data[c("node", "species", "color")], by = "node", all.x = TRUE)
+        ctree_data$label <- ctree_data$species
+        ctree$data <- ctree_data
+
+        ctree$data$rounded <- signif(ctree$data$branch.length, digits = 3)
+	ctree$data$label <- ifelse(
+				   is.na(ctree$data$label),
+				   ctree$data$label,
+				   paste0(ctree$data$label, " (BL:", ctree$data$rounded, ")")
+				   )
 
 	#Change color section in tree to avoid error
 	swap <- tax_filt %>%
@@ -189,7 +196,8 @@ gg.cont.tree <- function(phy,
         # Make the plots so that they can be graphed interactively or non-interactively later on
 	ctree <- change_tree_plot_internals(taxonomy, reduced.phy, ctree)
 
-        if (plot) {ctree}
+        saveRDS(ctree, "ctree")
+	if (plot) {ctree}
 
         return(list(tree = ctree,
               cAnc = cAnc,
