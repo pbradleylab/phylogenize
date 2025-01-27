@@ -186,8 +186,10 @@ clinUtils::knitPrintListPlots(
 	titleLevel = NULL
 )
 
-### Only mapped/observed taxa {.tabset}
-```{r subtrees_pre, cache=FALSE, echo=FALSE}
+```
+
+### Only Mapped/Observed Taxa
+```{r plot_pheno_trees_observed_taxa, echo=FALSE, warning=FALSE, results='asis', warning = FALSE, message = FALSE}
 
 pheno.labels <- names(phenotype)
 subtrees <- lapply(pz.db$trees, function(tr) {
@@ -200,31 +202,19 @@ subtrees <- Filter(function(x) {
   return(FALSE)
 }, subtrees)
 
-```
-```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(subtrees), cache.lazy = FALSE, cache=FALSE, echo=FALSE}
-
-plots <- list()
+subplots <- list()
 if (!pz.options('skip_graphs')) {
-  plots <- plot.phenotype.trees(phenotype,
-                                                 subtrees,
-						 pz.db$taxonomy,
-                                                 pheno.scale)
-  if (!is.null(plotted.pheno.subtrees)) {
-    if (length(plotted.pheno.subtrees) > 0) {
-      plot.labeled.phenotype.trees(plotted.pheno.subtrees,
-                                   100*logistic(phenotype))
-      rmd.message <- ""
-    } else {
-      rmd.message <- "(no taxa had more than one tip)"
-    }
-  } else {
-    rmd.message <- "(no taxa had more than one tip)"
-  }
+       plotted.pheno.subtrees <- plot.phenotype.trees(phenotype, subtrees, pz.db$taxonomy, pheno.scale)
+       subplots <- plot.labeled.phenotype.trees(plotted.pheno.subtrees,
+						 100*logistic(phenotype),
+						 label=pz.options('which_phenotype')
+				     )
 }
 
 clinUtils::knitPrintListPlots(
-        plotsList = plots,
+        plotsList = subplots,
         type = "plotly",
         titles = NULL,
         titleLevel = NULL
 )
+
