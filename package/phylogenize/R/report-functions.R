@@ -1700,7 +1700,7 @@ get_signif_associated_genes <- function(pz.db,
                                           method=p.method,
                                           do_POMS=do_POMS,
                                           ncl=pz.options('ncl'))
-        } else {
+	} else {
             results <- mapply(nonparallel.results.generator,
                               pz.db$gene.presence[taxaN],
                               pz.db$trees[taxaN],
