@@ -278,10 +278,10 @@ respectively.
 ```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=FALSE}
 do_enrichment <- ("clusterProfiler" %in% rownames(installed.packages()))
 if (do_enrichment) {
-    enr_tbls <- get_enrichment_tbls(signif,
-                                    signs,
+    enr_tbls <- get_enrichment_tbls(signif_genes[[2]],
+                                    signif_genes[[3]],
                                     pz.db,
-                                    results.matrix,
+                                    signif_genes[[5]],
                                     export=TRUE,
                                     print_out=TRUE)
     
