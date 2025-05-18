@@ -789,12 +789,11 @@ change.tree.tax.level <- function(tree, taxon, tax){
     			map(~ pull(.x, !!sym(taxon))) %>%
     			unlist() %>%
     			unique()
-  
- 	 	# Process each split name
+
  		for (j in seq_along(split_names)) {
 			tips <- tr$tip.label
     			split_tips <- t %>%
-				filter(family == split_names[[j]])
+				filter(!!sym(taxon) == split_names[[j]])
     			tips <- intersect(tips, split_tips[["cluster"]])
 			subtree <- ape::keep.tip(tr, tips)
     			if (!is.null(subtree) && length(subtree$tip.label) > 1) {
@@ -1698,7 +1697,6 @@ get_signif_associated_genes <- function(pz.db,
                                           clusters=pz.db$species[taxaN],
                                           proteins=pz.db$gene.presence[taxaN],
                                           method=p.method,
-                                          do_POMS=do_POMS,
                                           ncl=pz.options('ncl'))
 	} else {
             results <- mapply(nonparallel.results.generator,
@@ -1751,7 +1749,6 @@ get_signif_associated_genes <- function(pz.db,
 #' @param pz.db A database (typically obtained with \code{import.pz.db}).
 #' @param results.matrix Matrix of full results.
 #' @param export Write enrichment tables to disk? (Default: FALSE)
-#' @param print_out Display enrichment tables on screen? (Default: FALSE)
 #' @param ... Parameters to override defaults.
 #' @export
 get_enrichment_tbls <- function(signif,
@@ -1759,7 +1756,6 @@ get_enrichment_tbls <- function(signif,
                                 pz.db,
                                 results.matrix,
                                 export=FALSE,
-                                print_out=FALSE, 
                                 ...) {
     pretty.enr.tbl <- NULL
     enr.overlap <- NULL
@@ -1789,7 +1785,6 @@ get_enrichment_tbls <- function(signif,
         }
     }
     if (!is.null(pretty.enr.tbl)) {
-        if (print_out) cat(output.enr.table(pretty.enr.tbl))
         accession_to_fxn <- pz.db$gene.to.fxn %>%
             select(accession, `function`) %>%
             distinct()
@@ -1832,8 +1827,7 @@ get_enrichment_tbls <- function(signif,
             }
         }
     }
-    return(list(pretty.enr.tbl=pretty.enr.tbl,
-                enr.overlap=enr.overlap))
+    return(pretty.enr.tbl)
 }  
 
 #--- Alternative to full report generation ---#

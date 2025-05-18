@@ -230,17 +230,20 @@ an FDR of 5%.
 ```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
 
 signif_genes <- get_signif_associated_genes(pz.db, phenotype, do_POMS, p.method)
-
-knitr::kable(sapply(signif_genes[[4]], length), col.names = "Significant Genes")
+pos.sig <- data.frame(
+  Taxon = names(signif_genes[[4]]),
+  `Significant Genes` = sapply(signif_genes[[4]], length),
+  row.names = NULL
+)
+clinUtils::getClinDT(pos.sig)
 
 write.csv(file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
-          signif_genes[[7]])
+	  signif_genes[[7]])
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
           signif_genes[[5]])
 
 ```
 ## Gene association heat maps
-
 The left shows the phenotype painted on tips of the tree as above. The right
 adds a heatmap where blue points represent presence of a gene (aligned with the
 tips of the tree) and white points represent absence. Only
@@ -250,14 +253,13 @@ will form vertical stripes. Horizontal stripes may be visible for taxa that
 have particularly extreme phenotypes.
 
 ```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=FALSE}
-
-valid_keys <- intersect(signif_genes$phy.with.sigs, names(plotted.pheno.trees))
+valid_keys <- intersect(signif_genes[[6]], names(plotted.pheno.trees))
 valid_keys <- intersect(valid_keys, names(pz.db$gene.presence))
 valid_keys <- intersect(valid_keys, names(pz.db$trees))
 
 cluster.plots <- mapply(do.clust.plot,
                         pz.db$gene.presence[valid_keys],
-                        signif_genes$pos.sig.thresh[valid_keys],
+                        signif_genes[[8]][valid_keys],
                         pz.db$trees[valid_keys],
                         plotted.pheno.trees[valid_keys],
                         valid_keys,
@@ -265,30 +267,30 @@ cluster.plots <- mapply(do.clust.plot,
 
 ```
 ## Enrichment analysis
-
 This process takes the set of genes that are significant and positively
 associated with the phenotype, then asks whether there are more than expected
 by chance in a given KEGG module or pathway. This requires clusterProfiler to
-be installed. </p>
+be installed.
 
 All pathways/modules returned are significant at an FDR of 25%. "Strong", "Med",
 and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
-
-```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=FALSE}
+```{r enrichment_analysis, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE, results='axsis'}
 do_enrichment <- ("clusterProfiler" %in% rownames(installed.packages()))
 if (do_enrichment) {
-    enr_tbls <- get_enrichment_tbls(signif_genes[[2]],
+	table <- clinUtils::getClinDT(get_enrichment_tbls(signif_genes[[2]],
                                     signif_genes[[3]],
                                     pz.db,
                                     signif_genes[[5]],
                                     export=TRUE,
-                                    print_out=TRUE)
-    
+                                    print_out=TRUE))
+	DT::formatStyle(table,
+			'q_value',
+			target = 'row',
+			backgroundColor = DT::styleInterval(0.05, c('lightgreen', NA)))
 } else {
   pz.message("Skipping enrichment as clusterProfiler could not be found")
 }
-```
 
 ```{r cleanup, warning=FALSE, message=FALSE, echo=FALSE}
 # Clean up memory before rendering

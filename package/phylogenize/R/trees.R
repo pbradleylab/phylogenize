@@ -95,12 +95,13 @@ change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
 		mutate(cluster = as.character(cluster)) %>%
 		select(cluster, species) 
 
-	color_head <- names(ctree$mapping$colour)
-	color_head <- data.frame(cluster = color_head, stringsAsFactors = FALSE)
+	color_head <- data.frame(cluster = names(ctree$mapping$colour), stringsAsFactors = FALSE)
 	color_head <- color_head %>%
 		left_join(swap, by = "cluster")
-
+	
 	color_head$final_name <- ifelse(is.na(color_head$species), color_head$cluster, color_head$species)
+
+	# Only assign names when lengths match
 	names(ctree$mapping$colour) <- color_head$final_name
 
 	return(ctree)
@@ -196,7 +197,6 @@ gg.cont.tree <- function(phy,
         # Make the plots so that they can be graphed interactively or non-interactively later on
 	ctree <- change_tree_plot_internals(taxonomy, reduced.phy, ctree)
 
-        saveRDS(ctree, "ctree")
 	if (plot) {ctree}
 
         return(list(tree = ctree,

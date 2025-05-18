@@ -10,7 +10,6 @@
 #' @param method A function that returns a length-2 numeric vector of
 #'   effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
 #'   \code{lm.fx.pv}). Can be NULL for POMS.
-#' @param do_POMS Perform POMS instead of (phylogenetic) linear modeling.
 #' @param restrict.figfams Optionally, a character vector giving a subset of
 #'   genes to test.
 #' @param drop.zero.var Boolean giving whether to drop genes that are always
@@ -27,7 +26,6 @@ result.wrapper.plm <- function(taxa,
                                proteins,
                                clusters,
                                method = phylolm.fx.pv,
-                               do_POMS = FALSE,
                                restrict.figfams = NULL,
                                drop.zero.var = FALSE,
                                only.return.names = FALSE,
@@ -50,13 +48,15 @@ result.wrapper.plm <- function(taxa,
         if (!is.null(pheno)) {
             valid <- intersect(valid, names(pheno))
         }
-        if (is.null(restrict.figfams)) {
+        
+	if (is.null(restrict.figfams)) {
             restrict.figfams <- rownames(proteins[[p]])
         } else {
             restrict.figfams <- intersect(rownames(proteins[[p]]),
                                           restrict.figfams)
         }
-        if (drop.zero.var) {
+        
+	if (drop.zero.var) {
             fvar <- apply(proteins[[p]][, valid, drop=FALSE], 1, var)
             message(paste0(sprintf("%.01f",
                                    100 * mean(na.omit(fvar == 0))),
@@ -65,8 +65,8 @@ result.wrapper.plm <- function(taxa,
                                           rownames(proteins[[p]])[
                                               which(fvar > 0)])
         }
-        if (!only.return.names) {
-            if (!do_POMS) {
+        
+	if (!only.return.names) {
             matrix.plm(tr,
                        proteins[[p]],
                        pheno,
@@ -74,18 +74,11 @@ result.wrapper.plm <- function(taxa,
                        restrict.taxa = valid,
                        restrict.ff = restrict.figfams,
                        ...)
-            } else {
-                matrix.POMS(tr,
-                            proteins[[p]],
-                            abd.meta,
-                            restrict.taxa=valid,
-                            restrict.ff=restrict.figfams,
-                            ...)
-            }
+            
         } else {
             restrict.figfams
-        }
-    })
+	}
+})
 }
 
 #' Perform POMS modeling for a single clade.
