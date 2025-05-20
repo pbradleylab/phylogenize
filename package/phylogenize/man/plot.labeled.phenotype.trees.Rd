@@ -23,6 +23,9 @@
 
 \item{units}{A string appended to each label, used to give units of phenotype.}
 }
+\value{
+list containing plot.labeled.phenotype.trees
+}
 \description{
 This function adds fancy SVG highlight labels to ggtree objects and then
 plots them. If there's an error, it will fall back to a regular plot.
