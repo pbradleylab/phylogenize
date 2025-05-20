@@ -1244,6 +1244,7 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     Min <- opts('minimum')
     taxa <- names(trees)
+    to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)
     for (tx in taxa) {
         tips <- trees[[tx]]$tip.label
         colns <- colnames(gene.presence[[tx]])
@@ -1255,10 +1256,10 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
         }
         if ((length(g) == 0) || (length(i) == 0)) {
             # drop from the list
-            gene.presence <- gene.presence[names(pz.db$trees) != tx]  
+            to_remove[tx] <- TRUE
         }
     }
-    gene.presence
+    gene.presence[!to_remove]
 }
 
 #' Add gene descriptions to significant results; return in a tibble.
