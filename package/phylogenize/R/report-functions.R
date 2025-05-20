@@ -1241,7 +1241,8 @@ plot.pheno.distributions <- function(phenotype,
 #' @param label Label to give to the phenotype.
 #' @param stroke.scale How thick to make the highlight.
 #' @param units A string appended to each label, used to give units of phenotype.
-#' @export list containing plot.labeled.phenotype.trees
+#' @return list containing plot.labeled.phenotype.trees
+#' @export
 plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                                          phenotype,
                                          label='prevalence',
@@ -1286,7 +1287,8 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 #' @param abd.meta.scale user derived abundance data
 #' @param pz.db phylogenize in house taxonomy data 
 #' @param mapped.observed A character vector giving which tips to retain.
-#' @export list of three objects - [pz.db, phenotype, phenoP]
+#' @return list of three objects - [pz.db, phenotype, phenoP]
+#' @export
 calc.phenotype.interest <- function(abd.meta, pz.db, mapped.observed) {
   if (pz.options('which_phenotype') == "prevalence") {
     phenotype <- prev.addw(abd.meta)

@@ -7,6 +7,7 @@
 gg.cont.tree(
   phy,
   ctrait,
+  taxonomy,
   cAnc = NULL,
   model = "ARD",
   cLimits = logit(c(0.025, 0.1)),
@@ -25,6 +26,8 @@ gg.cont.tree(
 \item{phy}{A \code{phylo} object.}
 
 \item{ctrait}{A named numeric vector assigning trait values to tree tips.}
+
+\item{taxonomy}{A dataframe with the taxonomic information.}
 
 \item{cAnc}{Calculated ancestry for continuous trait; if this is NULL, it is calculated.}
 

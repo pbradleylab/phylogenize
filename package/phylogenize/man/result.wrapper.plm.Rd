@@ -11,7 +11,6 @@
   proteins,
   clusters,
   method = phylolm.fx.pv,
-  do_POMS = FALSE,
   restrict.figfams = NULL,
   drop.zero.var = FALSE,
   only.return.names = FALSE,
@@ -35,8 +34,6 @@ trees.}
 \item{method}{A function that returns a length-2 numeric vector of
 effect-size and p-value (see, e.g., \code{phylolm.fx.pv} or
 \code{lm.fx.pv}). Can be NULL for POMS.}
-
-\item{do_POMS}{Perform POMS instead of (phylogenetic) linear modeling.}
 
 \item{restrict.figfams}{Optionally, a character vector giving a subset of
 genes to test.}
