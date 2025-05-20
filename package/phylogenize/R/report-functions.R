@@ -856,11 +856,17 @@ import.pz.db <- function(...) {
     gene.to.fxn$gene <- gene.to.fxn$node_head
     # Make the files at the user requested taxon level. Here we adjust the classification level to look at
     # i.e family, class, order, etc.
-    if(opts('taxon_level') != "phylum"){
+    if (opts('taxon_level') != "phylum") {
 	    gene.presence <- change.presence.tax.level(gene.presence, opts('taxon_level'), taxonomy)
 	    trees <- change.tree.tax.level(trees, opts('taxon_level'), taxonomy)
 	    trees <- Filter(function(tr) length(tr$tip.label) > 1, trees)
     }
+    
+    # filter based on the minimum number of observations
+    gene.presence <- above_minimum_genes(gene.presence, trees)
+    
+    # drop any taxa that got culled in above_minimum_genes
+    trees <- trees[intersect(names(trees), names(gene.presence))]
     
     return(list(gene.presence = gene.presence,
                 trees = trees,

@@ -1228,6 +1228,39 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
            SIMPLIFY=FALSE)
 }
 
+#' Filter out genes that are almost always present or absent prior to running regressions.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{minimum}{Integer. A particular gene must be observed, and also
+#'   absent, at least this many times to be reported as a significant positive
+#'   association with the phenotype.}
+#' }
+#' @param gene.presence A list of matrices of gene presence/absence, as included in a `pz.db` object.
+#' @param trees A list of trees. Names should match names of `gene.presence`. Only taxa in these trees will be used for the analysis.
+#' @return A revised `gene.presence` list. Note that some taxa may be dropped from the list (if they had zero genes left after filtering).
+#' @export
+above_minimum_genes <- function(gene.presence, trees, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    Min <- opts('minimum')
+    taxa <- names(trees)
+    for (tx in taxa) {
+        tips <- trees[[tx]]$tip.label
+        colns <- colnames(gene.presence[[tx]])
+        i <- na.omit(intersect(tips, colns))
+        if (length(i) > 0) {
+            mtx <- gene.presence[[tx]][, i, drop=FALSE]
+            g <- names(which((rowSums(mtx) >= Min) & (rowSums(1-mtx) >= Min)))
+            gene.presence[[tx]] <- mtx[g, , drop=FALSE]
+        }
+        if ((length(g) == 0) || (length(i) == 0)) {
+            # drop from the list
+            gene.presence <- gene.presence[names(pz.db$trees) != tx]  
+        }
+    }
+    gene.presence
+}
+
 #' Add gene descriptions to significant results; return in a tibble.
 #'
 #' @param phy.with.sigs Character vector giving the taxa with significant hits.
