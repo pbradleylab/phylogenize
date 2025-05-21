@@ -138,9 +138,9 @@ list2env(phenotype_results, environment())
 mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
 
 phenotype_info <- calc.phenotype.interest(abd.meta, pz.db, mapped.observed)
-pz.db <- phenotype_info[[1]]
-phenotype <- phenotype_info[[2]]
-phenoP <- phenotype_info[[3]]
+pz.db <- phenotype_info[["pz.db"]]
+phenotype <- phenotype_info[["phenotype"]]
+phenoP <- phenotype_info[["phenoP"]]
 
 phenotype <- clean.pheno(phenotype, pz.db)
 pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
@@ -231,16 +231,16 @@ an FDR of 5%.
 
 signif_genes <- get_signif_associated_genes(pz.db, phenotype, do_POMS, p.method)
 pos.sig <- data.frame(
-  Taxon = names(signif_genes[[4]]),
-  `Significant Genes` = sapply(signif_genes[[4]], length),
+  Taxon = names(signif_genes[["pos.sig"]]),
+  `Significant Genes` = sapply(signif_genes[["pos.sig"]], length),
   row.names = NULL
 )
 clinUtils::getClinDT(pos.sig)
 
 write.csv(file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
-	  signif_genes[[7]])
+	  signif_genes[["pos.sig.descs"]])
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
-          signif_genes[[5]])
+          signif_genes[["results.matrix"]])
 
 ```
 ## Gene association heat maps
@@ -253,13 +253,13 @@ will form vertical stripes. Horizontal stripes may be visible for taxa that
 have particularly extreme phenotypes.
 
 ```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=FALSE}
-valid_keys <- intersect(signif_genes[[6]], names(plotted.pheno.trees))
+valid_keys <- intersect(signif_genes[["phy.with.sigs"]], names(plotted.pheno.trees))
 valid_keys <- intersect(valid_keys, names(pz.db$gene.presence))
 valid_keys <- intersect(valid_keys, names(pz.db$trees))
 
 cluster.plots <- mapply(do.clust.plot,
                         pz.db$gene.presence[valid_keys],
-                        signif_genes[[8]][valid_keys],
+                        signif_genes[["pos.sig.thresh"]][valid_keys],
                         pz.db$trees[valid_keys],
                         plotted.pheno.trees[valid_keys],
                         valid_keys,
@@ -278,10 +278,10 @@ respectively.
 ```{r enrichment_analysis, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE, results='axsis'}
 do_enrichment <- ("clusterProfiler" %in% rownames(installed.packages()))
 if (do_enrichment) {
-	table <- clinUtils::getClinDT(get_enrichment_tbls(signif_genes[[2]],
-                                    signif_genes[[3]],
+	table <- clinUtils::getClinDT(get_enrichment_tbls(signif_genes[["signif"]],
+                                    signif_genes[["signs"]],
                                     pz.db,
-                                    signif_genes[[5]],
+                                    signif_genes[["results.matrix"]],
                                     export=TRUE,
                                     print_out=TRUE))
 	DT::formatStyle(table,

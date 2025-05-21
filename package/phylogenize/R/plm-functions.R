@@ -414,7 +414,6 @@ matrix.plm <- function(tree,
                        ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     cores <- opts('ncl')
-    message(paste0("fitting models with method ", rlang::enexpr(method)))
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     if (opts('separate_process') || (cores > 1)) {
@@ -1187,8 +1186,8 @@ pz.warning <- function(msgtext, ...) {
 #' @return A single data frame with entries from \code{results}.
 #' @export
 make.results.matrix <- function(results) {
-    Reduce(rbind, lapply(names(results), function(rn) {
-        data.frame(taxon = rn,
+    Reduce(dplyr::bind_rows, lapply(names(results), function(rn) {
+        dplyr::tibble(taxon = rn,
                    gene = results[[rn]] %>% colnames,
                    effect.size = results[[rn]][1,],
                    p.value = results[[rn]][2,],
@@ -1259,7 +1258,7 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
             to_remove[tx] <- TRUE
         }
     }
-    gene.presence[!to_remove]
+    gene.presence[which(!to_remove)]
 }
 
 #' Add gene descriptions to significant results; return in a tibble.

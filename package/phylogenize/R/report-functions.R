@@ -1339,7 +1339,7 @@ calc.phenotype.interest <- function(abd.meta, pz.db, mapped.observed) {
     pz.error(paste0("don't know how to calculate the phenotype ",
                     pz.options('which_phenotype')))
   }
-  return(list(pz.db, phenotype, phenoP))
+  return(list(pz.db=pz.db, phenotype=phenotype, phenoP=phenoP))
 }
 
 #' Make a hybrid tree-heatmap plot showing the taxon distribution of significant
@@ -1725,7 +1725,9 @@ get_signif_associated_genes <- function(pz.db,
                                        proteins=pz.db$gene.presence[taxaN],
                                        method=p.method)
     }
-    
+    # trim out any that didn't get dropped
+    result_lens <- vapply(results, length, 1L)
+    results <- results[names(which(na.omit(result_lens>0)))]
     signif <- make.sigs(results)
     signs <- make.signs(results)
     pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
@@ -1738,15 +1740,15 @@ get_signif_associated_genes <- function(pz.db,
     phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
     
     return(list(
-        results=results,
-        signif=signif,
-        signs=signs,
-        pos.sig=pos.sig,
-        results.matrix=results.matrix,
-        phy.with.sigs=phy.with.sigs,
-        pos.sig.descs=pos.sig.descs,
-        pos.sig.thresh=pos.sig.thresh,
-        pos.sig.thresh.descs=pos.sig.thresh.descs
+        results=results, #1
+        signif=signif,   #2
+        signs=signs,     #3
+        pos.sig=pos.sig, #4
+        results.matrix=results.matrix,            #5
+        phy.with.sigs=phy.with.sigs,              #6
+        pos.sig.descs=pos.sig.descs,              #7
+        pos.sig.thresh=pos.sig.thresh,            #8
+        pos.sig.thresh.descs=pos.sig.thresh.descs #9
     ))
 }
 
@@ -1871,10 +1873,10 @@ phylogenize_core <- function(do_POMS=FALSE,
         do_POMS,
         p.method,
         ...)
-    enr_tbls <- get_enrichment_tbls(signif,
-                                    signs,
-                                    pz.db,
-                                    results.matrix,
+    enr_tbls <- get_enrichment_tbls(list_signif[["signif"]],
+                                    list_signif[["signs"]],
+                                    list_pheno[["pz.db"]],
+                                    list_signif[["results.matrix"]],
                                     export=TRUE,
                                     print_out=TRUE,
                                     ...)
