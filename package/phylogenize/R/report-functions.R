@@ -709,27 +709,25 @@ change.presence.tax.level <- function(binary, taxon, tax){
     binary_matrices <- list()
     taxon <- sym(taxon)
     
-    for (i in 1:length(names(binary))){
+    for (i in 1:length(names(binary))) {
         name <- names(binary)[i]
         b <- binary[[name]]
         t <- clean[[name]]
        
-        split_taxs <- t %>%
-            group_split(!!taxon) %>%
+        # make a named list in one step
+        named_tax_list <- t %>%
+            select(-phylum) %>%
+            group_by(!!taxon) %>%
+            nest() %>%
+            deframe() %>%
             map(~ pull(.x, cluster))
-        
-        split_names <- t %>%
-            group_split(!!taxon) %>%
-            map(~ pull(.x, !!taxon)) %>%
-            unlist() %>%
-            unique()
-        
+      
         columns <- colnames(binary[[name]])
         
-        for (j in 1:length(split_names)){
-            shared <- intersect(split_taxs[[j]], columns)
-            if (length(shared) > 1){
-                binary_matrices[[split_names[j]]] <- b[, shared, drop = FALSE]
+        for (j in 1:length(named_tax_list)){
+            shared <- intersect(named_tax_list[[j]], columns)
+            if (length(shared) > 1) {
+                binary_matrices[[names(named_tax_list)[j]]] <- b[, shared, drop = FALSE]
             }
         }
     }
@@ -1851,6 +1849,7 @@ get_enrichment_tbls <- function(signif,
 #'
 #' @param do_POMS Run the POMS algorithm instead of phylogenetic regression
 #'   (default: FALSE).
+#' @param do_enr Run enrichment analysis. Can skip to save time (default: TRUE)
 #' @param override_save_data Return the input data and metadata, even if not
 #'   using POMS (default: FALSE).
 #' @param p.method Function that returns the effect size and p-value per gene
@@ -1859,6 +1858,7 @@ get_enrichment_tbls <- function(signif,
 #' @param ... Parameters to override defaults.
 #' @export
 phylogenize_core <- function(do_POMS=FALSE,
+                             do_enr=TRUE,
                              override_save_data=FALSE,
                              override_options=NULL,
                              p.method=phylogenize:::phylolm.fx.pv,
@@ -1873,6 +1873,10 @@ phylogenize_core <- function(do_POMS=FALSE,
         do_POMS,
         p.method,
         ...)
+    if (!do_enr) {
+        return(list(list_pheno=list_pheno,
+                    list_signif=list_signif))
+    }
     enr_tbls <- get_enrichment_tbls(list_signif[["signif"]],
                                     list_signif[["signs"]],
                                     list_pheno[["pz.db"]],

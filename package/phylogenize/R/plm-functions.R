@@ -1250,15 +1250,15 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
         i <- na.omit(intersect(tips, colns))
         if (length(i) > 0) {
             mtx <- gene.presence[[tx]][, i, drop=FALSE]
-            g <- names(which((rowSums(mtx) >= Min) & (rowSums(1-mtx) >= Min)))
+            g <- names(which((rowSums(mtx) >= Min) & (rowSums(!mtx) >= Min)))
             gene.presence[[tx]] <- mtx[g, , drop=FALSE]
         }
-        if (length(i) == 0) || (length(g) == 0)) {
+        if ((length(i) == 0) || (length(g) == 0)) {
             # drop from the list
             to_remove[tx] <- TRUE
         }
     }
-    gene.presence[which(!to_remove)]
+    gene.presence[names(which(!to_remove))]
 }
 
 #' Add gene descriptions to significant results; return in a tibble.
