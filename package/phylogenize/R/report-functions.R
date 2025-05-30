@@ -1294,50 +1294,58 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 #' @return list of three objects - [pz.db, phenotype, phenoP]
 #' @export
 calc.phenotype.interest <- function(abd.meta, pz.db, mapped.observed) {
-  if (pz.options('which_phenotype') == "prevalence") {
-    phenotype <- prev.addw(abd.meta)
-    phenoP <- NULL
-  } else if (pz.options('which_phenotype') == "specificity") {
-    if (pz.options('prior_type') == "file") {
-      prior.data <- read.table(file.path(pz.options('input_dir'),
-                                        pz.options('prior_file')))
+    if (pz.options('which_phenotype') == "prevalence") {
+        phenotype <- prev.addw(abd.meta)
+        phenoP <- NULL
+    } else if (pz.options('which_phenotype') == "specificity") {
+        if (pz.options('prior_type') == "file") {
+            prior.data <- read.table(file.path(pz.options('input_dir'),
+                                               pz.options('prior_file')))
+        } else {
+            prior.data <- NULL
+        }
+        ess <- calc.ess(abd.meta,
+                        prior.data)
+        phenotype <- ess$ess
+        phenoP <- ess$phenoP
+        
+    } else if (pz.options("which_phenotype") == "provided") {
+        p_tbl <- read_tsv(pz.options("phenotype_file"))
+        if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
+            phenotype <- deframe(p_tbl)
+        } else { # perform shrinkage on the provided values w/ their stderrs
+            p_est <- as.numeric(p_tbl[["estimate"]])
+            p_se <- as.numeric(p_tbl[["stderr"]])
+            names(p_est) <- p_tbl[[1]]
+            names(p_se) <- p_tbl[[1]]
+            ashr_res <- ashr_wrapper(p_est, p_se)
+            phenotype <- ashr_res$result %>%
+                as_tibble(rownames="species") %>%
+                dplyr::select(species, PosteriorMean) %>%
+                deframe
+        }
+    } else if (pz.options("which_phenotype") == "abundance") {
+        phenotype <- ashr.diff.abund(abd.meta)
+        phenoP <- 0
     } else {
-      prior.data <- NULL
+        pz.error(paste0("don't know how to calculate the phenotype ",
+                        pz.options('which_phenotype')))
     }
-    ess <- calc.ess(abd.meta,
-                    prior.data)
-    phenotype <- ess$ess
-    phenoP <- ess$phenoP
-    # Specifically for specificity, only retain observed taxa
-    pz.db$trees <- retain.observed.taxa(pz.db$trees,
-                                        phenotype,
-                                        phenoP,
-                                        mapped.observed)
-    pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
-    pz.db$ntaxa <- length(pz.db$trees)
-  } else if (pz.options("which_phenotype") == "provided") {
-    p_tbl <- read_tsv(pz.options("phenotype_file"))
-    if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
-      phenotype <- deframe(p_tbl)
-    } else { # perform shrinkage on the provided values w/ their stderrs
-      p_est <- as.numeric(p_tbl[["estimate"]])
-      p_se <- as.numeric(p_tbl[["stderr"]])
-      names(p_est) <- p_tbl[[1]]
-      names(p_se) <- p_tbl[[1]]
-      ashr_res <- ashr_wrapper(p_est, p_se)
-      phenotype <- ashr_res$result %>%
-        as_tibble(rownames="species") %>%
-        dplyr::select(species, PosteriorMean) %>%
-        deframe
+    if (pz.options("which_phenotype") != "prevalence") {
+        # Specifically for specificity, only retain observed taxa
+        pz.db$trees <- retain.observed.taxa(pz.db$trees,
+                                            phenotype,
+                                            phenoP,
+                                            mapped.observed)
+        pz.db$trees <- pz.db$trees[
+            vapply(pz.db$trees, \(.) length(.$tip.label), 1L) >=
+                pz.options("treemin")
+        ]
+        if (length(pz.db$trees) == 0) { pz.error("all trees dropped") }
+        pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
+        pz.db$ntaxa <- length(pz.db$trees)
     }
-  } else if (pz.options("which_phenotype") == "abundance") {
-    phenotype <- ashr.diff.abund(abd.meta)
-    phenoP <- 0
-  } else {
-    pz.error(paste0("don't know how to calculate the phenotype ",
-                    pz.options('which_phenotype')))
-  }
-  return(list(pz.db=pz.db, phenotype=phenotype, phenoP=phenoP))
+    return(list(pz.db=pz.db, phenotype=phenotype, phenoP=phenoP))
 }
 
 #' Make a hybrid tree-heatmap plot showing the taxon distribution of significant
@@ -1345,7 +1353,7 @@ calc.phenotype.interest <- function(abd.meta, pz.db, mapped.observed) {
 #'
 #' This function wraps single.cluster.plot, running it in a separate process.
 #' This is because there can be problems with memory leaks. For relevant global
-#' options, see the doumentation for that function.
+#' options, see the documentation for `pz.options`.
 #'
 #' @param gene.presence Gene presence/absence matrix.
 #' @param sig.genes Character vector of the significant genes.
@@ -1823,6 +1831,7 @@ phylogenize_core <- function(
         p.method=phylogenize:::phylolm.fx.pv,
         ...
     ) {
+    options <- clone_and_merge(PZ_OPTIONS, ...)
     list_pheno <- data_to_phenotypes(
         save_data = (!do_POMS || override_save_data),
         ...
@@ -1835,7 +1844,8 @@ phylogenize_core <- function(
         ...)
     if (!do_enr) {
         return(list(list_pheno=list_pheno,
-                    list_signif=list_signif))
+                    list_signif=list_signif,
+                    options=options))
     }
     enr_tbls <- get_enrichment_tbls(list_signif[["signif"]],
                                     list_signif[["signs"]],
@@ -1844,7 +1854,6 @@ phylogenize_core <- function(
                                     export=TRUE,
                                     print_out=TRUE,
                                     ...)
-    options <- clone_and_merge(PZ_OPTIONS, ...)
     return(list(list_pheno=list_pheno,
                 list_signif=list_signif,
                 enr_tbls=enr_tbls,
@@ -1949,16 +1958,18 @@ phylogenize <- function(do_cache=TRUE,
     prev.options <- pz.options()
     do.call(pz.options, list(...))
     poms_flag <- tolower(pz.options("core_method"))=="poms"
+    pz.options(working_dir=normalizePath(getwd()))
+    pz.options(out_dir=normalizePath(pz.options("out_dir")))
+    if (!(dir.exists(pz.options("out_dir")))) dir.create(pz.options("out_dir"))
     
     pz.message("Running the core of phylogenize...")
     core <- phylogenize_core(do_POMS=poms_flag,
                              do_enr=do_enr)
-    pz.options(working_dir=normalizePath(getwd()))
-    pz.options(out_dir=normalizePath(pz.options("out_dir")))
+
     if (pz.options("rds_output_file") != "") {
         core_path <- file.path(pz.options("out_dir"), 
                                pz.options("rds_output_file"))
-        saveRDS(core, core_path)
+        saveRDS(object=core, file=core_path)
     }
     
     pz.message("Generating report...")

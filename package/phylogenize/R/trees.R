@@ -159,10 +159,13 @@ gg.cont.tree <- function(phy,
      if(is.null(reduced.phy)) {reduced.phy <- fix.tree(kept_tips)}
         pz.message("getting continuous trait ancestry")
         if (is.null(reduced.phy)) {
-           pz.error("all tips were dropped")
+            pz.warning(paste0("all tips were dropped from ", cName))
+            return(NA)
         }
         if (length(reduced.phy$tip.label) < 2) {
-           pz.error("need at least two tips for a tree")
+            pz.warning(paste0(
+                "need at least two tips for a tree; skipping ", cName))
+            return(NA)
         }
         if (is.null(cAnc)) cAnc <- phytools::fastAnc(reduced.phy, ctrait[n])
         cDisplay <- truncated(c(unlist(ctrait[n]), unlist(cAnc)), unlist(cLimits))
