@@ -131,7 +131,7 @@ change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
 #' @export
 gg.cont.tree <- function(phy,
                          ctrait,
-			 taxonomy,
+                         taxonomy,
                          cAnc = NULL,
                          model = "ARD",
                          cLimits = logit(c(0.025, 0.1)),

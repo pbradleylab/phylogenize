@@ -8,30 +8,11 @@ output:
     self_contained: true
 params:
   ncl: 1
-  type: "midas"
   source_dir: "."
   out_dir: "."
   in_dir: "."
-  data_dir: "./data"
-  abundance_file: "abundance.tab"
-  metadata_file: "metadata.tab"
-  biom_file: ""
-  input_format: "tabular"
-  env_column: "env"
-  taxon_level: "phylum"
-  dset_column: "dataset"
-  phenotype_file: ""
-  db: "gtdb"
-  which_phenotype: "prevalence"
-  which_envir: "Stool"
-  prior_type: "uninformative"
-  prior_file: ""
-  minimum: 3
-  treemin: 5
   assume_below_LOD: TRUE
   skip_graphs: FALSE
-  vsearch_dir: "./bin"
-  core_method: "phylogenize"
   use_rmd_params: TRUE
   error_to_file: TRUE
 ---
@@ -83,29 +64,13 @@ if (!pz.options('skip_graphs')) {
 
 # Only load lobstr to track memory usage if debugging
 dir.create(pz.options('out_dir'))
-do_POMS <- FALSE
-if (tolower(pz.options('core_method'))=="phylogenize") {
-  p.method <- phylolm.fx.pv
-} else if (tolower(pz.options('core_method'))=="poms") {
-  p.method <- NULL
-  do_POMS <- TRUE
-} else if (tolower(pz.options('core_method'))=="linear") {
-  p.method <- lm.fx.pv
-} else {
-  pz.error("core_method must be phylogenize, poms, or linear")
-}
+do_POMS <- (tolower(pz.options('core_method'))=="poms")
 
-# Read in user-supplied
-abd.meta <- read.abd.metadata()
-# Read in trees, gene presence/absence, taxonomy
-pz.db <- import.pz.db()
-# Figure out how many trees to retain
-pz.db <- adjust.db(pz.db, abd.meta)
 ```
 
 # Settings
 
-This report was generated automatically by [phylogenize](https://phylogenize.org/) (Bradley and Pollard, 2019: https://phylogenize.org), with the following parameters:
+This report was generated automatically by [Phylogenize2](https://phylogenize.org/) (Kananen et al., in preparation), with the following parameters:
 
 - Type of input data: "`r pz.options('db')`"
 - Phenotype calculated: "`r pz.options('which_phenotype')`"
@@ -126,23 +91,13 @@ environments (i.e., found less often in the environment chosen), and gray for
 taxa that are neither.
 
 ## Distribution of Phenotype {.tabset}
-```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=FALSE}
+```{r plot_phenotypes, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=FALSE}
 
-# Read in user-supplied data, trees, gene info, taxonomy; calculate phenotypes;
-# and automatically unpack results to current environment
-# Only save the abd.meta data if we're running POMS, which needs it...
-list2env(data_to_phenotypes(save_data = !do_POMS), environment())
-# Also unpack "phenotype, phenoP, ..." into current environment
-list2env(phenotype_results, environment())
+# Unpack pz.db and phenotype results to current environment
+list2env(core[["list_pheno"]], environment())
+# Also unpack "phenotype, phenoP, mapped.observed" into current environment
+list2env(core[["list_pheno"]][["phenotype_results"]], environment())
 
-mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
-
-phenotype_info <- calc.phenotype.interest(abd.meta, pz.db, mapped.observed)
-pz.db <- phenotype_info[["pz.db"]]
-phenotype <- phenotype_info[["phenotype"]]
-phenoP <- phenotype_info[["phenoP"]]
-
-phenotype <- clean.pheno(phenotype, pz.db)
 pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
 pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
 plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pz.db$taxonomy, pheno.scale)
@@ -170,7 +125,7 @@ gc()
 `r knitr::knit_child(text = unlist(plots), quiet = TRUE)`
 ## Phenotype Mapped Across Trees {.tabset}
 ### All Taxa
-```{r plot_pheno_trees, echo=FALSE, warning = FALSE, results='asis', cache=FALSE}
+```{r plot_phenos_on_trees, echo=FALSE, warning = FALSE, results='asis', cache=FALSE}
 
 plots <- list()
 if (!pz.options('skip_graphs')) {
@@ -189,7 +144,7 @@ clinUtils::knitPrintListPlots(
 ```
 
 ### Only Mapped/Observed Taxa
-```{r plot_pheno_trees_observed_taxa, echo=FALSE, warning=FALSE, results='asis', warning = FALSE, message = FALSE, cache=FALSE}
+```{r plot_phenos_on_observed_trees, echo=FALSE, warning=FALSE, results='asis', warning = FALSE, message = FALSE, cache=FALSE}
 
 pheno.labels <- names(phenotype)
 subtrees <- lapply(pz.db$trees, function(tr) {
@@ -227,9 +182,10 @@ of a gene, and enrichment analysis.
 This table gives an overview of how many genes were significantly associated at
 an FDR of 5%.
 
-```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
+```{r write_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
 
-signif_genes <- get_signif_associated_genes(pz.db, phenotype, do_POMS, p.method)
+signif_genes <- core[["list_signif"]]
+
 pos.sig <- data.frame(
   Taxon = names(signif_genes[["pos.sig"]]),
   `Significant Genes` = sapply(signif_genes[["pos.sig"]], length),
@@ -275,21 +231,16 @@ be installed.
 All pathways/modules returned are significant at an FDR of 25%. "Strong", "Med",
 and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
-```{r enrichment_analysis, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE, results='axsis'}
-do_enrichment <- ("clusterProfiler" %in% rownames(installed.packages()))
+```{r enrichment_tables, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE, results='axsis'}
+do_enrichment <- ("enr_tbls" %in% names(core))
 if (do_enrichment) {
-	table <- clinUtils::getClinDT(get_enrichment_tbls(signif_genes[["signif"]],
-                                    signif_genes[["signs"]],
-                                    pz.db,
-                                    signif_genes[["results.matrix"]],
-                                    export=TRUE,
-                                    print_out=TRUE))
+	table <- clinUtils::getClinDT(core[["enr_tbls"]])
 	DT::formatStyle(table,
 			'q_value',
 			target = 'row',
 			backgroundColor = DT::styleInterval(0.05, c('lightgreen', NA)))
 } else {
-  pz.message("Skipping enrichment as clusterProfiler could not be found")
+  pz.message("Skipping enrichment as tables could not be found in provided object")
 }
 
 ```{r cleanup, warning=FALSE, message=FALSE, echo=FALSE}
