@@ -1903,7 +1903,7 @@ render_core_report <- function(core,
     
     prev.options <- pz.options()
     if ("options" %in% names(core)) {
-        do.call(pz.options, core[["options"]])
+        do.call(pz.options, core[["options"]]())
     }
     do.call(pz.options, list(...))
     pz.options(working_dir=normalizePath(getwd()))
