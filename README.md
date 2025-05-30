@@ -53,7 +53,7 @@ We have several premade databases that you can select from depending on what is 
 | chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |
 | cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |
 | honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |
-| human gut          | v2.0.2  | MGnify   | 203                | 4543              |
+| human gut          | v2.0.2  | MGnify   | 215                | 3445              |
 | human oral         | v1.0.1  | MGnify   | 52                 | 260               |
 | human vaginal      | v1.0    | MGnify   | 52                 | 189               |
 | marine eukaryotes  | vbeta   | MGnify   | 250                | 250               |
