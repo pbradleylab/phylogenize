@@ -6,7 +6,7 @@ In addition, we highly recommend using v2.0.0-alpha or later. We no longer suppo
 
 ## Installing Phylogenize2
 
-The easiest way to install all the dependencies needed is by using mamba or conda. We recommend using [miniforge3](https://github.com/conda-forge/miniforge). Please make sure you are using miniforge v3-23.3.1-0 or later. Miniforge3 is available for MacOS, Linux, and Windows OS. Phylogenize is not tested for an Windows OS, so proceed at your own paril. For all future examples, unless otherwise stated, we are assuming you are using Linux.
+The easiest way to install all the dependencies needed is by using mamba or conda. We recommend using [miniforge3](https://github.com/conda-forge/miniforge). Please make sure you are using miniforge v3-23.3.1-0 or later. Miniforge3 is available for MacOS, Linux, and Windows OS. Phylogenize is not tested on Windows (proceed with caution); for all future examples, unless otherwise stated, we are assuming you are using Linux.
 
 To install miniforge, run `wget -c https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh` and then in a terminal type `bash Miniforge3-Linux-x86_64.sh`. You'll need to run through the prompts and then give it a download location if the default is not to your liking. Finally, you can let miniforge initialize itself if you want conda to always be in your "base" when you open the terminal. Otherwise, if you say `no` then you will have to manually source the executable for conda which can be done similarly as `source /your/path/to/miniforge3/bin/activate`.
 
@@ -93,7 +93,7 @@ The main function in Phylogenize2 is called `phylogenize`. The parameters that y
 | input_format | "tabular" | String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). |
 | ncl | 1 | Integer. Number of cores to use for parallel computation. |
 | type_16S | FALSE | Boolean. Set to true if your species names are 16S ASV sequences, instead of species IDs from your database of interest. |
-| db | "uhgp" | String. Gives the database to use. Some options are "uhgp" and "gtdb"; see below. |
+| db | "uhgp" | String. Gives the database to use. Some options are "uhgp" and "gtdb"; see above for others. |
 | env_column | "env" | String. Name of column in metadata file containing the environment annotations. |
 | dset_column | "dataset" | String. Name of column in metadata file containing the dataset annotations. |
 | sample_column | "sample_id" | Name of column in metadata file containing the sample IDs. |
