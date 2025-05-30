@@ -67,11 +67,11 @@ We have several premade databases that you can select from depending on what is 
 
 All databases have been been annotated using UniRef50, UHGP, and the remaining entries without an annotation using [anvi'o](https://peerj.com/articles/1319/) and [kegg](https://www.genome.jp/kegg/pathway.html) ko.
 
-Databases can be downloaded manually and decompressed from [here]() or they can be downloaded and udecompressed using phylogenize's `phylogenize::download_zenodo_db("your/html/link/here.zip")`
+Databases can be downloaded manually and decompressed from the respective urls or they can be downloaded and udecompressed using phylogenize's `phylogenize::download.zenodo.db("your/html/link/here.zip")`. The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
 
 ## Running *phylogenize*
 
-Congratulations! *phylogenize* should now be installed.
+Congratulations! *phylogenize* should now be installed with your selected database.
 
 ### Running *phylogenize* using the R interface
 
@@ -99,51 +99,31 @@ Compared to some R packages, passing options to *phylogenize* works a little dif
 
 Here is an example invocation of `render.report`: 
 
-~~~~
-library(phylogenize)
+```
 render.report(
-    output_file="16S-results.html",
-    in_dir="/home/kananen13/workspace/bradleyLab/tools/phylogenize/phylogenize/hmp/",
-    out_dir=file.path("hmp", "16S-results"),
-    type="midas",
-    db_version="midas_v1.0",
-    which_phenotype="prevalence",
-    which_envir="Stool",
-    abundance_file="hmp-shotgun-bodysite.tab",
-    metadata_file="hmp-shotgun-bodysite-metadata.tab", 
+    output_file="shotgun-results.html",
+    out_dir="./output/test/",
+    db="uhgp",
+    taxon_level="family",
+    type_16S=FALSE,
+    which_phenotype="abundance",
+    diff_abund_method="ancombc2",
+    abundance_file="cirrhosis-abundance.tab",
+    metadata_file="cirrhosis-metadata.tab",
     input_format="tabular",
-    ncl=10)
-~~~~
+    which_envir="case",
+    sample_column="sampleid",
+    vsearch_bin="/fs/project/bradley.720/users/kananen.13/tools/miniconda3/envs/phylogenize/bin/",
+    ncl=10
+)
+```
 
-This invocation will generate a report under "./hmp/16S-results" called "16S-results.html".
-
-Note that for now it is necessary to call `phylogenize::set_data_internal()` if you don't explicitly load the package with `library(phylogenize)`; that function is automatically triggered when the package is loaded with `library()`.
-
-
-### Running *phylogenize* locally with the web interface
-
-*phylogenize* also can be used with its own graphical user interface and job manager, which can be accessed with a web browser. We provide an installation of *phylogenize* at [https://www.phylogenize.org], but you can also run this interface locally. (The next part of the guide assumes a \*-nix environment like Ubuntu or OS X, but you may also be able to run this on Windows using the Windows Subsystem for Linux or Cygwin.)
-
-The *phylogenize* web interface is written as a Flask WSGI app. If you are just going to be running it on your own computer or within a trusted intranet, you can probably use the built-in Flask server. (If you are concerned about security and will be allowing potentially untrusted users to use the server, or if the built-in Flask server is inadequate for any other reason, we recommend using a production web server like Apache2. The Flask documentation has [some information](http://flask.pocoo.org/docs/1.0/deploying/mod_wsgi/) on how to get started hosting a WSGI app on Apache2 using `mod_wsgi`.)
-
-We recommend installing Flask using a virtual environment as per the instructions [here](http://flask.pocoo.org/docs/1.0/installation/). Once you have activated the virtual environment, before running the app but after cloning the repository with `git clone`, you will need to launch the Beanstalk-based queueing system. From the repository root, run:
-
-    nohup beanstalkd -l 127.0.0.1 -p 14711 &
-    nohup python3 phylogenize_app/worker.py &
-
-To keep these jobs running if the terminal is closed, you may want to `disown` these jobs or alternatively, start them in a `tmux` or `screen` session.
-
-To allow multiple simultaneous jobs, you will need to edit `worker.py` and change MaxJobs as appropriate. It may be worth starting with a single job, particularly if each job runs multi-threaded, to make sure memory use stays reasonable.
-
-Next, you will need to start the server as follows:
-
-     FLASK_APP=phylogenize_app flask run
-
-The application should then be accessible from http://localhost:5000.
+This invocation will generate a report using abundance and ancombc2 under "./output/test/" called "shotgun-results.html". We recommend when possible to use full paths to this folder instead of local paths shown in this example. The database in the `db=uhgp` can be set to be 'gtdb', 'uhgp', 'honeybee-gut', 'cow-rumen', 'chicken-gut', 'zebrafish-fecal', 'human-oral', 'marine', 'etc'. The naming convention of this parameter for default databases will always be lowercase and match the `Environment` column from the "Selecting a database" section expect for spaces will be replaced with '-'. For specificy or prevalence change the which_phenotype to 'specificity' or 'prevalence'. For abundance if instead of using 'ancombc2' you can also use 'maaslin2'. Additionally, if you wish to run POMS set 'poms' for `which_phenotype`
 
 ## Acknowledgements
 
- * Project lead and repository maintainer: [Patrick H. Bradley](http://docpollard.org/people/patrick-j-h-bradley/)
+ * Project lead and repository maintainer: [Patrick H. Bradley](https://bradleylab.science/authors/admin/)
+ * repository maintainer: [Kathryn Kananen](https://bradleylab.science/author/kathryn-kananen/)
  * Principal investigator: [Katherine S. Pollard](http://docpollard.org)
  * Testing, troubleshooting, and debugging AWS/Mac installation: [Chunyu Zhao](https://github.com/zhaoc1)
  * More testing: [Jordan Bisanz](https://github.com/jbisanz) and other members of the [Turnbaugh lab](https://turnbaughlab.ucsf.edu/)
@@ -153,5 +133,5 @@ The application should then be accessible from http://localhost:5000.
 
 ## Contact
 
-If you have questions or comments, please contact [support@phylogenize.org]. If *phylogenize* is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!
+If you have questions or comments, please contact [support@phylogenize.org]. If *phylogenize* is giving you an error, please also feel free to file a bug report. Thanks for your feedback!
  
