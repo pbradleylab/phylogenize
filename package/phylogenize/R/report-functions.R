@@ -972,7 +972,7 @@ retain.observed.taxa <- function(trees, phenotype, phenoP, mapped.observed) {
         keep.tips(tr, intersect(tr$tip.label, mapped.observed))
     })
     n.not.prior <- sapply(trees, function(tr) {
-        sum(phenotype[tr$tip.label] != phenoP)
+        sum(phenotype[intersect(names(phenotype), tr$tip.label)] != phenoP)
     })
     if (all(n.not.prior == 0)) {
         pz.error(
