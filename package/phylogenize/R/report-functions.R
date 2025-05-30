@@ -823,7 +823,6 @@ change.tree.tax.level <- function(tree, taxon, tax){
 #' @export
 import.pz.db <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    
     if (opts('db') == "gtdb") {
 	    # Read in gene presence and the functions file
             gene.presence <- readRDS(file.path(opts('data_dir'), "gtdb-gene-presence-binary.rds"))
@@ -887,7 +886,7 @@ import.pz.db <- function(...) {
 adjust.db <- function(pz.db, abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     species.observed <- rownames(abd.meta$mtx)
-    
+   
     species.per.tree <- lapply(pz.db$trees, function(tr) {
 	intersect(tr$tip.label, species.observed)
     })
@@ -1553,19 +1552,20 @@ is.dna <- function(seq) {
     !(grepl("[^actguwsmkrybdhvn]", tolower(seq)))
 }
 
-#' Download data from figshare (or provide it locally) and un-gzip it into the
+#' Download data from zenodo (or provide it locally) and un-gzip it into the
 #' package directory so that it can be imported.
 #'
 #' @param data_path Optional: provide a path to a local file containing a
 #'     compressed .tar archive of data. Must extract to the subdirectory
 #'     \code{extdata/}.
-#' @param figshare_url Optional: override the URL from which to obtain the data.
+#' @param url Optional: override the URL from which to obtain the data. 
+#'     Default database is GTDB.
 #' @export
 install.data.figshare <- function(data_path=NULL,
-                                  figshare_url="https://ndownloader.figshare.com/files/43692576?private_link=987aeecdfebd2da02302") {
+                                  url="http://zenodo/gtdb.db") {
     if (is.null(data_path)) {
         data_path = tempfile()
-        curl::curl_download(figshare_url, data_path)
+        download.file(url, data_path, method="auto", mode="wb")
     }
     print(system.file("", package="phylogenize"))
     untar(data_path, exdir = system.file("", package="phylogenize"))
