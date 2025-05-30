@@ -25,6 +25,7 @@ These options are global because they affect how most of the functions in
   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message output to an error message file? Default: FALSE}
   \item{input_format}{String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). Default: "tabular"}
   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
+  \item{rds_output_file}{String. Name of output RDS file containing the full results of applying `phylogenize_core()`. Set to empty string to disable. Default: "core_output.rds"}
   \item{output_file}{String. Name of output file: "results.html"}
   \item{phenotype_file}{String. Name of input file for optional pre-calculated phenotype. Default: ""}
   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}

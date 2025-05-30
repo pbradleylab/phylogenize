@@ -62,7 +62,6 @@ if (!pz.options('skip_graphs')) {
     })
 }
 
-# Only load lobstr to track memory usage if debugging
 dir.create(pz.options('out_dir'))
 do_POMS <- (tolower(pz.options('core_method'))=="poms")
 
@@ -234,13 +233,21 @@ respectively.
 ```{r enrichment_tables, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE, results='axsis'}
 do_enrichment <- ("enr_tbls" %in% names(core))
 if (do_enrichment) {
-	table <- clinUtils::getClinDT(core[["enr_tbls"]])
-	DT::formatStyle(table,
-			'q_value',
-			target = 'row',
-			backgroundColor = DT::styleInterval(0.05, c('lightgreen', NA)))
+    table <- clinUtils::getClinDT(core[["enr_tbls"]]) |>
+        DT::formatStyle(
+            'q_value',
+            target = 'row',
+            backgroundColor = DT::styleInterval(0.05, c('lightgreen', NA))
+        ) |>
+        DT::formatSignif(
+            c('q_value', 'Enrichment_odds_ratio'),
+            digits=2
+        )
+    table
 } else {
-  pz.message("Skipping enrichment as tables could not be found in provided object")
+    pz.message(
+        "Skipping enrichment as tables could not be found in provided object"
+    )
 }
 
 ```{r cleanup, warning=FALSE, message=FALSE, echo=FALSE}

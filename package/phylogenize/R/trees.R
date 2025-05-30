@@ -83,11 +83,11 @@ change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
         ctree_data$label <- ctree_data$species
         ctree$data <- ctree_data
 
-        ctree$data$rounded <- signif(ctree$data$branch.length, digits = 3)
+        ctree$data$rounded <- signif(ctree$data$color, digits = 2)
 	ctree$data$label <- ifelse(
 				   is.na(ctree$data$label),
 				   ctree$data$label,
-				   paste0(ctree$data$label, " (BL:", ctree$data$rounded, ")")
+				   paste0(ctree$data$label, " (phenotype: ", ctree$data$rounded, ")")
 				   )
 
 	#Change color section in tree to avoid error

@@ -1470,53 +1470,6 @@ single.cluster.plot <- function(gene.presence,
     tmp
 }
 
-#--- Report generation ---#
-
-#' Run *phylogenize* start to finish.
-#'
-#' @param output_file Path giving what to name the resulting HTML file.
-#' @param report_input Optionally override which notebook to knit (useful for
-#'     testing).
-#' @param do_cache Turn on or off Rmarkdown's caching.
-#' @param reset_after Reset global options to package defaults after running?
-#' @param ... Parameters to override defaults.
-#' @export
-render.report <- function(output_file='report_output.html',
-                          report_input='phylogenize-report.Rmd',
-                          do_cache=TRUE,
-                          reset_after=TRUE,
-                          ...) {
-    prev.options <- pz.options()
-    do.call(pz.options, list(...))
-    pz.options(working_dir=normalizePath(getwd()))
-    pz.options(out_dir=normalizePath(pz.options("out_dir")))
-    if (!dir.exists(pz.options('out_dir'))) {dir.create(pz.options('out_dir'))}
-    p <- pz.options()
-    for (n in names(p)) {
-        message(paste0(n, ": ", p[[n]]))
-    }
-    file.copy(system.file("rmd",
-                          report_input,
-                          package="phylogenize"),
-              pz.options("out_dir"),
-              overwrite=TRUE)
-    r <- rmarkdown::render(file.path(pz.options("out_dir"),
-                                     report_input),
-                           output_file=basename(output_file),
-                           output_dir=pz.options("out_dir"),
-                           output_options=list(
-                               cache.path=pz.options("out_dir"),
-                               cache=do_cache
-                           ),
-                           intermediates_dir=pz.options("out_dir"),
-                           knit_root_dir=pz.options("out_dir"))
-    if (reset_after) {
-        do.call(pz.options, prev.options)
-        set_data_internal()
-    }
-    r
-}
-
 #' Make a pretty enrichment table.
 #'
 #' @param enr.table Input enrichment table.
@@ -1856,19 +1809,20 @@ get_enrichment_tbls <- function(signif,
 #' @param do_POMS Run the POMS algorithm instead of phylogenetic regression
 #'   (default: FALSE).
 #' @param do_enr Run enrichment analysis. Can skip to save time (default: TRUE)
-#' @param override_save_data Return the input data and metadata, even if not
+#' @param force_return_data Return the input data and metadata, even if not
 #'   using POMS (default: FALSE).
 #' @param p.method Function that returns the effect size and p-value per gene
 #'   (default: phylolm.fx.pv). Can be overridden to use (for example) a plain
 #'   linear model instead, for the sake of comparison.
 #' @param ... Parameters to override defaults.
 #' @export
-phylogenize_core <- function(do_POMS=FALSE,
-                             do_enr=TRUE,
-                             override_save_data=FALSE,
-                             override_options=NULL,
-                             p.method=phylogenize:::phylolm.fx.pv,
-                             ...) {
+phylogenize_core <- function(
+        do_POMS=FALSE,
+        do_enr=TRUE,
+        force_return_data=FALSE,
+        p.method=phylogenize:::phylolm.fx.pv,
+        ...
+    ) {
     list_pheno <- data_to_phenotypes(
         save_data = (!do_POMS || override_save_data),
         ...
@@ -1931,8 +1885,8 @@ augment_with_enrichments <- function(core) {
 #' @param ... Other options to be passed to `pz.options` that will override options in `core`.
 #' @export
 render_core_report <- function(core,
-                               output_file="phylogenize-core-report.html",
-                               report_input="phylogenize-core-report.Rmd",
+                               output_file="phylogenize-report.html",
+                               report_input="phylogenize-report.Rmd",
                                do_cache=FALSE,
                                reset_after=TRUE,
                                verbose=FALSE,
@@ -1973,7 +1927,47 @@ render_core_report <- function(core,
                            envir = e)
     if (reset_after) {
         do.call(pz.options, prev.options)
-        set_data_internal()
     }
     r
+}
+
+
+#--- Report generation ---#
+
+#' Run *phylogenize* start to finish, then render an interactive report on the results.
+#'
+#' @param do_cache Turn on or off Rmarkdown's caching (default: TRUE).
+#' @param reset_after Reset global options to package defaults after running? (default: TRUE)
+#' @param do_enr Generate enrichment tables? (default: TRUE)
+#' @param ... Other parameters to override defaults (see ?pz.options for a full list).
+#' @export
+phylogenize <- function(do_cache=TRUE,
+                        reset_after=TRUE,
+                        do_enr=TRUE,
+                        ...) {
+    
+    prev.options <- pz.options()
+    do.call(pz.options, list(...))
+    poms_flag <- tolower(pz.options("core_method"))=="poms"
+    
+    pz.message("Running the core of phylogenize...")
+    core <- phylogenize_core(do_POMS=poms_flag,
+                             do_enr=do_enr)
+    pz.options(working_dir=normalizePath(getwd()))
+    pz.options(out_dir=normalizePath(pz.options("out_dir")))
+    if (pz.options("rds_output_file") != "") {
+        core_path <- file.path(pz.options("out_dir"), 
+                               pz.options("rds_output_file"))
+        saveRDS(core, core_path)
+    }
+    
+    pz.message("Generating report...")
+    render_core_report(core,
+                       output_file=pz.options("output_file"),
+                       do_cache=do_cache,
+                       reset_after=reset_after)
+    if (reset_after) {
+        do.call(pz.options, prev.options)
+    }
+    return(core)
 }
