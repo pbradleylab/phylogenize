@@ -379,9 +379,9 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     }
     abd.meta$mtx <- abd.meta$mtx[, samples.present, drop=FALSE]
     abd.meta$metadata <- abd.meta$metadata[
-                            abd.meta$metadata[[opts('sample_column')]] %in%
-                            samples.present, ]
-
+        abd.meta$metadata[[opts('sample_column')]] %in%
+            samples.present, ]
+    
     if (opts('which_phenotype') %in% c("specificity", "prevalence", "abundance")) {
         all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
         env.number <- sapply(all.envs, function(e) {
@@ -389,7 +389,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
         })
         names(env.number) <- all.envs
         singleton.envs <- names(which(env.number == 1))
-	if (length(singleton.envs) > 0) {
+        if (length(singleton.envs) > 0) {
             pz.warning(paste0("Warning: each environment requires at least two samples."))
             pz.warning("Dropped the following environment(s) from the analysis: ")
             for (s in singleton.envs) {
@@ -398,7 +398,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
         }
         nonsingleton.envs <- names(which(env.number > 1))
         pz.message(paste0(length(nonsingleton.envs),
-                        " non-singleton environment(s) found"))
+                          " non-singleton environment(s) found"))
         if ((length(nonsingleton.envs) < 2) &&
             (opts('which_phenotype') == 'specificity')) {
             pz.error(paste0("In order to calculate specificity, there must be at least",
@@ -410,11 +410,11 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                             " one environment with two samples."))
         }
     } else {
-      # Must be correlation
-      n_present <- sum(!is.na(as.numeric(abd.meta$metadata[[opts('env_column')]])))
-      if (n_present < 3) pz.error("In order to calculate correlation, there must be at least 3 non-missing values.")
+        # Must be correlation
+        n_present <- sum(!is.na(as.numeric(abd.meta$metadata[[opts('env_column')]])))
+        if (n_present < 3) pz.error("In order to calculate correlation, there must be at least 3 non-missing values.")
     }
-
+    
     all.dsets <- unique(abd.meta$metadata[[opts('dset_column')]])
     dset.number <- sapply(all.dsets, function(d) {
         sum(abd.meta$metadata[[opts('dset_column')]] == d)
@@ -423,12 +423,12 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     nonsingleton.dsets <- names(which(dset.number > 1))
     pz.message(paste0(length(nonsingleton.dsets),
                       " non-singleton dataset(s) found"))
-    if (opts('which_phenotype') != "correlation") {
-      wrows <- which(
-      (abd.meta$metadata[[opts('env_column')]] %in% nonsingleton.envs) &
-      (abd.meta$metadata[[opts('dset_column')]] %in% nonsingleton.dsets))
+    if (!(opts('which_phenotype') %in% c("correlation", "provided"))) {
+        wrows <- which(
+            (abd.meta$metadata[[opts('env_column')]] %in% nonsingleton.envs) &
+                (abd.meta$metadata[[opts('dset_column')]] %in% nonsingleton.dsets))
     } else {
-      wrows <- which(abd.meta$metadata[[opts('dset_column')]] %in% nonsingleton.dsets)
+        wrows <- which(abd.meta$metadata[[opts('dset_column')]] %in% nonsingleton.dsets)
     }
     if (length(wrows) < 2) {
         pz.error(paste0("Too few rows found in metadata matrix after ",
