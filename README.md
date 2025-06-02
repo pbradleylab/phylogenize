@@ -55,7 +55,7 @@ sudo apt install fontconfig
 We have several premade databases that you can select from depending on what is expected to match your host's system. If you are unsure what database to use, then we recommend using GTDB as the default.
 
 | Environment        | Version | Database | Number of families | Number of species |
-|---------------|--------------|--------------|---------------|--------------|
+|--------------------|---------|----------|--------------------|-------------------|
 | chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |
 | cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |
 | honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |
@@ -79,13 +79,12 @@ Databases can be downloaded manually and decompressed from our Zenodo page [here
 
 Congratulations! Phylogenize2 should now be installed.
 
-
 ### Running Phylogenize2 using the R interface
 
 The main function in Phylogenize2 is called `phylogenize`. The parameters that you are the most likely to use are as follows:
 
 | Option | Default | Description |
-|--------------------------|------------------------|----------------------|
+|----|----|----|
 | in_dir | "." | String. Path to input directory (i.e., where to look for input files. |
 | out_dir | "output" | String. Path to output directory. |
 | abundance_file | "test-abundance.tab" | String. Name of abundance tabular file. |
@@ -193,4 +192,3 @@ The application should then be accessible from <http://localhost:5000>.
 ## Contact
 
 If you have questions or comments, please contact [[support\@phylogenize.org](mailto:support@phylogenize.org){.email}]. If Phylogenize2 is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!
-

@@ -24,6 +24,8 @@ p-value) and one column per gene tested.}
 \item{exclude}{String vector of genes to exclude (optional).}
 
 \item{min.fx}{Minimum effect size for calling something significant.}
+
+\item{...}{Extra parameters to be passed to `method`.}
 }
 \value{
 List (per taxon) of string vectors of significant hits.

@@ -83,6 +83,7 @@ equiv_test <- function(fx, se, df, min_fx=0.25) {
 #'     \code{results}.
 #' @param exclude String vector of genes to exclude (optional).
 #' @param min.fx Minimum effect size for calling something significant.
+#' @param ... Extra parameters to be passed to `method`.
 #' @return List (per taxon) of string vectors of significant hits.
 #' @export
 make.sigs <- function(results,
@@ -100,7 +101,7 @@ make.sigs <- function(results,
             } else { valid <- colnames(results[[x]]) }
             tested <- na.omit(results[[x]][2, valid, drop=TRUE])
             above.min <- nw(abs(results[[x]][1, valid, drop=TRUE]) >= min.fx)
-            tryCatch(intersect(nw(method(tested) <= cut), above.min),
+            tryCatch(intersect(nw(method(tested, ...) <= cut), above.min),
                      error = function(e) character(0))
         })
     })
@@ -197,12 +198,14 @@ get.top.N <- function(p,
     setdiff(names(sort(sig.pv, dec = F)), exclude)[1:N]
 }
 
-#' Wrapper around \code{qvalue} that extracts only q-values. If there is an
-#' error in estimating q-values, will automatically fall back to a
-#' Benjamini-Hochberg-style correction (by setting lambda to zero), finally
-#' returning a vector of NAs if this still does not work.
+#' Wrapper around \code{qvalue} and \code{p.adjust} that extracts only q-values.
+#' If there is an error in `qvalue()` with default parameters, this function
+#' will automatically fall back to a Benjamini-Hochberg-style correction (by
+#' setting lambda to zero), using p.adjust if that still doesn't work, and
+#' finally returning a vector of NAs if all else fails.
 #'
 #' @param x A vector of p-values.
+#' @param ... Extra parameters to override defaults, especially `fdr_method` (which can be "BH", "BY", or "qvalue).
 #' @return A vector of q-values.
 #' @keywords internal
 qvals <- function(x, ...) {

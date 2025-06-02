@@ -51,7 +51,8 @@ default_params <- list(
     diff_abund_method = "maaslin2",
     working_dir = '.',
     core_method = "phylogenize",
-    rds_output_file = "core_output.rds"
+    rds_output_file = "core_output.rds",
+    fdr_method = "BY"
 )
 
 

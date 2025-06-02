@@ -1606,11 +1606,11 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
 #'     metadata (from read.abd.metadata or data_to_phenotypes).
 #' @param ... Parameters to override defaults.
 #' @export
-get_signif_associated_genes <- function(pz.db,
-                                        phenotype,
-                                        do_POMS=FALSE,
-                                        p.method=phylolm.fx.pv,
-                                        ...) {
+get_all_associated_genes <- function(pz.db,
+                                     phenotype,
+                                     do_POMS=FALSE,
+                                     p.method=phylolm.fx.pv,
+                                     ...) {
     pz.options <- clone_and_merge(PZ_OPTIONS, ...)
     taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$species)))
     if (!do_POMS) {
@@ -1644,6 +1644,19 @@ get_signif_associated_genes <- function(pz.db,
     # trim out any that didn't get dropped
     result_lens <- vapply(results, length, 1L)
     results <- results[names(which(na.omit(result_lens>0)))]
+    return(get_signif_associated_genes(pz.db, results))
+}
+
+#' Process genes by significance threshold.
+#'
+#' @param pz.db A database (typically obtained with \code{import.pz.db}).
+#' @param results Results object from \code{get_all_associated_genes}.
+#' @param ... Parameters to override defaults.
+#' @export
+get_signif_associated_genes <- function(pz.db,
+                                        results,
+                                        ...) {
+    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
     signif <- make.sigs(results)
     signs <- make.signs(results)
     pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
@@ -1654,7 +1667,6 @@ get_signif_associated_genes <- function(pz.db,
     pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs, pos.sig.thresh, pz.db$gene.to.fxn)
     # recalculate, since some of these may go away
     phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
-    
     return(list(
         results=results, #1
         signif=signif,   #2
@@ -1667,6 +1679,7 @@ get_signif_associated_genes <- function(pz.db,
         pos.sig.thresh.descs=pos.sig.thresh.descs #9
     ))
 }
+
 
 #' Get enrichment tables.
 #'
@@ -1787,7 +1800,7 @@ phylogenize_core <- function(
         save_data = (!do_POMS || override_save_data),
         ...
     )
-    list_signif <- get_signif_associated_genes(
+    list_signif <- get_all_associated_genes(
         list_pheno$pz.db,
         list_pheno$phenotype_results$phenotype,
         do_POMS,
@@ -1826,8 +1839,7 @@ augment_with_enrichments <- function(core) {
         core[["list_pheno"]][["pz.db"]],
         core[["list_signif"]][["results.matrix"]],
         export=TRUE,
-        print_out=TRUE,
-        ...)
+        print_out=TRUE)
     core
 }
 
