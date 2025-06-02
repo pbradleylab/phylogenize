@@ -221,7 +221,9 @@ cluster.plots <- mapply(do.clust.plot,
                         SIMPLIFY = FALSE)
 
 ```
+
 ## Enrichment analysis
+
 This process takes the set of genes that are significant and positively
 associated with the phenotype, then asks whether there are more than expected
 by chance in a given KEGG module or pathway. This requires clusterProfiler to
@@ -230,6 +232,7 @@ be installed.
 All pathways/modules returned are significant at an FDR of 25%. "Strong", "Med",
 and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
+
 ```{r enrichment_tables, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE, results='axsis'}
 do_enrichment <- ("enr_tbls" %in% names(core))
 if (do_enrichment) {
@@ -249,13 +252,6 @@ if (do_enrichment) {
         "Skipping enrichment as tables could not be found in provided object"
     )
 }
-
-```{r cleanup, warning=FALSE, message=FALSE, echo=FALSE}
-# Clean up memory before rendering
-rm(results)
-rm(plotted.pheno.subtrees)
-rm(plotted.pheno.trees)
-rm(pz.db)
 ```
 
 # Full output files

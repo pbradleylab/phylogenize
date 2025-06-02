@@ -1142,24 +1142,32 @@ get.pheno.plotting.scales.specificity <- function(phenotype,
 #' @export plot.phenotype.trees
 plot.phenotype.trees <- function(phenotype,
                                  trees,
-				 taxonomy,
+                                 taxonomy,
                                  scale,
                                  ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if (any(!(names(trees) %in% names(scale$phy.limits)))) {
         pz.error("taxon-specific limits must be calculated for every tree")
     }
-
+    
     plotted.pheno.trees <- lapply(names(trees), function(tn) {
-                                             gg.cont.tree(trees[[tn]], phenotype, taxonomy, cLimits=scale$phy.limits[[tn]], colors=scale$colors, cName=tn, plot=FALSE)#,
-                                 })
+        gg.cont.tree(trees[[tn]],
+                     phenotype,
+                     taxonomy,
+                     cLimits=scale$phy.limits[[tn]],
+                     colors=scale$colors,
+                     cName=tn,
+                     plot=FALSE)#,
+    })
     if(!is.null(plotted.pheno.trees)) {
-       names(plotted.pheno.trees) <- names(trees)
-       plotted.pheno.trees <- plotted.pheno.trees[vapply(plotted.pheno.trees, is.list, TRUE)]
-       if (length(plotted.pheno.trees) == 0) {
-          pz.warning("No trees were plotted: too few taxa for any taxon?")
-       }
-       return(plotted.pheno.trees)
+        names(plotted.pheno.trees) <- names(trees)
+        plotted.pheno.trees <- plotted.pheno.trees[
+            vapply(plotted.pheno.trees, is.list, TRUE)
+        ]
+        if (length(plotted.pheno.trees) == 0) {
+            pz.warning("No trees were plotted: too few taxa for any taxon?")
+        }
+        return(plotted.pheno.trees)
     }
 }
     
@@ -1275,77 +1283,6 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 	    })
     }
     return(plots)
-}
-
-
-#' Calculate the phenotype of interest
-#'
-#' This function generates the phenotype of interest based on user input 
-#' and returns three objects used in the report.
-#'
-#' Some particularly relevant global options are:
-#' \describe{
-#'   \item{abd.meta}{dataframe. holds the use derived abundance data}
-#' }
-#'
-#' @param abd.meta.scale user derived abundance data
-#' @param pz.db phylogenize in house taxonomy data 
-#' @param mapped.observed A character vector giving which tips to retain.
-#' @return list of three objects - [pz.db, phenotype, phenoP]
-#' @export
-calc.phenotype.interest <- function(abd.meta, pz.db, mapped.observed) {
-    if (pz.options('which_phenotype') == "prevalence") {
-        phenotype <- prev.addw(abd.meta)
-        phenoP <- NULL
-    } else if (pz.options('which_phenotype') == "specificity") {
-        if (pz.options('prior_type') == "file") {
-            prior.data <- read.table(file.path(pz.options('input_dir'),
-                                               pz.options('prior_file')))
-        } else {
-            prior.data <- NULL
-        }
-        ess <- calc.ess(abd.meta,
-                        prior.data)
-        phenotype <- ess$ess
-        phenoP <- ess$phenoP
-        
-    } else if (pz.options("which_phenotype") == "provided") {
-        p_tbl <- read_tsv(pz.options("phenotype_file"))
-        if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
-            phenotype <- deframe(p_tbl)
-        } else { # perform shrinkage on the provided values w/ their stderrs
-            p_est <- as.numeric(p_tbl[["estimate"]])
-            p_se <- as.numeric(p_tbl[["stderr"]])
-            names(p_est) <- p_tbl[[1]]
-            names(p_se) <- p_tbl[[1]]
-            ashr_res <- ashr_wrapper(p_est, p_se)
-            phenotype <- ashr_res$result %>%
-                as_tibble(rownames="species") %>%
-                dplyr::select(species, PosteriorMean) %>%
-                deframe
-        }
-    } else if (pz.options("which_phenotype") == "abundance") {
-        phenotype <- ashr.diff.abund(abd.meta)
-        phenoP <- 0
-    } else {
-        pz.error(paste0("don't know how to calculate the phenotype ",
-                        pz.options('which_phenotype')))
-    }
-    if (pz.options("which_phenotype") != "prevalence") {
-        # Specifically for specificity, only retain observed taxa
-        pz.db$trees <- retain.observed.taxa(pz.db$trees,
-                                            phenotype,
-                                            phenoP,
-                                            mapped.observed)
-        pz.db$trees <- pz.db$trees[
-            vapply(pz.db$trees, \(.) length(.$tip.label), 1L) >=
-                pz.options("treemin")
-        ]
-        if (length(pz.db$trees) == 0) { pz.error("all trees dropped") }
-        pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
-        pz.db$ntaxa <- length(pz.db$trees)
-    }
-    return(list(pz.db=pz.db, phenotype=phenotype, phenoP=phenoP))
 }
 
 #' Make a hybrid tree-heatmap plot showing the taxon distribution of significant
@@ -1645,6 +1582,20 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
                         opts('which_phenotype')))
     }
     phenotype <- clean.pheno(phenotype, pz.db)
+    if (pz.options("which_phenotype") != "prevalence") {
+        # Except for prevalence, retain observed taxa
+        pz.db$trees <- retain.observed.taxa(pz.db$trees,
+                                            phenotype,
+                                            phenoP,
+                                            mapped.observed)
+        pz.db$trees <- pz.db$trees[
+            vapply(pz.db$trees, \(.) length(.$tip.label), 1L) >=
+                pz.options("treemin")
+        ]
+        if (length(pz.db$trees) == 0) { pz.error("all trees dropped") }
+        pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
+        pz.db$ntaxa <- length(pz.db$trees)
+    }
     list(phenotype=phenotype, phenoP=phenoP, mapped.observed=mapped.observed)
 }
 

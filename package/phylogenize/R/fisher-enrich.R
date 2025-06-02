@@ -1,27 +1,5 @@
-# Functions for performing enrichment analysis. Note: deprecated in newest version, use kegg_enrich.R
 
-#' Wrapper around \code{qvalue} that extracts only q-values. If there is an
-#' error in estimating q-values, will automatically fall back to a
-#' Benjamini-Hochberg-style correction (by setting lambda to zero), finally
-#' returning a vector of NAs if this still does not work.
-#'
-#' @param x A vector of p-values.
-#' @return A vector of q-values.
-#' @keywords internal
-qvals <- function(x, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
-    tryCatch(qvalue::qvalue(x, fdr=T, lambda=seq(0.001, 0.95, 0.005))$qvalues,
-             error=function(e) {
-                 pz.warning("Falling back to BH...", ...)
-                 tryCatch(qvalue::qvalue(x, fdr=T, lambda=0)$qvalues,
-                          error=function(e) {
-                              pz.warning(e, ...)
-                              q <- rep(NA, length(x))
-                              names(q) <- names(x)
-                              q
-                          })
-             })
-}
+# Functions for performing enrichment analysis. Note: deprecated in newest version, use kegg_enrich.R
 
 #' Wrapper around \code{p.adjust('BY')}.
 #'

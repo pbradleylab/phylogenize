@@ -15,7 +15,6 @@ Depends:
     phylolm,
     settings,
     Matrix,
-    tidyverse,
     ggtree,
     biomformat,
     methods,
@@ -32,6 +31,10 @@ Depends:
     plotly
 Imports:
     readr,
+    dplyr,
+    stringr,
+    tibble,
+    purrr,
     parallel,
     qvalue,
     ape,
@@ -48,7 +51,6 @@ Imports:
     pbapply,
     gtools,
     svglite,
-    lobstr,
     testthat,
     ezknitr,
     plotly,
