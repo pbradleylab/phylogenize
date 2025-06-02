@@ -50,7 +50,8 @@ default_params <- list(
     categorical = TRUE,
     diff_abund_method = "maaslin2",
     working_dir = '.',
-    core_method = "phylogenize"
+    core_method = "phylogenize",
+    rds_output_file = "core_output.rds"
 )
 
 
@@ -72,6 +73,7 @@ PZ_OPTIONS <- options_manager(.list=default_params)
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message output to an error message file? Default: FALSE}
 #'   \item{input_format}{String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). Default: "tabular"}
 #'   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
+#'   \item{rds_output_file}{String. Name of output RDS file containing the full results of applying `phylogenize_core()`. Set to empty string to disable. Default: "core_output.rds"}
 #'   \item{output_file}{String. Name of output file: "results.html"}
 #'   \item{phenotype_file}{String. Name of input file for optional pre-calculated phenotype. Default: ""}
 #'   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
@@ -106,6 +108,7 @@ PZ_OPTIONS <- options_manager(.list=default_params)
 #'   \item{categorical}{Boolean. For abundance estimates, is the environment in env_column a categorical variable (TRUE) or continuous (FALSE)? Default: TRUE}
 #'   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "Maaslin2"}
 #'   \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "phylogenize" or "POMS" (case insensitive). Default: "phylogenize"}
+#'   \item{fdr_method}{String. Which method to correct FDR for significant results? Either "BH", "BY", or "qvalue". Default: "qvalue"}
 #' }
 #'
 #' @section Graphing:

@@ -196,3 +196,39 @@ get.top.N <- function(p,
     sig.pv <- results[[p]][2, sig.up, drop=TRUE]
     setdiff(names(sort(sig.pv, dec = F)), exclude)[1:N]
 }
+
+#' Wrapper around \code{qvalue} that extracts only q-values. If there is an
+#' error in estimating q-values, will automatically fall back to a
+#' Benjamini-Hochberg-style correction (by setting lambda to zero), finally
+#' returning a vector of NAs if this still does not work.
+#'
+#' @param x A vector of p-values.
+#' @return A vector of q-values.
+#' @keywords internal
+qvals <- function(x, ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    if (toupper(pz.options("fdr_method"))=="BH") { 
+        return(p.adjust(x, 'BH'))
+    }
+    if (toupper(pz.options("fdr_method"))=="BY") {
+        return(p.adjust(x, 'BY'))
+    }
+    if (tolower(pz.options("fdr_method"))=="qvalue") {
+        q <- tryCatch(qvalue::qvalue(x,
+                                     fdr=T,
+                                     lambda=seq(0.001, 0.95, 0.005))$qvalues,
+                      error=function(e) {
+                          pz.warning("Trying lambda=0...", ...)
+                          tryCatch(qvalue::qvalue(x, fdr=T, lambda=0)$qvalues,
+                                   error=function(e) {
+                                       pz.warning(e, ...)
+                                       pz.warning("Falling back to BH", ...)
+                                       p.adjust(x, 'BH')
+                                       #q <- rep(NA, length(x))
+                                       #names(q) <- names(x)
+                                       #q
+                                   })
+                      })
+        return(q)
+    }
+}

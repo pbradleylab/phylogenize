@@ -83,11 +83,11 @@ change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
         ctree_data$label <- ctree_data$species
         ctree$data <- ctree_data
 
-        ctree$data$rounded <- signif(ctree$data$branch.length, digits = 3)
+        ctree$data$rounded <- signif(ctree$data$color, digits = 2)
 	ctree$data$label <- ifelse(
 				   is.na(ctree$data$label),
 				   ctree$data$label,
-				   paste0(ctree$data$label, " (BL:", ctree$data$rounded, ")")
+				   paste0(ctree$data$label, " (phenotype: ", ctree$data$rounded, ")")
 				   )
 
 	#Change color section in tree to avoid error
@@ -131,7 +131,7 @@ change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
 #' @export
 gg.cont.tree <- function(phy,
                          ctrait,
-			 taxonomy,
+                         taxonomy,
                          cAnc = NULL,
                          model = "ARD",
                          cLimits = logit(c(0.025, 0.1)),
@@ -159,10 +159,13 @@ gg.cont.tree <- function(phy,
      if(is.null(reduced.phy)) {reduced.phy <- fix.tree(kept_tips)}
         pz.message("getting continuous trait ancestry")
         if (is.null(reduced.phy)) {
-           pz.error("all tips were dropped")
+            pz.warning(paste0("all tips were dropped from ", cName))
+            return(NA)
         }
         if (length(reduced.phy$tip.label) < 2) {
-           pz.error("need at least two tips for a tree")
+            pz.warning(paste0(
+                "need at least two tips for a tree; skipping ", cName))
+            return(NA)
         }
         if (is.null(cAnc)) cAnc <- phytools::fastAnc(reduced.phy, ctrait[n])
         cDisplay <- truncated(c(unlist(ctrait[n]), unlist(cAnc)), unlist(cLimits))
