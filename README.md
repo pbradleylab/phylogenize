@@ -54,26 +54,14 @@ sudo apt install fontconfig
 
 We have several premade databases that you can select from depending on what is expected to match your host's system. If you are unsure what database to use, then we recommend using GTDB as the default.
 
-| Environment        | Version | Database | Number of families | Number of species |
-|--------------------|---------|----------|--------------------|-------------------|
-| chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |
-| cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |
-| honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |
-| human gut          | v2.0.2  | MGnify   | 215                | 3445              |
-| human oral         | v1.0.1  | MGnify   | 52                 | 260               |
-| human vaginal      | v1.0    | MGnify   | 52                 | 189               |
-| marine eukaryotes  | vbeta   | MGnify   | 250                | 250               |
-| marine             | v2.0    | MGnify   | 1192               | 7408              |
-| mouse gut          | v1.0    | MGnify   | 136                | 1639              |
-| non model fish gut | v2.0    | MGnify   | 60                 | 87                |
-| pig gut            | v1.0    | MGnify   | 138                | 800               |
-| sheep rumen        | v1.0    | MGnify   | 117                | 2122              |
-| zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |
-| mixed environment  | v214    | GTDB     | 3003               | 43058             |
+| Environment        | Version | Database | Number of families | Number of species | Link                                |
+|--------------------|---------|----------|--------------------|-------------------| ----------------------------------- |
+| human gut          | v2.0    | MGnify   | 203                | 4543              | [here](https://zenodo.org/records/15585455/files/phylogenize_data.zip?download=1) |
+| mixed environment  | v214    | GTDB     | 3003               | 43058             | [here](https://zenodo.org/records/15585701/files/phylogenize_data.zip?download=1) |
 
 All databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
 
-Databases can be downloaded manually and decompressed from our Zenodo page [here](), or they can be downloaded and decompressed using Phylogenize2's `phylogenize::download.zenodo.db("your/html/link/here.zip")`. The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
+Databases can be downloaded manually and decompressed from our Zenodo page [here](), or they can be downloaded and decompressed using Phylogenize2's `phylogenize::download.zenodo.db("your/html/link/here/")`. The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
 
 ## Running Phylogenize2
 
