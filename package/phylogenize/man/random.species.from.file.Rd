@@ -4,20 +4,20 @@
 \alias{random.species.from.file}
 \title{Simulate amplicon sequence variants (ASVs) from a database of 16S sequences.}
 \usage{
-random.species.from.file(n.taxa, tag.length = 100, ...)
+random.species.from.file(n.species, tag.length = 100, ...)
 }
 \arguments{
-\item{n.taxa}{Positive integer: how many ASVs to simulate?}
+\item{n.species}{Positive integer: how many ASVs to simulate?}
 
 \item{tag.length}{Positive integer: how long should the ASVs be?}
 }
 \value{
 A list:
   \item{seqs}{String vector: sequences of simulated ASVs.}
-  \item{names}{String vector: names of the taxa to which the ASVs "should"
+  \item{names}{String vector: names of the species to which the ASVs "should"
     map.}
   \item{species.map}{Numeric vector where the $i$'th element gives the number
-    of the species that taxon $i$ was mapped to.}
+    of the species that species $i$ was mapped to.}
 }
 \description{
 Some global options that may be helpful include:
@@ -25,7 +25,7 @@ Some global options that may be helpful include:
   \item{data_dir}{String. Path to directory containing the data files
   required to perform a \emph{phylogenize} analysis. Here, this is where the
   16S database is located.}
-  \item{burst_16sfile}{String. Filename of the 16S FASTA database that maps
+  \item{vsearch_16sfile}{String. Filename of the 16S FASTA database that maps
   back to MIDAS species.}
 }
 }

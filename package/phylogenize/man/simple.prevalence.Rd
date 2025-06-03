@@ -2,17 +2,17 @@
 % Please edit documentation in R/dummy.R
 \name{simple.prevalence}
 \alias{simple.prevalence}
-\title{Calculate prevalence (with additive smoothing) for taxa given an abundance matrix.}
+\title{Calculate prevalence (with additive smoothing) for species given an abundance matrix.}
 \usage{
 simple.prevalence(mtx)
 }
 \arguments{
-\item{mtx}{Abundance matrix (rows: taxa; columns: samples).}
+\item{mtx}{Abundance matrix (rows: species; columns: samples).}
 }
 \value{
 Prevalence with additive smoothing.
 }
 \description{
-Calculate prevalence (with additive smoothing) for taxa given an abundance matrix.
+Calculate prevalence (with additive smoothing) for species given an abundance matrix.
 }
 \keyword{internal}

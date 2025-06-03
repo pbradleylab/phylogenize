@@ -2,10 +2,9 @@
 % Please edit documentation in R/report-functions.R
 \name{get.pheno.plotting.scales.specificity}
 \alias{get.pheno.plotting.scales.specificity}
-\title{Get phenotype plotting scales (specificity-specific).}
+\title{Get phenotype plotting scales (specificity or abundance).}
 \usage{
-get.pheno.plotting.scales.specificity(phenotype, trees, phenoP = NULL,
-  ...)
+get.pheno.plotting.scales.specificity(phenotype, trees, phenoP = 0, ...)
 }
 \arguments{
 \item{phenotype}{A named vector giving the phenotype for each taxon ID.}
@@ -16,7 +15,7 @@ get.pheno.plotting.scales.specificity(phenotype, trees, phenoP = NULL,
 environment of interest.}
 }
 \value{
-A list of overall limits (\code{limits}), phylum-specific limits
+A list of overall limits (\code{limits}), taxon-specific limits
     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
     (\code{zero}).
 }

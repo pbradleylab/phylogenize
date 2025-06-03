@@ -5,8 +5,7 @@
 \title{Make a hybrid tree-heatmap plot showing the taxon distribution of significant
 hits.}
 \usage{
-\method{do}{clust.plot}(gene.presence, sig.genes, tree, plotted.tree,
-  phylum, verbose = FALSE, ...)
+\method{do}{clust.plot}(gene.presence, sig.genes, tree, plotted.tree, taxon, verbose = FALSE, ...)
 }
 \arguments{
 \item{gene.presence}{Gene presence/absence matrix.}
@@ -17,12 +16,12 @@ hits.}
 
 \item{plotted.tree}{A ggtree plot of \code{tree}.}
 
-\item{phylum}{Name of the phylum represented by \code{tree}}
+\item{taxon}{Name of the taxon represented by \code{tree}}
 
 \item{verbose}{Whether to report debugging information (boolean).}
 }
 \description{
 This function wraps single.cluster.plot, running it in a separate process.
 This is because there can be problems with memory leaks. For relevant global
-options, see the doumentation for that function.
+options, see the documentation for `pz.options`.
 }

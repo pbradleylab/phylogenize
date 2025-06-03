@@ -4,7 +4,7 @@
 \alias{get.pheno.plotting.scales}
 \title{Get phenotype plotting scales.}
 \usage{
-get.pheno.plotting.scales(phenotype, trees, phenoP = NULL, ...)
+get.pheno.plotting.scales(phenotype, trees, phenoP = 0, ...)
 }
 \arguments{
 \item{phenotype}{A named vector giving the phenotype for each taxon ID.}
@@ -15,7 +15,7 @@ get.pheno.plotting.scales(phenotype, trees, phenoP = NULL, ...)
 environment of interest.}
 }
 \value{
-A list of overall limits (\code{limits}), phylum-specific limits
+A list of overall limits (\code{limits}), taxon-specific limits
     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
     (\code{zero}).
 }
@@ -23,7 +23,7 @@ A list of overall limits (\code{limits}), phylum-specific limits
 Some particularly relevant global options are:
 \describe{
   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
-  or "specificity").}
+  or "specificity" or "correlation").}
   \item{prev_color_low}{String. When graphing prevalence on a tree, this
   color is the lowest value.} \item{prev_color_high}{String. When graphing
   prevalence on a tree, this color is the highest value.}

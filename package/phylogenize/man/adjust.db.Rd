@@ -9,15 +9,15 @@ adjust.db(pz.db, abd.meta, ...)
 \arguments{
 \item{pz.db}{A database (typically obtained with \code{import.pz.db}).}
 
-\item{abd.meta}{A list consisting of a taxon abundance matrix and the
+\item{abd.meta}{A list consisting of a species abundance matrix and the
 metadata.}
 }
 \value{
 An updated database.
 }
 \description{
-\code{adjust.db} removes any phyla with fewer than \code{opts('treemin')}
+\code{adjust.db} removes any species with fewer than \code{opts('treemin')}
 representatives, removes tips from trees that were not observed in the data,
 and resolves polytomies. It also adds a couple of variables into the database
-that give lists of taxa per tree and the total number of remaining phyla.
+that give lists of species per tree and the total number of remaining taxa
 }

@@ -7,9 +7,9 @@
 dummy.g2s(g2s.matrices, n, fp = 0.1, minN = 2)
 }
 \arguments{
-\item{g2s.matrices}{A list of sparse binary matrices, one per phylum.}
+\item{g2s.matrices}{A list of sparse binary matrices, one per taxon.}
 
-\item{n}{Integer: how many genes per phylum to sample?}
+\item{n}{Integer: how many genes per taxon to sample?}
 
 \item{fp}{Double: what proportion of highest-variance genes to sample from?}
 

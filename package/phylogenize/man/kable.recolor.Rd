@@ -4,9 +4,15 @@
 \alias{kable.recolor}
 \title{Function to obtain HTML colors for a particular value.}
 \usage{
-kable.recolor(x, direction = 1, option = "D", na_color = "#BBBBBB",
-  scale_from = NULL, colors = c("#000000", "#FFFFFF"),
-  limits = c(-Inf, Inf))
+kable.recolor(
+  x,
+  direction = 1,
+  option = "D",
+  na_color = "#BBBBBB",
+  scale_from = NULL,
+  colors = c("#000000", "#FFFFFF"),
+  limits = c(-Inf, Inf)
+)
 }
 \arguments{
 \item{x}{A value or vector of values to colorize.}

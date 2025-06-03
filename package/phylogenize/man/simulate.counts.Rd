@@ -7,7 +7,7 @@
 \method{simulate}{counts}(com, nr)
 }
 \arguments{
-\item{com}{Multinomial probability distribution for all taxa.}
+\item{com}{Multinomial probability distribution for all species.}
 
 \item{nr}{Read depth.}
 }

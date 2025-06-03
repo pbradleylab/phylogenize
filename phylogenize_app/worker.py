@@ -89,8 +89,8 @@ while True:
              'abundance_file="{abundance_file}", '
              'metadata_file="{metadata_file}", '
              'separate_metadata={separate_metadata}, '
-             'burst_cutoff="{burst_cutoff}", '
-             'burst_dir="{burst_dir}", '
+             'vsearch_cutoff="{vsearch_cutoff}", '
+             'vsearch_dir="{vsearch_dir}", '
              'in_dir="{input_dir}", '
              'out_dir="{output_dir}", '
              'ncl={ncl}, '
@@ -110,7 +110,7 @@ while True:
         output_file="index.html",
         input_dir=jobdict["input_dir"],
         output_dir=jobdict["output_dir"],
-        burst_dir=jobdict["burst_dir"],
+        vsearch_dir=jobdict["vsearch_dir"],
         ncl=1,
         separate_metadata=jobdict["separate_metadata"],
         db_version=jobdict["db_version"],
@@ -124,7 +124,7 @@ while True:
         dset_column=jobdict["dset_column"],
         env_column=jobdict["env_column"],
         sample_column=jobdict["sample_column"],
-        burst_cutoff=format(jobdict["burst_cutoff"]),
+        vsearch_cutoff=format(jobdict["vsearch_cutoff"]),
         assume_below_lod_R="TRUE",
         single_dset_R=jobdict["single_dset"],
         minimum=jobdict["minimum"]

@@ -5,21 +5,21 @@
 \title{Construct a master effect size matrix given environmental and dataset
 effects (wraps \code{master.fx.matrix}).}
 \usage{
-master.fx.matrix(divided, taxa, env.fx, env.taxa, dset.fx, dset.taxa)
+master.fx.matrix(divided, species, env.fx, env.species, dset.fx, dset.species)
 }
 \arguments{
 \item{divided}{Output of \code{divide.samples}.}
 
-\item{taxa}{Vector of strings representing taxon names.}
+\item{species}{Vector of strings representing species names.}
 
 \item{env.fx}{Named numeric vector giving effect sizes per environment.}
 
-\item{env.taxa}{List of vectors of strings giving the subset of taxa to be
+\item{env.species}{List of vectors of strings giving the subset of species to be
 affected in each distinct environment effect.}
 
 \item{dset.fx}{Named numeric vector giving effect sizes per dataset.}
 
-\item{dset.taxa}{List of vectors of strings giving the subset of taxa to be
+\item{dset.species}{List of vectors of strings giving the subset of species to be
 affected in each distinct dataset effect.}
 }
 \value{

@@ -13,7 +13,11 @@ sample columns corresponding to those in the global options (see
 }
 \value{
 A data frame of metadata, with environment and
-    dataset columns converted to factors.
+    dataset columns converted to factors, *unless* calculating correlation
+    in which case environment column will be cast as numeric. The environment
+    factor will be automatically re-leveled so that \code{envir} is last, so
+    that it is guaranteed to appear in the output of differential abundance 
+    estimators.
 }
 \description{
 \code{check.process.metadata} is used to make sure that the metadata
@@ -24,6 +28,7 @@ that the metadata are of the correct type.
 Some particularly relevant global options are:
 \describe{
   \item{env_column}{Name of metadata column containing environment annotations.}
+  \item{envir}{Environment of interest.}
   \item{dset_column}{Name of metadata column containing dataset annotations.}
   \item{single_dset}{Boolean. If true, will assume that all samples come from
   a single dataset called \code{dset1} no matter what, if anything, is in

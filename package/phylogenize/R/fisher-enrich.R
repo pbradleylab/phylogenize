@@ -1,27 +1,5 @@
-# Functions for performing enrichment analysis
 
-#' Wrapper around \code{qvalue} that extracts only q-values. If there is an
-#' error in estimating q-values, will automatically fall back to a
-#' Benjamini-Hochberg-style correction (by setting lambda to zero), finally
-#' returning a vector of NAs if this still does not work.
-#'
-#' @param x A vector of p-values.
-#' @return A vector of q-values.
-#' @keywords internal
-qvals <- function(x, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
-    tryCatch(qvalue::qvalue(x, fdr=T, lambda=seq(0.001, 0.95, 0.005))$qvalues,
-             error=function(e) {
-                 pz.warning("Falling back to BH...", ...)
-                 tryCatch(qvalue::qvalue(x, fdr=T, lambda=0)$qvalues,
-                          error=function(e) {
-                              pz.warning(e, ...)
-                              q <- rep(NA, length(x))
-                              names(q) <- names(x)
-                              q
-                          })
-             })
-}
+# Functions for performing enrichment analysis. Note: deprecated in newest version, use kegg_enrich.R
 
 #' Wrapper around \code{p.adjust('BY')}.
 #'
@@ -69,12 +47,14 @@ do.fisher <- function(list1, list2, background, alt="two.sided") {
     f
 }
 
+
+
 #' Given lists of significant genes (at different thresholds), effect sizes, and
 #' gene set mappings, assemble a tbl of results.
 #'
-#' @param sigs List giving, per phylum (outer) and per significance cutoff
+#' @param sigs List giving, per taxonomic group (outer) and per significance cutoff
 #'     (inner), significant hits to test for enrichment.
-#' @param signs List giving, per phylum, signs of all gene effect sizes.
+#' @param signs List giving, per taxonomic group, signs of all gene effect sizes.
 #' @param mappings List of data.frames giving gene-to-gene-set mappings.
 #' @param dirxn Count only genes with this effect sign as significant.
 #' @return A tbl giving Fisher's test p-values, q-values, effect sizes, and overlaps.
@@ -94,20 +74,20 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
         nest() %>% rename(term=1) %>%
         mutate(data=purrr::map(data, unlist)))) %>%
         rename(termset=name, terms=value)
-      phylum <- names(sigs)
+     taxon <- names(sigs)
       cutoff <- names(sigs[[1]])
       map.bg <- Reduce(union, purrr::map(tbl.mappings$terms,
           ~Reduce(union, .$data)))
-      full.table <- crossing(phylum, cutoff, tbl.mappings) %>% unnest()
+      full.table <- crossing(taxon, cutoff, tbl.mappings) %>% unnest()
       full.table <- mutate(full.table,
-        enr=purrr::pmap(full.table, function(phylum,
+        enr=purrr::pmap(full.table, function(taxon,
             cutoff,
             termset,
             term,
             data) {
-          s <- intersect(sigs[[phylum]][[cutoff]],
-            nw(signs[[phylum]] == d))
-          g <- names(which(!is.na(signs[[phylum]])))
+          s <- intersect(sigs[[taxon]][[cutoff]],
+            nw(signs[[taxon]] == d))
+          g <- names(which(!is.na(signs[[taxon]])))
           do.fisher(data,
             s,
             intersect(map.bg, g))
@@ -117,21 +97,21 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
         enr.estimate=purrr::map_dbl(enr, ~.$estimate),
         enr.overlap=purrr::map(enr, ~.$overlap))
       full.table <- full.table %>%
-        group_by(phylum, cutoff, termset) %>%
+        group_by(taxon, cutoff, termset) %>%
         mutate(enr.qval=qvals(pv1(enr.pval))) %>%
         ungroup
 }
 
 #' Get q-values for results in tbl format.
 #'
-#' @param results A tbl of results with columns for "phylum" and "p.value".
+#' @param results A tbl of results with columns for "taxon" and "p.value".
 #' @param method A function: method for obtaining q-values from p-values.
 #' @param ... Additional parameters to pass to \code{method}.
 #' @return A tbl with an additional "q.value" column.
 #' @export tbl.result.qvs
 tbl.result.qvs <- function(results, method=qvals, ...) {
     results <- results %>%
-        group_by(phylum) %>%
+        group_by(taxon) %>%
         nest %>%
         mutate(q.value=map(data, ~ {
             method(.x$p.value)
@@ -144,7 +124,7 @@ tbl.result.qvs <- function(results, method=qvals, ...) {
 #' instead of separate inputs for significant results, effect signs, etc.
 #'
 #' @param results A tidyverse tbl of results with at least the following
-#'     columns: "phylum", "gene", "effect.size", and "q.value" (if only
+#'     columns: "taxon", "gene", "effect.size", and "q.value" (if only
 #'     "p.value" is present, first apply function \code{tbl.result.qvs}).
 #' @param mappings List of data.frames giving gene-to-gene-set mappings.
 #' @param dirxn Count only genes with this effect sign as significant.
@@ -162,11 +142,11 @@ alt.multi.enrich <- function(results, mappings, dirxn=1,
                                               nest() %>% rename(term=1) %>%
                                               mutate(data=map(data, unlist)))) %>%
         rename(termset=name, terms=value)
-    phyla <- unique(results$phylum)
+    taxa <- unique(results$taxon)
     cutoff <- names(qcuts)
     map.bg <- Reduce(union, map(tbl.mappings$terms,
                                 ~Reduce(union, .$data)))
-    full.table <- crossing(phylum=phyla, cutoff, tbl.mappings) %>% unnest()
+    full.table <- crossing(taxon=taxa, cutoff, tbl.mappings) %>% unnest()
     if (future) {
         map_fxn <- functional::Curry(furrr::future_pmap, .progress=TRUE)
     } else {
@@ -184,23 +164,23 @@ alt.multi.enrich <- function(results, mappings, dirxn=1,
                          enr.estimate=map_dbl(enr, ~.$estimate),
                          enr.overlap=map(enr, ~.$overlap))
     full.table <- full.table %>%
-        group_by(phylum, cutoff, termset) %>%
+        group_by(taxon, cutoff, termset) %>%
         mutate(enr.qval=qvals(pv1(enr.pval))) %>%
         ungroup
 }
 
 #' Internal function to perform an individual enrichment.
 #' @keywords internal
-indiv.enr <- function(phylum, cutoff, termset, term, data, results,
+indiv.enr <- function(taxon, cutoff, termset, term, data, results,
                       qcuts=c(strong=0.05), dirxn=1, bg=NULL) {
     s <- filter(results,
                 q.value <= qcuts[cutoff],
-                phylum == !!phylum,
+               taxon == !!taxon,
                 sign(effect.size) == dirxn) %>%
         select(gene) %>%
         unlist
     g <- filter(results,
-                phylum == !!phylum,
+               taxon == !!taxon,
                 !is.na(effect.size)) %>%
         select(gene) %>%
         unlist

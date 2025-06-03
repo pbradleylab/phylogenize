@@ -4,15 +4,21 @@
 \alias{add.fx.to.matrix}
 \title{Add a true effect to a matrix of effect sizes (or generate a new one).}
 \usage{
-add.fx.to.matrix(samples, taxa, which.taxa, which.samples, mtx = 0,
-  fx = 1)
+add.fx.to.matrix(
+  samples,
+  species,
+  which.species,
+  which.samples,
+  mtx = 0,
+  fx = 1
+)
 }
 \arguments{
 \item{samples}{Vector of strings representing the sample names.}
 
-\item{taxa}{Vector of strings representing taxon names.}
+\item{species}{Vector of strings representing species names.}
 
-\item{which.taxa}{Vector of strings giving subset of taxa to be affected.}
+\item{which.species}{Vector of strings giving subset of species to be affected.}
 
 \item{which.samples}{Vector of strings giving which samples to be affected.}
 

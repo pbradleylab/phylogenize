@@ -8,35 +8,16 @@ output:
     self_contained: true
 params:
   ncl: 1
-  type: "midas"
   source_dir: "."
   out_dir: "."
   in_dir: "."
-  data_dir: "./data"
-  abundance_file: "abundance.tab"
-  metadata_file: "metadata.tab"
-  biom_file: ""
-  input_format: "tabular"
-  env_column: "env"
-  dset_column: "dataset"
-  phenotype_file: ""
-  db_version: "midas_v1.2"
-  which_phenotype: "prevalence"
-  which_envir: "Stool"
-  prior_type: "uninformative"
-  prior_file: ""
-  minimum: 3
-  treemin: 5
   assume_below_LOD: TRUE
   skip_graphs: FALSE
-  burst_dir: "./bin"
-  linearize: FALSE
-  pryr: TRUE
   use_rmd_params: TRUE
   error_to_file: TRUE
 ---
 
-```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=TRUE}
+```{r setup, warning=FALSE, message=FALSE, results="hide", echo=FALSE, cache=FALSE}
 
 library(phylogenize)
 library(Matrix)
@@ -52,10 +33,6 @@ if (pz.options('use_rmd_params')) {
 
 if (is.null(pz.options('relative_out_dir'))) {
   pz.options(relative_out_dir=pz.options('out_dir'))
-}
-
-check.pryr <- function() {
-    if (pz.options('pryr')) message(pryr::mem_used() / 1e6)
 }
 
 # Note that params give defaults for the web tool, while PZ_OPTIONS gives
@@ -85,42 +62,23 @@ if (!pz.options('skip_graphs')) {
     })
 }
 
-# Only load pryr to track memory usage if debugging
-if (pz.options('pryr')) { library(pryr) }
-if (pz.options('pryr')) message(pryr::mem_used() / 1e6)
-
 dir.create(pz.options('out_dir'))
-
-# Read in user-supplied
-abd.meta <- read.abd.metadata()
-# Read in trees, gene presence/absence, taxonomy
-pz.db <- import.pz.db()
-# Figure out how many trees to retain
-pz.db <- adjust.db(pz.db, abd.meta)
-if (pz.options('assume_below_LOD')) {
-  abd.meta <- add.below.LOD(pz.db, abd.meta)
-  sanity.check.abundance(abd.meta$mtx)
-}
-
-# Make back into a binary sparse matrix to save memory
-gc()
-check.pryr()
-pz.message("Starting evaluation...")
+do_POMS <- (tolower(pz.options('core_method'))=="poms")
 
 ```
 
 # Settings
 
-This report was generated automatically by [phylogenize](https://phylogenize.org/) (Bradley and Pollard, 2019: https://phylogenize.org), with the following parameters:
+This report was generated automatically by [Phylogenize2](https://phylogenize.org/) (Kananen et al., in preparation), with the following parameters:
 
-- Type of input data: "`r pz.options('type')`"
+- Type of input data: "`r pz.options('db')`"
 - Phenotype calculated: "`r pz.options('which_phenotype')`"
 - Environment of interest: "`r pz.options('which_envir')`"
 - Prior probabilities for environments: "`r pz.options('prior_type')`"
 
-# Phenotype calculation
+# Phenotypic Calculation
 
-Below, trees for all phyla with at least `r pz.options('treemin')`
+Below, trees for all taxa with at least `r pz.options('treemin')`
 representatives in the input data are presented. Trees are colored according to
 the phenotype chosen (here, `r pz.options('which_phenotype')` in the environment
  `r pz.options('which_envir') `).
@@ -131,183 +89,116 @@ specific for an environment, blue for taxa that are specific for other
 environments (i.e., found less often in the environment chosen), and gray for
 taxa that are neither.
 
+## Distribution of Phenotype {.tabset}
+```{r plot_phenotypes, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=FALSE}
 
+# Unpack pz.db and phenotype results to current environment
+list2env(core[["list_pheno"]], environment())
+# Also unpack "phenotype, phenoP, mapped.observed" into current environment
+list2env(core[["list_pheno"]][["phenotype_results"]], environment())
 
-```{r calculate_phenotype, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=TRUE}
-
-# Calculate the phenotype of interest
-
-mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
-
-if (pz.options('which_phenotype') == "prevalence") {
-  phenotype <- prev.addw(abd.meta)
-  phenoP <- NULL
-} else if (pz.options('which_phenotype') == "specificity") {
-  if (pz.options('prior_type') == "file") {
-    prior.data <- read.table(file.path(pz.options('input_dir'),
-                                        pz.options('prior_file')))
-  } else {
-    prior.data <- NULL
-  }
-  ess <- calc.ess(abd.meta,
-                  prior.data)
-  phenotype <- ess$ess
-  phenoP <- ess$phenoP
-  # Specifically for specificity, only retain observed taxa
-  pz.db$trees <- retain.observed.taxa(pz.db$trees,
-                                      phenotype,
-                                      phenoP,
-                                      mapped.observed)
-  pz.db$taxa <- lapply(pz.db$trees, function(x) x$tip.label)
-  pz.db$nphyla <- length(pz.db$trees)
-} else if (pz.options("which_phenotype") == "correlation") {
-  phenotype <- correl.clr(abd.meta)
-  phenoP <- 0
-} else if (pz.options("which_phenotype") == "provided") {
-  pz.error("providing your own phenotype not implemented yet")
-} else {
-  pz.error(paste0("don't know how to calculate the phenotype ",
-                  pz.options('which_phenotype')))
-}
-
-phenotype <- clean.pheno(phenotype, pz.db)
+pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
 pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
-plotted.pheno.trees <- plot.phenotype.trees(phenotype,
-                                            pz.db$trees,
-                                            pheno.scale)
-pheno.distros <- plot.pheno.distributions(phenotype,
-                                          pz.db)
+plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pz.db$taxonomy, pheno.scale)
 
-print(pheno.distros)
+# Template for plots
+template <- c(
+    "### Page {{nm}}\n",
+    "```{r, echo = FALSE, warning = FALSE, message = FALSE}\n",
+    "pheno.distros[[{{nm}}]]\n",
+    "```\n",
+    "\n"
+)
+
+plots <- lapply(1:length(pheno.distros), function(nm) {
+    knitr::knit_expand(text = template, nm = nm)
+})
+
 write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
             phenotype,
             sep = '\t')
 
-
 # be a little parsimonious with memory here
-rm(abd.meta); gc()
-check.pryr()
+gc()
 ```
+`r knitr::knit_child(text = unlist(plots), quiet = TRUE)`
+## Phenotype Mapped Across Trees {.tabset}
+### All Taxa
+```{r plot_phenos_on_trees, echo=FALSE, warning = FALSE, results='asis', cache=FALSE}
 
-# Phenotype mapped across trees {.tabset}
-
-## All taxa
-
-```{r plot_pheno_trees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(plotted.pheno.trees), cache.lazy = FALSE, cache=TRUE}
-
+plots <- list()
 if (!pz.options('skip_graphs')) {
-    plot.labeled.phenotype.trees(plotted.pheno.trees,
-                                 100*logistic(phenotype),
-                                 label=pz.options('which_phenotype'))
+	plots <- plot.labeled.phenotype.trees(plotted.pheno.trees,
+				     100*logistic(phenotype),
+				     label=pz.options('which_phenotype'))
 }
 
-check.pryr()
+clinUtils::knitPrintListPlots(
+	plotsList = plots, 
+	type = "plotly", 
+	titles = NULL, 
+	titleLevel = NULL
+)
+
 ```
 
-## Only mapped/observed taxa {.tabset}
-
-Displays phenotype on trees, with only the mapped/observed taxa plotted.
-
-```{r subtrees_pre, cache=TRUE, echo=FALSE}
+### Only Mapped/Observed Taxa
+```{r plot_phenos_on_observed_trees, echo=FALSE, warning=FALSE, results='asis', warning = FALSE, message = FALSE, cache=FALSE}
 
 pheno.labels <- names(phenotype)
 subtrees <- lapply(pz.db$trees, function(tr) {
   keep.tips(tr, intersect(mapped.observed, pheno.labels))
 })
+
 subtrees <- Filter(function(x) {
   if (is.null(x)) return(FALSE)
   if (length(x$tip.label) > 2) return(TRUE)
   return(FALSE)
 }, subtrees)
 
-```
-
-```{r subtrees, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, fig.keep = 'none', fig.ext='svg', custom.plot=TRUE, fig.num=length(subtrees), cache.lazy = FALSE, cache=TRUE, echo=FALSE}
-
+subplots <- list()
 if (!pz.options('skip_graphs')) {
-  plotted.pheno.subtrees <- plot.phenotype.trees(phenotype,
-                                                 subtrees,
-                                                 pheno.scale)
-  if (!is.null(plotted.pheno.subtrees)) {
-    if (length(plotted.pheno.subtrees) > 0) {
-      plot.labeled.phenotype.trees(plotted.pheno.subtrees,
-                                   100*logistic(phenotype))
-      rmd.message <- ""
-    } else {
-      rmd.message <- "(no phyla had more than one tip)"
-    }
-  } else {
-    rmd.message <- "(no phyla had more than one tip)"
-  }
+       plotted.pheno.subtrees <- plot.phenotype.trees(phenotype, subtrees, pz.db$taxonomy, pheno.scale)
+       subplots <- plot.labeled.phenotype.trees(plotted.pheno.subtrees,
+						 100*logistic(phenotype),
+						 label=pz.options('which_phenotype')
+				     )
 }
 
-check.pryr()
+clinUtils::knitPrintListPlots(
+        plotsList = subplots,
+        type = "plotly",
+        titles = NULL,
+        titleLevel = NULL
+)
+
 ```
+# Gene Associations and Significance
+Analysis of the genes associated to taxa including their significance, presence/absence 
+of a gene, and enrichment analysis.
 
-`r rmd.message`
-
-# Associations between genes and taxa
-
+## Associations between genes and taxa
 This table gives an overview of how many genes were significantly associated at
 an FDR of 5%.
 
-```{r get_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=TRUE}
+```{r write_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
 
-if (pz.options('linearize')) { # mostly for testing
-  p.method <- lm.fx.pv
-} else {
-  p.method <- phylolm.fx.pv
-}
+signif_genes <- core[["list_signif"]]
 
-taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$taxa)))
-
-if (pz.options('ncl') > 1) {
-    results <- result.wrapper.plm(phyla=taxaN,
-                                  pheno=phenotype,
-                                  tree=pz.db$trees[taxaN],
-                                  clusters=pz.db$taxa[taxaN],
-                                  proteins=pz.db$gene.presence[taxaN],
-                                  method=p.method)
-} else {
-    results <- mapply(nonparallel.results.generator,
-                      pz.db$gene.presence[taxaN],
-                      pz.db$trees[taxaN],
-                      pz.db$taxa[taxaN],
-                      as.list(taxaN),
-                      MoreArgs=list(pheno=phenotype,
-                                    method=p.method,
-                                    use.for.loop=FALSE),
-                      SIMPLIFY=FALSE)
-}
-signif <- make.sigs(results)
-signs <- make.signs(results)
-# pos.sig <- make.pos.sig(sigs=signif, signs=signs)
-pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
-results.matrix <- make.results.matrix(results)
-
-knitr::kable(sapply(pos.sig, length), col.names = "significant genes")
-
-phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
-pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
-
-pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig)
-pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs, pos.sig.thresh, pz.db$gene.to.fxn)
-
-# recalculate, since some of these may go away
-phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
+pos.sig <- data.frame(
+  Taxon = names(signif_genes[["pos.sig"]]),
+  `Significant Genes` = sapply(signif_genes[["pos.sig"]], length),
+  row.names = NULL
+)
+clinUtils::getClinDT(pos.sig)
 
 write.csv(file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
-          pos.sig.thresh.descs)
-rm(pos.sig.thresh.descs)
-
+	  signif_genes[["pos.sig.descs"]])
 write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
-          results.matrix)
-rm(results.matrix)
-check.pryr()
+          signif_genes[["results.matrix"]])
+
 ```
-
-# Gene association heat maps
-
+## Gene association heat maps
 The left shows the phenotype painted on tips of the tree as above. The right
 adds a heatmap where blue points represent presence of a gene (aligned with the
 tips of the tree) and white points represent absence. Only
@@ -316,120 +207,51 @@ right by Jaccard dissimilarity, so genes with similar patterns of inheritance
 will form vertical stripes. Horizontal stripes may be visible for taxa that
 have particularly extreme phenotypes.
 
-```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=TRUE}
+```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=FALSE}
+valid_keys <- intersect(signif_genes[["phy.with.sigs"]], names(plotted.pheno.trees))
+valid_keys <- intersect(valid_keys, names(pz.db$gene.presence))
+valid_keys <- intersect(valid_keys, names(pz.db$trees))
 
-
-check.pryr()
-
-cluster.plots <- mapply(do.clust.plot, 
-                        pz.db$gene.presence[phy.with.sigs],
-                        pos.sig.thresh[phy.with.sigs],
-                        pz.db$trees[phy.with.sigs],
-                        plotted.pheno.trees[phy.with.sigs],
-                        phy.with.sigs,
+cluster.plots <- mapply(do.clust.plot,
+                        pz.db$gene.presence[valid_keys],
+                        signif_genes[["pos.sig.thresh"]][valid_keys],
+                        pz.db$trees[valid_keys],
+                        plotted.pheno.trees[valid_keys],
+                        valid_keys,
                         SIMPLIFY = FALSE)
-
-rm(cluster.plots)
-rm(plotted.pheno.trees)
-check.pryr()
 
 ```
 
-# Enrichment analysis
+## Enrichment analysis
 
 This process takes the set of genes that are significant and positively
 associated with the phenotype, then asks whether there are more than expected
-by chance in a given SEED subsystem. Subsystems come in three levels of
-granularity (referred to here as l1, l2, and l3); "l1" subsystems are the most
-general and "l3" are the most specific. </p>
+by chance in a given KEGG module or pathway. This requires clusterProfiler to
+be installed.
 
-All SEED categories returned are significant at an FDR of 25%. "Strong", "Med",
+All pathways/modules returned are significant at an FDR of 25%. "Strong", "Med",
 and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
 
-```{r enrichment_analysis, warning = FALSE, message = FALSE, echo = FALSE,results="hide", cache=TRUE}
-
-pretty.enr.tbl <- NULL
-enrichment.tbl <- multi.enrich(signif,
-                               signs,
-                               pz.db$g.mappings)
-if (!is.null(enrichment.tbl)) {
-  enrichment.tbl <- filter(enrichment.tbl,
-                           enr.qval <= 0.25, enr.estimate > 1)
-  pretty.enr.tbl <- select(enrichment.tbl,
-                          phylum,
-                          cutoff,
-                          termset,
-                          term,
-                          enr.qval,
-                          enr.estimate) %>%
-    rename(Gene_significance=cutoff,
-          Subsystem_level=termset,
-          Phylum=phylum,
-          Subsystem=term,
-          q_value=enr.qval,
-          Enrichment_odds_ratio=enr.estimate) %>%
-    arrange(factor(Gene_significance, levels=names(signif[[1]])),
-            Phylum,
-            Subsystem_level,
-            desc(Enrichment_odds_ratio))
-
-  check.pryr()
-  write.csv(file=file.path(pz.options('out_dir'), "enr-table.csv"), pretty.enr.tbl)
-  check.pryr()
+```{r enrichment_tables, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE, results='axsis'}
+do_enrichment <- ("enr_tbls" %in% names(core))
+if (do_enrichment) {
+    table <- clinUtils::getClinDT(core[["enr_tbls"]]) |>
+        DT::formatStyle(
+            'q_value',
+            target = 'row',
+            backgroundColor = DT::styleInterval(0.05, c('lightgreen', NA))
+        ) |>
+        DT::formatSignif(
+            c('q_value', 'Enrichment_odds_ratio'),
+            digits=2
+        )
+    table
+} else {
+    pz.message(
+        "Skipping enrichment as tables could not be found in provided object"
+    )
 }
-
-```
-Enrichment tables:
-
-```{r enrichment_display, echo=FALSE, results='asis'}
-options(knitr.table.format = "html")
-check.pryr()
-if (!is.null(pretty.enr.tbl)) {
-  print(output.enr.table(pretty.enr.tbl))
-  check.pryr()
-  if (nrow(enrichment.tbl) > 0) {
-    enr.overlap <- select(enrichment.tbl,
-                          phylum,
-                          cutoff,
-                          termset,
-                          term,
-                          enr.overlap) %>% unnest %>%
-                   left_join(.,
-                             pz.db$gene.to.fxn,
-                             by=c("enr.overlap"="gene")) %>%
-                   rename(gene=enr.overlap, description=`function`) %>%
-                   mutate(effectsize=map2_dbl(phylum,
-                                              gene,
-                                              ~results[[.x]][1, .y]))
-    check.pryr()
-    write.csv(file=file.path(pz.options('out_dir'),
-                             "enr-overlaps.csv"),
-              enr.overlap)
-    write.csv(file=file.path(pz.options('out_dir'),
-                             "enr-overlaps-sorted.csv"),
-              arrange(enr.overlap,
-                      phylum,
-                      factor(cutoff, levels=names(signif[[1]])),
-                      termset,
-                      term,
-                      desc(effectsize)))
-    check.pryr()
-    rm(enr.overlap)
-    rm(enrichments)
-  }
-}
-rm(enr.overlap.lists)
-gc()
-```
-
-```{r cleanup, warning=FALSE, message=FALSE, echo=FALSE}
-# Clean up memory before rendering
-rm(results)
-rm(plotted.pheno.subtrees)
-rm(plotted.pheno.trees)
-rm(pz.db)
-gc()
 ```
 
 # Full output files

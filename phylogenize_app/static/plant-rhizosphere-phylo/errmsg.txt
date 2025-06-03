@@ -1,7 +1,7 @@
 looking for file: /home/pbradz/projects/phylogenize/emp/emp_deblur_orig_metadata.biom
 located biom file: /home/pbradz/projects/phylogenize/emp/emp_deblur_orig_metadata.biom
 sample column not found: sample; assuming row names are sample IDs
-Calling BURST with arguments: -r /home/pbradz/R/x86_64-pc-linux-gnu-library/3.6/phylogenize/extdata/16s_renamed.frn -fr -q /home/pbradz/projects/phylogenize/emp/input_seqs.txt -i 0.985 -o /home/pbradz/projects/phylogenize/emp/output_assignments.txt
+Calling vsearch with arguments: -r /home/pbradz/R/x86_64-pc-linux-gnu-library/3.6/phylogenize/extdata/16s_renamed.frn -fr -q /home/pbradz/projects/phylogenize/emp/input_seqs.txt -i 0.985 -o /home/pbradz/projects/phylogenize/emp/output_assignments.txt
 17 non-singleton environment(s) found
 1 non-singleton dataset(s) found
 0.2727273

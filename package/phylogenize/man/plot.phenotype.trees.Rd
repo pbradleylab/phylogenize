@@ -4,12 +4,14 @@
 \alias{plot.phenotype.trees}
 \title{Plot a phenotype along a list of trees.}
 \usage{
-\method{plot}{phenotype.trees}(phenotype, trees, scale, ...)
+\method{plot}{phenotype.trees}(phenotype, trees, taxonomy, scale, ...)
 }
 \arguments{
 \item{phenotype}{A named vector with the phenotype values for each taxon.}
 
 \item{trees}{A list of trees.}
+
+\item{taxonomy}{A dataframe with the taxonomix information.}
 
 \item{scale}{A list returned from \code{get.pheno.plotting.scales}.}
 }

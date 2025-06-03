@@ -143,12 +143,8 @@ truncated <- function(x, lim = c(logit(0.001), logit(0.25))) {
 #' @keywords internal
 fastread <- function(location, cn = TRUE) {
     # rownames are useful
-    master <- data.frame(data.table::fread(location, header = T),
-                         check.names = cn)
-    rn <- master[, 1, drop=TRUE]
-    rest <- master[, -1, drop=FALSE]
-    rownames(rest) <- rn
-    return(data.matrix(rest))
+    master <- data.frame(read.csv(location, sep='\t', row.names=1, header=T))
+    return(data.matrix(master))
 }
 
 # Parallelization
@@ -346,152 +342,6 @@ capwords <- function(words, USE.NAMES=FALSE) {
     }
 }
 
-###
-
-# Super gross XML hack follows to make SVGs of trees interactive
-
-#' XML hack to make interactive tree diagrams.
-#'
-#' This hack is very ugly but works most of the time. However, it is a good idea
-#' to wrap it in a tryCatch so that you can fall back to a less flashy
-#' implementation, because it relies on editing a poorly-annotated SVG file as
-#' if it were an XML document.
-#'
-#' @param tree.obj A ggtree representation of a tree.
-#' @param file A filename where the final SVG output will be written.
-#' @param stroke.scale Multiplier of stroke width in dendrogram.
-#' @param pheno A vector with names corresponding to the tips of the tree and
-#'     values corresponding to the phenotype value at that tip.
-#' @param pheno.name The name of the phenotype being calculated (e.g.
-#'     "prevalence").
-#' @param native.tooltip Instead of using mouseover, use SVG tooltips (less
-#'     powerful).
-#' @param units Postfix for the values in \code{pheno} (e.g. "%" for
-#'     percentages).
-#' @export
-hack.tree.labels <- function(tree.obj,
-                             file,
-                             stroke.scale = 0.7,
-                             pheno = NULL,
-                             pheno.name = NULL,
-                             native.tooltip = FALSE,
-                             units = "",
-                             ...) {
-    tip.labels <- with(tree.obj$data, label[isTip])
-    xml <- svglite::xmlSVG(print(tree.obj), standalone = TRUE, ...)
-    new.style.text <- " \n .faketip:hover ~ .realtip { \n stroke-width: 5; \n opacity: 1; \n  } \n .faketip:hover ~ .specieslabel { \n opacity: 1; \n } \n "
-    style.nodes <- xml2::xml_find_all(xml, "//*[local-name()='style']")
-    xml2::xml_set_text(style.nodes[1], new.style.text)
-    xml.text <- xml2::xml_find_all(xml, "//*[local-name()='text']")
-    xml.text.contents <- sapply(xml.text, xml2::xml_text)
-    xml.label.indices <- which(xml.text.contents %in% tip.labels)
-    xml.label.heights <- sapply(xml.text, function(x) {
-        xml2::xml_attrs(x)["y"]
-    })
-    xml.label.pair <- cbind(label = xml.text.contents,
-                            y = xml.label.heights)[xml.label.indices, , drop=FALSE]
-    ordered.labels <- xml.label.pair[order(xml.label.pair[, "y"] %>% as.numeric),
-                                     "label"]
-    xml.lines <- xml2::xml_find_all(xml, "//*[local-name()='line']")
-    xml.line.props <- sapply(xml.lines, function(x) xml2::xml_attrs(x))
-    xml.x2 <- xml.line.props["x2", ] %>% as.numeric
-    xml.y2 <- xml.line.props["y2", ] %>% as.numeric
-    # terminus <- max(xml.x2)
-    uniq.x2 <- unique(xml.x2)
-    count.x2 <- sapply(uniq.x2, function(x) sum(xml.x2 == x))
-    terminus <- uniq.x2[which(count.x2 == length(tip.labels))]
-    xml.y2.sorted <- sort(xml.y2[xml.x2 == terminus])
-    # skootch over, remove tip, add title
-    for (x in xml.text) {
-        label <- xml2::xml_text(x)
-        if (label %in% ordered.labels) {
-            xml2::xml_set_attr(x, "x", as.character(terminus))
-            xml2::xml_set_text(x, " ")
-            if (native.tooltip) {
-                xml2::xml_add_sibling(x, xml2::read_xml(paste0("<title>",
-                                                               label,
-                                                               "</title>")))
-            }
-        }
-    }
-    for (l in xml.lines) {
-        l.attr <- xml2::xml_attrs(l)
-        l.y2 <- as.numeric(l.attr["y2"])
-        l.x2 <- as.numeric(l.attr["x2"])
-        l.x1 <- as.numeric(l.attr["x1"])
-        # This step is necessary because otherwise mouseover won't work
-        style <- xml2::xml_attrs(l)["style"]
-        s.parsed <- style.parse(style)
-        for (n in 1:length(s.parsed)) {
-            xml2::xml_set_attr(l, names(s.parsed)[n], s.parsed[n])
-        }
-        xml2::xml_set_attr(l, "style", "")
-        if ("stroke-width" %in% names(s.parsed)) {
-            xml2::xml_set_attr(l,
-                         "stroke-width",
-                         (as.numeric(s.parsed["stroke-width"]) * stroke.scale) %>%
-                         as.character)
-        }
-        if (!("stroke" %in% names(s.parsed))) {
-            xml2::xml_set_attr(l, "stroke", "#000000")
-        }
-        if (l.x2 == terminus) {
-            label <- ordered.labels[which(xml.y2.sorted == l.y2)]
-            xml2::xml_set_attr(l, "id", label)
-            xml2::xml_set_attr(l, "class", "realtip")
-            new.group <- xml2::read_xml("<g class=\"tip\"> </g>")
-            l2 <- xml2::xml_add_child(new.group, l)
-            xml2::xml_add_child(new.group, l)
-            xml2::xml_set_attr(l2, "opacity", "0")
-            xml2::xml_set_attr(l2, "pointer-events", "all")
-            xml2::xml_set_attr(l2, "stroke-width", 5)
-            xml2::xml_set_attr(l2, "class", "faketip")
-            xml2::xml_set_attr(l2, "x1",
-                         as.character(
-                             l.x1 - 500
-                         ))
-            xml2::xml_set_attr(l2, "x2",
-                         as.character(
-                             terminus + 500
-                         ))
-            extra.info <-  ""
-            if (!is.null(pheno)) {
-                if (is.null(pheno.name)) pheno.name <- "phenotype"
-                if (label %in% names(pheno)) {
-                    phi <- format(pheno[label], digits = 3)
-                } else {
-                    phi <- "NA"
-                }
-                extra.info <- paste0("(", pheno.name, " = ", phi, units,  ")")
-            }
-            xml2::xml_add_child(new.group, xml2::read_xml(paste0(
-              "<text x=\"",
-              l.x2 + 5,
-              "\" y = \"",
-              l.y2 + 3,
-              "\" opacity=\"0\" pointer-events=\"all\"" ,
-              " style=\"font-family: Arial; font-size: 10px;",
-              " fill: ",
-              xml2::xml_attr(l, "stroke"),
-              ";",
-              "\" class=\"specieslabel\"> ",
-              label,
-              " ",
-              extra.info,
-              " ",
-              "</text>")))
-            if (native.tooltip) {
-                xml2::xml_add_child(new.group, xml2::read_xml(paste0("<title>",
-                                                                     label,
-                                                                     "</title>")))
-            }
-            xml2::xml_replace(l, new.group)
-        }
-    }
-    xml2::write_xml(x = xml, file)
-}
-
-
 #' Helper function to parse SVG styles.
 #'
 #' @param str A style string to parse.
@@ -516,14 +366,48 @@ style.parse <- function(str) {
 #' to produce the same kind of output.
 #'
 #' @param tree.obj A ggtree object.
-#' @param file File to which an SVG representation of this tree object will be
-#'     written.
+#' @param file File to which an SVG representation of this tree object will be written.
+#' @param name String. the name of the taxon being added. Used for title.
 #' @export
-non.interactive.plot <- function(tree.obj, file) {
+non.interactive.plot <- function(tree.obj, file, name) {
     warning(paste0("replotting to: ", file))
-    non.int <- svglite::xmlSVG(print(tree.obj), standalone = TRUE)
-    xml2::write_xml(x = non.int, file)
+    
+    valid_labels <- subset(tree.obj$tree$data, !is.na(label))
+    low_color <- tree.obj$cols["low.col"]
+    high_color <- tree.obj$cols["high.col"]
+
+    tree <- ggtree(as.phylo(tree.obj$tree)) +
+                geom_point(data = valid_labels, aes(text = label, color = color)) +
+                geom_tiplab(data = valid_labels, aes(color = color)) +
+		ggtitle(name) +
+        labs(color="phenotype")
+    
+    # Write to an svg
+    svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
+    writeLines(as.character(svg), file)
+    
+    return(tree)
 }
+
+
+#' XML hack to make interactive tree diagrams.
+#'
+#' This hack is very ugly but works most of the time. However, it is a good idea
+#' to wrap it in a tryCatch so that you can fall back to a less flashy
+#' implementation, because it relies on editing a poorly-annotated SVG file as
+#' if it were an XML document.
+#'
+#' @param tree.obj A ggtree representation of a tree.
+#' @param file A filename where the final SVG output will be written.
+#' @param name. String. the name of the taxon being added. Used for title.
+#' @export
+interactive.plot <- function(tree.obj, file, name) {
+        tree <- non.interactive.plot(tree.obj, file, name)
+        interactive_tree <- ggplotly(tree, tooltip = "text")
+
+        return(interactive_tree)
+}
+
 
 #' A wrapper around \code{apply} and \code{parApply} that allows them to be
 #' called with a single syntax.

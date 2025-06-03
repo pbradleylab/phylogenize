@@ -18,9 +18,6 @@ Some global options that may be helpful include:
 \describe{
   \item{biom_file}{String. Name of BIOM abundance-and-metadata file (in this
   case, to write to disk).}
-  \item{in_dir}{String. Path to input directory (i.e., where to look for
-  input files). In this case, this is the directory where the BIOM file will
-  be *written*.}
   \item{biom_dir}{String. Path to BIOM command-line executables. These are
   necessary to write the BIOM file and add the metadata.}
 }
