@@ -448,19 +448,20 @@ matrix.plm <- function(tree,
 #' Obtain a regularized estimate of specificity.
 #'
 #' @param vec A named numeric vector giving presence/absence across samples.
-#' @param env.ids A named factor assigning an environment to each sample (names).
-#' @param which.env A string: in which environment should specificity be calculated?
+#' @param env.ids A named factor assigning an environment to each sample
+#'   (names).
+#' @param which.env A string: in which environment should specificity be
+#'   calculated?
 #' @param prior Prior probability of \code{which.env}
 #' @param b Free parameter giving degree of regularization (see
-#'     \code{optimize.b.wrapper}).
+#'   \code{optimize.b.wrapper}).
 #' @param add.pc Boolean giving whether to add a pseudocount.
 #' @param min.limit Will not optimize below this value.
 #' @param max.limit Will not optimize above this value.
 #' @return A list. \code{x}: regularized specificity estimate; \code{p}:
-#'     regularized prevalence estimate; \code{x.init}: naive specificity
-#'     estimate; \code{p.init}: naive prevalence estimate; \code{pT}:
-#'     probability of encountering a particular taxon, marginalized across
-#'     environments
+#'   regularized prevalence estimate; \code{x.init}: naive specificity estimate;
+#'   \code{p.init}: naive prevalence estimate; \code{pT}: probability of
+#'   encountering a particular taxon, marginalized across environments
 #' @keywords internal
 regularize.pET <- function(vec,
                           env.ids,
@@ -539,19 +540,21 @@ fit.beta.list <-  function(mtx, ids, fallback = c(NA, NA)) {
 #' Simulate a presence/absence matrix.
 #'
 #' @param effect.size A number giving the shift in logit-prevalence between
-#'     environments for simulated true positives.
+#'   environments for simulated true positives.
 #' @param baseline.distro A two-element numeric vector of beta distribution
-#'     parameters, giving the distribution of simulated prevalences.
-#' @param which.env String; gives the environment in which an effect will be simulated.
-#' @param samples Named integer vector giving the number of samples per environment.
+#'   parameters, giving the distribution of simulated prevalences.
+#' @param which.env String; gives the environment in which an effect will be
+#'   simulated.
+#' @param samples Named integer vector giving the number of samples per
+#'   environment.
 #' @param taxa How many taxa to simulate?
 #' @param tpr Fraction of taxa that should be simulated as true positives.
-#' @param sign.pos.prob Fraction of effects that should be positive (vs. negative)?
+#' @param sign.pos.prob Fraction of effects that should be positive (vs.
+#'   negative)?
 #' @return A list. \code{mtx}: a simulated matrix; \code{pT}: true prevalences;
-#'     \code{pTbs}: true prevalences after adding in effects; \code{fx}:
-#'     effects; \code{ids}: mapping of samples to environments;
-#'     \code{input.params}: input parameters used to call
-#'     \code{simulate.binom.mtx}.
+#'   \code{pTbs}: true prevalences after adding in effects; \code{fx}: effects;
+#'   \code{ids}: mapping of samples to environments; \code{input.params}: input
+#'   parameters used to call \code{simulate.binom.mtx}.
 #' @keywords internal
 simulate.binom.mtx <- function(effect.size = 2,
                               baseline.distro = c(shape1 = 0.66,
@@ -781,12 +784,13 @@ prev.addw <- function(abd.meta,
 
 ### calculate correlation
 
-#' Main function to calculate taxon-to-phenotype correlations, using clr-transformed abundances.
+#' Main function to calculate taxon-to-phenotype correlations, using
+#' clr-transformed abundances.
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   \item{env_column}{String. Name of column in metadata file containing (in this case) the
-#'   correlation variable.}
+#'   \item{env_column}{String. Name of column in metadata file containing (in
+#'   this case) the correlation variable.}
 #'   \item{dset_column}{String. Name of column in metadata file containing the
 #'   dataset annotations.}
 #'   \item{sample_column}{String. Name of column in metadata file containing the
@@ -818,12 +822,18 @@ correl.clr <- function(abd.meta,
     keep_cols <- intersect(clr_cols, R_cols)
     clr_mtx <- clr_mtx[, keep_cols]
     trait <- R_values[keep_cols]
-    if (sd(trait) == 0) { stop("Trait has a constant value; can't take correlation") }
-    if (all(trait %in% c(0, 1))) { warning("Trait looks binary; are you sure you want to take correlation?") }
+    if (sd(trait) == 0) { stop(
+        "Trait has a constant value; can't take correlation") }
+    if (all(trait %in% c(0, 1))) { warning(
+        "Trait looks binary; are you sure you want to take correlation?") }
     corr_values <- apply(clr_mtx, 1, function(x) cor(x, trait))
     # take care of any perfect correlations before taking fisher transform
-    corr_values[corr_values == 1] <- (max(corr_values[corr_values < 1]) + 1) / 2
-    corr_values[corr_values == -1] <- (min(corr_values[corr_values > 1]) + -1) / 2
+    corr_values[corr_values == 1] <- (
+        (max(corr_values[corr_values < 1]) + 1) / 2
+    )
+    corr_values[corr_values == -1] <- (
+        (min(corr_values[corr_values > 1]) + -1) / 2
+    )
     return(atanh(corr_values))
 }
 
@@ -946,7 +956,6 @@ calc.ess <- function(abd.meta,
 ### Wrap ashr with default parameters
 
 #' Wrapper function to perform adaptive shrinkage.
-#'  TODO make user-configurable
 #'
 #' @param m Estimates of parameter of interest.
 #' @param s Standard errors of parameters of interest.
@@ -999,16 +1008,19 @@ ashr.diff.abund <- function(abd.meta,
   } else {
     abd.meta$metadata[[E]] <- as.numeric(abd.meta$metadata[[E]])
     if (all(is.na(abd.meta$metadata[[E]]))) {
-      pz.error("Environment failed conversion to numeric; is this supposed to be a categorical variable?")
+      pz.error(paste0(
+          "Environment failed conversion to numeric; is this supposed to be ",
+          "a categorical variable?"))
     }
   }
   # Both tools expect rownames to be sample IDs
   named_metadata <- data.frame(
     abd.meta$metadata[, setdiff(colnames(abd.meta$metadata), S)]
   )
-
   rownames(named_metadata) <- abd.meta$metadata[[S]]
+  
   if (M=="ancombc2") { 
+      
     named_metadata <- named_metadata %>%
 	    mutate(across(c(E, D), as.factor))
     if (length(levels(named_metadata[[D]])) < 2) {
@@ -1017,12 +1029,12 @@ ashr.diff.abund <- function(abd.meta,
       ancom_formula = paste0(E, "+", D)
     }
     if (length(levels(named_metadata[[E]])) < 2) {
-      pz.error("For abundance there must be at least two different environments")
+      pz.error(
+          "For abundance there must be at least two different environments")
     }
     named_metadata <- named_metadata %>%
 	    filter(!is.na(E) | !is.na(D))
-    # Make sure they are in the same order
-    # named_metadata <- named_metadata[match(colnames(abd.meta$mtx), rownames(named_metadata)), ]
+    
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
       assays=S4Vectors::SimpleList(counts=abd.meta$mtx),
       colData=S4Vectors::DataFrame(named_metadata))
@@ -1049,7 +1061,9 @@ ashr.diff.abund <- function(abd.meta,
                                            taxon,
                                            !!(se_col)) %>% deframe)
     sample_ashr <- as_tibble(ancom_ash$result, rownames = "species")
+    
   } else if (M == "maaslin2") {
+      
       ref_env_level <- levels(named_metadata[[E]])[1]
       all_dset_level <- levels(named_metadata[[D]])
       ref_dset_level <- all_dset_level[1]
@@ -1097,7 +1111,10 @@ ashr.diff.abund <- function(abd.meta,
   # Fix automatic renaming of taxa that seem "numeric"
   spn <- names(sample_pheno)
   orign <- rownames(abd.meta$mtx)
-  numeric_names <- tibble(old_name = as.character(orign[which(!is.na(as.numeric(orign)))]),
+  numeric_names <- tibble(old_name =
+                              as.character(orign[
+                                  which(!is.na(as.numeric(orign)))
+                              ]),
                           new_name = paste0("X", old_name))
   # if the names didn't change, just keep them:
   all_names <- bind_rows(numeric_names, tibble(old_name=orign,
@@ -1227,7 +1244,8 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
            SIMPLIFY=FALSE)
 }
 
-#' Filter out genes that are almost always present or absent prior to running regressions.
+#' Filter out genes that are almost always present or absent prior to running
+#' regressions.
 #'
 #' Some particularly relevant global options are:
 #' \describe{
@@ -1235,9 +1253,12 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 #'   absent, at least this many times to be reported as a significant positive
 #'   association with the phenotype.}
 #' }
-#' @param gene.presence A list of matrices of gene presence/absence, as included in a `pz.db` object.
-#' @param trees A list of trees. Names should match names of `gene.presence`. Only taxa in these trees will be used for the analysis.
-#' @return A revised `gene.presence` list. Note that some taxa may be dropped from the list (if they had zero genes left after filtering).
+#' @param gene.presence A list of matrices of gene presence/absence, as included
+#'   in a `pz.db` object.
+#' @param trees A list of trees. Names should match names of `gene.presence`.
+#'   Only taxa in these trees will be used for the analysis.
+#' @return A revised `gene.presence` list. Note that some taxa may be dropped
+#'   from the list (if they had zero genes left after filtering).
 #' @export
 above_minimum_genes <- function(gene.presence, trees, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)

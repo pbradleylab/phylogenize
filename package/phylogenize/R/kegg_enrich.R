@@ -78,3 +78,4 @@ kegg.enrich.single <- function(sc, sn, p2k, cn="test_cutoff", d=1, tg="test_taxo
   	  pz.error("Internal dataframe is malformed for kegg.enrich.single. Please file a bug report.")
   }
 }
+
