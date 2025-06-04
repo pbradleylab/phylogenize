@@ -1558,7 +1558,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
                         ...)
         phenotype <- ess$ess
         phenoP <- ess$phenoP
-    } else if (pz.options("which_phenotype") == "provided") {
+    } else if (opts("which_phenotype") == "provided") {
         p_tbl <- read_tsv(pz.options("phenotype_file"))
         if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
             phenotype <- deframe(p_tbl)
@@ -1576,7 +1576,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
         phenoP <- 0
     } else if (opts("which_phenotype") == "abundance") {
         phenotype <- ashr.diff.abund(abd.meta, ...)
-        phenoP <- 0
+        phenoP <- 0  
     } else {
         pz.error(paste0("don't know how to calculate the phenotype ",
                         opts('which_phenotype')))
