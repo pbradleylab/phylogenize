@@ -9,7 +9,8 @@ mcapply(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...)
 \arguments{
 \item{X}{A matrix.}
 
-\item{MARGIN}{A number specifying whether to apply over rows (1) or columns (2).}
+\item{MARGIN}{A number specifying whether to apply over rows (1) or columns
+(2).}
 
 \item{FUN}{A function to be applied.}
 

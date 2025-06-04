@@ -16,8 +16,7 @@ Depends:
     stringr,
     tidyr,
     tibble,
-    purrr,
-    parallel
+    purrr
 Imports:
     readr,
     dplyr,

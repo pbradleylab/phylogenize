@@ -49,8 +49,8 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
     if (tolower(opts('core_method')) == "poms") {
-        pz.warning(paste0('POMS will ignore this phenotype, '
-                          'as it computes its own on balances'))
+        pz.warning(paste0("POMS will ignore this phenotype, ",
+                          "as it computes its own on balances"))
     }
     if (opts('which_phenotype') == "prevalence") {
         phenotype <- prev.addw(abd.meta, ...)

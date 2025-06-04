@@ -9,7 +9,8 @@ gene.annot(x, gene.to.fxn)
 \arguments{
 \item{x}{A gene (string) or vector of genes (strings).}
 
-\item{gene.to.fxn}{A data frame with at least "gene" and "function" as columns.}
+\item{gene.to.fxn}{A data frame with at least "gene" and "function" as
+columns.}
 }
 \value{
 A character vector of gene functions, with names equal to \code{x}.
