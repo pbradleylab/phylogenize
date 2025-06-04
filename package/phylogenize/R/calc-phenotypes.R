@@ -70,7 +70,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
     } else if (pz.options("which_phenotype") == "provided") {
         p_tbl <- read_tsv(pz.options("phenotype_file"))
         if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
-            phenotype <- deframe(p_tbl)
+            phenotype <- tibble::deframe(p_tbl)
         } else { # perform shrinkage on the provided values w/ their stderrs
             p_est <- as.numeric(p_tbl[["estimate"]])
             p_se <- as.numeric(p_tbl[["stderr"]])
@@ -78,9 +78,9 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
             names(p_se) <- p_tbl[[1]]
             ashr_res <- ash_wrapper(p_est, p_se)
             phenotype <- ashr_res$result %>%
-                as_tibble(rownames="species") %>%
+                tibble::as_tibble(rownames="species") %>%
                 dplyr::select(species, PosteriorMean) %>%
-                deframe
+                tibble::deframe()
         }
         phenoP <- 0
     } else if (opts("which_phenotype") == "abundance") {

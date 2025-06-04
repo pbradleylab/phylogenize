@@ -366,36 +366,6 @@ style.parse <- function(str) {
     return(c.output)
 }
 
-#' A fall-back plotting option for when \code{hack.tree.labels} fails, designed
-#' to produce the same kind of output.
-#'
-#' @param tree.obj A ggtree object.
-#' @param file File to which an SVG representation of this tree object will be
-#'   written.
-#' @param name String. the name of the taxon being added. Used for title.
-#' @export
-non.interactive.plot <- function(tree.obj, file, name) {
-    warning(paste0("replotting to: ", file))
-    
-    valid_labels <- subset(tree.obj$tree$data, !is.na(label))
-    low_color <- tree.obj$cols["low.col"]
-    high_color <- tree.obj$cols["high.col"]
-
-    tree <- ggtree(as.phylo(tree.obj$tree)) +
-                geom_point(data = valid_labels,
-                           aes(text = label, color = color)) +
-                geom_tiplab(data = valid_labels,
-                            aes(color = color)) +
-		ggtitle(name) +
-        labs(color="phenotype")
-    
-    # Write to an svg
-    svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
-    writeLines(as.character(svg), file)
-    
-    return(tree)
-}
-
 
 
 #' A wrapper around \code{apply} and \code{parApply} that allows them to be

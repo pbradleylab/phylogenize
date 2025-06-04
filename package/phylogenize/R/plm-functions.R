@@ -1022,7 +1022,7 @@ ashr.diff.abund <- function(abd.meta,
   if (M=="ancombc2") { 
       
     named_metadata <- named_metadata %>%
-	    mutate(across(c(E, D), as.factor))
+	    dplyr::mutate(tidyselect::across(c(E, D), as.factor))
     if (length(levels(named_metadata[[D]])) < 2) {
       ancom_formula = E
       } else {
@@ -1043,7 +1043,7 @@ ashr.diff.abund <- function(abd.meta,
                               assay_name="counts",
                               fix_formula=ancom_formula,
                               n_cl=opts('ncl'))
-    ancom_results_tbl <- ancom_results$res %>% tibble()
+    ancom_results_tbl <- ancom_results$res %>% tibble::tibble()
     envir_stem <- paste0("env", envir)
     lfc_col <- paste0("lfc_", envir_stem)
     se_col <- paste0("se_", envir_stem)
@@ -1056,11 +1056,11 @@ ashr.diff.abund <- function(abd.meta,
     }
     ancom_ash <- ash_wrapper(dplyr::select(ancom_results_tbl,
                                            taxon,
-                                           !!(lfc_col)) %>% deframe,
+                                           !!(lfc_col)) %>% tibble::deframe,
                              dplyr::select(ancom_results_tbl,
                                            taxon,
-                                           !!(se_col)) %>% deframe)
-    sample_ashr <- as_tibble(ancom_ash$result, rownames = "species")
+                                           !!(se_col)) %>% tibble::deframe)
+    sample_ashr <- tibble::as_tibble(ancom_ash$result, rownames = "species")
     
   } else if (M == "maaslin2") {
       
@@ -1085,17 +1085,19 @@ ashr.diff.abund <- function(abd.meta,
           plot_heatmap = FALSE,
           plot_scatter = FALSE
       )
-      maaslin_results_tbl <- maaslin_res$results %>% tibble() %>%
+      maaslin_results_tbl <- maaslin_res$results %>% tibble::tibble() %>%
           dplyr::filter(metadata == E, value == envir)
       if (any(is.na(maaslin_results_tbl$coef)) ||
           any(is.na(maaslin_results_tbl$stderr))) {
           pz.error("Error: Missing values found in coef or stderr columns.")
       }
       maaslin_ash <- ash_wrapper(
-          dplyr::select(maaslin_results_tbl, feature, coef) %>% deframe,
-          dplyr::select(maaslin_results_tbl, feature, stderr) %>% deframe
+          dplyr::select(maaslin_results_tbl, feature, coef) %>%
+              tibble::deframe(),
+          dplyr::select(maaslin_results_tbl, feature, stderr) %>%
+              tibble::deframe()
       )
-      sample_ashr <- as_tibble(maaslin_ash$result, rownames = "species")
+      sample_ashr <- tibble::as_tibble(maaslin_ash$result, rownames = "species")
   } else {
       pz.error(
           paste0(
@@ -1106,26 +1108,27 @@ ashr.diff.abund <- function(abd.meta,
   }
   sample_pheno <- sample_ashr %>%
     dplyr::select(species, PosteriorMean) %>%
-    deframe
+    tibble::deframe()
   
   # Fix automatic renaming of taxa that seem "numeric"
   spn <- names(sample_pheno)
   orign <- rownames(abd.meta$mtx)
-  numeric_names <- tibble(old_name =
-                              as.character(orign[
-                                  which(!is.na(as.numeric(orign)))
-                              ]),
-                          new_name = paste0("X", old_name))
+  numeric_names <- tibble::tibble(old_name =
+                                      as.character(orign[
+                                          which(!is.na(as.numeric(orign)))
+                                      ]),
+                                  new_name = paste0("X", old_name))
   # if the names didn't change, just keep them:
-  all_names <- bind_rows(numeric_names, tibble(old_name=orign,
+  all_names <- dplyr::bind_rows(numeric_names,
+                                tibble::tibble(old_name=orign,
                                                new_name=orign))
-  sample_pheno_tbl <- left_join(
-      enframe(sample_pheno, name="new_name", value="pheno"),
+  sample_pheno_tbl <- dplyr::left_join(
+      tibble::enframe(sample_pheno, name="new_name", value="pheno"),
       all_names)
   
   sample_pheno <- sample_pheno_tbl %>%
-      select(old_name, pheno) %>%
-      deframe()
+      dplyr::select(old_name, pheno) %>%
+      tibble::deframe()
 
   return(sample_pheno)
 }
@@ -1204,12 +1207,12 @@ pz.warning <- function(msgtext, ...) {
 #' @export
 make.results.matrix <- function(results) {
     Reduce(dplyr::bind_rows, lapply(names(results), function(rn) {
-        dplyr::tibble(taxon = rn,
-                   gene = results[[rn]] %>% colnames,
-                   effect.size = results[[rn]][1,],
-                   p.value = results[[rn]][2,],
-                   std.err = results[[rn]][3,],
-                   df = results[[rn]][4,])
+        tibble::tibble(taxon = rn,
+                       gene = results[[rn]] %>% colnames,
+                       effect.size = results[[rn]][1,],
+                       p.value = results[[rn]][2,],
+                       std.err = results[[rn]][3,],
+                       df = results[[rn]][4,])
     }))
 }
 
@@ -1290,7 +1293,8 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
 #' @return A single data frame of all significant results plus descriptions.
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
-    pos.sig.tbl <- enframe(pos.sig, name="taxon", value="gene") %>% unnest
+    pos.sig.tbl <- tibble::enframe(pos.sig, name="taxon", value="gene") %>%
+        dplyr::unnest()
     
     column_names <- colnames(gene.to.fxn)
     na_columns <- which(is.na(column_names))
@@ -1303,11 +1307,11 @@ add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
    
     # Ensure they are the same type and are not doubles
     gene.to.fxn <- gene.to.fxn %>%
-	    mutate(gene = as.character(gene)) 
+	    dplyr::mutate(gene = as.character(gene)) 
     pos.sig.tbl <- pos.sig.tbl %>%
-	    mutate(gene = as.character(gene))
+	    dplyr::mutate(gene = as.character(gene))
     pos.sig.descs <- dplyr::left_join(pos.sig.tbl,
                                gene.to.fxn,
                                by="gene") %>%
-        rename(description=`function`)
+        dplyr::rename(description=`function`)
 }

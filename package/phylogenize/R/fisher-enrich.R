@@ -70,16 +70,16 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
     return(c())
   }
   tbl.mappings <- tibble::enframe(purrr::map(mappings,
-      ~group_by_at(., colnames(.)[2]) %>%
-        nest() %>% rename(term=1) %>%
-        mutate(data=purrr::map(data, unlist)))) %>%
-        rename(termset=name, terms=value)
+      ~dplyr::group_by_at(., colnames(.)[2]) %>%
+        dplyr::nest() %>% dplyr::rename(term=1) %>%
+        dplyr::mutate(data=purrr::map(data, unlist)))) %>%
+        dplyr::rename(termset=name, terms=value)
      taxon <- names(sigs)
       cutoff <- names(sigs[[1]])
       map.bg <- Reduce(union, purrr::map(tbl.mappings$terms,
           ~Reduce(union, .$data)))
-      full.table <- crossing(taxon, cutoff, tbl.mappings) %>% unnest()
-      full.table <- mutate(full.table,
+      full.table <- tidyr::crossing(taxon, cutoff, tbl.mappings) %>% unnest()
+      full.table <- dplyr::mutate(full.table,
         enr=purrr::pmap(full.table, function(taxon,
             cutoff,
             termset,
@@ -92,14 +92,14 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
             s,
             intersect(map.bg, g))
           }))
-      full.table <- mutate(full.table,
+      full.table <- dplyr::mutate(full.table,
         enr.pval=purrr::map_dbl(enr, ~.$p.value),
         enr.estimate=purrr::map_dbl(enr, ~.$estimate),
         enr.overlap=purrr::map(enr, ~.$overlap))
       full.table <- full.table %>%
-        group_by(taxon, cutoff, termset) %>%
-        mutate(enr.qval=qvals(pv1(enr.pval))) %>%
-        ungroup
+        dplyr::group_by(taxon, cutoff, termset) %>%
+        dplyr::mutate(enr.qval=qvals(pv1(enr.pval))) %>%
+        dplyr::ungroup()
 }
 
 #' Get q-values for results in tbl format.
@@ -111,12 +111,12 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
 #' @export tbl.result.qvs
 tbl.result.qvs <- function(results, method=qvals, ...) {
     results <- results %>%
-        group_by(taxon) %>%
-        nest %>%
-        mutate(q.value=map(data, ~ {
+        dplyr::group_by(taxon) %>%
+        dplyr::nest() %>%
+        dplyr::mutate(q.value=purrr::map(data, ~ {
             method(.x$p.value)
         })) %>%
-        unnest
+        dplyr::unnest
     results
 }
 
@@ -138,52 +138,52 @@ alt.multi.enrich <- function(results, mappings, dirxn=1,
         pz.warning("Didn't find significant hits, signs, or mappings")
         return(c())
     }
-    tbl.mappings <- enframe(map(mappings, ~group_by_at(., colnames(.)[2]) %>%
-                                              nest() %>% rename(term=1) %>%
-                                              mutate(data=map(data, unlist)))) %>%
-        rename(termset=name, terms=value)
+    tbl.mappings <- tibble::enframe(
+        purrr::map(mappings, ~group_by_at(., colnames(.)[2]) %>%
+                       dplyr::nest() %>%
+                       dplyr::rename(term=1) %>%
+                       dplyr::mutate(data=purrr::map(data, unlist)))) %>%
+        dplyr::rename(termset=name, terms=value)
     taxa <- unique(results$taxon)
     cutoff <- names(qcuts)
-    map.bg <- Reduce(union, map(tbl.mappings$terms,
-                                ~Reduce(union, .$data)))
-    full.table <- crossing(taxon=taxa, cutoff, tbl.mappings) %>% unnest()
-    if (future) {
-        map_fxn <- functional::Curry(furrr::future_pmap, .progress=TRUE)
-    } else {
-        map_fxn <- purrr::pmap
-    }
-    full.table <- mutate(full.table,
+    map.bg <- Reduce(union, purrr::map(tbl.mappings$terms,
+                                       ~Reduce(union, .$data)))
+    full.table <- tidyr::crossing(
+        taxon=taxa, cutoff, tbl.mappings) %>% dplyr::unnest()
+    map_fxn <- purrr::pmap
+    full.table <- dplyr::mutate(full.table,
                          enr=map_fxn(full.table,
                                      indiv.enr,
                                      results=results,
                                      qcuts=qcuts,
                                      dirxn=dirxn,
                                      bg=map.bg))
-    full.table <- mutate(full.table,
-                         enr.pval=map_dbl(enr, ~.$p.value),
-                         enr.estimate=map_dbl(enr, ~.$estimate),
-                         enr.overlap=map(enr, ~.$overlap))
+    full.table <- dplyr::mutate(
+        full.table,
+        enr.pval=purrr::map_dbl(enr, ~.$p.value),
+        enr.estimate=purrr::map_dbl(enr, ~.$estimate),
+        enr.overlap=purrr::map(enr, ~.$overlap))
     full.table <- full.table %>%
-        group_by(taxon, cutoff, termset) %>%
-        mutate(enr.qval=qvals(pv1(enr.pval))) %>%
-        ungroup
+        dplyr::group_by(taxon, cutoff, termset) %>%
+        dplyr::mutate(enr.qval=qvals(pv1(enr.pval))) %>%
+        dplyr::ungroup()
 }
 
 #' Internal function to perform an individual enrichment.
 #' @keywords internal
 indiv.enr <- function(taxon, cutoff, termset, term, data, results,
                       qcuts=c(strong=0.05), dirxn=1, bg=NULL) {
-    s <- filter(results,
-                q.value <= qcuts[cutoff],
-               taxon == !!taxon,
-                sign(effect.size) == dirxn) %>%
-        select(gene) %>%
-        unlist
-    g <- filter(results,
-               taxon == !!taxon,
-                !is.na(effect.size)) %>%
-        select(gene) %>%
-        unlist
+    s <- dplyr::filter(results,
+                       q.value <= qcuts[cutoff],
+                       taxon == !!taxon,
+                       sign(effect.size) == dirxn) %>%
+        dplyr::select(gene) %>%
+        unlist()
+    g <- dplyr::filter(results,
+                       taxon == !!taxon,
+                       !is.na(effect.size)) %>%
+        dplyr::select(gene) %>%
+        unlist()
     if (is.null(bg)) {
         bg <- g
     } else {

@@ -128,7 +128,7 @@ check.process.metadata <- function(metadata, ...) {
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
     
     # One more sanity check before we return
-    compare_md <- full_join(orig_md[c(S, E)], metadata[c(S, E)], by=S)
+    compare_md <- dplyr::full_join(orig_md[c(S, E)], metadata[c(S, E)], by=S)
     wrong_rows <- compare_md[
         compare_md[[paste0(E, ".x")]] != compare_md[[paste0(E, ".y")]],
     ]
@@ -263,10 +263,10 @@ import.pz.db <- function(...) {
                                        found_db[["genes"]]))
     trees <- readRDS(file.path(opts('data_dir'),
                                found_db[["trees"]]))
-    taxonomy <- read_csv(file.path(opts('data_dir'),
-                                   found_db[["taxonomy"]]))
-    gene.to.fxn <- read_csv(file.path(opts('data_dir'),
-                                      found_db[["functions"]]))
+    taxonomy <- readr::read_csv(file.path(opts('data_dir'),
+                                          found_db[["taxonomy"]]))
+    gene.to.fxn <- readr::read_csv(file.path(opts('data_dir'),
+                                             found_db[["functions"]]))
     # Check if the files exist instead of throwing a null error
     if (is.null(gene.presence) |
         is.null(trees) |
@@ -378,14 +378,14 @@ change.presence.tax.level <- function(binary, taxon, tax){
     # Make a mapping file that is at the taxonomic level selected from the tax
     # file.
     clean <- tax %>%
-        select(cluster, taxon, phylum) %>%
-        distinct()
+        dplyr::select(cluster, taxon, phylum) %>%
+        dplyr::distinct()
     # Drop empty values from the taxonomic level selected if they are not
     clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
     # Arrange them so that the runtime is slightly less in the lookup
     clean <- clean %>%
-        arrange(phylum, !!sym(taxon)) %>%
-        mutate(cluster = as.character(cluster))
+        dplyr::arrange(phylum, !!(rlang::sym(taxon))) %>%
+        dplyr::mutate(cluster = as.character(cluster))
     # Split the dataframe by phylum so that we only need to lookup the taxon
     # associated with each one.
     clean <- clean %>%
@@ -394,7 +394,7 @@ change.presence.tax.level <- function(binary, taxon, tax){
     # For every species in the dataframe, if the species is selected, pop the
     # column and remove it from the sparse matrix.
     binary_matrices <- list()
-    taxon <- sym(taxon)
+    taxon <- rlang::sym(taxon)
     
     for (i in 1:length(names(binary))) {
         name <- names(binary)[i]
@@ -403,11 +403,11 @@ change.presence.tax.level <- function(binary, taxon, tax){
         
         # make a named list in one step
         named_tax_list <- t %>%
-            select(-phylum) %>%
-            group_by(!!taxon) %>%
-            nest() %>%
-            deframe() %>%
-            map(~ pull(.x, cluster))
+            dplyr::select(-phylum) %>%
+            dplyr::group_by(!!taxon) %>%
+            dplyr::nest() %>%
+            tibble::deframe() %>%
+            purrr::map(~ dplyr::pull(.x, cluster))
         
         columns <- colnames(binary[[name]])
         
@@ -447,17 +447,19 @@ change.tree.tax.level <- function(tree, taxon, tax) {
     # Make a mapping file that is at the taxonomic level selected from the tax
     # file.
     clean <- tax %>%
-        select(cluster, taxon, phylum) %>%
-        distinct()
+        dplyr::select(cluster, taxon, phylum) %>%
+        dplyr::distinct()
     pz.message(head(clean))
     # Drop empty values from the taxonomic level selected if they are not 
     clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
     # Arrange them so that the runtime is slightly less in the lookup
     clean <- clean %>%
-        group_by(across(all_of(taxon))) %>%
-        ungroup() %>%
-        arrange(phylum, !!sym(taxon)) %>%
-        mutate(cluster = as.character(cluster))
+        dplyr::group_by(
+            tidyselect::across(tidyselect::all_of(taxon))
+        ) %>%
+        dplyr::ungroup() %>%
+        dplyr::arrange(phylum, !!(rlang::sym(taxon))) %>%
+        dplyr::mutate(cluster = as.character(cluster))
     # Split the dataframe by phylum so that we only need to lookup the taxon
     # associated with each one.
     clean <- clean %>% 
@@ -481,15 +483,15 @@ change.tree.tax.level <- function(tree, taxon, tax) {
         }	
         # Generate a list of unique split names based on taxon
         split_names <- t %>%
-            group_split(!!sym(taxon)) %>%
-            map(~ pull(.x, !!sym(taxon))) %>%
+            dplyr::group_split(!!(rlang::sym(taxon))) %>%
+            purrr::map(~ dplyr::pull(.x, !!(rlang::sym(taxon)))) %>%
             unlist() %>%
             unique()
         
         for (j in seq_along(split_names)) {
             tips <- tr$tip.label
             split_tips <- t %>%
-                filter(!!sym(taxon) == split_names[[j]])
+                dplyr::filter(!!(rlang::sym(taxon)) == split_names[[j]])
             tips <- intersect(tips, split_tips[["cluster"]])
             subtree <- ape::keep.tip(tr, tips)
             if (!is.null(subtree) && length(subtree$tip.label) > 1) {

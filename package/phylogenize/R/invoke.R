@@ -1,4 +1,6 @@
 #' @import Matrix
+#' @importFrom ggtree %<+%
+#' @importFrom settings clone_and_merge
 NULL
 
 #--- Main ways to invoke phylogenize: ---#

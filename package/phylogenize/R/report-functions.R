@@ -1,5 +1,3 @@
-#' @import Matrix
-NULL
 
 #--- Plotting ---#
 
@@ -207,25 +205,25 @@ plot.pheno.distributions <- function(phenotype,
 
     distros <- sub.pheno %>%
 	    dplyr::group_by(taxon) %>%
-	    nest() %>%
-	    mutate(n_datapoints = map_dbl(data, nrow)) %>%
+	    dplyr::nest() %>%
+	    dplyr::mutate(n_datapoints = purrr::map_dbl(data, nrow)) %>%
 	    dplyr::filter(n_datapoints >= 3) %>%
-	    arrange(-n_datapoints) %>%
-	    mutate(plots = map2(data, taxon, ~ {
-            	p <- ggplot2::ggplot(.x, ggplot2::aes(pheno, fill=.y)) +
-		    ggplot2::geom_density() +  
-                    ggplot2::xlab(opts('which_phenotype')) +
-                    ggplot2::ggtitle(.y) +
-                    ggplot2::theme_minimal() + 
-		    ggplot2::scale_fill_manual(values = setNames(color_palette,
-		                                                 taxon_uniq)) + 
-		    ggplot2::guides(fill = "none")
-            	return(p)
-		 })) %>%
-	    ungroup() %>%
-	    dplyr::select(plots) %>%
-	    tibble::deframe()
-
+	    dplyr::arrange(-n_datapoints) %>%
+        dplyr::mutate(plots = purrr::map2(data, taxon, ~ {
+            p <- ggplot2::ggplot(.x, ggplot2::aes(pheno, fill=.y)) +
+                ggplot2::geom_density() +  
+                ggplot2::xlab(opts('which_phenotype')) +
+                ggplot2::ggtitle(.y) +
+                ggplot2::theme_minimal() + 
+                ggplot2::scale_fill_manual(values = setNames(color_palette,
+                                                             taxon_uniq)) + 
+                ggplot2::guides(fill = "none")
+            return(p)
+        })) %>%
+        dplyr::ungroup() %>%
+        dplyr::select(plots) %>%
+        tibble::deframe()
+    
     # Group the ggplots into sets of 10 with them already being ordered from the
     # groups with the most individuals to the least for node tips in the kept
     # taxon
@@ -418,7 +416,7 @@ single.cluster.plot <- function(gene.presence,
         ggplot2::scale_fill_gradient(low = opts('gene_color_absent'),
                                      high = opts('gene_color_present'),
                                      na.value = opts('gene_color_absent')) +
-        labs(color=opts("which_phenotype"), fill="gene presence") +
+        ggplot2::labs(color=opts("which_phenotype"), fill="gene presence") +
         scale_shape(guide="none")
     tmp
 }
@@ -529,23 +527,23 @@ get_enrichment_tbls <- function(signif,
                                         signs,
                                         pz.db$gene.to.fxn)
     if (!is.null(enrichment.tbl)) {
-        enrichment.tbl <- filter(enrichment.tbl,
-                                 qvalue <= 0.25, enr.estimate > 1)
-        pretty.enr.tbl <- select(enrichment.tbl,
-                                 taxon,
-                                 cutoff,
-                                 ID,
-                                 Description,
-                                 qvalue,
-                                 enr.estimate) %>%
-            rename(Gene_significance=cutoff,
-                   Taxon=taxon,
-                   Description=Description,
-                   q_value=qvalue,
-                   Enrichment_odds_ratio=enr.estimate) %>%
-            arrange(factor(Gene_significance, levels=names(signif[[1]])),
-                    Taxon,
-                    q_value)
+        enrichment.tbl <- dplyr::filter(enrichment.tbl,
+                                        qvalue <= 0.25, enr.estimate > 1)
+        pretty.enr.tbl <- dplyr::select(enrichment.tbl,
+                                        taxon,
+                                        cutoff,
+                                        ID,
+                                        Description,
+                                        qvalue,
+                                        enr.estimate) %>%
+            dplyr::rename(Gene_significance=cutoff,
+                          Taxon=taxon,
+                          Description=Description,
+                          q_value=qvalue,
+                          Enrichment_odds_ratio=enr.estimate) %>%
+            dplyr::arrange(factor(Gene_significance, levels=names(signif[[1]])),
+                           Taxon,
+                           q_value)
         if (export) {
             write.csv(file=file.path(pz.options('out_dir'),
                                      "enr-table.csv"),
@@ -554,21 +552,21 @@ get_enrichment_tbls <- function(signif,
     }
     if (!is.null(pretty.enr.tbl)) {
         accession_to_fxn <- pz.db$gene.to.fxn %>%
-            select(accession, `function`) %>%
-            distinct()
+            dplyr::select(accession, `function`) %>%
+            dplyr::distinct()
         if (nrow(enrichment.tbl) > 0) {
-            enr.overlap <- select(enrichment.tbl,
-                                  taxon,
-                                  cutoff,
-                                  ID,
-                                  Description,
-                                  geneID) %>%
-                separate_longer_delim(geneID, delim="/") %>%
-                left_join(.,
-                          accession_to_fxn,
-                          by=c("geneID"="accession")) %>%
-                rename(gene=geneID, description=`function`) %>%
-                mutate(effectsize=map2_dbl(
+            enr.overlap <- dplyr::select(enrichment.tbl,
+                                         taxon,
+                                         cutoff,
+                                         ID,
+                                         Description,
+                                         geneID) %>%
+                tidyr::separate_longer_delim(geneID, delim="/") %>%
+                dplyr::left_join(.,
+                                 accession_to_fxn,
+                                 by=c("geneID"="accession")) %>%
+                dplyr::rename(gene=geneID, description=`function`) %>%
+                dplyr::mutate(effectsize=purrr::map2_dbl(
                     taxon,
                     gene,
                     ~ {
@@ -588,10 +586,11 @@ get_enrichment_tbls <- function(signif,
                           enr.overlap)
                 write.csv(file=file.path(pz.options('out_dir'),
                                          "enr-overlaps-sorted.csv"),
-                          arrange(enr.overlap,
-                                  taxon,
-                                  factor(cutoff, levels=names(signif[[1]])),
-                                  desc(effectsize)))
+                          dplyr::arrange(enr.overlap,
+                                         taxon,
+                                         factor(cutoff,
+                                                levels=names(signif[[1]])),
+                                         desc(effectsize)))
             }
         }
     }
@@ -680,13 +679,13 @@ change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
     
     #Change color section in tree to avoid error
     swap <- tax_filt %>%
-        mutate(cluster = as.character(cluster)) %>%
-        select(cluster, species) 
+        dplyr::mutate(cluster = as.character(cluster)) %>%
+        dplyr::select(cluster, species) 
     
     color_head <- data.frame(cluster = names(ctree$mapping$colour),
                              stringsAsFactors = FALSE)
     color_head <- color_head %>%
-        left_join(swap, by = "cluster")
+        dplyr::left_join(swap, by = "cluster")
     
     color_head$final_name <- ifelse(is.na(color_head$species),
                                     color_head$cluster,
@@ -834,4 +833,35 @@ interactive.plot <- function(tree.obj, file, name) {
     tree <- non.interactive.plot(tree.obj, file, name)
     interactive_tree <- plotly::ggplotly(tree, tooltip = "text")
     return(interactive_tree)
+}
+
+
+#' A fall-back plotting option for when \code{hack.tree.labels} fails, designed
+#' to produce the same kind of output.
+#'
+#' @param tree.obj A ggtree object.
+#' @param file File to which an SVG representation of this tree object will be
+#'   written.
+#' @param name String. the name of the taxon being added. Used for title.
+#' @export
+non.interactive.plot <- function(tree.obj, file, name) {
+    warning(paste0("replotting to: ", file))
+    
+    valid_labels <- subset(tree.obj$tree$data, !is.na(label))
+    low_color <- tree.obj$cols["low.col"]
+    high_color <- tree.obj$cols["high.col"]
+    
+    tree <- ggtree::ggtree(as.phylo(tree.obj$tree)) +
+        ggtree::geom_point(data = valid_labels,
+                   aes(text = label, color = color)) +
+        ggtree::geom_tiplab(data = valid_labels,
+                    aes(color = color)) +
+        ggplot2::ggtitle(name) +
+        ggplot2::labs(color="phenotype")
+    
+    # Write to an svg
+    svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
+    writeLines(as.character(svg), file)
+    
+    return(tree)
 }
