@@ -64,7 +64,7 @@ make.sim <- function(n.species,
         alphas <- round(runif(n.species, min = 1, max = 100000))
     }
     reads <- rnorm(n.samples, log(avg.reads), 0.5) %>% exp %>% round
-    com <- gtools::rdirichlet(n.samples, alphas) %>% t
+    com <- extraDistr::rdirichlet(n.samples, alphas) %>% t
     colnames(com) <- paste0("sample", 1:n.samples)
     rownames(com) <- paste0("species", 1:n.species)
     ncells <- nrow(com) * ncol(com)

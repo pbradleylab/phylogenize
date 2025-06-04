@@ -5,13 +5,17 @@ Authors@R:
     person(given = "Patrick",
            family = "Bradley",
            role = c("aut", "cre"),
-           email = "bradley.720@osu.edu")
+           email = "bradley.720@osu.edu"),
+     person(given = "Kathryn",
+           family = "Kananen",
+           role = c("aut"),
+           email = "kananen.13@osu.edu")      
 Description: phylogenize contains functions to estimate microbial prevalence and specificity scores from data, to associate these quantitative phenotypes with gene presence/absence (using the implementation of phylogenetic regression from the package phylolm), and to visualize the results. Both shotgun metagenomics and 16S amplicon data can be used with this pipeline.
 License: MIT
 Encoding: UTF-8
 LazyData: true
 Depends:
-   readr,
+    readr,
     dplyr,
     stringr,
     tidyr,
@@ -25,14 +29,13 @@ Imports:
     castor,
     clinUtils,
     dplyr,
-    ezknitr,
+    extraDistr,
     forcats,
     future,
     ggplot2,
     ggtree,
     graphics,
     grDevices,
-    gtools,
     kableExtra,
     knitr,
     MASS,
@@ -46,13 +49,15 @@ Imports:
     purrr,
     qvalue,
     readr,
+    rlang,
+    rmarkdown,
+    S4Vectors,
     scales,
     seqinr,
     settings,
     stats,
     stringr,
     svglite,
-    testthat,
     tibble,
     tidyr, 
     yaml
