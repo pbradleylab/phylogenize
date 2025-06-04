@@ -78,7 +78,8 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
       cutoff <- names(sigs[[1]])
       map.bg <- Reduce(union, purrr::map(tbl.mappings$terms,
           ~Reduce(union, .$data)))
-      full.table <- tidyr::crossing(taxon, cutoff, tbl.mappings) %>% unnest()
+      full.table <- tidyr::crossing(taxon, cutoff, tbl.mappings) %>%
+          tidyr::unnest()
       full.table <- dplyr::mutate(full.table,
         enr=purrr::pmap(full.table, function(taxon,
             cutoff,
@@ -116,7 +117,7 @@ tbl.result.qvs <- function(results, method=qvals, ...) {
         dplyr::mutate(q.value=purrr::map(data, ~ {
             method(.x$p.value)
         })) %>%
-        dplyr::unnest
+        tidyr::unnest()
     results
 }
 
@@ -149,7 +150,8 @@ alt.multi.enrich <- function(results, mappings, dirxn=1,
     map.bg <- Reduce(union, purrr::map(tbl.mappings$terms,
                                        ~Reduce(union, .$data)))
     full.table <- tidyr::crossing(
-        taxon=taxa, cutoff, tbl.mappings) %>% dplyr::unnest()
+        taxon=taxa, cutoff, tbl.mappings) %>%
+        tidyr::unnest()
     map_fxn <- purrr::pmap
     full.table <- dplyr::mutate(full.table,
                          enr=map_fxn(full.table,

@@ -254,7 +254,7 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
         m <- m[restrict]
     }
     fx.pv <- tryCatch({
-        plm <- phylolm(p ~ m, phy=tr, measurement_error=meas_err)
+        plm <- phylolm::phylolm(p ~ m, phy=tr, measurement_error=meas_err)
         coef <- summary(plm)$coefficients
         c(coef[coefname, c("Estimate", "p.value", "StdErr")],
           df=(plm$n - plm$d))
@@ -1294,7 +1294,7 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
     pos.sig.tbl <- tibble::enframe(pos.sig, name="taxon", value="gene") %>%
-        dplyr::unnest()
+        tidyr::unnest()
     
     column_names <- colnames(gene.to.fxn)
     na_columns <- which(is.na(column_names))
