@@ -1022,7 +1022,7 @@ ashr.diff.abund <- function(abd.meta,
   if (M=="ancombc2") { 
       
     named_metadata <- named_metadata %>%
-	    dplyr::mutate(tidyselect::across(c(E, D), as.factor))
+	    dplyr::mutate(dplyr::across(c(E, D), as.factor))
     if (length(levels(named_metadata[[D]])) < 2) {
       ancom_formula = E
       } else {

@@ -32,7 +32,6 @@ Imports:
     DT,
     extraDistr,
     forcats,
-    future,
     ggplot2,
     ggtree,
     graphics,

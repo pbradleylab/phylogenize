@@ -455,7 +455,7 @@ change.tree.tax.level <- function(tree, taxon, tax) {
     # Arrange them so that the runtime is slightly less in the lookup
     clean <- clean %>%
         dplyr::group_by(
-            tidyselect::across(tidyselect::all_of(taxon))
+            dplyr::across(tidyselect::all_of(taxon))
         ) %>%
         dplyr::ungroup() %>%
         dplyr::arrange(phylum, !!(rlang::sym(taxon))) %>%
