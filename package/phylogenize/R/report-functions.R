@@ -827,7 +827,7 @@ gg.cont.tree <- function(phy,
 #'
 #' @param tree.obj A ggtree representation of a tree.
 #' @param file A filename where the final SVG output will be written.
-#' @param name. String. the name of the taxon being added. Used for title.
+#' @param name String. the name of the taxon being added. Used for title.
 #' @export
 interactive.plot <- function(tree.obj, file, name) {
     tree <- non.interactive.plot(tree.obj, file, name)
