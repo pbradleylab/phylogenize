@@ -707,8 +707,7 @@ change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
 #' @param ctrait A named numeric vector assigning trait values to tree tips.
 #' @param taxonomy A dataframe with the taxonomic information.
 #' @param cAnc Calculated ancestry for continuous trait; if this is NULL, it is
-#'   calculated.
-#' @param model Model for calculating ancestry (see phytools::fastAnc).
+#'   calculated using castor::get_ancestral_nodes.
 #' @param cLimits Scale bar limits for plotting continuous trait.
 #' @param n Character vector giving which nodes to display; if NULL, defaults to
 #'   intersection of \code{phy$tip.label} and \code{names(ctrait)}.
@@ -729,7 +728,6 @@ gg.cont.tree <- function(phy,
                          ctrait,
                          taxonomy,
                          cAnc = NULL,
-                         model = "ARD",
                          cLimits = logit(c(0.025, 0.1)),
                          n = NULL,
                          reduced.phy = NULL,
@@ -763,7 +761,13 @@ gg.cont.tree <- function(phy,
                 "need at least two tips for a tree; skipping ", cName))
             return(NA)
         }
-        if (is.null(cAnc)) cAnc <- phytools::fastAnc(reduced.phy, ctrait[n])
+        if (is.null(cAnc)) {
+            #cAnc <- phytools::fastAnc(reduced.phy, ctrait[n])
+            cAnc <- castor::asr_independent_contrasts(
+                reduced.phy,
+                ctrait[n][reduced.phy[["tip.label"]]]
+            )[["ancestral_states"]]
+        }
         cDisplay <- truncated(c(unlist(ctrait[n]),
                                 unlist(cAnc)),
                               unlist(cLimits))

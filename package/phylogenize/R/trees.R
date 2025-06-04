@@ -12,7 +12,7 @@ fix.tree <- function(phy, len=1e-6) {
   if (!is.null(phy) && inherits(phy, "phylo")) {
       phy <- ape::multi2di(phy)
       if (any(phy$edge.length == 0)) {
-          max_height <- max(phytools::nodeHeights(phy))
+          max_height <- max(castor::get_all_distances_to_root(phy))
           phy$edge.length[phy$edge.length == 0] <- max_height * len
       }
   }
