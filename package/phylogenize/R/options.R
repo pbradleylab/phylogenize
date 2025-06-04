@@ -57,7 +57,7 @@ default_params <- list(
 
 
 # Options given by user
-PZ_OPTIONS <- options_manager(.list=default_params)
+PZ_OPTIONS <- settings::options_manager(.list=default_params)
 
 #' Set and get options for phylogenize.
 #'
