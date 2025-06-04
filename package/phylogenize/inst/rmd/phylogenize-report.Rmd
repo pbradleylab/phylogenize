@@ -133,7 +133,7 @@ if (!pz.options('skip_graphs')) {
 				     label=pz.options('which_phenotype'))
 }
 
-clinUtils::knitPrintListPlots(
+phylogenize::knitPrintListPlots(
 	plotsList = plots, 
 	type = "plotly", 
 	titles = NULL, 
@@ -165,7 +165,7 @@ if (!pz.options('skip_graphs')) {
 				     )
 }
 
-clinUtils::knitPrintListPlots(
+phylogenize::knitPrintListPlots(
         plotsList = subplots,
         type = "plotly",
         titles = NULL,
@@ -190,7 +190,7 @@ pos.sig <- data.frame(
   `Significant Genes` = sapply(signif_genes[["pos.sig"]], length),
   row.names = NULL
 )
-clinUtils::getClinDT(pos.sig)
+phylogenize::getClinDT(pos.sig)
 
 write.csv(file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
 	  signif_genes[["pos.sig.descs"]])
@@ -236,7 +236,7 @@ respectively.
 ```{r enrichment_tables, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE, results='axsis'}
 do_enrichment <- ("enr_tbls" %in% names(core))
 if (do_enrichment) {
-    table <- clinUtils::getClinDT(core[["enr_tbls"]]) |>
+    table <- phylogenize::getClinDT(core[["enr_tbls"]]) |>
         DT::formatStyle(
             'q_value',
             target = 'row',

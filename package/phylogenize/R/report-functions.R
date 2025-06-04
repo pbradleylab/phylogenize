@@ -205,7 +205,7 @@ plot.pheno.distributions <- function(phenotype,
 
     distros <- sub.pheno %>%
 	    dplyr::group_by(taxon) %>%
-	    dplyr::nest() %>%
+	    tidyr::nest() %>%
 	    dplyr::mutate(n_datapoints = purrr::map_dbl(data, nrow)) %>%
 	    dplyr::filter(n_datapoints >= 3) %>%
 	    dplyr::arrange(-n_datapoints) %>%

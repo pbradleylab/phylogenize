@@ -405,7 +405,7 @@ change.presence.tax.level <- function(binary, taxon, tax){
         named_tax_list <- t %>%
             dplyr::select(-phylum) %>%
             dplyr::group_by(!!taxon) %>%
-            dplyr::nest() %>%
+            tidyr::nest() %>%
             tibble::deframe() %>%
             purrr::map(~ dplyr::pull(.x, cluster))
         

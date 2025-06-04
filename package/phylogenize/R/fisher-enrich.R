@@ -71,7 +71,7 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
   }
   tbl.mappings <- tibble::enframe(purrr::map(mappings,
       ~dplyr::group_by_at(., colnames(.)[2]) %>%
-        dplyr::nest() %>% dplyr::rename(term=1) %>%
+        tidyr::nest() %>% dplyr::rename(term=1) %>%
         dplyr::mutate(data=purrr::map(data, unlist)))) %>%
         dplyr::rename(termset=name, terms=value)
      taxon <- names(sigs)
@@ -112,7 +112,7 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
 tbl.result.qvs <- function(results, method=qvals, ...) {
     results <- results %>%
         dplyr::group_by(taxon) %>%
-        dplyr::nest() %>%
+        tidyr::nest() %>%
         dplyr::mutate(q.value=purrr::map(data, ~ {
             method(.x$p.value)
         })) %>%
@@ -140,7 +140,7 @@ alt.multi.enrich <- function(results, mappings, dirxn=1,
     }
     tbl.mappings <- tibble::enframe(
         purrr::map(mappings, ~group_by_at(., colnames(.)[2]) %>%
-                       dplyr::nest() %>%
+                       tidyr::nest() %>%
                        dplyr::rename(term=1) %>%
                        dplyr::mutate(data=purrr::map(data, unlist)))) %>%
         dplyr::rename(termset=name, terms=value)
