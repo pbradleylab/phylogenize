@@ -5,7 +5,7 @@
 \title{Convert a matrix to a data frame of numeric values, then add a column for row
 names.}
 \usage{
-\method{prep}{mtx.for.write}(mtx, initial.octo = FALSE)
+prep.mtx.for.write(mtx, initial.octo = FALSE)
 }
 \arguments{
 \item{mtx}{Matrix to convert}

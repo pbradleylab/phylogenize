@@ -360,7 +360,7 @@ phylolm.subset <- function(p, m, phy) {
     m <- m[keep]
     p <- p[keep]
     phys <- keep.tips(phy, keep)
-    phylolm(p ~ m, phy = phys)
+    phylolm::phylolm(p ~ m, phy = phys)
 }
 
 

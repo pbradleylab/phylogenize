@@ -4,7 +4,7 @@
 \alias{result.wrapper.plm}
 \title{Fit phylogenetic (or linear) models, or perform POMS.}
 \usage{
-\method{result}{wrapper.plm}(
+result.wrapper.plm(
   taxa,
   pheno,
   tree,

@@ -4,7 +4,7 @@
 \alias{run.vsearch}
 \title{Run vsearch analysis on a FASTA file of sequences.}
 \usage{
-\method{run}{vsearch}(...)
+run.vsearch(...)
 }
 \value{
 Returns TRUE unless an error is thrown.
