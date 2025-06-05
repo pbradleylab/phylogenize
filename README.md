@@ -56,7 +56,7 @@ We have several premade databases that you can select from depending on what is 
 
 | Environment        | Version | Database | Number of families | Number of species | Link                                |
 |--------------------|---------|----------|--------------------|-------------------| ----------------------------------- |
-| human gut          | v2.0    | MGnify   | 203                | 4543              | [here](https://zenodo.org/records/15585455/files/phylogenize_data.zip?download=1) |
+| human gut          | v1.0    | MGnify   | 203                | 4543              | [here](https://zenodo.org/records/15585455/files/phylogenize_data.zip?download=1) |
 | mixed environment  | v202    | GTDB     | 3003               | 43058             | [here](https://zenodo.org/records/15585701/files/phylogenize_data.zip?download=1) |
 
 All databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
