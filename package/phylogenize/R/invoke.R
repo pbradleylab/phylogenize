@@ -232,7 +232,7 @@ get_all_associated_genes <- function(list_pheno,
     # trim out any that didn't get dropped
     result_lens <- vapply(results, length, 1L)
     results <- results[names(which(na.omit(result_lens>0)))]
-    return(get_signif_associated_genes(pz.db, results))
+    return(get_signif_associated_genes(list_pheno$pz.db, results))
 }
 
 #' Process genes by significance threshold.
