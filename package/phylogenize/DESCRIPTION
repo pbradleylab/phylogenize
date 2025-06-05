@@ -23,7 +23,6 @@ Depends:
     grDevices,
     functional,
     future,
-    cd,
     yaml,
     furrr,
     tidymodels,
