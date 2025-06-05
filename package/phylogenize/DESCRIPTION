@@ -1,6 +1,6 @@
 Package: phylogenize
 Title: Associate Microbial Prevalence, Specificity, and Abundance with Gene Presence
-Version: 1.9.9
+Version: 2.0.0.0001
 Authors@R: 
     person(given = "Patrick",
            family = "Bradley",
@@ -15,7 +15,6 @@ Depends:
     phylolm,
     settings,
     Matrix,
-    tidyverse,
     ggtree,
     biomformat,
     methods,
@@ -32,6 +31,10 @@ Depends:
     plotly
 Imports:
     readr,
+    dplyr,
+    stringr,
+    tibble,
+    purrr,
     parallel,
     qvalue,
     ape,
@@ -48,7 +51,6 @@ Imports:
     pbapply,
     gtools,
     svglite,
-    lobstr,
     testthat,
     ezknitr,
     plotly,

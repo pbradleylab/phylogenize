@@ -1,179 +1,161 @@
-# phylogenize (v0.94 beta)
+# Phylogenize2 (v2.0.0-alpha)
 
-*phylogenize* is a tool that allows users to link microbial genes to environments, accounting for phylogeny. More specifically, given community composition data, *phylogenize* links genes in microbial genomes to either microbial prevalence in, or specificity for, a given environment, while also taking into account an important potential confounder: the phylogenetic relationships between microbes. *phylogenize* comes with [web](https://www.phylogenize.org), QIIME 2, and R interfaces.
+Phylogenize2 allows users to link microbial genes to environments, accounting for phylogeny. More specifically, given community composition data Phylogenize2 links patterns of microbes in a given environment to genes in those microbes' pangenomes, while taking into account an important potential confounder: the phylogenetic relationships between microbes. We allow several different patterns to be calculated, including prevalence, specificity, and differential abundance (using [MaAsLin2](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1009442) or [ANCOM-BC2](https://www.nature.com/articles/s41467-020-17041-7)). By default, we use phylogenetic regression, but we also allow users to apply the alternative method [POMS](https://academic.oup.com/bioinformatics/article/38/22/5055/6731923). The method is described in a forthcoming preprint (Kananen et al., in preparation).
 
-The method is described fully in [Bradley, Nayfach, and Pollard (2018)](http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006242).
+In addition, we highly recommend using v2.0.0-alpha or later. We no longer support the use of earlier versions, as there are significant improvements since v0.91.
 
-## Installing phylogenize
-The easiest way to install all the dependencies needed is by using mamba or conda. We recommend using mamba's maintained [miniforge](https://github.com/conda-forge/miniforge). Miniforge is available for MacOS, Linux, and Windows. For all future examples, unless otherwise stated, we are assuming you are using Linux. 
+## Installing Phylogenize2
 
-To install miniforge, run `wget -c https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh` and then `bash Miniforge3-Linux-x86_64.sh`. You'll need to run through the prompts and then give it a download location if the default is not to your liking. Finally, you can let mamba initialize itself if you want mamba to always be in your "base" when you open the terminal. Otherwise, if you say `no` then you will have to manually source the executable for mamba which can be done similarly as `source /your/path/to/miniforge3/bin/activate`.
+The easiest way to install all the dependencies needed is by using mamba or conda. We recommend using [miniforge3](https://github.com/conda-forge/miniforge). Please make sure you are using miniforge v3-23.3.1-0 or later. Miniforge3 is available for MacOS, Linux, and Windows OS. Phylogenize is not tested on Windows (proceed with caution); for all future examples, unless otherwise stated, we are assuming you are using Linux.
 
-Now you are ready to start installing the dependencies.
+To install miniforge, run `wget -c https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh` and then in a terminal type `bash Miniforge3-Linux-x86_64.sh`. You'll need to run through the prompts and then give it a download location if the default is not to your liking. Finally, you can let miniforge initialize itself if you want conda to always be in your "base" when you open the terminal. Otherwise, if you say `no` then you will have to manually source the executable for conda which can be done similarly as `source /your/path/to/miniforge3/bin/activate`.
 
-Important::: We have replaced the BURST package with Vsearch. If you are having issues with BURST, please switch over to vsearch! 
+### Now you are ready to start installing the dependencies.
 
-### Locally - Command line and Rstudio (MacOS/Linux)
+Create a new environment by typing `conda create -n phylogenize` and `conda activate phylogenize`. Then you can install phylogenize by running `conda install bioconda::phylogenize`. For any future analysis, all you have to do is activate this environment to have the dependencies run.
+
+#### Locally - Command line and Rstudio (MacOS/Linux)
+
 Please note, we assume in these instructions you are working off of base-r and NOT Rstudio. We describe at the bottom of this section how to use Rstudio while still installing the dependencies with mamba.
 
 #### Install with mamba - configuration file
-You can make a conda evnironment using the supplied yaml file and not worry about installing any dependencies. Run `mamba env create -f environment.yml
-` and then `mamba activate phylogenize`. Open base-r (look below for how to use Rstudio) and then type `devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')` followed by `library("phylogenize")` and then `phylogenize::install.data.figshare()`.
-   
-#### Install with mamba - no configuration file
-1. Make sure you have R installed. You can verify if you type `R --version`. If you don't you can get the latest version [here](https://www.r-project.org/) or install it using mamba [here](https://anaconda.org/r/r).
-   
-   *P.S use this website to look for any packages you need to install. Conda is the older version of mamba and the commands are the same. For R the command is like so `mamba install -c r r`*
-2. Create a new environment in mamba by running `mamba create -n phylogenize`
-3. Activate your new environment with `mamba activate phylogenize`
-4. Install the dependencies with the bioconda and conda-forge channels as shown below
-```
-mamba install -y -c bioconda \
-	bioconductor-qvalue \
-	bioconductor-ggtree \
-	bioconductor-biomformat \
-	vsearch
-```
-```
-mamba install -y -c conda-forge \
-	r-devtools \
-	r-ragg \
-	r-phylolm \
-	r-phangorn	
-```
-5. Now you can install phylogenize by running either `R -e "devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')"` or by opening an R session and then running `devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')`.
-6. Run `library("phylogenize")` in your R session.
-7. Then download the necessary databases with `phylogenize::install.data.figshare()`
-##### Locally - Rstudio
-After creating a `phylogenize` environment in mamba, to install and use Rstudio run `mamba install -c r rstudio`. Then you can activate it by typing `rstudio`. This will launch an Rstudio IDE. There, if you haven't already, you can run `devtools::install_bitbucket('pbradz/phylogenize/package/phylogenize')` followed by `library("phylogenize")` and then `phylogenize::install.data.figshare()`.
 
-### QIIME 2
-QIIME 2 runs in a conda environment, meaning it has its own installation of R and related packages. To run phylogenize with QIIME 2, you will need to install phylogenize within the QIIME 2 conda environment, then install the [q2-phylogenize plugin](https://bitbucket.org/pbradz/q2-phylogenize). The instructions are similar for installing in any other conda environment, except you won't need the plugin.
+You can make a conda environment using the supplied yaml file and not worry about installing any dependencies. Run `conda env create -f environment.yml` and then `conda activate phylogenize`. Open base-r and then type `devtools::install_github("biocore/phylogenize")`.
 
-1. First, switch to the correct environment. For QIIME 2, this is accomplished with `source activate qiime2-2019.4` (see [here](https://docs.qiime2.org/2019.4/install/native/#activate-the-conda-environment)). Note that you may need to replace "2019.4" with the most recent version of QIIME2, e.g., "2020.6".
+#### Install with conda - no configuration file
 
-```
-options(unzip="internal")
-Sys.setenv(TAR="/bin/tar")   # replace with path to tar in your installation, if necessary
+1.  Make sure you have R installed. You can verify if you type `R --version`. If you don't you can get the latest version [here](https://www.r-project.org/) or install it using conda [here](https://anaconda.org/r/r).
+2.  Create a new environment in conda by running `conda create -n phylogenize`
+3.  Activate your new environment with `conda activate phylogenize`
+4.  Install the dependencies with the bioconda and conda-forge channels as shown below
+
+```         
+mamba install -y bioconda::phylogenize
 ```
 
-These options only stick around for your current session, so re-run them if you quit and come back to the installation process. You shouldn't need to run them once phylogenize is installed, though.
+4.  Open R and then run `library("phylogenize")`.
 
-Next try:
+#### Locally - Rstudio
 
-```
-ackages("BiocManager")
-BiocManager::install(c("qvalue","biomformat","ggtree"))
-Sys.setenv(R_REMOTES_NO_ERRORS_FROM_WARNINGS="true")
-devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
-phylogenize::install.data.figshare()    # nb: this may take a while to download
-```
+After creating a `phylogenize` environment with conda using `conda create -n phylogenize` and installing phylogenize `conda install bioconda::phylogenize`, to use Rstudio run `conda install r::rstudio`. Then you can activate it by typing `rstudio` in your terminal. This will launch an Rstudio IDE. There, if you haven't already, you can run followed by `library("phylogenize")`.
 
-To avoid causing problems elsewhere in QIIME2, we recommend *not* updating any other packages if prompted.
+### Installing Phylogenize2 package for use on AWS
 
-*Note* (updated 8/4/2020): If you get an error message about the package "mnormt" and/or "phylolm" not being available for R 3.5.1, try installing a specific version with the command `remotes::install_version("mnormt", "1.5-5"); remotes::install_version("phylolm", "2.6")`. Then retry the above commands starting from the `devtools::install_bitbucket` line.
+We recommend you install Phylogenize2 in a conda environment as above. However, because the default Amazon images are meant for headless operation they are missing some tools to deal with fonts that Phylogenize2 uses to generate its plots. You can install those as follows:
 
-*Note* (updated 8/10/2020): If you get errors installing the package "igraph" that relate to "-lgomp", first install libgomp from the command line (outside of R, but in your QIIME2 environment) with `conda install libgomp`. Because of some quirks in where conda expects libraries to be, you may then also need to manually put the `libgomp` library in your QIIME2 environment. You can do that with a soft-link, e.g., `ln -s ~/miniconda3/lib/libgomp.so ~/miniconda3/envs/qiime2-2020.6/x86_64-conda-linux-gnu/lib/`. Substitute your anaconda directory for "~/miniconda3" and your QIIME2 environment name for "qiime2-2020.6" as needed.
-
-*Note*: If you are having trouble with the `install_bitbucket` command on Windows or within the QIIME2 VM on Windows, you can try instead [downloading](https://bitbucket.org/pbradz/phylogenize/downloads/) the repository and unzipping it, then running:
-
-```
-devtools::install(pkg="[...]/package/phylogenize")
-```
-... where `[...]` should be replaced with the path where you unzipped the repository. Then run `install.data.figshare()` as above.
-
-Finally, install the plugin. From the UNIX command line (i.e., not in R -- you can use the command `quit()` or press Ctrl+D to leave the R environment; don't worry about "saving" since the packages will remain installed):
-
-```
-git clone https://bitbucket.org/pbradz/q2-phylogenize
-cd q2-phylogenize
-python setup.py build
-python setup.py install
-```
-
-Further information about how to use q2-phylogenize can be found on its [git repository](https://bitbucket.org/pbradz/q2-phylogenize). If you are just using conda and not QIIME 2, you can just proceed to the section entitled "Running *phylogenize* using the R interface."
-
-### Installing *phylogenize* package for use on AWS
-
-We recommend you install *phylogenize* in a conda environment as above. However, because the default Amazon images are meant for headless operation they are missing some tools to deal with fonts that *phylogenize* uses to generate its plots. You can install those as follows:
-
-```
+```         
 conda install -c conda-forge xorg-libxt
 sudo apt install zlib
 sudo apt show zlib1g
 sudo apt install fontconfig
 ```
 
-### Re-installing *phylogenize* after an upgrade
+## Selecting a database
 
-To **reinstall** *phylogenize*, the following should be all that's necessary:
+We have several premade databases that you can select from depending on what is expected to match your host's system. If you are unsure what database to use, then we recommend using GTDB as the default.
 
-```
-devtools::install_bitbucket("pbradz/phylogenize/package/phylogenize")
-phylogenize::install.data.figshare()
-```
+| Environment        | Version | Database | Number of families | Number of species | Link                                |
+|--------------------|---------|----------|--------------------|-------------------| ----------------------------------- |
+| human gut          | v2.0    | MGnify   | 203                | 4543              | [here](https://zenodo.org/records/15585455/files/phylogenize_data.zip?download=1) |
+| mixed environment  | v214    | GTDB     | 3003               | 43058             | [here](https://zenodo.org/records/15585701/files/phylogenize_data.zip?download=1) |
 
-## Running *phylogenize*
+All databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
 
-Congratulations! *phylogenize* should now be installed.
+Databases can be downloaded manually and decompressed from our Zenodo page [here](), or they can be downloaded and decompressed using Phylogenize2's `phylogenize::download.zenodo.db("your/html/link/here/")`. The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
 
-### Running *phylogenize* using the R interface
+## Running Phylogenize2
 
-The main function in *phylogenize* is `render.report`. The parameters that you are the most likely to use are as follows:
+Congratulations! Phylogenize2 should now be installed.
 
-| Option            | Default         |   Description  |
-|-------------------|-----------------|----------------|
+### Running Phylogenize2 using the R interface
+
+The main function in Phylogenize2 is called `phylogenize`. The parameters that you are the most likely to use are as follows:
+
+| Option | Default | Description |
+|----|----|----|
 | in_dir | "." | String. Path to input directory (i.e., where to look for input files. |
 | out_dir | "output" | String. Path to output directory. |
 | abundance_file | "test-abundance.tab" | String. Name of abundance tabular file. |
 | metadata_file | "test-metadata.tab" | String. Name of metadata tabular file. |
-| biom_file | "test.biom" | String. Name of BIOM abundance-and-metadata file. |
+| biom_file | "test.biom" | String. Name of BIOM abundance-and-metadata file, if using BIOM instead of tabular data. |
 | input_format | "tabular" | String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). |
 | ncl | 1 | Integer. Number of cores to use for parallel computation. |
-| type | "midas" |  Type of data to use, either "midas" (shotgun) or "16S" (amplicon). |
+| type_16S | FALSE | Boolean. Set to true if your species names are 16S ASV sequences, instead of species IDs from your database of interest. |
+| db | "uhgp" | String. Gives the database to use. Some options are "uhgp" and "gtdb"; see above for others. |
 | env_column | "env" | String. Name of column in metadata file containing the environment annotations. |
 | dset_column | "dataset" | String. Name of column in metadata file containing the dataset annotations. |
 | sample_column | "sample_id" | Name of column in metadata file containing the sample IDs. |
 | single_dset | FALSE | Boolean. If true, will assume that all samples come from a single dataset called `"dset1"` no matter what, if anything, is in `dset_column`. |
-| db_version | "midas_v1.2" | String. Which version of the MIDAS database to use ("midas_v1.2" or "midas_v1.0"). |
-| which_phenotype | "prevalence" | String. Which phenotype to calculate ("prevalence" or "specificity"). |
+| diff_abund_method | "maaslin2" | String. Which tool to use to give differential abundance estimates ("Maaslin2" or "ANCOMBC2"; case insensitive). |
+| which_phenotype | "prevalence" | String. Which phenotype to calculate ("prevalence", "abundance", "specificity", or "provided"). |
+| taxon_level | "family" | String. Run analyses for each of these taxonomic units (can be "phylum", "class", "order", "family", or "genus"; "family" is recommended). |
 | which_envir | "Stool" | String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. |
 
-Compared to some R packages, passing options to *phylogenize* works a little differently under the hood. Instead of having its own parameters, `render.report` and other *phylogenize* functions look for global options that can either be set using the function `pz.options` or overridden as extra arguments. This allows you to set parameters once and then work with the *phylogenize* functions without retyping them, and therefore makes the code easier to read. To see the full list of parameters that can be overridden, see `?pz.options`.
+Compared to some R packages, passing options to Phylogenize2 works a little differently under the hood. Instead of having its own parameters, `phylogenize` and other Phylogenize2 functions look for global options that can either be set using the function `pz.options` or overridden as extra arguments. This allows you to set parameters once and then work with the Phylogenize2 functions without retyping them, and therefore makes the code easier to read. To see the full list of parameters that can be overridden, see `?pz.options`.
 
-Here is an example invocation of `render.report`: 
+Here is an example invocation:
 
-~~~~
+```         
 library(phylogenize)
-render.report(
-    output_file="16S-results.html",
-    in_dir="/home/kananen13/workspace/bradleyLab/tools/phylogenize/phylogenize/hmp/",
-    out_dir=file.path("hmp", "16S-results"),
-    type="midas",
-    db_version="midas_v1.0",
-    which_phenotype="prevalence",
-    which_envir="Stool",
-    abundance_file="hmp-shotgun-bodysite.tab",
-    metadata_file="hmp-shotgun-bodysite-metadata.tab", 
-    input_format="tabular",
-    ncl=10)
-~~~~
+cirrhosis_family_abundance <- phylogenize(
+  output_file="cirrhosis-fam-abd.html",
+  output_rds_file="cirrhosis-fam-abd.rds",
+  out_dir=file.path("output", "cirrhosis_uhgp_abd_family"),
+  db="uhgp",
+  taxon_level="family",
+  type_16S=FALSE,
+  which_phenotype="abundance",
+  diff_abund_method="maaslin2",
+  which_envir="case",
+  abundance_file="test_data/cirr/cirrhosis-abundance.tab",
+  metadata_file="test_data/cirr/cirrhosis-metadata.tab", 
+  input_format="tabular",
+  sample_column="sampleid",
+  ncl=4)
+```
 
-This invocation will generate a report under "./hmp/16S-results" called "16S-results.html".
+This invocation will run Phylogenize2 with four cores, using Maaslin2 to get differential abundance of microbes between cases and controls, and using the UHGP human gut database. It will then output the report to `output/cirrhosis_uhgp_abd_family/cirrhosis-fam-abd.html` and will also generate a so-called RDS object under `output/cirrhosis_uhgp_abd_family/cirrhosis-fam-abd.rds` that contains the full output generated by Phylogenize2, so that you can later re-generate just the report if desired.
 
-Note that for now it is necessary to call `phylogenize::set_data_internal()` if you don't explicitly load the package with `library(phylogenize)`; that function is automatically triggered when the package is loaded with `library()`.
+You can also run just the analysis part of Phylogenize2 using the function `phylogenize_core()`, or just render a new report from an existing analysis run of Phylogenize2 using `render_core_report()`. (Note that `phylogenize_core()` does not save a RDS file of its results by default, but you can save it with `saveRDS`.) The above call would be equivalent to:
 
+```         
+cirrhosis_family_abundance <- phylogenize_core(
+  db="uhgp",
+  taxon_level="family",
+  type_16S=FALSE,
+  which_phenotype="abundance",
+  diff_abund_method="maaslin2",
+  which_envir="case",
+  abundance_file="test_data/cirr/cirrhosis-abundance.tab",
+  metadata_file="test_data/cirr/cirrhosis-metadata.tab", 
+  input_format="tabular",
+  sample_column="sampleid",
+  ncl=4)
+  
+saveRDS(cirrhosis_family_abundance, 
+  output_rds_file="output/cirrhosis_uhgp_abd_family/cirrhosis-fam-abd.rds")
+  
+# To load this output back into memory after writing to disk:
+# cirrhosis_family_abundance <- readRDS("output/cirrhosis_uhgp_abd_family/cirrhosis-fam-abd.rds")
 
-### Running *phylogenize* locally with the web interface
+render_core_report(
+  cirrhosis_family_abundance,
+  output_file="cirrhosis-fam-abd.html",
+  out_dir=file.path("output", "cirrhosis_uhgp_abd_family"))
+```
 
-*phylogenize* also can be used with its own graphical user interface and job manager, which can be accessed with a web browser. We provide an installation of *phylogenize* at [https://www.phylogenize.org], but you can also run this interface locally. (The next part of the guide assumes a \*-nix environment like Ubuntu or OS X, but you may also be able to run this on Windows using the Windows Subsystem for Linux or Cygwin.)
+### Running Phylogenize2 locally with the web interface
 
-The *phylogenize* web interface is written as a Flask WSGI app. If you are just going to be running it on your own computer or within a trusted intranet, you can probably use the built-in Flask server. (If you are concerned about security and will be allowing potentially untrusted users to use the server, or if the built-in Flask server is inadequate for any other reason, we recommend using a production web server like Apache2. The Flask documentation has [some information](http://flask.pocoo.org/docs/1.0/deploying/mod_wsgi/) on how to get started hosting a WSGI app on Apache2 using `mod_wsgi`.)
+Phylogenize2 also can be used with its own graphical user interface and job manager, which can be accessed with a web browser. We provide an installation of Phylogenize2 at [<https://www.phylogenize.org>], but you can also run this interface locally. (The next part of the guide assumes a \*-nix environment like Ubuntu or OS X, but you may also be able to run this on Windows using the Windows Subsystem for Linux or Cygwin.)
+
+The Phylogenize2 web interface is written as a Flask WSGI app. If you are just going to be running it on your own computer or within a trusted intranet, you can probably use the built-in Flask server. (If you are concerned about security and will be allowing potentially untrusted users to use the server, or if the built-in Flask server is inadequate for any other reason, we recommend using a production web server like Apache2. The Flask documentation has [some information](http://flask.pocoo.org/docs/1.0/deploying/mod_wsgi/) on how to get started hosting a WSGI app on Apache2 using `mod_wsgi`.)
 
 We recommend installing Flask using a virtual environment as per the instructions [here](http://flask.pocoo.org/docs/1.0/installation/). Once you have activated the virtual environment, before running the app but after cloning the repository with `git clone`, you will need to launch the Beanstalk-based queueing system. From the repository root, run:
 
-    nohup beanstalkd -l 127.0.0.1 -p 14711 &
-    nohup python3 phylogenize_app/worker.py &
+```         
+nohup beanstalkd -l 127.0.0.1 -p 14711 &
+nohup python3 phylogenize_app/worker.py &
+```
 
 To keep these jobs running if the terminal is closed, you may want to `disown` these jobs or alternatively, start them in a `tmux` or `screen` session.
 
@@ -181,21 +163,20 @@ To allow multiple simultaneous jobs, you will need to edit `worker.py` and chang
 
 Next, you will need to start the server as follows:
 
-     FLASK_APP=phylogenize_app flask run
+```         
+ FLASK_APP=phylogenize_app flask run
+```
 
-The application should then be accessible from http://localhost:5000.
+The application should then be accessible from <http://localhost:5000>.
 
 ## Acknowledgements
 
- * Project lead and repository maintainer: [Patrick H. Bradley](http://docpollard.org/people/patrick-j-h-bradley/)
- * Principal investigator: [Katherine S. Pollard](http://docpollard.org)
- * Testing, troubleshooting, and debugging AWS/Mac installation: [Chunyu Zhao](https://github.com/zhaoc1)
- * More testing: [Jordan Bisanz](https://github.com/jbisanz) and other members of the [Turnbaugh lab](https://turnbaughlab.ucsf.edu/)
- * Funding: 
-     - National Science Foundation (DMS-106[]9303, DMS-156[]3159)
-     - Gordon & Betty Moore Foundation (#3300)
+-   Principal investigator: [Patrick H. Bradley](https://bradleylab.science)
+-   Development: Kathryn Kananen, Nia Tran, [Patrick H. Bradley](https://bradleylab.science)
+-   Funding:
+    -   Startup funds from The Ohio State University
+    -   National Institutes of Health, NIGMS R35GM151155
 
 ## Contact
 
-If you have questions or comments, please contact [support@phylogenize.org]. If *phylogenize* is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!
- 
+If you have questions or comments, please contact [[support\@phylogenize.org](mailto:support@phylogenize.org){.email}]. If Phylogenize2 is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!

@@ -23,5 +23,5 @@ hits.}
 \description{
 This function wraps single.cluster.plot, running it in a separate process.
 This is because there can be problems with memory leaks. For relevant global
-options, see the doumentation for that function.
+options, see the documentation for `pz.options`.
 }

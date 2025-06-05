@@ -367,7 +367,7 @@ style.parse <- function(str) {
 #'
 #' @param tree.obj A ggtree object.
 #' @param file File to which an SVG representation of this tree object will be written.
-#' @param name. String. the name of the taxon being added. Used for title.
+#' @param name String. the name of the taxon being added. Used for title.
 #' @export
 non.interactive.plot <- function(tree.obj, file, name) {
     warning(paste0("replotting to: ", file))
@@ -379,7 +379,8 @@ non.interactive.plot <- function(tree.obj, file, name) {
     tree <- ggtree(as.phylo(tree.obj$tree)) +
                 geom_point(data = valid_labels, aes(text = label, color = color)) +
                 geom_tiplab(data = valid_labels, aes(color = color)) +
-		ggtitle(name)
+		ggtitle(name) +
+        labs(color="phenotype")
     
     # Write to an svg
     svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
