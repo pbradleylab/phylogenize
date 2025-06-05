@@ -158,17 +158,17 @@ set_data_internal <- function(fail=FALSE, startup=FALSE) {
     } else {
         if (dd == "") {
             if (!fail) {
-                M("Installing data from Figshare...")
-                success <- tryCatch(install.data.figshare(), error = function(e) {
+                M("Installing data from Zenodo...")
+                success <- tryCatch(install.data.zenodo(opts('database_zenodo_url')), error = function(e) {
                     warning(paste("Installing from Figshare failed: ", e))
                     return(FALSE)
                 })
             }
             if (!success) {
                 warning(paste("Data not found; *phylogenize* will not run",
-                              "properly. Please try",
-                              "phylogenize::install.data.figshare()",
-                              "later or install the data manually into",
+                              "properly. Please try to download a database",
+			      "By default we will download gtdb using phylogenize::install.data.zenodo(url)",
+                              "for manual download install the data into",
                               file.path(system.file("", package="phylogenize"),
                                         "extdata"),
                               "."))
@@ -197,7 +197,7 @@ check_data_found <- function(fail=FALSE, startup=FALSE) {
     if (dd == "") {
         M(paste("Data not found; *phylogenize* will not run",
                 "properly. Please try",
-                "phylogenize::install.data.figshare()",
+                "phylogenize::install.data.zenodo(url)",
                 "later or install the data manually into",
                 file.path(system.file("", package="phylogenize"),
                           "extdata"),
