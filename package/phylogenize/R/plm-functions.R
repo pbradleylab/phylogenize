@@ -145,7 +145,7 @@ matrix.POMS <- function(tree,
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     
-    phylotype_df <- data.frame(t(mtx[restrict.ff, ]))
+    phylotype_df <- data.frame(as.matrix(t(mtx[restrict.ff, ])))
     tree_nodes <- makeNodeLabel(tree)
     poms_output <- POMS::POMS_pipeline(abun=data.frame(abd.meta$abd),
                                        func=phylotype_df,

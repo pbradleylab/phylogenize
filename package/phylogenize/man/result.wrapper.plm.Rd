@@ -15,6 +15,7 @@ result.wrapper.plm(
   drop.zero.var = FALSE,
   only.return.names = FALSE,
   abd.meta = FALSE,
+  poms = FALSE,
   ...
 )
 }
@@ -46,6 +47,8 @@ genes to be tested (for debugging).}
 
 \item{abd.meta}{List containing abundances and metadata (only required for
 POMS)}
+
+\item{poms}{Boolean; whether to run POMS instead of phylolm.}
 }
 \value{
 Named list of p-value and effect-size matrices, one per taxon.

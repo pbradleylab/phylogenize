@@ -197,20 +197,20 @@ get_all_associated_genes <- function(list_pheno,
     pz.options <- clone_and_merge(PZ_OPTIONS, ...)
     if (!do_POMS) {
     phenotype <- list_pheno$phenotype_results$phenotype
-    taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$species)))
+    taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
         if (pz.options('ncl') > 1) {
             results <- result.wrapper.plm(taxa=taxaN,
                                           pheno=phenotype,
-                                          tree=pz.db$trees[taxaN],
-                                          clusters=pz.db$species[taxaN],
-                                          proteins=pz.db$gene.presence[taxaN],
+                                          tree=list_pheno$pz.db$trees[taxaN],
+                                          clusters=list_pheno$pz.db$species[taxaN],
+                                          proteins=list_pheno$pz.db$gene.presence[taxaN],
                                           method=p.method,
                                           ncl=pz.options('ncl'))
 	} else {
             results <- mapply(nonparallel.results.generator,
-                              pz.db$gene.presence[taxaN],
-                              pz.db$trees[taxaN],
-                              pz.db$species[taxaN],
+                              list_pheno$pz.db$gene.presence[taxaN],
+                              list_pheno$pz.db$trees[taxaN],
+                              list_pheno$pz.db$species[taxaN],
                               as.list(taxaN),
                               MoreArgs=list(pheno=phenotype,
                                             method=p.method,
@@ -218,12 +218,12 @@ get_all_associated_genes <- function(list_pheno,
                               SIMPLIFY=FALSE)
         }
     } else {
-	    taxaN <- names(pz.db$species)
+	    taxaN <- names(list_pheno$pz.db$species)
         results <- result.wrapper.plm(taxa=taxaN,
                                        pheno=NULL,
-                                       tree=pz.db$trees[taxaN],
-                                       clusters=pz.db$species[taxaN],
-                                       proteins=pz.db$gene.presence[taxaN],
+                                       tree=list_pheno$pz.db$trees[taxaN],
+                                       clusters=list_pheno$pz.db$species[taxaN],
+                                       proteins=list_pheno$pz.db$gene.presence[taxaN],
                                        method=p.method,
 				       poms=TRUE,
 				       abd.meta=list_pheno$abd.meta,
