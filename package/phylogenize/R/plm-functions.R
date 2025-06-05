@@ -146,8 +146,11 @@ matrix.POMS <- function(tree,
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     
     phylotype_df <- data.frame(as.matrix(t(mtx[restrict.ff, ])))
-    tree_nodes <- makeNodeLabel(tree)
-    poms_output <- POMS::POMS_pipeline(abun=data.frame(abd.meta$abd),
+    tree_nodes <- ape::makeNodeLabel(tree)
+    # Don't check names because this will potentially change them, meaning 
+    # they won't match the metadata anymore
+    poms_output <- POMS::POMS_pipeline(abun=data.frame(abd.meta$mtx,
+						       check.names=FALSE),
                                        func=phylotype_df,
                                        tree=tree_nodes,
                                        group1_samples=poms_group1,
