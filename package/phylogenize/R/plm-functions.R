@@ -18,6 +18,7 @@
 #'   genes to be tested (for debugging).
 #' @param abd.meta List containing abundances and metadata (only required for
 #'   POMS)
+#' @param poms Boolean; whether to run POMS instead of phylolm.
 #' @return Named list of p-value and effect-size matrices, one per taxon.
 #' @export result.wrapper.plm
 result.wrapper.plm <- function(taxa,
@@ -30,6 +31,7 @@ result.wrapper.plm <- function(taxa,
                                drop.zero.var = FALSE,
                                only.return.names = FALSE,
                                abd.meta = FALSE,
+			       poms = FALSE,
                                ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     lapply.across.names(taxa, function(p) {
@@ -67,6 +69,14 @@ result.wrapper.plm <- function(taxa,
         }
         
 	if (!only.return.names) {
+		if (poms) {
+			matrix.POMS(tr,
+				    proteins[[p]],
+				    abd.meta,
+				    restrict.taxa=valid,
+				    restrict.ff=restrict.figfams,
+				    ...)
+		} else {
             matrix.plm(tr,
                        proteins[[p]],
                        pheno,
@@ -74,6 +84,7 @@ result.wrapper.plm <- function(taxa,
                        restrict.taxa = valid,
                        restrict.ff = restrict.figfams,
                        ...)
+		}
             
         } else {
             restrict.figfams

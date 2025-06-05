@@ -75,12 +75,11 @@ phylogenize_core <- function(
 ) {
     options <- clone_and_merge(PZ_OPTIONS, ...)
     list_pheno <- data_to_phenotypes(
-        save_data = (!do_POMS || override_save_data),
+        save_data = (!do_POMS || force_return_data),
         ...
     )
     list_signif <- get_all_associated_genes(
-        list_pheno$pz.db,
-        list_pheno$phenotype_results$phenotype,
+        list_pheno,
         do_POMS,
         p.method,
         ...)
@@ -182,3 +181,185 @@ augment_with_enrichments <- function(core) {
         print_out=TRUE)
     core
 }
+
+
+#' Perform either phylogenetic regression or POMS.
+#'
+#' @param lixt_pheno A list, the result of data_to_phenotypes
+#' @param abd.meta A list consisting of a species abundance matrix and the
+#'     metadata (from read.abd.metadata or data_to_phenotypes).
+#' @param ... Parameters to override defaults.
+#' @export
+get_all_associated_genes <- function(list_pheno,
+                                     do_POMS=FALSE,
+                                     p.method=phylolm.fx.pv,
+                                     ...) {
+    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+    if (!do_POMS) {
+    phenotype <- list_pheno$phenotype_results$phenotype
+    taxaN <- names(which(pheno_nonzero_var(phenotype, pz.db$species)))
+        if (pz.options('ncl') > 1) {
+            results <- result.wrapper.plm(taxa=taxaN,
+                                          pheno=phenotype,
+                                          tree=pz.db$trees[taxaN],
+                                          clusters=pz.db$species[taxaN],
+                                          proteins=pz.db$gene.presence[taxaN],
+                                          method=p.method,
+                                          ncl=pz.options('ncl'))
+	} else {
+            results <- mapply(nonparallel.results.generator,
+                              pz.db$gene.presence[taxaN],
+                              pz.db$trees[taxaN],
+                              pz.db$species[taxaN],
+                              as.list(taxaN),
+                              MoreArgs=list(pheno=phenotype,
+                                            method=p.method,
+                                            use.for.loop=FALSE),
+                              SIMPLIFY=FALSE)
+        }
+    } else {
+	    taxaN <- names(pz.db$species)
+        results <- result.wrapper.plm(taxa=taxaN,
+                                       pheno=NULL,
+                                       tree=pz.db$trees[taxaN],
+                                       clusters=pz.db$species[taxaN],
+                                       proteins=pz.db$gene.presence[taxaN],
+                                       method=p.method,
+				       poms=TRUE,
+				       abd.meta=list_pheno$abd.meta,
+				       )
+    }
+    # trim out any that didn't get dropped
+    result_lens <- vapply(results, length, 1L)
+    results <- results[names(which(na.omit(result_lens>0)))]
+    return(get_signif_associated_genes(pz.db, results))
+}
+
+#' Process genes by significance threshold.
+#'
+#' @param pz.db A database (typically obtained with \code{import.pz.db}).
+#' @param results Results object from \code{get_all_associated_genes}.
+#' @param ... Parameters to override defaults.
+#' @export
+get_signif_associated_genes <- function(pz.db,
+                                        results,
+                                        ...) {
+    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+    signif <- make.sigs(results)
+    signs <- make.signs(results)
+    pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
+    results.matrix <- make.results.matrix(results)
+    phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
+    pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
+    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig)
+    pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs,
+                                          pos.sig.thresh,
+                                          pz.db$gene.to.fxn)
+    # recalculate, since some of these may go away
+    phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
+    return(list(
+        results=results, #1
+        signif=signif,   #2
+        signs=signs,     #3
+        pos.sig=pos.sig, #4
+        results.matrix=results.matrix,            #5
+        phy.with.sigs=phy.with.sigs,              #6
+        pos.sig.descs=pos.sig.descs,              #7
+        pos.sig.thresh=pos.sig.thresh,            #8
+        pos.sig.thresh.descs=pos.sig.thresh.descs #9
+    ))
+}
+
+
+#' Get enrichment tables.
+#'
+#' @param signif Significant genes.
+#' @param signs Signs of effect sizes.
+#' @param pz.db A database (typically obtained with \code{import.pz.db}).
+#' @param results.matrix Matrix of full results.
+#' @param export Write enrichment tables to disk? (Default: FALSE)
+#' @param ... Parameters to override defaults.
+#' @export
+get_enrichment_tbls <- function(signif,
+                                signs,
+                                pz.db,
+                                results.matrix,
+                                export=FALSE,
+                                ...) {
+    pretty.enr.tbl <- NULL
+    enr.overlap <- NULL
+    enrichment.tbl <- multi.kegg.enrich(signif,
+                                        signs,
+                                        pz.db$gene.to.fxn)
+    if (!is.null(enrichment.tbl)) {
+        enrichment.tbl <- dplyr::filter(enrichment.tbl,
+                                        qvalue <= 0.25, enr.estimate > 1)
+        pretty.enr.tbl <- dplyr::select(enrichment.tbl,
+                                        taxon,
+                                        cutoff,
+                                        ID,
+                                        Description,
+                                        qvalue,
+                                        enr.estimate) %>%
+            dplyr::rename(Gene_significance=cutoff,
+                          Taxon=taxon,
+                          Description=Description,
+                          q_value=qvalue,
+                          Enrichment_odds_ratio=enr.estimate) %>%
+            dplyr::arrange(factor(Gene_significance, levels=names(signif[[1]])),
+                           Taxon,
+                           q_value)
+        if (export) {
+            write.csv(file=file.path(pz.options('out_dir'),
+                                     "enr-table.csv"),
+                      pretty.enr.tbl)
+        }
+    }
+    if (!is.null(pretty.enr.tbl)) {
+        accession_to_fxn <- pz.db$gene.to.fxn %>%
+            dplyr::select(accession, `function`) %>%
+            dplyr::distinct()
+        if (nrow(enrichment.tbl) > 0) {
+            enr.overlap <- dplyr::select(enrichment.tbl,
+                                         taxon,
+                                         cutoff,
+                                         ID,
+                                         Description,
+                                         geneID) %>%
+                tidyr::separate_longer_delim(geneID, delim="/") %>%
+                dplyr::left_join(.,
+                                 accession_to_fxn,
+                                 by=c("geneID"="accession")) %>%
+                dplyr::rename(gene=geneID, description=`function`) %>%
+                dplyr::mutate(effectsize=purrr::map2_dbl(
+                    taxon,
+                    gene,
+                    ~ {
+                        tryCatch({
+                            value <- results.matrix[[.x]][1, .y]
+                            if (length(value) == 0) {
+                                return(NA_real_)
+                            }
+                            return(value)
+                        }, error = function(e) {
+                            return(NA_real_)
+                        })
+                    }))
+            if (export) {
+                write.csv(file=file.path(pz.options('out_dir'),
+                                         "enr-overlaps.csv"),
+                          enr.overlap)
+                write.csv(file=file.path(pz.options('out_dir'),
+                                         "enr-overlaps-sorted.csv"),
+                          dplyr::arrange(enr.overlap,
+                                         taxon,
+                                         factor(cutoff,
+                                                levels=names(signif[[1]])),
+                                         desc(effectsize)))
+            }
+        }
+    }
+    return(pretty.enr.tbl)
+}  
+
+

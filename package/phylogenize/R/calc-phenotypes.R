@@ -19,6 +19,13 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
         abd.meta <- add.below.LOD(pz.db, abd.meta, ...)
         sanity.check.abundance(abd.meta$mtx, ...)
     }
+    if (tolower(pz.options('core_method')) == 'poms') {
+	pz.message("Skipping phenotype calculation for POMS")
+    	return(list(
+			abd.meta=abd.meta,
+			pz.db=pz.db,
+			phenotype_results=NULL))
+    }
     phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
     if (pz.options('which_phenotype') %in% c("specificity", "abundance")) {
         # only retain observed taxa
