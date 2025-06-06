@@ -96,6 +96,10 @@ taxa that are neither.
 
 # Unpack pz.db and phenotype results to current environment
 list2env(core[["list_pheno"]], environment())
+
+if (!("phenotype_results") %in% core[["list_pheno"]]) { skip_phenotypes <- TRUE } else { skip_phenotypes <- FALSE }
+
+if (!(skip_phenotypes)) {
 # Also unpack "phenotype, phenoP, mapped.observed" into current environment
 list2env(core[["list_pheno"]][["phenotype_results"]], environment())
 
@@ -119,7 +123,10 @@ plots <- lapply(1:length(pheno.distros), function(nm) {
 write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
             phenotype,
             sep = '\t')
+} else {
 
+pz.message("Skipping phenotypes, as not found (possibly because POMS was used)")
+}
 # be a little parsimonious with memory here
 gc()
 ```
@@ -128,6 +135,7 @@ gc()
 ### All Taxa
 ```{r plot_phenos_on_trees, echo=FALSE, warning = FALSE, results='asis', cache=FALSE}
 
+if (!(skip_phenotypes)) {
 plots <- list()
 if (!pz.options('skip_graphs')) {
 	plots <- plot.labeled.phenotype.trees(plotted.pheno.trees,
@@ -141,12 +149,13 @@ phylogenize::knitPrintListPlots(
 	titles = NULL, 
 	titleLevel = NULL
 )
-
+}
 ```
 
 ### Only Mapped/Observed Taxa
 ```{r plot_phenos_on_observed_trees, echo=FALSE, warning=FALSE, results='asis', warning = FALSE, message = FALSE, cache=FALSE}
 
+if (!(skip_phenotypes)) {
 pheno.labels <- names(phenotype)
 subtrees <- lapply(pz.db$trees, function(tr) {
   keep.tips(tr, intersect(mapped.observed, pheno.labels))
@@ -173,7 +182,7 @@ phylogenize::knitPrintListPlots(
         titles = NULL,
         titleLevel = NULL
 )
-
+}
 ```
 # Gene Associations and Significance
 Analysis of the genes associated to taxa including their significance, presence/absence 
