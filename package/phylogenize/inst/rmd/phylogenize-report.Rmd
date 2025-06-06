@@ -22,6 +22,8 @@ params:
 library(phylogenize)
 library(Matrix)
 
+pz.warning(paste(names(core)))
+
 cache.d <- file.path(pz.options('out_dir'), 'cache')
 dir.create(pz.options('out_dir'))
 dir.create(cache.d)
@@ -234,7 +236,7 @@ and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
 
 ```{r enrichment_tables, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE, results='axsis'}
-do_enrichment <- ("enr_tbls" %in% names(core))
+do_enrichment <- (("enr_tbls" %in% names(core)) && !(is.null(core[["enr_tbls"]])))
 if (do_enrichment) {
     table <- phylogenize::getClinDT(core[["enr_tbls"]]) |>
         DT::formatStyle(
