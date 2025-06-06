@@ -54,10 +54,22 @@ sudo apt install fontconfig
 
 We have several premade databases that you can select from depending on what is expected to match your host's system. If you are unsure what database to use, then we recommend using GTDB as the default.
 
-| Environment        | Version | Database | Number of families | Number of species | Link                                |
-|--------------------|---------|----------|--------------------|-------------------| ----------------------------------- |
-| human gut          | v2.0    | MGnify   | 203                | 4543              | [here](https://zenodo.org/records/15585455/files/phylogenize_data.zip?download=1) |
-| mixed environment  | v202    | GTDB     | 3003               | 43058             | [here](https://zenodo.org/records/15585701/files/phylogenize_data.zip?download=1) |
+| Environment        | Version | Database | Number of families | Number of species |
+|---------------|---------------|---------------|---------------|---------------|
+| chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |
+| cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |
+| honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |
+| human gut          | v2.0.2  | MGnify   | 215                | 3445              |
+| human oral         | v1.0.1  | MGnify   | 52                 | 260               |
+| human vaginal      | v1.0    | MGnify   | 52                 | 189               |
+| marine eukaryotes  | vbeta   | MGnify   | 250                | 250               |
+| marine             | v2.0    | MGnify   | 1192               | 7408              |
+| mouse gut          | v1.0    | MGnify   | 136                | 1639              |
+| non model fish gut | v2.0    | MGnify   | 60                 | 87                |
+| pig gut            | v1.0    | MGnify   | 138                | 800               |
+| sheep rumen        | v1.0    | MGnify   | 117                | 2122              |
+| zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |
+| mixed environment  | v202    | GTDB     | 3003               | 43058             |
 
 All databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
 
@@ -72,7 +84,7 @@ Congratulations! Phylogenize2 should now be installed.
 The main function in Phylogenize2 is called `phylogenize`. The parameters that you are the most likely to use are as follows:
 
 | Option | Default | Description |
-|----|----|----|
+|--------------------------|------------------------|----------------------|
 | in_dir | "." | String. Path to input directory (i.e., where to look for input files. |
 | out_dir | "output" | String. Path to output directory. |
 | abundance_file | "test-abundance.tab" | String. Name of abundance tabular file. |
@@ -143,31 +155,6 @@ render_core_report(
   output_file="cirrhosis-fam-abd.html",
   out_dir=file.path("output", "cirrhosis_uhgp_abd_family"))
 ```
-
-### Running Phylogenize2 locally with the web interface
-
-Phylogenize2 also can be used with its own graphical user interface and job manager, which can be accessed with a web browser. We provide an installation of Phylogenize2 at [<https://www.phylogenize.org>], but you can also run this interface locally. (The next part of the guide assumes a \*-nix environment like Ubuntu or OS X, but you may also be able to run this on Windows using the Windows Subsystem for Linux or Cygwin.)
-
-The Phylogenize2 web interface is written as a Flask WSGI app. If you are just going to be running it on your own computer or within a trusted intranet, you can probably use the built-in Flask server. (If you are concerned about security and will be allowing potentially untrusted users to use the server, or if the built-in Flask server is inadequate for any other reason, we recommend using a production web server like Apache2. The Flask documentation has [some information](http://flask.pocoo.org/docs/1.0/deploying/mod_wsgi/) on how to get started hosting a WSGI app on Apache2 using `mod_wsgi`.)
-
-We recommend installing Flask using a virtual environment as per the instructions [here](http://flask.pocoo.org/docs/1.0/installation/). Once you have activated the virtual environment, before running the app but after cloning the repository with `git clone`, you will need to launch the Beanstalk-based queueing system. From the repository root, run:
-
-```         
-nohup beanstalkd -l 127.0.0.1 -p 14711 &
-nohup python3 phylogenize_app/worker.py &
-```
-
-To keep these jobs running if the terminal is closed, you may want to `disown` these jobs or alternatively, start them in a `tmux` or `screen` session.
-
-To allow multiple simultaneous jobs, you will need to edit `worker.py` and change MaxJobs as appropriate. It may be worth starting with a single job, particularly if each job runs multi-threaded, to make sure memory use stays reasonable.
-
-Next, you will need to start the server as follows:
-
-```         
- FLASK_APP=phylogenize_app flask run
-```
-
-The application should then be accessible from <http://localhost:5000>.
 
 ## Acknowledgements
 

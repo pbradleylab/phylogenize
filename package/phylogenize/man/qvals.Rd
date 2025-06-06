@@ -13,7 +13,8 @@ qvals(x, ...)
 \arguments{
 \item{x}{A vector of p-values.}
 
-\item{...}{Extra parameters to override defaults, especially `fdr_method` (which can be "BH", "BY", or "qvalue).}
+\item{...}{Extra parameters to override defaults, especially `fdr_method`
+(which can be "BH", "BY", or "qvalue).}
 }
 \value{
 A vector of q-values.

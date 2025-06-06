@@ -18,9 +18,11 @@ regularize.pET(
 \arguments{
 \item{vec}{A named numeric vector giving presence/absence across samples.}
 
-\item{env.ids}{A named factor assigning an environment to each sample (names).}
+\item{env.ids}{A named factor assigning an environment to each sample
+(names).}
 
-\item{which.env}{A string: in which environment should specificity be calculated?}
+\item{which.env}{A string: in which environment should specificity be
+calculated?}
 
 \item{prior}{Prior probability of \code{which.env}}
 
@@ -35,10 +37,9 @@ regularize.pET(
 }
 \value{
 A list. \code{x}: regularized specificity estimate; \code{p}:
-    regularized prevalence estimate; \code{x.init}: naive specificity
-    estimate; \code{p.init}: naive prevalence estimate; \code{pT}:
-    probability of encountering a particular taxon, marginalized across
-    environments
+  regularized prevalence estimate; \code{x.init}: naive specificity estimate;
+  \code{p.init}: naive prevalence estimate; \code{pT}: probability of
+  encountering a particular taxon, marginalized across environments
 }
 \description{
 Obtain a regularized estimate of specificity.

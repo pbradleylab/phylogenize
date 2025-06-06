@@ -11,7 +11,7 @@ output.enr.table(enr.table)
 }
 \value{
 Mutated enrichment table with better-labeled columns and significance
-    coloring.
+  coloring.
 }
 \description{
 Make a pretty enrichment table.

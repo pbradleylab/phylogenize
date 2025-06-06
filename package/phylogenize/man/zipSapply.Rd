@@ -8,11 +8,12 @@ simplification at the end to an array.}
 zipSapply(iterover, fxn, ...)
 }
 \arguments{
-\item{iterover}{List to iterate over. This list will be transformed by \code{zipData}.}
+\item{iterover}{List to iterate over. This list will be transformed by
+\code{zipData}.}
 
 \item{fxn}{A function to apply to each element \code{x} of
-\code{zipData(iterover)}, where the name is accessible as \code{x$name}
-and the original list element is accessible as \code{x$data}.}
+\code{zipData(iterover)}, where the name is accessible as \code{x$name} and
+the original list element is accessible as \code{x$data}.}
 }
 \description{
 A wrapper for lapply that allows access to list element names, with

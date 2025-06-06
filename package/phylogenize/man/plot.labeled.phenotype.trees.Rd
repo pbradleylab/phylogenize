@@ -21,7 +21,8 @@
 
 \item{stroke.scale}{How thick to make the highlight.}
 
-\item{units}{A string appended to each label, used to give units of phenotype.}
+\item{units}{A string appended to each label, used to give units of
+phenotype.}
 }
 \value{
 list containing plot.labeled.phenotype.trees

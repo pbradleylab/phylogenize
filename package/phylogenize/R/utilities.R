@@ -137,9 +137,10 @@ truncated <- function(x, lim = c(logit(0.001), logit(0.25))) {
 #' Wrapper around fastread that preserves row names.
 #'
 #' @param location Path to file to be read.
-#' @param cn Whether to check that the row names are valid, non-duplicated R row names.
+#' @param cn Whether to check that the row names are valid, non-duplicated R row
+#'   names.
 #' @return A data matrix with rownames equal to the first column of the input
-#'     file and colnames equal to the first row.
+#'   file and colnames equal to the first row.
 #' @keywords internal
 fastread <- function(location, cn = TRUE) {
     # rownames are useful
@@ -152,7 +153,8 @@ fastread <- function(location, cn = TRUE) {
 #' Apply a function over a margin of a matrix in parallel.
 #'
 #' @param X A matrix.
-#' @param MARGIN A number specifying whether to apply over rows (1) or columns (2).
+#' @param MARGIN A number specifying whether to apply over rows (1) or columns
+#'   (2).
 #' @param FUN A function to be applied.
 #' @param mc.cores Number of cores to use.
 #' @param simplify Whether to simplify the results using \code{simplify2array}.
@@ -199,7 +201,8 @@ pbmcapply <- function(X, MARGIN, FUN, mc.cores = 10, simplify = TRUE, ...) {
 #' Annotate genes using a gene-to-function table.
 #'
 #' @param x A gene (string) or vector of genes (strings).
-#' @param gene.to.fxn A data frame with at least "gene" and "function" as columns.
+#' @param gene.to.fxn A data frame with at least "gene" and "function" as
+#'   columns.
 #' @return A character vector of gene functions, with names equal to \code{x}.
 #' @export
 gene.annot <- function(x, gene.to.fxn) {
@@ -271,10 +274,11 @@ zipLapply <- function(iterover, fxn, ...) {
 #' A wrapper for lapply that allows access to list element names, with
 #' simplification at the end to an array.
 #'
-#' @param iterover List to iterate over. This list will be transformed by \code{zipData}.
+#' @param iterover List to iterate over. This list will be transformed by
+#'   \code{zipData}.
 #' @param fxn A function to apply to each element \code{x} of
-#'     \code{zipData(iterover)}, where the name is accessible as \code{x$name}
-#'     and the original list element is accessible as \code{x$data}.
+#'   \code{zipData(iterover)}, where the name is accessible as \code{x$name} and
+#'   the original list element is accessible as \code{x$data}.
 #' @keywords internal
 zipSapply <- function(iterover, fxn, ...) {
     simplify2array(zipLapply(iterover, fxn), ...)
@@ -362,51 +366,6 @@ style.parse <- function(str) {
     return(c.output)
 }
 
-#' A fall-back plotting option for when \code{hack.tree.labels} fails, designed
-#' to produce the same kind of output.
-#'
-#' @param tree.obj A ggtree object.
-#' @param file File to which an SVG representation of this tree object will be written.
-#' @param name String. the name of the taxon being added. Used for title.
-#' @export
-non.interactive.plot <- function(tree.obj, file, name) {
-    warning(paste0("replotting to: ", file))
-    
-    valid_labels <- subset(tree.obj$tree$data, !is.na(label))
-    low_color <- tree.obj$cols["low.col"]
-    high_color <- tree.obj$cols["high.col"]
-
-    tree <- ggtree(as.phylo(tree.obj$tree)) +
-                geom_point(data = valid_labels, aes(text = label, color = color)) +
-                geom_tiplab(data = valid_labels, aes(color = color)) +
-		ggtitle(name) +
-        labs(color="phenotype")
-    
-    # Write to an svg
-    svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
-    writeLines(as.character(svg), file)
-    
-    return(tree)
-}
-
-
-#' XML hack to make interactive tree diagrams.
-#'
-#' This hack is very ugly but works most of the time. However, it is a good idea
-#' to wrap it in a tryCatch so that you can fall back to a less flashy
-#' implementation, because it relies on editing a poorly-annotated SVG file as
-#' if it were an XML document.
-#'
-#' @param tree.obj A ggtree representation of a tree.
-#' @param file A filename where the final SVG output will be written.
-#' @param name. String. the name of the taxon being added. Used for title.
-#' @export
-interactive.plot <- function(tree.obj, file, name) {
-        tree <- non.interactive.plot(tree.obj, file, name)
-        interactive_tree <- ggplotly(tree, tooltip = "text")
-
-        return(interactive_tree)
-}
 
 
 #' A wrapper around \code{apply} and \code{parApply} that allows them to be
@@ -440,4 +399,30 @@ sparseMelt <- function(mtx) {
         colnames(df)[1:2] <- names(dimnames(mtxT))
     }
     df
+}
+
+
+#' Check if a particular string is likely to be DNA.
+#'
+#' @param seq String to check for illegal characters.
+#' @return TRUE if it contains no illegal characters, FALSE otherwise.
+#' @keywords internal
+is.dna <- function(seq) {
+    !(grepl("[^actguwsmkrybdhvn]", tolower(seq)))
+}
+
+#' Utility function to pivot species dataframes wider and convert to matrices
+create_matrix <- function(sub_df) {
+    # Pivot the dataframe to wide format using pivot_wider
+    pivoted <- sub_df %>%
+        tidyr::pivot_wider(names_from = species,
+                           values_from = presence,
+                           values_fill = list(presence = 0))
+    
+    mat <- as.matrix(pivoted %>%
+                         dplyr::select(-tidyselect::all_of("max_count")) %>%
+                         dplyr::select(-tidyselect::all_of("function")) %>%
+                         dplyr::select(-tidyselect::all_of("protein")))
+    rownames(mat) <- pivoted[["protein"]]
+    return(mat)
 }
