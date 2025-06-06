@@ -92,7 +92,8 @@ make.sigs <- function(results,
                                weak = 0.25),
                       method = qvals,
                       exclude = NULL,
-                      min.fx = 0) {
+                      min.fx = 0,
+		      ...) {
     lapply.across.names(names(results), function(x) {
         lapply(cuts, function(cut) {
             if (!is.null(exclude)) {
