@@ -1,4 +1,3 @@
-
 #--- Plotting ---#
 
 #' Get phenotype plotting scales.
@@ -454,7 +453,7 @@ output.enr.table <- function(enr.table) {
         kableExtra::kable_styling(c("striped", "condensed"))
 }
 
-
+                                     
 #' Helper function for gg.cont.tree
 #'
 #' \code{gg.cont.tree} generates the right internals for later use in plotting

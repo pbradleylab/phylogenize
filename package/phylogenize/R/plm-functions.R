@@ -1290,11 +1290,10 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
             mtx <- gene.presence[[tx]][, i, drop=FALSE]
             g <- names(which((rowSums(mtx) >= Min) & (rowSums(!mtx) >= Min)))
             gene.presence[[tx]] <- mtx[g, , drop=FALSE]
-        }
-        if ((length(i) == 0) || (length(g) == 0)) {
-            # drop from the list
+	}
+	if ((length(i) == 0) || (length(g) == 0)) {
             to_remove[tx] <- TRUE
-        }
+	}
     }
     gene.presence[names(which(!to_remove))]
 }

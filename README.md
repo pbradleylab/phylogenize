@@ -69,11 +69,11 @@ We have several premade databases that you can select from depending on what is 
 | pig gut            | v1.0    | MGnify   | 138                | 800               |
 | sheep rumen        | v1.0    | MGnify   | 117                | 2122              |
 | zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |
-| mixed environment  | v214    | GTDB     | 3003               | 43058             |
+| mixed environment  | v202    | GTDB     | 3003               | 43058             |
 
 All databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
 
-Databases can be downloaded manually and decompressed from our Zenodo page [here](), or they can be downloaded and decompressed using Phylogenize2's `phylogenize::download.zenodo.db("your/html/link/here.zip")`. The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
+Databases can be downloaded manually and decompressed from our Zenodo page [here](), or they can be downloaded and decompressed using Phylogenize2's `phylogenize::download.zenodo.db("your/html/link/here/")`. The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
 
 ## Running Phylogenize2
 
