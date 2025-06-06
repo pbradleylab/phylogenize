@@ -9,7 +9,8 @@ make.sigs(
   cuts = c(strong = 0.05, med = 0.1, weak = 0.25),
   method = qvals,
   exclude = NULL,
-  min.fx = 0
+  min.fx = 0,
+  ...
 )
 }
 \arguments{
