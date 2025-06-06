@@ -416,7 +416,7 @@ single.cluster.plot <- function(gene.presence,
                                      high = opts('gene_color_present'),
                                      na.value = opts('gene_color_absent')) +
         ggplot2::labs(color=opts("which_phenotype"), fill="gene presence") +
-        scale_shape(guide="none")
+        ggplot2::scale_shape(guide="none")
     tmp
 }
 
