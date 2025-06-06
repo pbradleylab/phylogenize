@@ -288,8 +288,8 @@ get_enrichment_tbls <- function(signif,
                                 ...) {
     pretty.enr.tbl <- NULL
     enr.overlap <- NULL
-    kegg_pw_data <- clusterProfiler::download_KEGG("ko", type="KEGG")
-    kegg_mod_data <- clusterProfiler::download_KEGG("ko", type="MKEGG")
+    kegg_pw_data <- clusterProfiler::download_KEGG("ko", keggType="KEGG")
+    kegg_mod_data <- clusterProfiler::download_KEGG("ko", keggType="MKEGG")
     enrichment.tbl <- multi.kegg.enrich(signif,
                                         signs,
                                         pz.db$gene.to.fxn,
