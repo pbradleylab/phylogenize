@@ -36,7 +36,9 @@ Some particularly relevant global options are:
 \describe{
   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
   or "specificity").}
-  \item{gene_color_absent}{String. When graphing gene presence/absence, this color indicates absence.}
-  \item{gene_color_present}{String. When graphing gene presence/absence, this color indicates presence.}
+  \item{gene_color_absent}{String. When graphing gene presence/absence,
+  this color indicates absence.}
+  \item{gene_color_present}{String. When graphing gene presence/absence, this
+  color indicates presence.}
 }
 }

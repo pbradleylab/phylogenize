@@ -65,8 +65,8 @@ nonequiv.pos.sig <- function(results,
 #' @return A p-value; reject non-equivalence if below alpha.
 #' @keywords internal
 equiv_test <- function(fx, se, df, min_fx=0.25) {
-                                        # test 1: H0 is fx >= min_fx, HA is fx < min_fx
-                                        # test 2: H0 is fx <= -min_fx, HA is fx > -min_fx
+    # test 1: H0 is fx >= min_fx, HA is fx < min_fx
+    # test 2: H0 is fx <= -min_fx, HA is fx > -min_fx
     t_stat1 <- -(fx - min_fx) / se # more negative as fx >> min_fx
     t_stat2 <- -(-min_fx - fx) / se # more negative as fx << -min_fx
     pv1 <- pt(t_stat1, df, lower.tail=FALSE)
@@ -205,7 +205,8 @@ get.top.N <- function(p,
 #' finally returning a vector of NAs if all else fails.
 #'
 #' @param x A vector of p-values.
-#' @param ... Extra parameters to override defaults, especially `fdr_method` (which can be "BH", "BY", or "qvalue).
+#' @param ... Extra parameters to override defaults, especially `fdr_method`
+#'   (which can be "BH", "BY", or "qvalue).
 #' @return A vector of q-values.
 #' @keywords internal
 qvals <- function(x, ...) {
@@ -227,9 +228,6 @@ qvals <- function(x, ...) {
                                        pz.warning(e, ...)
                                        pz.warning("Falling back to BH", ...)
                                        p.adjust(x, 'BH')
-                                       #q <- rep(NA, length(x))
-                                       #names(q) <- names(x)
-                                       #q
                                    })
                       })
         return(q)

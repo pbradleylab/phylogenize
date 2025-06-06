@@ -9,11 +9,12 @@ fastread(location, cn = TRUE)
 \arguments{
 \item{location}{Path to file to be read.}
 
-\item{cn}{Whether to check that the row names are valid, non-duplicated R row names.}
+\item{cn}{Whether to check that the row names are valid, non-duplicated R row
+names.}
 }
 \value{
 A data matrix with rownames equal to the first column of the input
-    file and colnames equal to the first row.
+  file and colnames equal to the first row.
 }
 \description{
 Wrapper around fastread that preserves row names.

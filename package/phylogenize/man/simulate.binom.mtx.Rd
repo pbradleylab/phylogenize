@@ -21,22 +21,24 @@ environments for simulated true positives.}
 \item{baseline.distro}{A two-element numeric vector of beta distribution
 parameters, giving the distribution of simulated prevalences.}
 
-\item{samples}{Named integer vector giving the number of samples per environment.}
+\item{samples}{Named integer vector giving the number of samples per
+environment.}
 
-\item{which.env}{String; gives the environment in which an effect will be simulated.}
+\item{which.env}{String; gives the environment in which an effect will be
+simulated.}
 
 \item{taxa}{How many taxa to simulate?}
 
 \item{tpr}{Fraction of taxa that should be simulated as true positives.}
 
-\item{sign.pos.prob}{Fraction of effects that should be positive (vs. negative)?}
+\item{sign.pos.prob}{Fraction of effects that should be positive (vs.
+negative)?}
 }
 \value{
 A list. \code{mtx}: a simulated matrix; \code{pT}: true prevalences;
-    \code{pTbs}: true prevalences after adding in effects; \code{fx}:
-    effects; \code{ids}: mapping of samples to environments;
-    \code{input.params}: input parameters used to call
-    \code{simulate.binom.mtx}.
+  \code{pTbs}: true prevalences after adding in effects; \code{fx}: effects;
+  \code{ids}: mapping of samples to environments; \code{input.params}: input
+  parameters used to call \code{simulate.binom.mtx}.
 }
 \description{
 Simulate a presence/absence matrix.

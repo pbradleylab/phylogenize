@@ -4,7 +4,7 @@
 \alias{fit.beta.list}
 \title{Get a distribution of environment prevalences from a matrix.}
 \usage{
-\method{fit}{beta.list}(mtx, ids, fallback = c(NA, NA))
+fit.beta.list(mtx, ids, fallback = c(NA, NA))
 }
 \arguments{
 \item{mtx}{A matrix of presence/absence values.}
