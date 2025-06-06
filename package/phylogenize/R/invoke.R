@@ -245,13 +245,13 @@ get_signif_associated_genes <- function(pz.db,
                                         results,
                                         ...) {
     pz.options <- clone_and_merge(PZ_OPTIONS, ...)
-    signif <- make.sigs(results)
+    signif <- make.sigs(results, ...)
     signs <- make.signs(results)
     pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
     results.matrix <- make.results.matrix(results)
     phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
     pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
-    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig)
+    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig, ...)
     pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs,
                                           pos.sig.thresh,
                                           pz.db$gene.to.fxn)
