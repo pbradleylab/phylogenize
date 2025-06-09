@@ -97,7 +97,7 @@ taxa that are neither.
 # Unpack pz.db and phenotype results to current environment
 list2env(core[["list_pheno"]], environment())
 
-if (!("phenotype_results") %in% core[["list_pheno"]]) { skip_phenotypes <- TRUE } else { skip_phenotypes <- FALSE }
+if (!("phenotype_results") %in% names(core[["list_pheno"]])) { skip_phenotypes <- TRUE } else { skip_phenotypes <- FALSE }
 
 if (!(skip_phenotypes)) {
 # Also unpack "phenotype, phenoP, mapped.observed" into current environment
@@ -126,11 +126,12 @@ write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
 } else {
 
 pz.message("Skipping phenotypes, as not found (possibly because POMS was used)")
+plots <- NULL 
 }
 # be a little parsimonious with memory here
 gc()
 ```
-`r knitr::knit_child(text = unlist(plots), quiet = TRUE)`
+`r if (!is.null(plots)) { knitr::knit_child(text = unlist(plots), quiet = TRUE) }`
 ## Phenotype Mapped Across Trees {.tabset}
 ### All Taxa
 ```{r plot_phenos_on_trees, echo=FALSE, warning = FALSE, results='asis', cache=FALSE}

@@ -125,6 +125,12 @@ render_core_report <- function(core,
                                ...) {
     
     prev.options <- pz.options()
+    if (!("list_pheno" %in% names(core)) || !("list_signif" %in% names(core))) {
+        pz.error(paste0(
+	  "`core` does not look like Phylogenize2 output; did you pass ",
+	  "a path to an RDS file instead of reading it with readRDS?"
+	))
+    }
     if ("options" %in% names(core)) {
         do.call(pz.options, core[["options"]]())
     }
