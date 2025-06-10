@@ -1068,12 +1068,12 @@ ashr.diff.abund <- function(abd.meta,
                             "should be reported as a bug."))
         } 
     }
-    ancom_ash <- ash_wrapper(dplyr::select(ancom_results_tbl,
-                                           taxon,
-                                           !!(lfc_col)) %>% tibble::deframe,
-                             dplyr::select(ancom_results_tbl,
-                                           taxon,
-                                           !!(se_col)) %>% tibble::deframe)
+    ancom_ash <- ash_wrapper(dplyr::pull(ancom_results_tbl,
+					 !!(lfc_col),
+					 name=taxon),
+			     dplyr::pull(ancom_results_tbl,
+					 !!(se_col),
+					 name=taxon))
     sample_ashr <- tibble::as_tibble(ancom_ash$result, rownames = "species")
     
   } else if (M == "maaslin2") {

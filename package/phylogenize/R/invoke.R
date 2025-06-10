@@ -125,6 +125,12 @@ render_core_report <- function(core,
                                ...) {
     
     prev.options <- pz.options()
+    if (!("list_pheno" %in% names(core)) || !("list_signif" %in% names(core))) {
+        pz.error(paste0(
+	  "`core` does not look like Phylogenize2 output; did you pass ",
+	  "a path to an RDS file instead of reading it with readRDS?"
+	))
+    }
     if ("options" %in% names(core)) {
         do.call(pz.options, core[["options"]]())
     }
@@ -245,13 +251,13 @@ get_signif_associated_genes <- function(pz.db,
                                         results,
                                         ...) {
     pz.options <- clone_and_merge(PZ_OPTIONS, ...)
-    signif <- make.sigs(results)
+    signif <- make.sigs(results, ...)
     signs <- make.signs(results)
     pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
     results.matrix <- make.results.matrix(results)
     phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
     pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
-    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig)
+    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig, ...)
     pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs,
                                           pos.sig.thresh,
                                           pz.db$gene.to.fxn)
@@ -288,9 +294,13 @@ get_enrichment_tbls <- function(signif,
                                 ...) {
     pretty.enr.tbl <- NULL
     enr.overlap <- NULL
+    kegg_pw_data <- clusterProfiler::download_KEGG("ko", keggType="KEGG")
+    kegg_mod_data <- clusterProfiler::download_KEGG("ko", keggType="MKEGG")
     enrichment.tbl <- multi.kegg.enrich(signif,
                                         signs,
-                                        pz.db$gene.to.fxn)
+                                        pz.db$gene.to.fxn,
+                                        kegg_pw = kegg_pw_data,
+                                        kegg_mod = kegg_mod_data)
     if (!is.null(enrichment.tbl)) {
         enrichment.tbl <- dplyr::filter(enrichment.tbl,
                                         qvalue <= 0.25, enr.estimate > 1)

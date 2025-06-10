@@ -22,6 +22,8 @@ params:
 library(phylogenize)
 library(Matrix)
 
+pz.warning(paste(names(core)))
+
 cache.d <- file.path(pz.options('out_dir'), 'cache')
 dir.create(pz.options('out_dir'))
 dir.create(cache.d)
@@ -94,6 +96,10 @@ taxa that are neither.
 
 # Unpack pz.db and phenotype results to current environment
 list2env(core[["list_pheno"]], environment())
+
+if (!("phenotype_results") %in% names(core[["list_pheno"]])) { skip_phenotypes <- TRUE } else { skip_phenotypes <- FALSE }
+
+if (!(skip_phenotypes)) {
 # Also unpack "phenotype, phenoP, mapped.observed" into current environment
 list2env(core[["list_pheno"]][["phenotype_results"]], environment())
 
@@ -117,15 +123,20 @@ plots <- lapply(1:length(pheno.distros), function(nm) {
 write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
             phenotype,
             sep = '\t')
+} else {
 
+pz.message("Skipping phenotypes, as not found (possibly because POMS was used)")
+plots <- NULL 
+}
 # be a little parsimonious with memory here
 gc()
 ```
-`r knitr::knit_child(text = unlist(plots), quiet = TRUE)`
+`r if (!is.null(plots)) { knitr::knit_child(text = unlist(plots), quiet = TRUE) }`
 ## Phenotype Mapped Across Trees {.tabset}
 ### All Taxa
 ```{r plot_phenos_on_trees, echo=FALSE, warning = FALSE, results='asis', cache=FALSE}
 
+if (!(skip_phenotypes)) {
 plots <- list()
 if (!pz.options('skip_graphs')) {
 	plots <- plot.labeled.phenotype.trees(plotted.pheno.trees,
@@ -139,12 +150,13 @@ phylogenize::knitPrintListPlots(
 	titles = NULL, 
 	titleLevel = NULL
 )
-
+}
 ```
 
 ### Only Mapped/Observed Taxa
 ```{r plot_phenos_on_observed_trees, echo=FALSE, warning=FALSE, results='asis', warning = FALSE, message = FALSE, cache=FALSE}
 
+if (!(skip_phenotypes)) {
 pheno.labels <- names(phenotype)
 subtrees <- lapply(pz.db$trees, function(tr) {
   keep.tips(tr, intersect(mapped.observed, pheno.labels))
@@ -171,7 +183,7 @@ phylogenize::knitPrintListPlots(
         titles = NULL,
         titleLevel = NULL
 )
-
+}
 ```
 # Gene Associations and Significance
 Analysis of the genes associated to taxa including their significance, presence/absence 
@@ -234,7 +246,7 @@ and "Weak" refer to per-gene significance cutoffs of 5%, 10%, and 25%,
 respectively.
 
 ```{r enrichment_tables, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE, results='axsis'}
-do_enrichment <- ("enr_tbls" %in% names(core))
+do_enrichment <- (("enr_tbls" %in% names(core)) && !(is.null(core[["enr_tbls"]])))
 if (do_enrichment) {
     table <- phylogenize::getClinDT(core[["enr_tbls"]]) |>
         DT::formatStyle(

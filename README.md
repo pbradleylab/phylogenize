@@ -10,9 +10,13 @@ The easiest way to install all the dependencies needed is by using mamba or cond
 
 To install miniforge, run `wget -c https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh` and then in a terminal type `bash Miniforge3-Linux-x86_64.sh`. You'll need to run through the prompts and then give it a download location if the default is not to your liking. Finally, you can let miniforge initialize itself if you want conda to always be in your "base" when you open the terminal. Otherwise, if you say `no` then you will have to manually source the executable for conda which can be done similarly as `source /your/path/to/miniforge3/bin/activate`.
 
+You can also install Phylogenize2 using [Pixi](https://pixi.sh) with the provided `pixi.toml` file.
+
 ### Now you are ready to start installing the dependencies.
 
 Create a new environment by typing `conda create -n phylogenize` and `conda activate phylogenize`. Then you can install phylogenize by running `conda install bioconda::phylogenize`. For any future analysis, all you have to do is activate this environment to have the dependencies run.
+
+To use Pixi, first use `git clone https://github.com/pbradleylab/phylogenize`, enter the `phylogenize` directory, then type `pixi install` to download all of the dependencies. You can then use Phylogenize2 from within an R session that you start by typing `pixi run R` from within the `phylogenize` directory.
 
 #### Locally - Command line and Rstudio (MacOS/Linux)
 
