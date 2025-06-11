@@ -11,7 +11,7 @@ make.pos.sig <- function(sigs, signs, cut = "strong") {
     })
 }
 
-#' Get vectors of significant genes with positive effect sizes.
+#' Get vectors of significant genes with positive (or negative) effect sizes.
 #'
 #' @param results List of result matrices (4 x N).
 #' @param method Method for performing multiple test adjustment.
@@ -20,6 +20,7 @@ make.pos.sig <- function(sigs, signs, cut = "strong") {
 #'     significantly equivalent hits will be *excluded*).
 #' @param min_fx Minimum effect size for equivalence test.
 #' @param exclude Optional list of character vectors of genes to exclude.
+#' @param dir Direction of test (1 is positive, -1 is negative; default: 1).
 #' @return List of character vectors of hits that were significantly different
 #'     from zero, had positive effect sizes, and not significantly equivalent to
 #'     a minimum effect size.
@@ -29,7 +30,10 @@ nonequiv.pos.sig <- function(results,
                              qcut_sig=0.05,
                              qcut_eq=0.05,
                              min_fx=0.25,
-                             exclude=NULL) {
+                             exclude=NULL,
+                             dir=1) {
+    dir <- sign(dir)
+    if (dir==0) { stop("dir must not be zero") }
     if (is.null(exclude)) exclude <- lapply(results, function(.) NULL)
     mapply(function(r, ex) {
         valid <- colnames(r)[which(!is.na(r[1, , drop=TRUE]))]
@@ -48,7 +52,7 @@ nonequiv.pos.sig <- function(results,
             } else {
               neq_sig <- valid
             }
-            which_pos <- nw(r[1, valid, drop=TRUE] > 0)
+            which_pos <- nw((dir * r[1, valid, drop=TRUE]) > 0)
             Reduce(intersect, list(fx_sig,
                                    neq_sig,
                                    which_pos))

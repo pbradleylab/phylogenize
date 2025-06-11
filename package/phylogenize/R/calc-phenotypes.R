@@ -19,13 +19,6 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
         abd.meta <- add.below.LOD(pz.db, abd.meta, ...)
         sanity.check.abundance(abd.meta$mtx, ...)
     }
-    if (tolower(pz.options('core_method')) == 'poms') {
-	pz.message("Skipping phenotype calculation for POMS")
-    	return(list(
-			abd.meta=abd.meta,
-			pz.db=pz.db,
-			phenotype_results=NULL))
-    }
     phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
     if (pz.options('which_phenotype') %in% c("specificity", "abundance")) {
         # only retain observed taxa
@@ -35,6 +28,10 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
                                             phenotype_results$mapped.observed)
         pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
         pz.db$ntaxa <- length(pz.db$trees)
+    }
+    if (tolower(pz.options('core_method')) == "poms") {
+        pz.message("Saving abundance data to run POMS...")
+        save_data <- TRUE
     }
     if (save_data) return(list(
         abd.meta=abd.meta,
@@ -56,46 +53,49 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
     if (tolower(opts('core_method')) == "poms") {
-        pz.warning(paste0("POMS will ignore this phenotype, ",
-                          "as it computes its own on balances"))
-    }
-    if (opts('which_phenotype') == "prevalence") {
-        phenotype <- prev.addw(abd.meta, ...)
-        phenoP <- NULL
-    } else if (opts('which_phenotype') == "specificity") {
-        if (opts('prior_type') == "file") {
-            prior.data <- read.table(file.path(opts('input_dir'),
-                                               opts('prior_file')))
-        } else {
-            prior.data <- NULL
-        }
-        ess <- calc.ess(abd.meta,
-                        prior.data,
-                        ...)
-        phenotype <- ess$ess
-        phenoP <- ess$phenoP
-    } else if (pz.options("which_phenotype") == "provided") {
-        p_tbl <- read_tsv(pz.options("phenotype_file"))
-        if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
-            phenotype <- tibble::deframe(p_tbl)
-        } else { # perform shrinkage on the provided values w/ their stderrs
-            p_est <- as.numeric(p_tbl[["estimate"]])
-            p_se <- as.numeric(p_tbl[["stderr"]])
-            names(p_est) <- p_tbl[[1]]
-            names(p_se) <- p_tbl[[1]]
-            ashr_res <- ash_wrapper(p_est, p_se)
-            phenotype <- ashr_res$result %>%
-                tibble::as_tibble(rownames="species") %>%
-                dplyr::select(species, PosteriorMean) %>%
-                tibble::deframe()
-        }
-        phenoP <- 0
-    } else if (opts("which_phenotype") == "abundance") {
-        phenotype <- ashr.diff.abund(abd.meta, ...)
+        pz.warning(paste0("Generating an approximate phenotype just for ",
+                          "plotting POMS output (logit-AUC)..."))
+        phenotype <- logit_auc_pheno(abd.meta, ...)
         phenoP <- 0
     } else {
-        pz.error(paste0("don't know how to calculate the phenotype ",
-                        opts('which_phenotype')))
+        if (opts('which_phenotype') == "prevalence") {
+            phenotype <- prev.addw(abd.meta, ...)
+            phenoP <- NULL
+        } else if (opts('which_phenotype') == "specificity") {
+            if (opts('prior_type') == "file") {
+                prior.data <- read.table(file.path(opts('input_dir'),
+                                                   opts('prior_file')))
+            } else {
+                prior.data <- NULL
+            }
+            ess <- calc.ess(abd.meta,
+                            prior.data,
+                            ...)
+            phenotype <- ess$ess
+            phenoP <- ess$phenoP
+        } else if (pz.options("which_phenotype") == "provided") {
+            p_tbl <- read_tsv(pz.options("phenotype_file"))
+            if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
+                phenotype <- tibble::deframe(p_tbl)
+            } else { # perform shrinkage on the provided values w/ their stderrs
+                p_est <- as.numeric(p_tbl[["estimate"]])
+                p_se <- as.numeric(p_tbl[["stderr"]])
+                names(p_est) <- p_tbl[[1]]
+                names(p_se) <- p_tbl[[1]]
+                ashr_res <- ash_wrapper(p_est, p_se)
+                phenotype <- ashr_res$result %>%
+                    tibble::as_tibble(rownames="species") %>%
+                    dplyr::select(species, PosteriorMean) %>%
+                    tibble::deframe()
+            }
+            phenoP <- 0
+        } else if (opts("which_phenotype") == "abundance") {
+            phenotype <- ashr.diff.abund(abd.meta, ...)
+            phenoP <- 0
+        } else {
+            pz.error(paste0("don't know how to calculate the phenotype ",
+                            opts('which_phenotype')))
+        }
     }
     phenotype <- clean.pheno(phenotype, pz.db)
     if (pz.options("which_phenotype") != "prevalence") {
@@ -198,9 +198,59 @@ add.below.LOD <- function(pz.db, abd.meta, ...) {
                                             colnames(abd.meta$mtx)))
         abd.meta$mtx <- rbind(abd.meta$mtx, taxa.zero)
     }
-    # Make sure still binary
-    if(opts('which_phenotype') != 'abundance'){
+    # Make sure still binary, if appropriate
+    if ((opts('which_phenotype') != 'abundance') &&
+        tolower(opts('core_method')) != "poms") {
+        pz.message("Binarizing input data...")
+        # binarize to save memory usage since we care about pres/abs
         abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
     }
     return(abd.meta)
 }
+
+#' Generate logit-AUC phenotype from Wilcoxon test on clr-transformed data.
+#' Mostly used as an approximate phenotype for plotting POMS output.
+#' 
+#' @param abd.meta A list consisting of a taxon abundance matrix and the
+#'   metadata.
+#' @return An updated version of \code{abd.meta}.
+#' @export
+logit_auc_pheno <- function(abd.meta,
+                            ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    E <- opts('env_column')
+    D <- opts('dset_column')
+    S <- opts('sample_column')
+    envir <- opts('which_envir')
+    if (!(envir %in% levels(abd.meta$metadata[[E]]))) {
+        stop(paste0("environment ", envir, " not found in metadata"))
+    }
+    env.rows <- (abd.meta$metadata[[E]] == envir)
+    nenv.rows <- (abd.meta$metadata[[E]] != envir)
+    env.w <- which(env.rows)
+    nenv.w <- which(nenv.rows)
+    dsets <- unique(abd.meta$metadata[env.rows, D, drop=TRUE])
+    if (length(dsets) > 1) {
+        warning("datasets are ignored when calculating wilcox phenotype")
+    }
+    meta.present <- abd.meta$meta[(abd.meta$meta[[S]] %>%
+                                       as.character %in%
+                                       colnames(abd.meta$mtx)), ]
+    envirs <- unique(meta.present[[E]])
+    ids <- sapply(colnames(abd.meta$mtx),
+                  function (sn) abd.meta$meta[(abd.meta$meta[[S]] == sn), E])
+    if (length(unique(ids)) < 2) { 
+        stop("error: only one environment found")
+    }
+    names(ids) <- colnames(abd.meta$mtx)
+    ids <- simplify2array(ids)
+    clr_mtx <- clr(abd.meta$mtx, pc = 1)
+    logit_auc <- apply(clr_mtx, 1, \(x) {
+        st <- wilcox.test(x[env.w], x[nenv.w])$statistic
+        # convert to AUC, then take logit
+        logit(st / (length(env.w) * length(nenv.w)))
+    })
+    return(logit_auc)
+}
+
+

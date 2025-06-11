@@ -46,7 +46,8 @@ read.abd.metadata <- function(...) {
         abd.meta <- process.16s(abd.meta, ...)
     }
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
-    if (opts('which_phenotype') != 'abundance') {
+    if ((opts('which_phenotype') != 'abundance') &&
+        tolower(opts('core_method')) != "poms") {
         pz.message("Binarizing input data...")
         # binarize to save memory usage since we care about pres/abs
         abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)

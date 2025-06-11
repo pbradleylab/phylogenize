@@ -426,3 +426,6 @@ create_matrix <- function(sub_df) {
     rownames(mat) <- pivoted[["protein"]]
     return(mat)
 }
+
+#' Utility function to make a matrix out of a tibble
+tbl_to_mtx <- function(tbl) { mtx <- as.matrix(tbl[-1]); rownames(mtx) <- tbl[[1]]; mtx }

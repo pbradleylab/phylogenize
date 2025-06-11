@@ -2,7 +2,7 @@
 % Please edit documentation in R/significance.R
 \name{nonequiv.pos.sig}
 \alias{nonequiv.pos.sig}
-\title{Get vectors of significant genes with positive effect sizes.}
+\title{Get vectors of significant genes with positive (or negative) effect sizes.}
 \usage{
 nonequiv.pos.sig(
   results,
@@ -10,7 +10,8 @@ nonequiv.pos.sig(
   qcut_sig = 0.05,
   qcut_eq = 0.05,
   min_fx = 0.25,
-  exclude = NULL
+  exclude = NULL,
+  dir = 1
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ significantly equivalent hits will be *excluded*).}
 \item{min_fx}{Minimum effect size for equivalence test.}
 
 \item{exclude}{Optional list of character vectors of genes to exclude.}
+
+\item{dir}{Direction of test (1 is positive, -1 is negative; default: 1).}
 }
 \value{
 List of character vectors of hits that were significantly different
@@ -33,5 +36,5 @@ List of character vectors of hits that were significantly different
     a minimum effect size.
 }
 \description{
-Get vectors of significant genes with positive effect sizes.
+Get vectors of significant genes with positive (or negative) effect sizes.
 }
