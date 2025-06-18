@@ -46,7 +46,8 @@ read.abd.metadata <- function(...) {
         abd.meta <- process.16s(abd.meta, ...)
     }
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
-    if (opts('which_phenotype') != 'abundance') {
+    if ((opts('which_phenotype') != 'abundance') &&
+        tolower(opts('core_method')) != "poms") {
         pz.message("Binarizing input data...")
         # binarize to save memory usage since we care about pres/abs
         abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
@@ -785,22 +786,30 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
     return(abd.mtx)
 }
 
-#' Download data from figshare (or provide it locally) and un-gzip it into the
-#' package directory so that it can be imported.
+#' Copy and/or unzip downloaded data into the Phylogenize2 database directory.
 #'
-#' @param data_path Optional: provide a path to a local file containing a
-#'     compressed .tar archive of data. Must extract to the subdirectory
-#'     \code{extdata/}.
-#' @param figshare_url Optional: override the URL from which to obtain the data.
+#' @param path Provide a path to a local file containing a .zip file (which will
+#'   be unzipped) or a .csv file (which will be copied).
+#' @param force Boolean; overwrite existing files? (Default: FALSE)
 #' @export
-install.data.figshare <- function(
-        data_path=NULL,
-        figshare_url=paste0("https://ndownloader.figshare.com/files/",
-                            "43692576?private_link=987aeecdfebd2da02302")) {
-    if (is.null(data_path)) {
-        data_path = tempfile()
-        curl::curl_download(figshare_url, data_path)
+install_data <- function(path, force=FALSE) {
+    fn <- basename(path)
+    extd_path <- system.file("extdata/", package="phylogenize")
+    if (stringr::str_ends(basename(path), "\\.csv")) {
+        if (!file.exists(file.path(extd_path, fn)) || force) {
+            print(paste0(
+                "Copying ",
+                path,
+                " to ",
+                system.file("", package="phylogenize")))
+            file.copy(path, extd_path, overwrite = force)
+        }
+    } else {
+        print(paste0(
+            "Unzipping ",
+            path,
+            " to ",
+            system.file("", package="phylogenize")))
+        unzip(path, overwrite = force, exdir = extd_path)
     }
-    print(system.file("", package="phylogenize"))
-    untar(data_path, exdir = system.file("", package="phylogenize"))
 }

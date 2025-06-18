@@ -20,11 +20,11 @@ To use Pixi, first use `git clone https://github.com/pbradleylab/phylogenize`, e
 
 #### Locally - Command line and Rstudio (MacOS/Linux)
 
-Please note, we assume in these instructions you are working off of base-r and NOT Rstudio. We describe at the bottom of this section how to use Rstudio while still installing the dependencies with mamba.
+Please note, we assume in these instructions you are working off of command line R and NOT Rstudio. We describe at the bottom of this section how to use Rstudio while still installing the dependencies with mamba.
 
 #### Install with mamba - configuration file
 
-You can make a conda environment using the supplied yaml file and not worry about installing any dependencies. Run `conda env create -f environment.yml` and then `conda activate phylogenize`. Open base-r and then type `devtools::install_github("biocore/phylogenize")`.
+You can make a conda environment using the supplied yaml file and not worry about installing any dependencies. Run `conda env create -f environment.yml` and then `conda activate phylogenize`. Open R from the terminal, and then type `devtools::install_github("biocore/phylogenize")`.
 
 #### Install with conda - no configuration file
 
@@ -56,7 +56,18 @@ sudo apt install fontconfig
 
 ## Selecting a database
 
-We have several premade databases that you can select from depending on what is expected to match your host's system. If you are unsure what database to use, then we recommend using GTDB as the default.
+Currently, two databases can be used with Phylogenize2:
+
+| Name | Environment        | Version | Database | Number of families | Number of species |
+|------|---------------|---------------|---------------|---------------|---------------|
+| uhgp | human gut          | v1.0  | MGnify   | 202                | 4542              |
+| gtdb | mixed environment  | v202    | GTDB     | 3003               | 43058             |
+
+These databases can be downloaded from our Zenodo page [here](https://zenodo.org/communities/bradley_phylogenize), then installed using Phylogenize2's `phylogenize::install_data("path/to/downloaded/file")`. Note that you will also have to download and install the `databases.csv` file in addition to one or both databases.
+
+The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
+
+We are currently preparing more biome-specific databases that may be better suited for particular environments (in progress):
 
 | Environment        | Version | Database | Number of families | Number of species |
 |---------------|---------------|---------------|---------------|---------------|
@@ -75,9 +86,7 @@ We have several premade databases that you can select from depending on what is 
 | zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |
 | mixed environment  | v202    | GTDB     | 3003               | 43058             |
 
-All databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
-
-Databases can be downloaded manually and decompressed from our Zenodo page [here](), or they can be downloaded and decompressed using Phylogenize2's `phylogenize::download.zenodo.db("your/html/link/here/")`. The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
+All of the above databases will have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
 
 ## Running Phylogenize2
 

@@ -191,7 +191,7 @@ augment_with_enrichments <- function(core) {
 
 #' Perform either phylogenetic regression or POMS.
 #'
-#' @param lixt_pheno A list, the result of data_to_phenotypes
+#' @param list_pheno A list, the result of data_to_phenotypes
 #' @param abd.meta A list consisting of a species abundance matrix and the
 #'     metadata (from read.abd.metadata or data_to_phenotypes).
 #' @param ... Parameters to override defaults.
@@ -202,8 +202,8 @@ get_all_associated_genes <- function(list_pheno,
                                      ...) {
     pz.options <- clone_and_merge(PZ_OPTIONS, ...)
     if (!do_POMS) {
-    phenotype <- list_pheno$phenotype_results$phenotype
-    taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
+        phenotype <- list_pheno$phenotype_results$phenotype
+        taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
         if (pz.options('ncl') > 1) {
             results <- result.wrapper.plm(taxa=taxaN,
                                           pheno=phenotype,
@@ -212,7 +212,7 @@ get_all_associated_genes <- function(list_pheno,
                                           proteins=list_pheno$pz.db$gene.presence[taxaN],
                                           method=p.method,
                                           ncl=pz.options('ncl'))
-	} else {
+        } else {
             results <- mapply(nonparallel.results.generator,
                               list_pheno$pz.db$gene.presence[taxaN],
                               list_pheno$pz.db$trees[taxaN],
@@ -224,16 +224,16 @@ get_all_associated_genes <- function(list_pheno,
                               SIMPLIFY=FALSE)
         }
     } else {
-	    taxaN <- names(list_pheno$pz.db$species)
+        taxaN <- names(list_pheno$pz.db$species)
         results <- result.wrapper.plm(taxa=taxaN,
-                                       pheno=NULL,
-                                       tree=list_pheno$pz.db$trees[taxaN],
-                                       clusters=list_pheno$pz.db$species[taxaN],
-                                       proteins=list_pheno$pz.db$gene.presence[taxaN],
-                                       method=p.method,
-				       poms=TRUE,
-				       abd.meta=list_pheno$abd.meta,
-				       )
+                                      pheno=NULL,
+                                      tree=list_pheno$pz.db$trees[taxaN],
+                                      clusters=list_pheno$pz.db$species[taxaN],
+                                      proteins=list_pheno$pz.db$gene.presence[taxaN],
+                                      method=p.method,
+                                      poms=TRUE,
+                                      abd.meta=list_pheno$abd.meta
+        )
     }
     # trim out any that didn't get dropped
     result_lens <- vapply(results, length, 1L)
@@ -254,7 +254,13 @@ get_signif_associated_genes <- function(pz.db,
     signif <- make.sigs(results, ...)
     signs <- make.signs(results)
     pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
-    results.matrix <- make.results.matrix(results)
+    neg.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'), dir=-1)
+    results.matrix <- make.results.matrix(results) %>%
+        dplyr::filter(!is.na(p.value)) %>%
+        dplyr::group_by(taxon) %>%
+        dplyr::mutate(q.value = qvals(p.value, ...)) %>%
+        dplyr::arrange(taxon, q.value) %>%
+        dplyr::ungroup()
     phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
     pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
     pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig, ...)
@@ -268,11 +274,12 @@ get_signif_associated_genes <- function(pz.db,
         signif=signif,   #2
         signs=signs,     #3
         pos.sig=pos.sig, #4
-        results.matrix=results.matrix,            #5
-        phy.with.sigs=phy.with.sigs,              #6
-        pos.sig.descs=pos.sig.descs,              #7
-        pos.sig.thresh=pos.sig.thresh,            #8
-        pos.sig.thresh.descs=pos.sig.thresh.descs #9
+        results.matrix=results.matrix,             #5
+        phy.with.sigs=phy.with.sigs,               #6
+        pos.sig.descs=pos.sig.descs,               #7
+        pos.sig.thresh=pos.sig.thresh,             #8
+        pos.sig.thresh.descs=pos.sig.thresh.descs, #9
+        neg.sig=neg.sig                            #10
     ))
 }
 

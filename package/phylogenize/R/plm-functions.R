@@ -31,7 +31,7 @@ result.wrapper.plm <- function(taxa,
                                drop.zero.var = FALSE,
                                only.return.names = FALSE,
                                abd.meta = FALSE,
-			       poms = FALSE,
+                               poms = FALSE,
                                ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     lapply.across.names(taxa, function(p) {
@@ -117,7 +117,7 @@ result.wrapper.plm <- function(taxa,
 #' @param poms_min_func Minimum number of function instances
 #'   (min_func_instances); default 2.
 #' @param poms_pseudocount Pseudocount value for POMS; default 0.5.
-#' @return Matrix of p-values (row 1) and "effect-sizes" (row 2) per gene
+#' @return Matrix of "effect-sizes" (row 1) and p-values (row 2) per gene
 #'   (columns). Here, we "fake" effect sizes by taking the log2-ratio of
 #'   num_FSNs_group1_enrich and num_FSNs_group2_enrich with a 0.5 pseudocount.
 #' @export
@@ -146,25 +146,39 @@ matrix.POMS <- function(tree,
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     
     phylotype_df <- data.frame(as.matrix(t(mtx[restrict.ff, ])))
+    
+    if (length(unique(as.numeric(abd.meta$mtx))) <= 2) {
+        pz.error(paste0(
+            "Abundance matrix has two or fewer unique values; ",
+            "suggests matrix is binary (which will not work for POMS). ",
+            "Please double check that you passed in the right data."
+        ))
+    }
     tree_nodes <- ape::makeNodeLabel(tree)
     # Don't check names because this will potentially change them, meaning 
     # they won't match the metadata anymore
-    poms_output <- POMS::POMS_pipeline(abun=data.frame(abd.meta$mtx,
-						       check.names=FALSE),
-                                       func=phylotype_df,
-                                       tree=tree_nodes,
-                                       group1_samples=poms_group1,
-                                       group2_samples=poms_group2,
-                                       ncores=cores,
-                                       min_num_tips=poms_min_tips,
-                                       min_func_instances=poms_min_func,
-                                       pseudocount=poms_pseudocount)
+    poms_output <- POMS::POMS_pipeline(
+        abun=data.frame(
+            as.matrix(abd.meta$mtx),
+            check.names=FALSE),
+        func=phylotype_df,
+        tree=tree_nodes,
+        group1_samples=poms_group1,
+        group2_samples=poms_group2,
+        ncores=cores,
+        min_num_tips=poms_min_tips,
+        min_func_instances=poms_min_func,
+        pseudocount=poms_pseudocount)
     poms_enrichments <- (log2(
         (poms_output$results[, "num_FSNs_group1_enrich"] + 0.5) /
             (poms_output$results[, "num_FSNs_group2_enrich"] + 0.5)))
     poms_pvals <- poms_output$results[, "multinomial_p"]
-    return(rbind(p.value = poms_pvals, Estimate = poms_enrichments,
-                 StdErr = NA, df = NA))
+    result_mtx <- rbind(Estimate = poms_enrichments,
+                 p.value = poms_pvals,
+                 StdErr = NA,
+                 df = NA)
+    colnames(result_mtx) <- colnames(phylotype_df)
+    result_mtx
 }
 
 #' Fit phylogenetic (or linear) models (single core version, single taxon).

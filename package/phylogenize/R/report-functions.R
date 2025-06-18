@@ -31,7 +31,7 @@ get.pheno.plotting.scales <- function(phenotype, trees, phenoP=0, ...) {
                                              trees,
                                              phenoP,
                                              ...)
-    } else if (opts('which_phenotype') %in% c('specificity', 'abundance')) {
+    } else if (opts('which_phenotype') %in% c('specificity', 'abundance', 'provided')) {
         get.pheno.plotting.scales.specificity(phenotype,
                                               trees,
                                               phenoP,
@@ -63,7 +63,7 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
                                                  ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     phenoLimits <- quantile(unique(phenotype), c(0.2, 0.8))
-    phenoLimitsTaxon <- lapply(trees, function(tr) {
+    phenoLimitsTaxon <- lapply(trees, function(tr) {      
         phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>%
             na.omit
 	if (length(unique(phi)) > 1) {

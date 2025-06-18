@@ -97,7 +97,12 @@ taxa that are neither.
 # Unpack pz.db and phenotype results to current environment
 list2env(core[["list_pheno"]], environment())
 
-if (!("phenotype_results") %in% names(core[["list_pheno"]])) { skip_phenotypes <- TRUE } else { skip_phenotypes <- FALSE }
+if (("phenotype_results" %in% names(core[["list_pheno"]])) &&
+    !(is.null(core[["list_pheno"]][["phenotype_results"]]))) {
+    skip_phenotypes <- FALSE
+} else {
+    skip_phenotypes <- TRUE
+}
 
 if (!(skip_phenotypes)) {
 # Also unpack "phenotype, phenoP, mapped.observed" into current environment
@@ -106,6 +111,7 @@ list2env(core[["list_pheno"]][["phenotype_results"]], environment())
 pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
 pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
 plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pz.db$taxonomy, pheno.scale)
+
 
 # Template for plots
 template <- c(
@@ -126,6 +132,15 @@ write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
 } else {
 
 pz.message("Skipping phenotypes, as not found (possibly because POMS was used)")
+
+# Create dummy phenotypes for significant gene plot 
+all_species <- Reduce(union, map(pz.db$trees, \(.) .$tip.label))
+phenotype <- setNames(rep(0, length(poms_sp)), poms_sp)
+phenoP <- 0
+
+pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
+plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pz.db$taxonomy, pheno.scale)
+
 plots <- NULL 
 }
 # be a little parsimonious with memory here
@@ -196,13 +211,18 @@ an FDR of 5%.
 ```{r write_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
 
 signif_genes <- core[["list_signif"]]
+pos.sig.count <- purrr::map_dbl(signif_genes$pos.sig, length)
 
-pos.sig <- data.frame(
-  Taxon = names(signif_genes[["pos.sig"]]),
-  `Significant Genes` = sapply(signif_genes[["pos.sig"]], length),
-  row.names = NULL
-)
-phylogenize::getClinDT(pos.sig)
+if ("neg.sig" %in% names(core[["list_signif"]])) {
+    neg.sig.count <- purrr::map_dbl(signif_genes$neg.sig, length)
+    sig.count <- full_join(enframe(pos.sig.count, name="Taxon", value="Pos. Sig. Genes"),
+                           enframe(neg.sig.count, name="Taxon", value="Neg. Sig. Genes"),
+                           by="Taxon")
+} else {
+    sig.count <- enframe(pos.sig.count, name="Taxon", value="Pos. Sig. Genes")
+}
+
+phylogenize::getClinDT(sig.count)
 
 write.csv(file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
 	  signif_genes[["pos.sig.descs"]])
