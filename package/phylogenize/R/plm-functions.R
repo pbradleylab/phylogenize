@@ -1119,12 +1119,12 @@ ashr.diff.abund <- function(abd.meta,
           any(is.na(maaslin_results_tbl$stderr))) {
           pz.error("Error: Missing values found in coef or stderr columns.")
       }
-      maaslin_ash <- ash_wrapper(
-          dplyr::select(maaslin_results_tbl, feature, coef) %>%
-              tibble::deframe(),
-          dplyr::select(maaslin_results_tbl, feature, stderr) %>%
-              tibble::deframe()
-      )
+      maaslin_ash <- ash_wrapper(dplyr::pull(maaslin_results_tbl,
+                       coef,
+                       name=feature),
+                               dplyr::pull(maaslin_results_tbl,
+                                           stderr,
+                                           name=feature))
       sample_ashr <- tibble::as_tibble(maaslin_ash$result, rownames = "species")
   } else {
       pz.error(
