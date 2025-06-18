@@ -157,7 +157,8 @@ matrix.POMS <- function(tree,
     tree_nodes <- ape::makeNodeLabel(tree)
     # Don't check names because this will potentially change them, meaning 
     # they won't match the metadata anymore
-    poms_output <- POMS::POMS_pipeline(
+    poms_output <- tryCatch({
+			    POMS::POMS_pipeline(
         abun=data.frame(
             as.matrix(abd.meta$mtx),
             check.names=FALSE),
@@ -168,7 +169,20 @@ matrix.POMS <- function(tree,
         ncores=cores,
         min_num_tips=poms_min_tips,
         min_func_instances=poms_min_func,
-        pseudocount=poms_pseudocount)
+        pseudocount=poms_pseudocount)},
+			    error = function(e) {
+				    pz.warning(e)
+				    NA
+			    })
+    # handle error
+    if (is.na(poms_output)) {
+	    result_mtx <- rbind(Estimate = rep(NA, ncol(phylotype_df))),
+			 p.value = NA,
+			 StdErr = NA,
+			 df = NA)
+	    colnames(result_mtx) <- colnames(phylotype_df)
+	    return(result_mtx)
+    }
     poms_enrichments <- (log2(
         (poms_output$results[, "num_FSNs_group1_enrich"] + 0.5) /
             (poms_output$results[, "num_FSNs_group2_enrich"] + 0.5)))
