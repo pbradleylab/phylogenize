@@ -134,7 +134,7 @@ pz.message("Skipping phenotypes, as not found (possibly because POMS was used)")
 
 # Create dummy phenotypes for significant gene plot 
 all_species <- Reduce(union, map(pz.db$trees, \(.) .$tip.label))
-phenotype <- setNames(rep(0, length(poms_sp)), poms_sp)
+phenotype <- setNames(rep(0, length(all_species)), all_species)
 phenoP <- 0
 
 pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
@@ -210,10 +210,10 @@ an FDR of 5%.
 ```{r write_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
 
 signif_genes <- core[["list_signif"]]
-pos.sig.count <- purrr::map_dbl(cirr_fam_abd_poms_mini$list_signif$pos.sig, length)
+pos.sig.count <- purrr::map_dbl(signif_genes$pos.sig, length)
 
 if ("neg.sig" %in% names(core[["list_signif"]])) {
-    neg.sig.count <- purrr::map_dbl(cirr_fam_abd_poms_mini$list_signif$neg.sig, length)
+    neg.sig.count <- purrr::map_dbl(signif_genes$neg.sig, length)
     sig.count <- full_join(enframe(pos.sig.count, name="Taxon", value="Pos. Sig. Genes"),
                            enframe(neg.sig.count, name="Taxon", value="Neg. Sig. Genes"),
                            by="Taxon")
