@@ -88,6 +88,18 @@ We are currently preparing more biome-specific databases that may be better suit
 
 All of the above databases will have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
 
+## Preparing your data
+
+If you are using shotgun metagenomes, you will need to first quantify species. The species definitions and names must match the database you plan to use. We recommend using Kraken2/Bracken with one of the following databases:
+
+ - UHGG v1.0 Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v1.0/uhgg_kraken2-db/
+ - GTDB v202 Kraken2 database: http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release202/kraken2/
+    * Thanks to Nick Youngblut who generated this database using [Struo2](https://github.com/leylabmpi/Struo2).
+  
+An example workflow for UHGG written in Snakemake can be seen [here](https://github.com/pbradleylab/cirrhosis-analysis).
+
+Note that you will also need to merge the final Bracken output files into a tab-delimited file with the first column giving the species ID and other columns giving per-sample or per-subject abundances. (We also recommend that you merge any technical replicates at this point, as leaving in multiple measurements per experimental unit will lead to overconfident predictions.)
+
 ## Running Phylogenize2
 
 Congratulations! Phylogenize2 should now be installed.
