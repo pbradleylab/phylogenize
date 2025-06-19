@@ -37,7 +37,7 @@ default_params <- list(
     spec_color_mid = 'gray50',
     treemin = 5,
     type_16S = FALSE,
-    tax_level = "family",
+    taxon_level = "family",
     use_rmd_params = FALSE,
     vsearch_16sfile = "16s_gtdb.frn",
     vsearch_cutoff = 0.985,
@@ -91,7 +91,7 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{db}{String. Which database to use. Can be "gtdb" or "uhgp." Default: "gtdb"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
 #'   \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}
-#'   \item{tax_level}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
+#'   \item{taxon_level}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
 #'   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
 #'   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: TRUE}
 #'   \item{min_fx}{Positive double. Effects that are significantly equivalent to this effect size will be excluded from significant positive hits. If zero, the equivalence test will be skipped. Default: 0}

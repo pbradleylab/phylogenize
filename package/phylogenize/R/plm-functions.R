@@ -183,15 +183,17 @@ matrix.POMS <- function(tree,
 	    colnames(result_mtx) <- colnames(phylotype_df)
 	    return(result_mtx)
     }
-    poms_enrichments <- (log2(
-        (poms_output$results[, "num_FSNs_group1_enrich"] + 0.5) /
-            (poms_output$results[, "num_FSNs_group2_enrich"] + 0.5)))
-    poms_pvals <- poms_output$results[, "multinomial_p"]
-    result_mtx <- rbind(Estimate = poms_enrichments,
-                 p.value = poms_pvals,
-                 StdErr = NA,
-                 df = NA)
-    colnames(result_mtx) <- colnames(phylotype_df)
+    poms_tbl <- tibble::as_tibble(poms_output$results, rownames="gene") %>%
+        dplyr::mutate(
+              Estimate = abs(
+                           log2((num_FSNs_group1_enrich + 0.5) /
+                                (num_FSNs_group2_enrich + 0.5))),
+              p.value = multinomial_p,
+	      StdErr = NA,
+              df = NA) %>%
+        dplyr::select(gene, Estimate, p.value, StdErr, df)
+    result_mtx <- t(as.matrix(poms_tbl[-1]))
+    colnames(result_mtx) <- poms_tbl[[1]]
     result_mtx
 }
 
