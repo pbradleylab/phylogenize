@@ -96,9 +96,9 @@ If you are using shotgun metagenomes, you will need to first quantify species. T
  - GTDB v202 Kraken2 database: http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release202/kraken2/
     * Thanks to Nick Youngblut who generated this database using [Struo2](https://github.com/leylabmpi/Struo2).
   
-An example workflow for UHGG written in Snakemake can be seen [here](https://github.com/pbradleylab/cirrhosis-analysis).
+An example workflow for UHGG written in Snakemake can be seen under `shotgun_kraken2_example`. (Note that the names in the UHGG v1.0 database does not exactly match the database used in Phylogenize2, so they get processed further in `read-bracken.R`. We will make this easier in a future release.)
 
-Note that you will also need to merge the final Bracken output files into a tab-delimited file with the first column giving the species ID and other columns giving per-sample or per-subject abundances. (We also recommend that you merge any technical replicates at this point, as leaving in multiple measurements per experimental unit will lead to overconfident predictions.)
+Finally, we also recommend that you merge any technical replicates at this point, as leaving in multiple measurements per experimental unit will lead to overconfident predictions. `read-bracken.R` has an example of how to do this using run info downloaded from the SRA (provided as an example).
 
 ## Running Phylogenize2
 
@@ -191,4 +191,4 @@ render_core_report(
 
 ## Contact
 
-If you have questions or comments, please contact [[support\@phylogenize.org](mailto:support@phylogenize.org){.email}]. If Phylogenize2 is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!
+If you have questions or comments, please contact [support\@phylogenize.org](mailto:support@phylogenize.org). If Phylogenize2 is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!
