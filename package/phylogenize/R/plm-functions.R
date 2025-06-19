@@ -157,7 +157,8 @@ matrix.POMS <- function(tree,
     tree_nodes <- ape::makeNodeLabel(tree)
     # Don't check names because this will potentially change them, meaning 
     # they won't match the metadata anymore
-    poms_output <- POMS::POMS_pipeline(
+    poms_output <- tryCatch({
+			    POMS::POMS_pipeline(
         abun=data.frame(
             as.matrix(abd.meta$mtx),
             check.names=FALSE),
@@ -168,16 +169,31 @@ matrix.POMS <- function(tree,
         ncores=cores,
         min_num_tips=poms_min_tips,
         min_func_instances=poms_min_func,
-        pseudocount=poms_pseudocount)
-    poms_enrichments <- (log2(
-        (poms_output$results[, "num_FSNs_group1_enrich"] + 0.5) /
-            (poms_output$results[, "num_FSNs_group2_enrich"] + 0.5)))
-    poms_pvals <- poms_output$results[, "multinomial_p"]
-    result_mtx <- rbind(Estimate = poms_enrichments,
-                 p.value = poms_pvals,
-                 StdErr = NA,
-                 df = NA)
-    colnames(result_mtx) <- colnames(phylotype_df)
+        pseudocount=poms_pseudocount)},
+			    error = function(e) {
+				    pz.warning(e)
+				    NA
+			    })
+    # handle error
+    if ((length(poms_output)==1) && all(is.na(poms_output))) {
+	    result_mtx <- rbind(Estimate = rep(NA, ncol(phylotype_df)),
+			 p.value = NA,
+			 StdErr = NA,
+			 df = NA)
+	    colnames(result_mtx) <- colnames(phylotype_df)
+	    return(result_mtx)
+    }
+    poms_tbl <- tibble::as_tibble(poms_output$results, rownames="gene") %>%
+        dplyr::mutate(
+              Estimate = abs(
+                           log2((num_FSNs_group1_enrich + 0.5) /
+                                (num_FSNs_group2_enrich + 0.5))),
+              p.value = multinomial_p,
+	      StdErr = NA,
+              df = NA) %>%
+        dplyr::select(gene, Estimate, p.value, StdErr, df)
+    result_mtx <- t(as.matrix(poms_tbl[-1]))
+    colnames(result_mtx) <- poms_tbl[[1]]
     result_mtx
 }
 
@@ -1111,7 +1127,8 @@ ashr.diff.abund <- function(abd.meta,
           reference = m_reference,
           output = "temp/",
           plot_heatmap = FALSE,
-          plot_scatter = FALSE
+          plot_scatter = FALSE,
+	  min_prevalence = 1e-7 #hardcoded for now
       )
       maaslin_results_tbl <- maaslin_res$results %>% tibble::tibble() %>%
           dplyr::filter(metadata == E, value == envir)
@@ -1119,12 +1136,12 @@ ashr.diff.abund <- function(abd.meta,
           any(is.na(maaslin_results_tbl$stderr))) {
           pz.error("Error: Missing values found in coef or stderr columns.")
       }
-      maaslin_ash <- ash_wrapper(
-          dplyr::select(maaslin_results_tbl, feature, coef) %>%
-              tibble::deframe(),
-          dplyr::select(maaslin_results_tbl, feature, stderr) %>%
-              tibble::deframe()
-      )
+      maaslin_ash <- ash_wrapper(dplyr::pull(maaslin_results_tbl,
+                       coef,
+                       name=feature),
+                               dplyr::pull(maaslin_results_tbl,
+                                           stderr,
+                                           name=feature))
       sample_ashr <- tibble::as_tibble(maaslin_ash$result, rownames = "species")
   } else {
       pz.error(
@@ -1302,7 +1319,8 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
         i <- na.omit(intersect(tips, colns))
         if (length(i) > 0) {
             mtx <- gene.presence[[tx]][, i, drop=FALSE]
-            g <- names(which((rowSums(mtx) >= Min) & (rowSums(!mtx) >= Min)))
+	    Max <- ncol(mtx) - Min
+            g <- names(which((Matrix::rowSums(mtx) >= Min) & (Matrix::rowSums(mtx) <= Max)))
             gene.presence[[tx]] <- mtx[g, , drop=FALSE]
 	}
 	if ((length(i) == 0) || (length(g) == 0)) {
