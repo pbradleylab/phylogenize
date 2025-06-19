@@ -1125,7 +1125,8 @@ ashr.diff.abund <- function(abd.meta,
           reference = m_reference,
           output = "temp/",
           plot_heatmap = FALSE,
-          plot_scatter = FALSE
+          plot_scatter = FALSE,
+	  min_prevalence = 1e-7 #hardcoded for now
       )
       maaslin_results_tbl <- maaslin_res$results %>% tibble::tibble() %>%
           dplyr::filter(metadata == E, value == envir)
@@ -1316,7 +1317,8 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
         i <- na.omit(intersect(tips, colns))
         if (length(i) > 0) {
             mtx <- gene.presence[[tx]][, i, drop=FALSE]
-            g <- names(which((rowSums(mtx) >= Min) & (rowSums(!mtx) >= Min)))
+	    Max <- ncol(mtx) - Min
+            g <- names(which((Matrix::rowSums(mtx) >= Min) & (Matrix::rowSums(mtx) <= Max)))
             gene.presence[[tx]] <- mtx[g, , drop=FALSE]
 	}
 	if ((length(i) == 0) || (length(g) == 0)) {
