@@ -62,9 +62,7 @@ genome_metadata_fixed2 <-
 ### Part 3: collapse reads for the same individual
 # Load in and match sample/run metadata
 
-sample_metadata <- read_tsv("cirrhosis-igg-samples.tsv")
-sra_metadata <- read_csv("SraRunTable.txt")
-sra_metadata_with_env <- left_join(sra_metadata, sample_metadata, by=c("sample_acc"="sample_id"))
+sra_metadata_with_env <- read_csv("SraRunTable.txt")
 
 indiv_md <- sra_metadata_with_env %>%
     separate("Sample_Name", "_", into=c("individual", "seq_run")) %>%
