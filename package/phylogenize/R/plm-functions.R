@@ -175,7 +175,7 @@ matrix.POMS <- function(tree,
 				    NA
 			    })
     # handle error
-    if ((length(poms_output)==0) && is.na(poms_output)) {
+    if ((length(poms_output)==1) && all(is.na(poms_output))) {
 	    result_mtx <- rbind(Estimate = rep(NA, ncol(phylotype_df)),
 			 p.value = NA,
 			 StdErr = NA,
