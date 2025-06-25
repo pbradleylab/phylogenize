@@ -20,7 +20,7 @@ default_params <- list(
     ncl = 1,
     output_file="results.html",
     out_dir="./",
-    pctmin = 0.025,
+    pctmin = 0,
     phenotype_file = "",
     prior_type = "uninformative",
     prior_file = "",
@@ -97,7 +97,7 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{min_fx}{Positive double. Effects that are significantly equivalent to this effect size will be excluded from significant positive hits. If zero, the equivalence test will be skipped. Default: 0}
 #'   \item{minimum}{Integer. A particular gene must be observed, and also absent, at least this many times to be reported as a significant positive association with the phenotype. Default: 3}
 #'   \item{ncl}{Integer. Number of cores to use for parallel computation. Default: 1}
-#'   \item{pctmin}{Float. A taxon must have at least this percent of observed representatives in order to be processed. Default: 0.01}
+#'   \item{pctmin}{Float. A taxon must have at least this percent of observed representatives in order to be processed. Default: 0}
 #'   \item{prior_type}{String. What type of prior to use ("uninformative" or "file"). Default: "uninformative"}
 #'   \item{single_dset}{Boolean. If true, will assume that all samples come from a single dataset called \code{dset1} no matter what, if anything, is in \code{dset_column}. Default: FALSE}
 #'   \item{treemin}{Integer. A taxon must have at least this many representatives in order to be processed. Default: 5}

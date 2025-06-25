@@ -83,18 +83,10 @@ run.vsearch <- function(...) {
                          "--strand both",
                          "--id",
                          pid,
+			 "--maxaccepts",
+			 20,
                          "--blast6out",
                          opts('vsearch_outfile'))
-    } else if (binary == "vsearch") {
-        vsearch_args = c("--usearch_global",
-                         opts('vsearch_infile'),
-                         "--db",
-                         file.path(opts('data_dir'), opts('vsearch_16sfile')),
-                         "--strand both",
-                         "--blast6out",
-                         opts('vsearch_outfile'),
-                         "--id",
-                         pid)
     } else {
         pz.warning(paste0("Aligner not recognized, calling as old version of ",
                           "vsearch that does not support reverse complements"))
@@ -105,6 +97,8 @@ run.vsearch <- function(...) {
                          opts('vsearch_infile'),
                          "--id",
                          pid,
+			 "--maxaccepts",
+			 20,
                          "--blast6out",
                          opts('vsearch_outfile'))
         
@@ -140,7 +134,7 @@ get.vsearch.results <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     # map to MIDAS IDs using vsearch
     assignments <- data.frame(
-        readr::read_tsv(opts('vsearch_outfile')))
+        readr::read_tsv(opts('vsearch_outfile'), col_names=FALSE))
     row.hits <- as.numeric(gsub("Row", "", assignments[, 1]))
     row.targets <- sapply(assignments[, 2],
                           function(x) strsplit(x, ";;")[[1]][3])
@@ -168,18 +162,38 @@ get.vsearch.results <- function(...) {
 #'     amplicon sequence variant DNA sequences.
 #' @return A new matrix with MIDAS IDs as rows.
 #' @export sum.nonunique.vsearch
-sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
+sum.nonunique.vsearch <- function(vsearch, mtx, handle_multi="drop", return_val="matrix", ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    uniq.hits <- which(count.each(vsearch$hits) < 2)
-    rh <- vsearch$hits[uniq.hits]
-    rt <- vsearch$targets[uniq.hits]
-    subset.abd <- mtx[rh, , drop=FALSE]
-    urt <- unique(rt)
-    summed.uniq <- sapply(urt, function(r) {
-        w <- which(rt == r)
-        apply(subset.abd[w, , drop=FALSE], 2, sum)
-    }) %>% t
-    rownames(summed.uniq) <- urt
-    summed.uniq
+    V <- vsearch$assn
+    V_nest <- V %>%
+      dplyr::group_by(X1) %>%
+      dplyr::slice_max(X3) %>%
+      tidyr::separate_wider_delim(X2, delim=";;", names=c("genome", "species", "species_id")) %>%
+      dplyr::select(X1, species_id) %>%
+      dplyr::distinct() %>%
+      tidyr::nest() %>%
+      dplyr::mutate(r=purrr::map_int(data, nrow))
+    if (handle_multi=="drop") {
+	    V_dropped <- dplyr::filter(V_nest, r>1) 
+	    V_nest <- dplyr::filter(V_nest, r==1) 
+    } else { V_dropped <- NA }
+    V2 <- V_nest %>%
+	    tidyr::unnest(cols=c(data)) %>%
+	    dplyr::mutate(row=as.numeric(gsub("Row", "", X1))) %>%
+	    dplyr::ungroup()
+    data_tbl <- as_tibble(mtx)
+    if ((".Row.Number") %in% colnames(data_tbl)) { error("matrix cannot contain .Row.Number") }
+    data_tbl[[".Row.Number"]] <- 1:nrow(data_tbl)
+    summed_tbl <- data_tbl %>%
+      pivot_longer(-.Row.Number) %>%
+      inner_join(., V2, by=c(".Row.Number" = "row")) %>%
+      select(species_id, name, value) %>%
+      group_by(name, species_id) %>%
+      summarize(value = sum(value)) %>%
+      pivot_wider(names_from = name, values_from = value)
+    summed_mtx <- data.matrix(summed_tbl[-1])
+    rownames(summed_mtx) <- summed_tbl[[1]]
+    if (return_val == "matrix") return(summed_mtx)
+    return(list(mtx=summed_mtx, V_nest=V_nest, V_dropped=V_dropped, V2=V2))
 }
 
