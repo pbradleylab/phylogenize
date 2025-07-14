@@ -536,11 +536,12 @@ process.16s <- function(abd.meta, ...) {
     run.vsearch(...)
     vsearch <- get.vsearch.results(...)
     summed.uniq <- sum.nonunique.vsearch(vsearch, abd.meta$mtx, ...)
-    # csu <- colSums(summed.uniq)
-    # abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],
-    #                      2,
-    #                      function(x) x / sum(x))
-    # abd.meta
+    csu <- colSums(summed.uniq)
+    abd.meta$mtx <- summed.uniq[, which(csu > 0), drop=FALSE]
+    #abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],
+    #                     2,
+    #                     function(x) x / sum(x))
+    abd.meta
 }
 
 #' Check metadata and abundance matrix against one another
