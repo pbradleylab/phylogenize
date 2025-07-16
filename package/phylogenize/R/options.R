@@ -1,5 +1,6 @@
 # Set the default parameters
 default_params <- list(
+    appspam_path="/usr/local/bin/appspam",
     which_16s_method="appspam",
     aln_path_16s="",
     tree_path_16s="",

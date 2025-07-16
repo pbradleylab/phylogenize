@@ -246,7 +246,7 @@ get.appspam.results <- function(...) {
     edge <- tibble::as_tibble(tr$edge) %>%
         dplyr::mutate(edge_num=row_number()) %>%
         dplyr::inner_join(., pl)
-    tidy_tips <- purrr::map(p_place_edge$V1, ~ {
+    tidy_tips <- purrr::map(edge$V1, ~ {
         p_tree$tip.label[tidytree::offspring(p_tree, .x, type="tips")]
     }, .progress=TRUE)
     name_to_species <- dplyr::mutate(edge, tips_under = tidy_tips) %>%
