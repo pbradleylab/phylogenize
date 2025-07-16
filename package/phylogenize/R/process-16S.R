@@ -222,6 +222,8 @@ run.appspam <- function(...) {
             opts('tree_path_16s'),
             "-q",
             opts('named_asv_file'),
+	    "--threads",
+            opts('ncl'),
             "-o",
             opts('jplace_file') # in setup should check if exists
         )
@@ -247,7 +249,7 @@ get.appspam.results <- function(...) {
         dplyr::mutate(edge_num=row_number()) %>%
         dplyr::inner_join(., pl)
     tidy_tips <- purrr::map(edge$V1, ~ {
-        p_tree$tip.label[tidytree::offspring(p_tree, .x, type="tips")]
+        tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
     }, .progress=TRUE)
     name_to_species <- dplyr::mutate(edge, tips_under = tidy_tips) %>%
         tidyr::separate_wider_delim(
