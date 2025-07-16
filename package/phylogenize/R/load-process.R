@@ -529,15 +529,26 @@ process.16s <- function(abd.meta, ...) {
         pz.error(paste0("expected rows to be DNA sequences but found illegal ",
                         "characters"))
     }
-    prepare.vsearch.input(abd.meta$mtx, ...)
-    run.vsearch(...)
-    vsearch <- get.vsearch.results(...)
-    summed.uniq <- sum.nonunique.vsearch(vsearch, abd.meta$mtx, ...)
+    if (opts('which_16s_method')=="vsearch") {
+        prepare.vsearch.input(abd.meta$mtx, ...)
+        run.vsearch(...)
+        results_16s <- get.vsearch.results(...)
+    } else if (opts('which_16s_method')=="appspam") {
+        prepare.vsearch.input(abd.meta$mtx, ...)
+        run.appspam(...)
+        results_16s <- get.appspam.results(...)
+    } else if (opts('which_16s_method')=="jplace") {
+        results_16s <- get.appspam.results(...)        
+    } else {
+        pz.error("which_16s_method must be vsearch, appspam, or jplace")
+    }
+    summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ...)
     csu <- colSums(summed.uniq)
     abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],
                           2,
                           function(x) x / sum(x))
     abd.meta
+    
 }
 
 #' Check metadata and abundance matrix against one another
