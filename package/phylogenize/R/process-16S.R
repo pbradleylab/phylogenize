@@ -252,6 +252,7 @@ get.appspam.results <- function(...) {
         tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
     }, .progress=TRUE)
     name_to_species <- dplyr::mutate(edge, tips_under = tidy_tips) %>%
+	tidyr::unnest(tips_under) %>%
         tidyr::separate_wider_delim(
             tips_under,
             delim="____",
