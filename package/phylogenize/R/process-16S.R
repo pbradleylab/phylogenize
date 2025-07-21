@@ -170,15 +170,18 @@ get.vsearch.results <- function(...) {
 #' @export sum.nonunique.vsearch
 sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    uniq.hits <- which(count.each(vsearch$hits) < 2)
-    rh <- vsearch$hits[uniq.hits]
-    rt <- vsearch$targets[uniq.hits]
+    vs_tbl <- tibble::tibble(hits=vsearch$hits, targets=vsearch$targets) %>% 
+	    dplyr::group_by(hits) %>%
+	    dplyr::mutate(n = length(unique(targets)))
+    vs_tbl_1 <- dplyr::filter(vs_tbl, n == 1)
+    rh <- vs_tbl_1$hits
+    rt <- vs_tbl_1$targets
     subset.abd <- mtx[rh, , drop=FALSE]
     urt <- unique(rt)
-    summed.uniq <- sapply(urt, function(r) {
+    summed.uniq <- t(sapply(urt, function(r) {
         w <- which(rt == r)
         apply(subset.abd[w, , drop=FALSE], 2, sum)
-    }) %>% t
+    }))
     rownames(summed.uniq) <- urt
     summed.uniq
 }
@@ -257,7 +260,9 @@ get.appspam.results <- function(...) {
             tips_under,
             delim="____",
             names=c("gene","genus","species"))
-    return(list(hits=name_to_species$name,
-                targets=name_to_species$species,
+    uniq_n2s <- name_to_species %>% select(name, species) %>% distinct() %>%
+	    mutate(name = as.numeric(gsub("Row","", name)))
+    return(list(hits=uniq_n2s$name,
+                targets=uniq_n2s$species,
                 assn=name_to_species))
 }
