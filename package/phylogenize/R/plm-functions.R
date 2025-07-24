@@ -1302,7 +1302,8 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
         i <- na.omit(intersect(tips, colns))
         if (length(i) > 0) {
             mtx <- gene.presence[[tx]][, i, drop=FALSE]
-            g <- names(which((rowSums(mtx) >= Min) & (rowSums(!mtx) >= Min)))
+	    Max <- ncol(mtx) - Min
+            g <- names(which((rowSums(mtx) >= Min) & (rowSums(mtx) <= Max)))
             gene.presence[[tx]] <- mtx[g, , drop=FALSE]
 	}
 	if ((length(i) == 0) || (length(g) == 0)) {
