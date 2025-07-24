@@ -251,9 +251,14 @@ get.appspam.results <- function(...) {
     edge <- tibble::as_tibble(tr$edge) %>%
         dplyr::mutate(edge_num=row_number()) %>%
         dplyr::inner_join(., pl)
-    tidy_tips <- purrr::map(edge$V1, ~ {
+    cl <- parallel::makeCluster(opts('ncl'))
+    tidy_tips <- parallel::parLapply(cl, edge$V1, \(.x, tr) {
         tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
-    }, .progress=TRUE)
+    }, tr)
+    parallel::stopCluster(cl)
+    #tidy_tips <- purrr::map(edge$V1, ~ {
+    #    tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
+    #}, .progress=TRUE)
     name_to_species <- dplyr::mutate(edge, tips_under = tidy_tips) %>%
 	tidyr::unnest(tips_under) %>%
         tidyr::separate_wider_delim(
