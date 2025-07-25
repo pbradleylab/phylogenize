@@ -28,14 +28,6 @@ prepare.vsearch.input <- function(mtx, ...) {
     }
     asvnames = paste0("Row", (1:nrow(mtx)))
     asvs = rownames(mtx)
-    if (binary %in% c("vsearch", "appspam")) {
-        pz.message("Assuming aligner CAN do reverse complement by itself...")
-    } else {
-        pz.message("Assuming aligner CANNOT do reverse complement by itself...")
-        asvnames = c(asvnames, asvnames)
-        revcomp = function(x) seqinr::c2s(rev(seqinr::comp(seqinr::s2c(x))))
-        asvs = c(asvs, vapply(asvs, revcomp, ""))
-    }
     seqinr::write.fasta(as.list(asvs),
                         asvnames,
                         file.out=opts('named_asv_file'),
