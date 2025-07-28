@@ -544,9 +544,11 @@ process.16s <- function(abd.meta, ...) {
     }
     summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ...)
     csu <- colSums(summed.uniq)
-    abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],
-                          2,
-                          function(x) x / sum(x))
+    abd.meta$mtx <- summed.uniq[, which(csu > 0), drop=FALSE]
+    # don't convert to relative abundance...
+    # abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],
+    #                       2,
+    #                       function(x) x / sum(x))
     abd.meta
     
 }
