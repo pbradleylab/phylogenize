@@ -1,5 +1,6 @@
 # Set the default parameters
 default_params <- list(
+    min_frac_16s=0.8,		       
     appspam_path="/usr/local/bin/appspam",
     which_16s_method="appspam",
     aln_path_16s="",
@@ -92,6 +93,7 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{jplace_file}{String. Path to write .jplace file (if which_16s_method is "appspam") or to read user-provided .jplace file (if which_16s_method is "jplace".) \emph{phylogenize}. Default: ""}
 #'   \item{aln_path_16s}{String. Path to the multiple alignment of 16S sequences used for phylogenetic placement. Default: ""}
 #'   \item{tree_path_16s}{String. Path to the tree of 16S sequences used for phylogenetic placement. \emph{phylogenize}. Default: ""}
+#'   \item{min_frac_16s}{Numeric. Should be between 0.5 and 1. Only keep ASVs where at least this fraction of assignments are to the same species. Allows some tolerance for mislabeled or phylogenetically-inconsistent 16S sequences in the database. Default: 0.8}
 #' }
 #'
 #' @section Computing phenotypes and results:

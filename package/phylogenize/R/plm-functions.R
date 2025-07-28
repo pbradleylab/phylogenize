@@ -1295,8 +1295,10 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     Min <- opts('minimum')
     taxa <- names(trees)
+    # keep track of which taxa should be dropped entirely
     to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)
     for (tx in taxa) {
+	pz.message(paste0("Processing taxon ", tx))
         tips <- trees[[tx]]$tip.label
         colns <- colnames(gene.presence[[tx]])
         i <- na.omit(intersect(tips, colns))
@@ -1304,6 +1306,7 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
             mtx <- gene.presence[[tx]][, i, drop=FALSE]
 	    Max <- ncol(mtx) - Min
             g <- names(which((rowSums(mtx) >= Min) & (rowSums(mtx) <= Max)))
+	    pz.message(paste0("Retained ", length(g), " out of ", nrow(mtx), " genes..."))
             gene.presence[[tx]] <- mtx[g, , drop=FALSE]
 	}
 	if ((length(i) == 0) || (length(g) == 0)) {
