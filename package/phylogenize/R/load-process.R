@@ -353,11 +353,12 @@ adjust.db <- function(pz.db, abd.meta, ...) {
 	tips <- intersect(tr$tip.label, species.observed)
 	ape::keep.tip(tr, tips)
     })
+    pz.db$gene.presence <- above_minimum_genes(pz.db$gene.presence, pz.db$trees)
+    pz.db$trees <- pz.db$trees[intersect(names(pz.db$trees), names(pz.db$gene.presence))]
     pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
     pz.db$ntaxa <- length(pz.db$trees)
     pz.db$trees <- lapply(pz.db$trees, fix.tree)
     # Re-run this to drop any genes that shouldn't be run
-    pz.db$gene.presence <- above_minimum_genes(pz.db$gene.presence, pz.db$trees)
     pz.db
 }
 
