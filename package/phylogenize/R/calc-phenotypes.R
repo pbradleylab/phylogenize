@@ -20,6 +20,9 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
         sanity.check.abundance(abd.meta$mtx, ...)
     }
     phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
+    if (pz.options('quantile_normalize')) {
+	phenotype_results <- quantile_normalize(phenotype_results)
+    } 
     if (pz.options('which_phenotype') %in% c("specificity", "abundance")) {
         # only retain observed taxa
         pz.db$trees <- retain.observed.taxa(pz.db$trees,
@@ -40,6 +43,37 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
     ))
     # otherwise, don't need to save the original data beyond this point
     return(list(pz.db=pz.db, phenotype_results=phenotype_results))
+}
+
+#' Quantile-normalize phenotype. Wraps the function `quant_norm()`.
+#'
+#' @param phenotype_results A list with named components "phenotype" and optionally "phenoP".
+#' @export
+quantile_normalize <- function(phenotype_results) {
+  if ("phenoP" %in% names(phenotype_results)) {
+	  ph <- c(phenotype_results$phenoP, phenotype_results$phenotype)
+  } else {
+	  ph <- phenotype_results$phenotype
+  }
+  normed <- quant_norm(ph)
+  if ("phenoP" %in% names(phenotype_results)) {
+	  phenotype_results$phenotype <- normed[-1]
+	  phenotype_results$phenoP <- normed[1]
+  } else {
+	  phenotype_results$phenotype <- normed
+  }
+  phenotype_results
+}
+
+#' Actually perform quantile normalization of a vector.
+#'
+#' @param x Vector to quantile-normalize to the normal distribution.
+#' @export
+quant_norm <- function(x) {
+	l <- length(x)
+	n <- qnorm((1:l)/(l+1))[rank(x)]
+	names(n) <- names(x)
+	n
 }
 
 #' Determine which phenotype to calculate and then calculate it.

@@ -1009,6 +1009,7 @@ ash_wrapper <- function(m, s, nw=10, ashr_df=5) {
 #'   environment annotations.}
 #'   \item{dset_column}{String. Name of column in metadata file containing the
 #'   dataset annotations. Will be incorporated as a "nuisance" variable.}
+#'   \item{which_envir}{String. Which environment are we contrasting?}
 #'   \item{diff_abund_method}{String. Either "ANCOMBC2" or "Maaslin2" (case 
 #'   insensitive).}
 #' }

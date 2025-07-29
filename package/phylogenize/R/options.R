@@ -58,7 +58,8 @@ default_params <- list(
     working_dir = '.',
     core_method = "phylogenize",
     rds_output_file = "core_output.rds",
-    fdr_method = "BY"
+    fdr_method = "BY",
+    quantile_normalize = FALSE
 )
 
 
@@ -99,6 +100,7 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #' @section Computing phenotypes and results:
 #' \describe{
 #'   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
+#'   \item{quantile_normalize}{Boolean. If TRUE, all phenotypes will be quantile-normalized to the normal distribution. Default: FALSE}
 #'   \item{db}{String. Which database to use. Can be "gtdb" or "uhgp." Default: "gtdb"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
 #'   \item{env_column}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
