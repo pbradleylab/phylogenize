@@ -260,8 +260,10 @@ import.pz.db <- function(...) {
     if (nrow(found_db) > 1) {
         pz.error(paste0("Duplicate data entries in db file: ", db_csv))
     }
+
     gene.presence <- readRDS(file.path(opts('data_dir'),
                                        found_db[["genes"]]))
+    gene.presence <- gene.presence[names(gene.presence) != ""]
     trees <- readRDS(file.path(opts('data_dir'),
                                found_db[["trees"]]))
     taxonomy <- readr::read_csv(file.path(opts('data_dir'),
