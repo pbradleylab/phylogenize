@@ -21,25 +21,25 @@ rule all:
     input:
         expand("abund/{sample}.bracken", sample=SAMPLES)
 
-
+# don't save raw output as it is very very big and not used by bracken
 rule kraken:
     input: 
         in1 = os.path.join(datadir, "{sample}_1.fastq"),
         in2 = os.path.join(datadir, "{sample}_2.fastq"),
     output: 
-        out = "abund/{sample}.kraken2",
+        # out = "abund/{sample}.kraken2",
         report = "abund/{sample}.kreport",
     resources:
         runtime = 10,
         mem_mb = "100000",
         nodes = 1,
+    threads: 40
     shell:
         "kraken2 --db /fs/project/bradley.720/db/uhgg2/kraken2_db_uhgg_v2.0.2/ "
-        "--threads 40 "
-        "--output {output.out} "
+        "--threads {threads} "
         "--report {output.report} "
         "--paired "
-        "{input.in1} {input.in2} "
+        "{input.in1} {input.in2} > /dev/null"
 
 
 rule bracken:
@@ -55,4 +55,4 @@ rule bracken:
         "-i {input} "
         "-o {output} "
         "-r 100 "
-        "-l R7"
+        "-l S"
