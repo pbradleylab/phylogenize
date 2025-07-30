@@ -1025,6 +1025,7 @@ ash_wrapper <- function(m, s, nw=10, ashr_df=5) {
 #'   environment annotations.}
 #'   \item{dset_column}{String. Name of column in metadata file containing the
 #'   dataset annotations. Will be incorporated as a "nuisance" variable.}
+#'   \item{which_envir}{String. Which environment are we contrasting?}
 #'   \item{diff_abund_method}{String. Either "ANCOMBC2" or "Maaslin2" (case 
 #'   insensitive).}
 #' }
@@ -1312,20 +1313,23 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     Min <- opts('minimum')
     taxa <- names(trees)
+    # keep track of which taxa should be dropped entirely
     to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)
     for (tx in taxa) {
+      pz.message(paste0("Processing taxon ", tx))
         tips <- trees[[tx]]$tip.label
         colns <- colnames(gene.presence[[tx]])
         i <- na.omit(intersect(tips, colns))
         if (length(i) > 0) {
-            mtx <- gene.presence[[tx]][, i, drop=FALSE]
-	    Max <- ncol(mtx) - Min
-            g <- names(which((Matrix::rowSums(mtx) >= Min) & (Matrix::rowSums(mtx) <= Max)))
-            gene.presence[[tx]] <- mtx[g, , drop=FALSE]
-	}
-	if ((length(i) == 0) || (length(g) == 0)) {
-            to_remove[tx] <- TRUE
-	}
+          mtx <- gene.presence[[tx]][, i, drop=FALSE]
+	        Max <- ncol(mtx) - Min
+          g <- names(which((Matrix::rowSums(mtx) >= Min) & (Matrix::rowSums(mtx) <= Max)))
+	        pz.message(paste0("Retained ", length(g), " out of ", nrow(mtx), " genes..."))
+          gene.presence[[tx]] <- mtx[g, , drop=FALSE]
+        }
+	    if ((length(i) == 0) || (length(g) == 0)) {
+        to_remove[tx] <- TRUE
+      }
     }
     gene.presence[names(which(!to_remove))]
 }

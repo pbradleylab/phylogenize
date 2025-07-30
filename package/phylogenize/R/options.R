@@ -1,5 +1,11 @@
 # Set the default parameters
 default_params <- list(
+    min_frac_16s=0.8,		       
+    appspam_path="/usr/local/bin/appspam",
+    which_16s_method="appspam",
+    aln_path_16s="",
+    tree_path_16s="",
+    jplace_file="",
     abundance_file = "",
     assume_below_LOD = TRUE,
     biom_file = "",
@@ -42,7 +48,7 @@ default_params <- list(
     vsearch_16sfile = "16s_gtdb.frn",
     vsearch_cutoff = 0.985,
     vsearch_dir = "",
-    vsearch_infile = "input_seqs.txt",
+    named_asv_file = "input_seqs.txt",
     vsearch_outfile = "output_assignments.txt",
     which_envir = "stool",
     which_phenotype = "prevalence",
@@ -52,7 +58,8 @@ default_params <- list(
     working_dir = '.',
     core_method = "phylogenize",
     rds_output_file = "core_output.rds",
-    fdr_method = "BY"
+    fdr_method = "BY",
+    quantile_normalize = FALSE
 )
 
 
@@ -79,15 +86,21 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{phenotype_file}{String. Name of input file for optional pre-calculated phenotype. Default: ""}
 #'   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
 #'   \item{separate_metadata}{Boolean. For BIOM data, is there a separate tabular abundance table? Default: FALSE}
+#'   \item{which_16s_method}{String. Can be "vsearch" (best-hit alignment), "appspam" (perform phylogenetic placement), or "jplace" (bring-your-own .jplace file). Default: "appspam"}
 #'   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_gtdb.frn"}
 #'   \item{vsearch_dir}{String. Path where the binary of the aligner is found. Default: "/usr/local/bin/"}
-#'   \item{vsearch_infile}{String. File name of the sequences written to disk and then read into the aligner. Default: "input_seqs.txt"}
+#'   \item{named_asv_file}{String. Path where sequences will be written to disk and then read into the aligner/AppSpam. Default: "input_seqs.txt"}
 #'   \item{vsearch_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
+#'   \item{jplace_file}{String. Path to write .jplace file (if which_16s_method is "appspam") or to read user-provided .jplace file (if which_16s_method is "jplace".) \emph{phylogenize}. Default: ""}
+#'   \item{aln_path_16s}{String. Path to the multiple alignment of 16S sequences used for phylogenetic placement. Default: ""}
+#'   \item{tree_path_16s}{String. Path to the tree of 16S sequences used for phylogenetic placement. \emph{phylogenize}. Default: ""}
+#'   \item{min_frac_16s}{Numeric. Should be between 0.5 and 1. Only keep ASVs where at least this fraction of assignments are to the same species. Allows some tolerance for mislabeled or phylogenetically-inconsistent 16S sequences in the database. Default: 0.8}
 #' }
 #'
 #' @section Computing phenotypes and results:
 #' \describe{
 #'   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
+#'   \item{quantile_normalize}{Boolean. If TRUE, all phenotypes will be quantile-normalized to the normal distribution. Default: FALSE}
 #'   \item{db}{String. Which database to use. Can be "gtdb" or "uhgp." Default: "gtdb"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
 #'   \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}

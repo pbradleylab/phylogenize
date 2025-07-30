@@ -20,7 +20,7 @@ being called that doesn't have the ability to search both strands.
 \details{
 Some particularly relevant global options are:
 \describe{
-  \item{vsearch_infile}{String. File name of the sequences to be read into
+  \item{named_asv_file}{String. File name of the sequences to be read into
 vsearch.}
   \item{vsearch_outfile}{String. File name where vsearch writes output
   which is then read back into \emph{phylogenize}.}

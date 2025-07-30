@@ -8,7 +8,7 @@
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   \item{vsearch_infile}{String. File name of the sequences written to disk
+#'   \item{named_asv_file}{String. File name of the sequences written to disk
 #'   and then read into vsearch/vsearch.}
 #' }
 #'
@@ -28,17 +28,9 @@ prepare.vsearch.input <- function(mtx, ...) {
     }
     asvnames = paste0("Row", (1:nrow(mtx)))
     asvs = rownames(mtx)
-    if (binary %in% c("vsearch")) {
-        pz.message("Assuming aligner CAN do reverse complement by itself...")
-    } else {
-        pz.message("Assuming aligner CANNOT do reverse complement by itself...")
-        asvnames = c(asvnames, asvnames)
-        revcomp = function(x) seqinr::c2s(rev(seqinr::comp(seqinr::s2c(x))))
-        asvs = c(asvs, vapply(asvs, revcomp, ""))
-    }
     seqinr::write.fasta(as.list(asvs),
                         asvnames,
-                        file.out=opts('vsearch_infile'),
+                        file.out=opts('named_asv_file'),
                         nbchar=99999,
                         as.string=TRUE)
     return(TRUE)
@@ -55,7 +47,7 @@ prepare.vsearch.input <- function(mtx, ...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
-#'   \item{vsearch_infile}{String. File name of the sequences to be read into
+#'   \item{named_asv_file}{String. File name of the sequences to be read into
 #' vsearch.}
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output
 #'   which is then read back into \emph{phylogenize}.}
@@ -74,41 +66,18 @@ run.vsearch <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     binary = basename(opts('vsearch_dir'))
     pid = opts('vsearch_cutoff')
-    if (binary %in% c("vsearch")) {
-        vsearch_args = c("--db",
-                         file.path(opts('data_dir'),
-                                   opts('vsearch_16sfile')),
-                         "--usearch_global",
-                         opts('vsearch_infile'),
-                         "--strand both",
-                         "--id",
-                         pid,
-                         "--blast6out",
-                         opts('vsearch_outfile'))
-    } else if (binary == "vsearch") {
-        vsearch_args = c("--usearch_global",
-                         opts('vsearch_infile'),
-                         "--db",
-                         file.path(opts('data_dir'), opts('vsearch_16sfile')),
-                         "--strand both",
-                         "--blast6out",
-                         opts('vsearch_outfile'),
-                         "--id",
-                         pid)
-    } else {
-        pz.warning(paste0("Aligner not recognized, calling as old version of ",
-                          "vsearch that does not support reverse complements"))
-        vsearch_args = c("--db",
-                         file.path(opts('data_dir'),
-                                   opts('vsearch_16sfile')),
-                         "--usearch_global",
-                         opts('vsearch_infile'),
-                         "--id",
-                         pid,
-                         "--blast6out",
-                         opts('vsearch_outfile'))
-        
-    }
+    vsearch_args = c("--db",
+		     file.path(opts('data_dir'),
+			       opts('vsearch_16sfile')),
+		     "--usearch_global",
+		     opts('named_asv_file'),
+		     "--strand both",
+		     "--id",
+		     pid,
+		     "--maxaccepts",
+		     20,
+		     "--blast6out",
+		     opts('vsearch_outfile'))
     pz.message(paste0("Calling aligner ", binary, " with arguments: ",
                       paste(vsearch_args, sep=" ", collapse=" ")))
     r <- system2(opts('vsearch_dir'),
@@ -138,11 +107,14 @@ run.vsearch <- function(...) {
 #' @export
 get.vsearch.results <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    # map to MIDAS IDs using vsearch
-    assignments <- data.frame(
-        readr::read_tsv(opts('vsearch_outfile')))
-    row.hits <- as.numeric(gsub("Row", "", assignments[, 1]))
-    row.targets <- sapply(assignments[, 2],
+    # map to MIDAS IDs using vsearch (note X1 is query name, X3 is pctid)
+    assignments <- 
+        readr::read_tsv(opts('vsearch_outfile'), col_names=FALSE) %>%
+	dplyr::group_by(X1) %>%
+        dplyr::slice_max(X3) %>%
+	dplyr::ungroup()
+    row.hits <- as.numeric(gsub("Row", "", assignments[[1]]))
+    row.targets <- sapply(assignments[[2]],
                           function(x) strsplit(x, ";;")[[1]][3])
     return(list(hits=row.hits, targets=row.targets, assn=assignments))
 }
@@ -156,6 +128,10 @@ get.vsearch.results <- function(...) {
 #'
 #' Some particularly relevant global options are:
 #' \describe{
+#'   \item{min_frac_16s}{Numeric. Should be between 0.5 and 1. Only keep ASVs
+#'   where at least this fraction of assignments are to the same species. 
+#'   Allows some tolerance for mislabeled or phylogenetically-inconsistent
+#'   16S sequences in the database. Default: 0.8}
 #'   \item{out_dir}{String. Path to output directory. Default: "output"}
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis. Default: on package
@@ -170,16 +146,99 @@ get.vsearch.results <- function(...) {
 #' @export sum.nonunique.vsearch
 sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    uniq.hits <- which(count.each(vsearch$hits) < 2)
-    rh <- vsearch$hits[uniq.hits]
-    rt <- vsearch$targets[uniq.hits]
+    min_frac <- opts("min_frac_16s")
+    vs_tbl <- tibble::tibble(hits=vsearch$hits, targets=vsearch$targets) %>% 
+	    dplyr::group_by(hits) %>%
+	    dplyr::count(targets, name="n") %>%
+	    dplyr::mutate(frac = n/sum(n)) %>%
+	    dplyr::ungroup()
+    vs_tbl_f <- dplyr::filter(vs_tbl, frac >= min_frac)
+    rh <- vs_tbl_f$hits
+    rt <- vs_tbl_f$targets
     subset.abd <- mtx[rh, , drop=FALSE]
     urt <- unique(rt)
-    summed.uniq <- sapply(urt, function(r) {
+    summed.uniq <- t(sapply(urt, function(r) {
         w <- which(rt == r)
         apply(subset.abd[w, , drop=FALSE], 2, sum)
-    }) %>% t
+    }))
     rownames(summed.uniq) <- urt
     summed.uniq
 }
 
+
+
+#' Run AppSpam analysis on a FASTA file of sequences.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{appspam_path}{String. Path to appspam binary.}
+#'   \item{aln_path_16s}{String. Path to file containing aligned 16S sequences.}
+#'   \item{tree_path_16s}{String. Path to tree for phylogenetic placement.}
+#'   minimum for alignment results.}
+#'   \item{named_asv_file}{String. Path to FASTA file containing named ASVs (Row1, ...).}
+#'   \item{jplace_file}{String. Path giving where to store output .jplace file.}
+#' }
+#'
+#' @return Returns TRUE unless an error is thrown.
+#' @export run.vsearch
+run.appspam <- function(...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    r <- system2(
+        opts('appspam_path'), 
+        args = c(
+            "-s", 
+            opts('aln_path_16s'),
+            "-t",
+            opts('tree_path_16s'),
+            "-q",
+            opts('named_asv_file'),
+	    "--threads",
+            opts('ncl'),
+            "-o",
+            opts('jplace_file') # in setup should check if exists
+        )
+    )
+    if (r != 0) {
+        pz.error(paste0("AppSpam failed with error code ", r))
+    }
+    return(TRUE)
+}
+
+#' Read in results from AppSpam
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{jplace_file}{String. Path giving where to store input .jplace file.}
+#' }
+#' @return List containing a vector of hits, a vector of MIDAS ID targets, and a
+#'     data frame of the assignments as they came out of AppSpam 
+#' @export
+get.appspam.results <- function(...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    # map to MIDAS IDs using vsearch
+    placements <- treeio::read.jplace(opts('jplace_file'))
+    tr <- treeio::get.tree(placements)
+    pl <- treeio::get.placements(placements)
+    edge <- tibble::as_tibble(tr$edge) %>%
+        dplyr::mutate(edge_num=row_number()) %>%
+        dplyr::inner_join(., pl)
+    cl <- parallel::makeCluster(opts('ncl'))
+    tidy_tips <- parallel::parLapply(cl, edge$V1, \(.x, tr) {
+        tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
+    }, tr)
+    parallel::stopCluster(cl)
+    #tidy_tips <- purrr::map(edge$V1, ~ {
+    #    tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
+    #}, .progress=TRUE)
+    name_to_species <- dplyr::mutate(edge, tips_under = tidy_tips) %>%
+	tidyr::unnest(tips_under) %>%
+        tidyr::separate_wider_delim(
+            tips_under,
+            delim="____",
+            names=c("gene","genus","species"))
+    uniq_n2s <- name_to_species %>% select(name, species) %>% distinct() %>%
+	    mutate(name = as.numeric(gsub("Row","", name)))
+    return(list(hits=uniq_n2s$name,
+                targets=uniq_n2s$species,
+                assn=name_to_species))
+}

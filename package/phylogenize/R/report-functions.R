@@ -674,7 +674,7 @@ non.interactive.plot <- function(tree.obj, file, name) {
     low_color <- tree.obj$cols["low.col"]
     high_color <- tree.obj$cols["high.col"]
     
-    tree <- ggtree::ggtree(ape::as.phylo(tree.obj$tree)) +
+    tree <- ggtree::ggtree(ape::as.phylo(tree.obj$rphy)) +
         ggtree::geom_point(data = valid_labels,
                    ggplot2::aes(text = label, color = color)) +
         ggtree::geom_tiplab(data = valid_labels,
