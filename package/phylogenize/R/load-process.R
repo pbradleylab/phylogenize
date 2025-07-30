@@ -99,12 +99,14 @@ check.process.metadata <- function(metadata, ...) {
     if (!(opts('dset_column') %in% colnames(metadata))) {
         pz.error(paste0("dataset column not found: ", opts('dset_column')))
     }
+    converted_rownames <- FALSE
     if (!(opts('sample_column') %in% colnames(metadata))) {
         if (!is.null(rownames(metadata))) {
             pz.warning(paste0("sample column not found: ",
                               opts('sample_column'),
                               "; assuming row names are sample IDs"))
             metadata[[opts('sample_column')]] <- rownames(metadata)
+	    converted_rownames <- TRUE
         } else {
             pz.error(paste0("sample column not found: ", opts('sample_column')))
         }
@@ -129,6 +131,7 @@ check.process.metadata <- function(metadata, ...) {
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
     
     # One more sanity check before we return
+    if (converted_rownames) orig_md <- tibble::as_tibble(orig_md, rownames=S)
     compare_md <- dplyr::full_join(orig_md[c(S, E)], metadata[c(S, E)], by=S)
     wrong_rows <- compare_md[
         compare_md[[paste0(E, ".x")]] != compare_md[[paste0(E, ".y")]],
