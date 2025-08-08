@@ -1322,8 +1322,8 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
         i <- na.omit(intersect(tips, colns))
         if (length(i) > 0) {
           mtx <- gene.presence[[tx]][, i, drop=FALSE]
-	        Max <- ncol(mtx) - Min
-          g <- names(which((Matrix::rowSums(mtx) >= Min) & (Matrix::rowSums(mtx) <= Max)))
+	  Max <- ncol(mtx) - Min
+          g <- names(which((Matrix::rowSums(mtx > 0) >= Min) & (Matrix::rowSums(mtx > 0) <= Max)))
 	        pz.message(paste0("Retained ", length(g), " out of ", nrow(mtx), " genes..."))
           gene.presence[[tx]] <- mtx[g, , drop=FALSE]
         }
