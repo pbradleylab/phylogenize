@@ -283,13 +283,14 @@ nonparallel.results.generator <- function(gene.matrix,
 #' @param m Named numeric vector of gene presence/absences per taxon.
 #' @param p Named numeric vector of phenotype values per taxon.
 #' @param tr Phylogeny relating taxa (class \code{"phylo"}).
-#' @param coefname Which coefficient from the phylolm to return?
+#' @param coefname Which coefficient from the phylolm to return? Can be a
+#'     vector, in which case, the first one that matches will be returned.
 #' @param restrict If not NULL, a character vector of taxa to consider.
 #' @return Length-2 numeric vector with names \code{"Estimate"} and
 #'     \code{"p.value"}. If there is an error in \code{phylolm}, the values of
 #'     this vector will be \code{c(NA, NA)}.
 #' @export
-phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
+phylolm.fx.pv <- function(m, p, tr, coefname=c("mTRUE", "m"), restrict=NULL,
                           meas_err=FALSE) {
     # This seems redundant, but we can avoid touching the giant protein matrix
     # this way and therefore causing an expensive copy
@@ -300,6 +301,7 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
     fx.pv <- tryCatch({
         plm <- phylolm::phylolm(p ~ m, phy=tr, measurement_error=meas_err)
         coef <- summary(plm)$coefficients
+	coefname <- intersect(rownames(coef), coefname)[1]
         c(coef[coefname, c("Estimate", "p.value", "StdErr")],
           df=(plm$n - plm$d))
     }, error = function(e) {
@@ -314,11 +316,13 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
 #' @param m Named numeric vector of gene presence/absences per taxon.
 #' @param p Named numeric vector of phenotype values per taxon.
 #' @param tr Phylogeny relating taxa (class \code{"phylo"}).
+#' @param coefname Which coefficient from the phylolm to return? Can be a
+#'     vector, in which case, the first one that matches will be returned.
 #' @return Length-2 numeric vector with names \code{"Estimate"} and
 #'     \code{"p.value"}. If there is an error in \code{phylolm}, the values of
 #'     this vector will be \code{c(NA, NA)}.
 #' @export
-lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
+lm.fx.pv <- function(m, p, tr, coefname=c("mTRUE", "m"), restrict=NULL,
                      meas_err=FALSE) {
     if (!is.null(restrict)) {
         p <- p[restrict]
@@ -327,6 +331,7 @@ lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
     fx.pv <- tryCatch({
         lm <- lm(p ~ m)
         coef <- summary(lm)$coefficients
+	coefname <- intersect(rownames(coef), coefname)[1]
         pair <- coef[coefname, c("Estimate", "Pr(>|t|)", "Std. Error")]
         names(pair) <- c("Estimate", "p.value", "StdErr")
         c(pair, df = df.residual(lm))
@@ -349,7 +354,7 @@ lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
 #' @return Length-2 numeric vector with names \code{"Estimate"} and
 #'     \code{"p.value"}, with distributions N(0,1) and U(0,1), respectively.
 #' @keywords internal
-rnd.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
+rnd.fx.pv <- function(m, p, tr, coefname=c("mTRUE", "m"), restrict=NULL,
                       meas_err=FALSE) {
     return(c(Estimate = rnorm(n=1, 0, 1),
              p.value = runif(n=1, 0, 1)))
