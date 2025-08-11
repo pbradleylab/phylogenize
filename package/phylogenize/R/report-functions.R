@@ -411,7 +411,7 @@ single.cluster.plot <- function(gene.presence,
                               geom=ggplot2::geom_tile,
                               mapping=ggplot2::aes(
                                   x = as.numeric(as.factor(gene)),
-                                  fill = as.numeric(as.factor(value)))) +
+                                  fill = as.numeric((value)))) +
         ggplot2::scale_fill_gradient(low = opts('gene_color_absent'),
                                      high = opts('gene_color_present'),
                                      na.value = opts('gene_color_absent')) +
