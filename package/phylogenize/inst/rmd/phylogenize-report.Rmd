@@ -67,7 +67,6 @@ if (!pz.options('skip_graphs')) {
 dir.create(pz.options('out_dir'))
 do_POMS <- (tolower(pz.options('core_method'))=="poms")
 
-print(enframe(pz.options()))
 
 ```
 
@@ -75,8 +74,18 @@ print(enframe(pz.options()))
 
 This report was generated automatically by [Phylogenize2](https://phylogenize.org/) (Kananen et al., in preparation), with the following parameters:
 
+<details>
+<summary>Click to show options</summary>
+```{r show_options, results='asis', echo=FALSE}
 
-- Options: `r pz.options()`
+o <- pz.options()
+for (i in 1:length(o)) {
+	if ((is.null(o[i])) || (o[i] == "")) { o[i] <- "*(empty)*" }
+	cat(paste0(" - ", names(o)[i], " = ", o[i]), "\n")
+}
+
+```
+</details>
 
 # Phenotypic Calculation
 

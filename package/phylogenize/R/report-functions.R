@@ -278,10 +278,10 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 	    fn <- knitr::fig_path('svg', number = tree)
 	    name <- taxon_names[[tree]]
 	    tryCatch(
-		     plots[[name]] <- interactive.plot(plotted_tree, fn, name),
+		     plots[[name]] <- interactive.plot(plotted_tree, fn, name, label),
 		     error = function(e) {
 			    pz.message(e)
-			    plots[[name]] <- non.interactive.plot(plotted_tree, fn, name)
+			    plots[[name]] <- non.interactive.plot(plotted_tree, fn, name, label)
 	    })
     }
     return(plots)
@@ -651,9 +651,10 @@ gg.cont.tree <- function(phy,
 #' @param tree.obj A ggtree representation of a tree.
 #' @param file A filename where the final SVG output will be written.
 #' @param name String. the name of the taxon being added. Used for title.
+#' @param plabel String. Name of the phenotype that was calculated. Used for legend.
 #' @export
-interactive.plot <- function(tree.obj, file, name) {
-    tree <- non.interactive.plot(tree.obj, file, name)
+interactive.plot <- function(tree.obj, file, name, plabel="phenotype") {
+    tree <- non.interactive.plot(tree.obj, file, name, plabel)
     interactive_tree <- plotly::ggplotly(tree, tooltip = "text")
     return(interactive_tree)
 }
@@ -665,22 +666,41 @@ interactive.plot <- function(tree.obj, file, name) {
 #' @param tree.obj A ggtree object.
 #' @param file File to which an SVG representation of this tree object will be
 #'   written.
-#' @param name String. the name of the taxon being added. Used for title.
+#' @param name String. Name of the taxon being added. Used for title.
+#' @param plabel String. Name of the phenotype that was calculated. Used for legend.
 #' @export
-non.interactive.plot <- function(tree.obj, file, name) {
-    warning(paste0("replotting to: ", file))
+non.interactive.plot <- function(tree.obj, file, name, plabel="phenotype") {
+    #warning(paste0("replotting to: ", file))
     
     valid_labels <- subset(tree.obj$tree$data, !is.na(label))
+
+
+    if ("mid.col" %in% names(tree.obj$cols)) {
+        cColors <- ggplot2::scale_color_gradient2(low = tree.obj$cols["low.col"],
+                          high = tree.obj$cols["high.col"],
+                          mid = tree.obj$cols["mid.col"],
+                          midpoint = 0,
+                          guide = "colorbar",
+                          name = plabel)
+    } else {
+        cColors <- ggplot2::scale_color_gradient(low = tree.obj$cols["low.col"],
+                             high = tree.obj$cols["high.col"],
+                             guide = "colorbar",
+                             name = plabel)
+    }
+
     low_color <- tree.obj$cols["low.col"]
     high_color <- tree.obj$cols["high.col"]
     
-    tree <- ggtree::ggtree(ape::as.phylo(tree.obj$rphy)) +
+    tree <- ggtree::ggtree(ape::as.phylo(tree.obj$rphy),
+			   ladderize=TRUE) +
         ggtree::geom_point(data = valid_labels,
                    ggplot2::aes(text = label, color = color)) +
         ggtree::geom_tiplab(data = valid_labels,
                     ggplot2::aes(color = color)) +
         ggplot2::ggtitle(name) +
-        ggplot2::labs(color="phenotype")
+	cColors +
+        ggplot2::labs(color=plabel)
     
     # Write to an svg
     svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
