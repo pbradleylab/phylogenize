@@ -1299,13 +1299,16 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 }
 
 #' Filter out genes that are almost always present or absent prior to running
-#' regressions.
+#' regressions. Also screen out genes that are only observed at a low frequency
+#' (if working with continuous pangenomes).
 #'
 #' Some particularly relevant global options are:
 #' \describe{
 #'   \item{minimum}{Integer. A particular gene must be observed, and also
 #'   absent, at least this many times to be reported as a significant positive
 #'   association with the phenotype.}
+#'   \item{gene_min_frac}{Numeric. For fractional pangenomes (between 0 and 1),
+#'   what counts as "observed"?}
 #' }
 #' @param gene.presence A list of matrices of gene presence/absence, as included
 #'   in a `pz.db` object.
@@ -1317,6 +1320,7 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 above_minimum_genes <- function(gene.presence, trees, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     Min <- opts('minimum')
+    GMF <- opts('gene_min_frac')
     taxa <- names(trees)
     # keep track of which taxa should be dropped entirely
     to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)
@@ -1328,7 +1332,7 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
         if (length(i) > 0) {
           mtx <- gene.presence[[tx]][, i, drop=FALSE]
 	  Max <- ncol(mtx) - Min
-          g <- names(which((Matrix::rowSums(mtx > 0) >= Min) & (Matrix::rowSums(mtx > 0) <= Max)))
+          g <- names(which((Matrix::rowSums(mtx > GMF) >= Min) & (Matrix::rowSums(mtx > GMF) <= Max)))
 	        pz.message(paste0("Retained ", length(g), " out of ", nrow(mtx), " genes..."))
           gene.presence[[tx]] <- mtx[g, , drop=FALSE]
         }

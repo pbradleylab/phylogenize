@@ -22,6 +22,7 @@ default_params <- list(
     metadata_file = "",
     meas_err = TRUE,
     minimum = 3,
+    gene_min_frac = 0.5,
     min_fx = 0,
     ncl = 1,
     output_file="results.html",
