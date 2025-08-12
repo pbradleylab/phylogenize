@@ -67,16 +67,16 @@ if (!pz.options('skip_graphs')) {
 dir.create(pz.options('out_dir'))
 do_POMS <- (tolower(pz.options('core_method'))=="poms")
 
+print(enframe(pz.options()))
+
 ```
 
 # Settings
 
 This report was generated automatically by [Phylogenize2](https://phylogenize.org/) (Kananen et al., in preparation), with the following parameters:
 
-- Type of input data: "`r pz.options('db')`"
-- Phenotype calculated: "`r pz.options('which_phenotype')`"
-- Environment of interest: "`r pz.options('which_envir')`"
-- Prior probabilities for environments: "`r pz.options('prior_type')`"
+
+- Options: `r pz.options()`
 
 # Phenotypic Calculation
 
@@ -255,13 +255,14 @@ valid_keys <- intersect(signif_genes[["phy.with.sigs"]], names(plotted.pheno.tre
 valid_keys <- intersect(valid_keys, names(pz.db$gene.presence))
 valid_keys <- intersect(valid_keys, names(pz.db$trees))
 
-cluster.plots <- mapply(do.clust.plot,
+cluster.plots <- mapply(single.cluster.plot,
                         pz.db$gene.presence[valid_keys],
                         signif_genes[["pos.sig.thresh"]][valid_keys],
                         pz.db$trees[valid_keys],
                         plotted.pheno.trees[valid_keys],
                         valid_keys,
                         SIMPLIFY = FALSE)
+lapply(cluster.plots, print)
 
 ```
 

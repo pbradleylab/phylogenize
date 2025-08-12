@@ -311,6 +311,9 @@ do.clust.plot <- function(gene.presence,
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     # Run these on a separate process to avoid memory leak
     cl <- parallel::makeCluster(1)
+    if (verbose) message("importing source...")
+    # parallel::clusterCall(cl, library, phylogenize)
+    cluster.load.pkg(cl, opts("devel"), opts("devel_pkgdir"))
     if (verbose) message("exporting data...")
     parallel::clusterExport(cl,
                   c("gene.presence",
@@ -321,9 +324,6 @@ do.clust.plot <- function(gene.presence,
                     "verbose",
                     "PZ_OPTIONS"),
                   envir=environment())
-    if (verbose) message("importing source...")
-    # parallel::clusterCall(cl, library, phylogenize)
-    cluster.load.pkg(cl, opts("devel"), opts("devel_pkgdir"))
     if (verbose) message("performing call...")
     tmpL <- parallel::clusterCall(cl,
                         single.cluster.plot,
@@ -399,7 +399,7 @@ single.cluster.plot <- function(gene.presence,
     
     if (length(sig.genes) == 0) { return(p) }
     if (length(sig.genes) > 1) {
-        clust <- hclust(dist(sig.bin, method = "binary"))
+        clust <- hclust(dist(sig.bin, method = "canberra"))
         sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop=FALSE])
     } else {
         sig.ord <- sparseMelt(t(sig.bin))

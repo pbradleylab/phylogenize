@@ -16,8 +16,8 @@ default_params <- list(
     dset_column = "dataset",
     env_column = "env",
     error_to_file = TRUE,
-    gene_color_absent = 'black',
-    gene_color_present = 'slateblue2',
+    gene_color_absent = 'white',
+    gene_color_present = 'coral',
     input_format = "tabular",
     metadata_file = "",
     meas_err = TRUE,
@@ -127,8 +127,8 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'
 #' @section Graphing:
 #' \describe{
-#'   \item{gene_color_absent}{String. When graphing gene presence/absence, this color indicates absence. Default: "black"}
-#'   \item{gene_color_present}{String. When graphing gene presence/absence, this color indicates presence. Default: "black"}
+#'   \item{gene_color_absent}{String. When graphing gene presence/absence, this color indicates absence. Default: "white"}
+#'   \item{gene_color_present}{String. When graphing gene presence/absence, this color indicates presence. Default: "coral"}
 #'   \item{prev_color_high}{String. When graphing prevalence on a tree, this color is the highest value. Default: "orange2"}
 #'   \item{prev_color_low}{String. When graphing prevalence on a tree, this color is the lowest value. Default: "black"}
 #'   \item{skip_graphs}{Boolean. If TRUE, skip making graphs in the report, which can be time- and memory-consuming. Default: FALSE}
