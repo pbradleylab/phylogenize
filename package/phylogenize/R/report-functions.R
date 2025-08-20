@@ -401,11 +401,12 @@ single.cluster.plot <- function(gene.presence,
     if (length(sig.genes) > 1) {
         clust <- hclust(dist(sig.bin, method = "canberra"))
         sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop=FALSE])
+        sig.ord$gene <- factor(sig.ord$gene, levels=clust$labels[clust$order])
     } else {
         sig.ord <- sparseMelt(t(sig.bin))
         sig.ord <- sig.ord[order(sig.ord[, 3]), , drop=FALSE]
+        sig.ord$gene <- factor(sig.ord$gene)
     }
-    sig.ord$gene <- factor(sig.ord$gene, levels=clust$labels[clust$order])
     tmp <- ggtree::facet_plot(p,
                               panel=paste0('heatmap: ', taxon),
                               data=sig.ord,
