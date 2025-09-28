@@ -99,12 +99,14 @@ check.process.metadata <- function(metadata, ...) {
     if (!(opts('dset_column') %in% colnames(metadata))) {
         pz.error(paste0("dataset column not found: ", opts('dset_column')))
     }
+    converted_rownames <- FALSE
     if (!(opts('sample_column') %in% colnames(metadata))) {
         if (!is.null(rownames(metadata))) {
             pz.warning(paste0("sample column not found: ",
                               opts('sample_column'),
                               "; assuming row names are sample IDs"))
             metadata[[opts('sample_column')]] <- rownames(metadata)
+	    converted_rownames <- TRUE
         } else {
             pz.error(paste0("sample column not found: ", opts('sample_column')))
         }
@@ -129,6 +131,7 @@ check.process.metadata <- function(metadata, ...) {
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
     
     # One more sanity check before we return
+    if (converted_rownames) orig_md <- tibble::as_tibble(orig_md, rownames=S)
     compare_md <- dplyr::full_join(orig_md[c(S, E)], metadata[c(S, E)], by=S)
     wrong_rows <- compare_md[
         compare_md[[paste0(E, ".x")]] != compare_md[[paste0(E, ".y")]],
@@ -260,12 +263,27 @@ import.pz.db <- function(...) {
     if (nrow(found_db) > 1) {
         pz.error(paste0("Duplicate data entries in db file: ", db_csv))
     }
+
     gene.presence <- readRDS(file.path(opts('data_dir'),
                                        found_db[["genes"]]))
+    gene.presence <- gene.presence[names(gene.presence) != ""]
     trees <- readRDS(file.path(opts('data_dir'),
                                found_db[["trees"]]))
     taxonomy <- readr::read_csv(file.path(opts('data_dir'),
                                           found_db[["taxonomy"]]))
+
+    # propagate cluster values up, as higher level taxonomic names may be missing
+    taxonomy <- taxonomy %>% 
+      rowwise() %>%
+      mutate(species = ifelse(is.na(species), cluster, species)) %>%
+      mutate(genus = ifelse(is.na(genus), species, genus)) %>%
+      mutate(family = ifelse(is.na(family), genus, family)) %>%
+      mutate(order = ifelse(is.na(order), family, order)) %>%
+      mutate(class = ifelse(is.na(class), order, class)) %>%
+      mutate(phylum = ifelse(is.na(phylum), class, phylum)) %>%
+      mutate(domain = ifelse(is.na(domain), phylum, domain)) %>%
+      ungroup()
+
     gene.to.fxn <- readr::read_csv(file.path(opts('data_dir'),
                                              found_db[["functions"]]))
     # Check if the files exist instead of throwing a null error
@@ -349,10 +367,16 @@ adjust.db <- function(pz.db, abd.meta, ...) {
                         "the right database was not selected or very few ASVs ",
                         "mapped to entries in the database."))
     }
-    pz.db$trees <- pz.db$trees[saved.taxa]
+    pz.db$trees <- lapply(pz.db$trees[saved.taxa], function(tr) {
+	tips <- intersect(tr$tip.label, species.observed)
+	ape::keep.tip(tr, tips)
+    })
+    pz.db$gene.presence <- above_minimum_genes(pz.db$gene.presence, pz.db$trees)
+    pz.db$trees <- pz.db$trees[intersect(names(pz.db$trees), names(pz.db$gene.presence))]
     pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
     pz.db$ntaxa <- length(pz.db$trees)
     pz.db$trees <- lapply(pz.db$trees, fix.tree)
+    # Re-run this to drop any genes that shouldn't be run
     pz.db
 }
 
@@ -529,15 +553,28 @@ process.16s <- function(abd.meta, ...) {
         pz.error(paste0("expected rows to be DNA sequences but found illegal ",
                         "characters"))
     }
-    prepare.vsearch.input(abd.meta$mtx, ...)
-    run.vsearch(...)
-    vsearch <- get.vsearch.results(...)
-    summed.uniq <- sum.nonunique.vsearch(vsearch, abd.meta$mtx, ...)
+    if (opts('which_16s_method')=="vsearch") {
+        prepare.vsearch.input(abd.meta$mtx, ...)
+        run.vsearch(...)
+        results_16s <- get.vsearch.results(...)
+    } else if (opts('which_16s_method')=="appspam") {
+        prepare.vsearch.input(abd.meta$mtx, ...)
+        run.appspam(...)
+        results_16s <- get.appspam.results(...)
+    } else if (opts('which_16s_method')=="jplace") {
+        results_16s <- get.appspam.results(...)        
+    } else {
+        pz.error("which_16s_method must be vsearch, appspam, or jplace")
+    }
+    summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ...)
     csu <- colSums(summed.uniq)
-    abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],
-                          2,
-                          function(x) x / sum(x))
+    abd.meta$mtx <- summed.uniq[, which(csu > 0), drop=FALSE]
+    # don't convert to relative abundance...
+    # abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],
+    #                       2,
+    #                       function(x) x / sum(x))
     abd.meta
+    
 }
 
 #' Check metadata and abundance matrix against one another

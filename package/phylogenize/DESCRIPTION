@@ -60,7 +60,9 @@ Imports:
     stringr,
     svglite,
     tibble,
-    tidyr, 
+    tidyr,
+    treeio,
+    tidytree,
     yaml
 Suggests: 
     ANCOMBC,

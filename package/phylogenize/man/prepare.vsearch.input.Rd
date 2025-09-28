@@ -17,7 +17,7 @@ input 16S data for analysis using vsearch or vsearch.
 \details{
 Some particularly relevant global options are:
 \describe{
-  \item{vsearch_infile}{String. File name of the sequences written to disk
+  \item{named_asv_file}{String. File name of the sequences written to disk
   and then read into vsearch/vsearch.}
 }
 }

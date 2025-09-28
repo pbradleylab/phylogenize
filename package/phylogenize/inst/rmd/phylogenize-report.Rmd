@@ -67,16 +67,25 @@ if (!pz.options('skip_graphs')) {
 dir.create(pz.options('out_dir'))
 do_POMS <- (tolower(pz.options('core_method'))=="poms")
 
+
 ```
 
 # Settings
 
 This report was generated automatically by [Phylogenize2](https://phylogenize.org/) (Kananen et al., in preparation), with the following parameters:
 
-- Type of input data: "`r pz.options('db')`"
-- Phenotype calculated: "`r pz.options('which_phenotype')`"
-- Environment of interest: "`r pz.options('which_envir')`"
-- Prior probabilities for environments: "`r pz.options('prior_type')`"
+<details>
+<summary>Click to show options</summary>
+```{r show_options, results='asis', echo=FALSE}
+
+o <- pz.options()
+for (i in 1:length(o)) {
+	if ((is.null(o[i])) || (o[i] == "")) { o[i] <- "*(empty)*" }
+	cat(paste0(" - ", names(o)[i], " = ", o[i]), "\n")
+}
+
+```
+</details>
 
 # Phenotypic Calculation
 
@@ -95,6 +104,16 @@ taxa that are neither.
 ```{r plot_phenotypes, fig.width = 7, fig.height = 20, warning = FALSE, message = FALSE, results="hide", echo=FALSE, cache=FALSE}
 
 # Unpack pz.db and phenotype results to current environment
+
+# First do some sanity checking
+tree_lengths <- vapply(core[["list_pheno"]][["pz.db"]][["trees"]], \(.) length(.[["tip.label"]]), 1L)
+if (max(tree_lengths) <= 1) stop("No tree had more than 1 tip")
+core[["pz.db"]][["list_pheno"]][["trees"]] <- core[["pz.db"]][["list_pheno"]][["trees"]][tree_lengths > 1]
+core[["pz.db"]][["list_pheno"]][["gene.presence"]] <- core[["pz.db"]][["list_pheno"]][["gene.presence"]][names(which(tree_lengths > 1))]
+core[["pz.db"]][["list_pheno"]][["species"]] <- core[["pz.db"]][["list_pheno"]][["species"]][names(which(tree_lengths > 1))]
+core[["pz.db"]][["list_pheno"]][["ntaxa"]] <- length(names(which(tree_lengths > 1)))
+
+
 list2env(core[["list_pheno"]], environment())
 
 if (("phenotype_results" %in% names(core[["list_pheno"]])) &&
@@ -135,7 +154,7 @@ pz.message("Skipping phenotypes, as not found (possibly because POMS was used)")
 
 # Create dummy phenotypes for significant gene plot 
 all_species <- Reduce(union, map(pz.db$trees, \(.) .$tip.label))
-phenotype <- setNames(rep(0, length(poms_sp)), poms_sp)
+phenotype <- setNames(rep(0, length(all_species)), all_species)
 phenoP <- 0
 
 pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
@@ -211,10 +230,11 @@ an FDR of 5%.
 ```{r write_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
 
 signif_genes <- core[["list_signif"]]
-pos.sig.count <- purrr::map_dbl(signif_genes$pos.sig, length)
+
+pos.sig.count <- purrr::map_dbl(core[["list_signif"]]$pos.sig, length)
 
 if ("neg.sig" %in% names(core[["list_signif"]])) {
-    neg.sig.count <- purrr::map_dbl(signif_genes$neg.sig, length)
+    neg.sig.count <- purrr::map_dbl(core[["list_signif"]]$neg.sig, length)
     sig.count <- full_join(enframe(pos.sig.count, name="Taxon", value="Pos. Sig. Genes"),
                            enframe(neg.sig.count, name="Taxon", value="Neg. Sig. Genes"),
                            by="Taxon")
@@ -244,13 +264,14 @@ valid_keys <- intersect(signif_genes[["phy.with.sigs"]], names(plotted.pheno.tre
 valid_keys <- intersect(valid_keys, names(pz.db$gene.presence))
 valid_keys <- intersect(valid_keys, names(pz.db$trees))
 
-cluster.plots <- mapply(do.clust.plot,
+cluster.plots <- mapply(single.cluster.plot,
                         pz.db$gene.presence[valid_keys],
                         signif_genes[["pos.sig.thresh"]][valid_keys],
                         pz.db$trees[valid_keys],
                         plotted.pheno.trees[valid_keys],
                         valid_keys,
                         SIMPLIFY = FALSE)
+lapply(cluster.plots, print)
 
 ```
 

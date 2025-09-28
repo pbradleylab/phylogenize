@@ -157,7 +157,8 @@ matrix.POMS <- function(tree,
     tree_nodes <- ape::makeNodeLabel(tree)
     # Don't check names because this will potentially change them, meaning 
     # they won't match the metadata anymore
-    poms_output <- POMS::POMS_pipeline(
+    poms_output <- tryCatch({
+			    POMS::POMS_pipeline(
         abun=data.frame(
             as.matrix(abd.meta$mtx),
             check.names=FALSE),
@@ -168,16 +169,31 @@ matrix.POMS <- function(tree,
         ncores=cores,
         min_num_tips=poms_min_tips,
         min_func_instances=poms_min_func,
-        pseudocount=poms_pseudocount)
-    poms_enrichments <- (log2(
-        (poms_output$results[, "num_FSNs_group1_enrich"] + 0.5) /
-            (poms_output$results[, "num_FSNs_group2_enrich"] + 0.5)))
-    poms_pvals <- poms_output$results[, "multinomial_p"]
-    result_mtx <- rbind(Estimate = poms_enrichments,
-                 p.value = poms_pvals,
-                 StdErr = NA,
-                 df = NA)
-    colnames(result_mtx) <- colnames(phylotype_df)
+        pseudocount=poms_pseudocount)},
+			    error = function(e) {
+				    pz.warning(e)
+				    NA
+			    })
+    # handle error
+    if ((length(poms_output)==1) && all(is.na(poms_output))) {
+	    result_mtx <- rbind(Estimate = rep(NA, ncol(phylotype_df)),
+			 p.value = NA,
+			 StdErr = NA,
+			 df = NA)
+	    colnames(result_mtx) <- colnames(phylotype_df)
+	    return(result_mtx)
+    }
+    poms_tbl <- tibble::as_tibble(poms_output$results, rownames="gene") %>%
+        dplyr::mutate(
+              Estimate = abs(
+                           log2((num_FSNs_group1_enrich + 0.5) /
+                                (num_FSNs_group2_enrich + 0.5))),
+              p.value = multinomial_p,
+	      StdErr = NA,
+              df = NA) %>%
+        dplyr::select(gene, Estimate, p.value, StdErr, df)
+    result_mtx <- t(as.matrix(poms_tbl[-1]))
+    colnames(result_mtx) <- poms_tbl[[1]]
     result_mtx
 }
 
@@ -267,13 +283,14 @@ nonparallel.results.generator <- function(gene.matrix,
 #' @param m Named numeric vector of gene presence/absences per taxon.
 #' @param p Named numeric vector of phenotype values per taxon.
 #' @param tr Phylogeny relating taxa (class \code{"phylo"}).
-#' @param coefname Which coefficient from the phylolm to return?
+#' @param coefname Which coefficient from the phylolm to return? Can be a
+#'     vector, in which case, the first one that matches will be returned.
 #' @param restrict If not NULL, a character vector of taxa to consider.
 #' @return Length-2 numeric vector with names \code{"Estimate"} and
 #'     \code{"p.value"}. If there is an error in \code{phylolm}, the values of
 #'     this vector will be \code{c(NA, NA)}.
 #' @export
-phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
+phylolm.fx.pv <- function(m, p, tr, coefname=c("mTRUE", "m"), restrict=NULL,
                           meas_err=FALSE) {
     # This seems redundant, but we can avoid touching the giant protein matrix
     # this way and therefore causing an expensive copy
@@ -284,6 +301,7 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
     fx.pv <- tryCatch({
         plm <- phylolm::phylolm(p ~ m, phy=tr, measurement_error=meas_err)
         coef <- summary(plm)$coefficients
+	coefname <- intersect(rownames(coef), coefname)[1]
         c(coef[coefname, c("Estimate", "p.value", "StdErr")],
           df=(plm$n - plm$d))
     }, error = function(e) {
@@ -298,11 +316,13 @@ phylolm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
 #' @param m Named numeric vector of gene presence/absences per taxon.
 #' @param p Named numeric vector of phenotype values per taxon.
 #' @param tr Phylogeny relating taxa (class \code{"phylo"}).
+#' @param coefname Which coefficient from the phylolm to return? Can be a
+#'     vector, in which case, the first one that matches will be returned.
 #' @return Length-2 numeric vector with names \code{"Estimate"} and
 #'     \code{"p.value"}. If there is an error in \code{phylolm}, the values of
 #'     this vector will be \code{c(NA, NA)}.
 #' @export
-lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
+lm.fx.pv <- function(m, p, tr, coefname=c("mTRUE", "m"), restrict=NULL,
                      meas_err=FALSE) {
     if (!is.null(restrict)) {
         p <- p[restrict]
@@ -311,6 +331,7 @@ lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
     fx.pv <- tryCatch({
         lm <- lm(p ~ m)
         coef <- summary(lm)$coefficients
+	coefname <- intersect(rownames(coef), coefname)[1]
         pair <- coef[coefname, c("Estimate", "Pr(>|t|)", "Std. Error")]
         names(pair) <- c("Estimate", "p.value", "StdErr")
         c(pair, df = df.residual(lm))
@@ -333,7 +354,7 @@ lm.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
 #' @return Length-2 numeric vector with names \code{"Estimate"} and
 #'     \code{"p.value"}, with distributions N(0,1) and U(0,1), respectively.
 #' @keywords internal
-rnd.fx.pv <- function(m, p, tr, coefname="mTRUE", restrict=NULL,
+rnd.fx.pv <- function(m, p, tr, coefname=c("mTRUE", "m"), restrict=NULL,
                       meas_err=FALSE) {
     return(c(Estimate = rnorm(n=1, 0, 1),
              p.value = runif(n=1, 0, 1)))
@@ -1009,6 +1030,7 @@ ash_wrapper <- function(m, s, nw=10, ashr_df=5) {
 #'   environment annotations.}
 #'   \item{dset_column}{String. Name of column in metadata file containing the
 #'   dataset annotations. Will be incorporated as a "nuisance" variable.}
+#'   \item{which_envir}{String. Which environment are we contrasting?}
 #'   \item{diff_abund_method}{String. Either "ANCOMBC2" or "Maaslin2" (case 
 #'   insensitive).}
 #' }
@@ -1111,7 +1133,8 @@ ashr.diff.abund <- function(abd.meta,
           reference = m_reference,
           output = "temp/",
           plot_heatmap = FALSE,
-          plot_scatter = FALSE
+          plot_scatter = FALSE,
+	  min_prevalence = 1e-7 #hardcoded for now
       )
       maaslin_results_tbl <- maaslin_res$results %>% tibble::tibble() %>%
           dplyr::filter(metadata == E, value == envir)
@@ -1119,12 +1142,12 @@ ashr.diff.abund <- function(abd.meta,
           any(is.na(maaslin_results_tbl$stderr))) {
           pz.error("Error: Missing values found in coef or stderr columns.")
       }
-      maaslin_ash <- ash_wrapper(
-          dplyr::select(maaslin_results_tbl, feature, coef) %>%
-              tibble::deframe(),
-          dplyr::select(maaslin_results_tbl, feature, stderr) %>%
-              tibble::deframe()
-      )
+      maaslin_ash <- ash_wrapper(dplyr::pull(maaslin_results_tbl,
+                       coef,
+                       name=feature),
+                               dplyr::pull(maaslin_results_tbl,
+                                           stderr,
+                                           name=feature))
       sample_ashr <- tibble::as_tibble(maaslin_ash$result, rownames = "species")
   } else {
       pz.error(
@@ -1276,13 +1299,16 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 }
 
 #' Filter out genes that are almost always present or absent prior to running
-#' regressions.
+#' regressions. Also screen out genes that are only observed at a low frequency
+#' (if working with continuous pangenomes).
 #'
 #' Some particularly relevant global options are:
 #' \describe{
 #'   \item{minimum}{Integer. A particular gene must be observed, and also
 #'   absent, at least this many times to be reported as a significant positive
 #'   association with the phenotype.}
+#'   \item{gene_min_frac}{Numeric. For fractional pangenomes (between 0 and 1),
+#'   what counts as "observed"?}
 #' }
 #' @param gene.presence A list of matrices of gene presence/absence, as included
 #'   in a `pz.db` object.
@@ -1294,20 +1320,25 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 above_minimum_genes <- function(gene.presence, trees, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     Min <- opts('minimum')
+    GMF <- opts('gene_min_frac')
     taxa <- names(trees)
+    # keep track of which taxa should be dropped entirely
     to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)
     for (tx in taxa) {
+      pz.message(paste0("Processing taxon ", tx))
         tips <- trees[[tx]]$tip.label
         colns <- colnames(gene.presence[[tx]])
         i <- na.omit(intersect(tips, colns))
         if (length(i) > 0) {
-            mtx <- gene.presence[[tx]][, i, drop=FALSE]
-            g <- names(which((rowSums(mtx) >= Min) & (rowSums(!mtx) >= Min)))
-            gene.presence[[tx]] <- mtx[g, , drop=FALSE]
-	}
-	if ((length(i) == 0) || (length(g) == 0)) {
-            to_remove[tx] <- TRUE
-	}
+          mtx <- gene.presence[[tx]][, i, drop=FALSE]
+	  Max <- ncol(mtx) - Min
+          g <- names(which((Matrix::rowSums(mtx > GMF) >= Min) & (Matrix::rowSums(mtx > GMF) <= Max)))
+	        pz.message(paste0("Retained ", length(g), " out of ", nrow(mtx), " genes..."))
+          gene.presence[[tx]] <- mtx[g, , drop=FALSE]
+        }
+	    if ((length(i) == 0) || (length(g) == 0)) {
+        to_remove[tx] <- TRUE
+      }
     }
     gene.presence[names(which(!to_remove))]
 }

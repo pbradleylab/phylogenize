@@ -278,10 +278,10 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 	    fn <- knitr::fig_path('svg', number = tree)
 	    name <- taxon_names[[tree]]
 	    tryCatch(
-		     plots[[name]] <- interactive.plot(plotted_tree, fn, name),
+		     plots[[name]] <- interactive.plot(plotted_tree, fn, name, label),
 		     error = function(e) {
 			    pz.message(e)
-			    plots[[name]] <- non.interactive.plot(plotted_tree, fn, name)
+			    plots[[name]] <- non.interactive.plot(plotted_tree, fn, name, label)
 	    })
     }
     return(plots)
@@ -311,6 +311,9 @@ do.clust.plot <- function(gene.presence,
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     # Run these on a separate process to avoid memory leak
     cl <- parallel::makeCluster(1)
+    if (verbose) message("importing source...")
+    # parallel::clusterCall(cl, library, phylogenize)
+    cluster.load.pkg(cl, opts("devel"), opts("devel_pkgdir"))
     if (verbose) message("exporting data...")
     parallel::clusterExport(cl,
                   c("gene.presence",
@@ -321,9 +324,6 @@ do.clust.plot <- function(gene.presence,
                     "verbose",
                     "PZ_OPTIONS"),
                   envir=environment())
-    if (verbose) message("importing source...")
-    # parallel::clusterCall(cl, library, phylogenize)
-    cluster.load.pkg(cl, opts("devel"), opts("devel_pkgdir"))
     if (verbose) message("performing call...")
     tmpL <- parallel::clusterCall(cl,
                         single.cluster.plot,
@@ -399,19 +399,21 @@ single.cluster.plot <- function(gene.presence,
     
     if (length(sig.genes) == 0) { return(p) }
     if (length(sig.genes) > 1) {
-        clust <- hclust(dist(sig.bin, method = "binary"))
+        clust <- hclust(dist(sig.bin, method = "canberra"))
         sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop=FALSE])
+        sig.ord$gene <- factor(sig.ord$gene, levels=clust$labels[clust$order])
     } else {
         sig.ord <- sparseMelt(t(sig.bin))
         sig.ord <- sig.ord[order(sig.ord[, 3]), , drop=FALSE]
+        sig.ord$gene <- factor(sig.ord$gene)
     }
     tmp <- ggtree::facet_plot(p,
                               panel=paste0('heatmap: ', taxon),
                               data=sig.ord,
                               geom=ggplot2::geom_tile,
                               mapping=ggplot2::aes(
-                                  x = as.numeric(as.factor(gene)),
-                                  fill = as.numeric(as.factor(value)))) +
+                                  x = as.numeric(gene),
+                                  fill = as.numeric((value)))) +
         ggplot2::scale_fill_gradient(low = opts('gene_color_absent'),
                                      high = opts('gene_color_present'),
                                      na.value = opts('gene_color_absent')) +
@@ -651,9 +653,10 @@ gg.cont.tree <- function(phy,
 #' @param tree.obj A ggtree representation of a tree.
 #' @param file A filename where the final SVG output will be written.
 #' @param name String. the name of the taxon being added. Used for title.
+#' @param plabel String. Name of the phenotype that was calculated. Used for legend.
 #' @export
-interactive.plot <- function(tree.obj, file, name) {
-    tree <- non.interactive.plot(tree.obj, file, name)
+interactive.plot <- function(tree.obj, file=NULL, name="taxon", plabel="phenotype") {
+    tree <- non.interactive.plot(tree.obj, file, name, plabel)
     interactive_tree <- plotly::ggplotly(tree, tooltip = "text")
     return(interactive_tree)
 }
@@ -665,26 +668,164 @@ interactive.plot <- function(tree.obj, file, name) {
 #' @param tree.obj A ggtree object.
 #' @param file File to which an SVG representation of this tree object will be
 #'   written.
-#' @param name String. the name of the taxon being added. Used for title.
+#' @param name String. Name of the taxon being added. Used for title.
+#' @param plabel String. Name of the phenotype that was calculated. Used for legend.
 #' @export
-non.interactive.plot <- function(tree.obj, file, name) {
-    warning(paste0("replotting to: ", file))
+non.interactive.plot <- function(tree.obj, file=NULL, name="taxon", plabel="phenotype") {
     
     valid_labels <- subset(tree.obj$tree$data, !is.na(label))
+
+    if ("mid.col" %in% names(tree.obj$cols)) {
+        cColors <- ggplot2::scale_color_gradient2(low = tree.obj$cols["low.col"],
+                          high = tree.obj$cols["high.col"],
+                          mid = tree.obj$cols["mid.col"],
+                          midpoint=mean(tree.obj$lims),
+                          guide = "colorbar",
+                          name = plabel)
+    } else {
+        cColors <- ggplot2::scale_color_gradient(low = tree.obj$cols["low.col"],
+                             high = tree.obj$cols["high.col"],
+                             guide = "colorbar",
+                             name = plabel)
+    }
+
     low_color <- tree.obj$cols["low.col"]
     high_color <- tree.obj$cols["high.col"]
     
-    tree <- ggtree::ggtree(ape::as.phylo(tree.obj$tree)) +
+    tree <- ggtree::ggtree(ape::as.phylo(tree.obj$rphy),
+			   ladderize=TRUE) +
         ggtree::geom_point(data = valid_labels,
                    ggplot2::aes(text = label, color = color)) +
         ggtree::geom_tiplab(data = valid_labels,
                     ggplot2::aes(color = color)) +
         ggplot2::ggtitle(name) +
-        ggplot2::labs(color="phenotype")
+	cColors +
+        ggplot2::labs(color=plabel)
     
+    if (!is.null(file)) {
     # Write to an svg
-    svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
-    writeLines(as.character(svg), file)
-    
+        svg <- svglite::xmlSVG(print(tree), standalone = TRUE)
+        writeLines(as.character(svg), file)
+    }
     return(tree)
 }
+
+
+#' Wrapper to make interactive cluster plots to explore the data.
+#'
+#' @param dir Direction of effect sizes to keep (0: both, 1: positive, -1: negative)
+#' @export
+generate_interactive_cluster_plot <- function(results,
+					      which_taxon,
+					      q_thresh=0.05,
+					      fx_thresh=1,
+					      dir=0,
+					      metric='canberra',
+					      ...) {
+	rm <- results$list_signif$results.matrix %>%
+		dplyr::filter(taxon==which_taxon) %>%
+		dplyr::filter(q.value <= q_thresh) %>%
+		dplyr::filter(abs(effect.size) >= fx_thresh)
+	if (dir > 0) { rm <- dplyr::filter(rm, effect.size > 0) }
+	if (dir < 0) { rm <- dplyr::filter(rm, effect.size < 0) }
+	g <- dplyr::pull(rm, gene)
+	pl <- get.pheno.plotting.scales.specificity(
+		results$list_pheno$phenotype_results$phenotype,
+		results$list_pheno$pz.db$trees
+	)
+	tr <- gg.cont.tree(results$list_pheno$pz.db$trees[[which_taxon]],
+			   results$list_pheno$phenotype_results$phenotype,
+			   results$list_pheno$pz.db$taxonomy,
+			   cLimits=pl$phy.limits[[which_taxon]],
+			   colors=pl$colors,
+			   cName=which_taxon,
+			   plot=FALSE)
+				  
+	int.cluster.plot(
+			 results$list_pheno$pz.db$gene.presence[[which_taxon]],
+			 g,
+			 tr,
+			 which_taxon,
+			 results$list_pheno$pz.db$gene.to.fxn,
+			 results$list_signif$results.matrix,
+			 metric,
+			 ...)
+
+
+}
+
+
+#' Make an interactive hybrid tree-heatmap plot showing the taxon distribution of 
+#' significant hits.
+#'
+#' Some particularly relevant global options are:
+#' \describe{
+#'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
+#'   or "specificity").}
+#'   \item{gene_color_absent}{String. When graphing gene presence/absence,
+#'   this color indicates absence.}
+#'   \item{gene_color_present}{String. When graphing gene presence/absence, this
+#'   color indicates presence.}
+#' }
+#'
+#' @param gene.presence Gene presence/absence matrix.
+#' @param sig.genes Character vector of the significant genes.
+#' @param tree A tree object.
+#' @param plotted.tree A ggtree plot of \code{tree}.
+#' @param taxon Name of the taxon represented by \code{tree}
+#' @param verbose Whether to report debugging information (boolean).
+#' @return A faceted ggplot object.
+#' @export
+int.cluster.plot <- function(gene.presence,
+                             sig.genes,
+                             plotted.tree,
+                             taxon,
+			     annotations,
+			     results.matrix,
+			     metric='canberra',
+                             verbose=FALSE,
+                             ...) {
+    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    sig.bin <- gene.presence[intersect(rownames(gene.presence),
+                                       sig.genes), , drop=FALSE]
+    if (is.null(dim(sig.bin))) {
+        sig.bin <- as.matrix(sig.bin) %>% t
+        rownames(sig.bin) <- sig.genes
+    }
+    names(dimnames(sig.bin)) <- c("gene", "id")
+    p <- non.interactive.plot(plotted.tree)
+    
+    if (length(sig.genes) == 0) { return(p) }
+    if (length(sig.genes) > 1) {
+        clust <- hclust(dist(sig.bin, method = metric))
+        sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop=FALSE])
+    } else {
+        sig.ord <- sparseMelt(t(sig.bin))
+        sig.ord <- sig.ord[order(sig.ord[, 4]), , drop=FALSE]
+    }
+    this_taxon <- taxon
+    # note, geom_facet will crash if one of your data columns is named "df"...
+    results.matrix <- dplyr::filter(results.matrix, taxon==this_taxon) %>% rename(degrees_of_freedom=df) %>%dplyr::distinct()
+    annotations <- dplyr::select(annotations, gene, accession, fxn=`function`) %>% dplyr::distinct()
+    sig.ord <- sig.ord %>%
+	    dplyr::left_join(., results.matrix, by="gene") %>%
+	    dplyr::left_join(., annotations, by="gene") %>%
+	    dplyr::mutate(value = as.numeric(value)) %>%
+	    dplyr::mutate(gene = factor(gene, levels=clust$labels[clust$order])) %>%
+	    dplyr::mutate(xpos = as.numeric(gene))
+    tmp <- ggtree::facet_plot(p,
+                              panel=paste0('heatmap: ', taxon),
+                              data=sig.ord,
+                              geom=ggplot2::geom_tile,
+                              mapping=ggplot2::aes(
+                                  x = xpos,
+                                  fill = value,
+				  text = paste0(gene, "\n", accession, "\n", fxn, "\n", "q = ", q.value))) +
+        ggplot2::scale_fill_gradient(low = opts('gene_color_absent'),
+                                     high = opts('gene_color_present'),
+                                     na.value = opts('gene_color_absent')) +
+        ggplot2::labs(color=opts("which_phenotype"), fill="gene presence") +
+        ggplot2::scale_shape(guide="none")
+    plotly::ggplotly(tmp)
+}
+

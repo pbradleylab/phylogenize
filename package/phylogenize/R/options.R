@@ -1,5 +1,11 @@
 # Set the default parameters
 default_params <- list(
+    min_frac_16s=0.8,		       
+    appspam_path="/usr/local/bin/appspam",
+    which_16s_method="appspam",
+    aln_path_16s="",
+    tree_path_16s="",
+    jplace_file="",
     abundance_file = "",
     assume_below_LOD = TRUE,
     biom_file = "",
@@ -9,14 +15,14 @@ default_params <- list(
     devel_pkgdir = 'package/phylogenize',
     dset_column = "dataset",
     env_column = "env",
-    taxon_level = "phylum",
     error_to_file = TRUE,
-    gene_color_absent = 'black',
-    gene_color_present = 'slateblue2',
+    gene_color_absent = 'white',
+    gene_color_present = 'coral',
     input_format = "tabular",
     metadata_file = "",
     meas_err = TRUE,
     minimum = 3,
+    gene_min_frac = 0.5,
     min_fx = 0,
     ncl = 1,
     output_file="results.html",
@@ -29,6 +35,7 @@ default_params <- list(
     prev_color_low = 'black',
     relative_out_dir = NULL,
     sample_column = "sample",
+    separate_metadata = FALSE,
     separate_process = TRUE,
     single_dset = FALSE,
     skip_graphs = FALSE,
@@ -37,12 +44,12 @@ default_params <- list(
     spec_color_mid = 'gray50',
     treemin = 5,
     type_16S = FALSE,
-    tax_level = "family",
+    taxon_level = "family",
     use_rmd_params = FALSE,
     vsearch_16sfile = "16s_gtdb.frn",
     vsearch_cutoff = 0.985,
     vsearch_dir = "",
-    vsearch_infile = "input_seqs.txt",
+    named_asv_file = "input_seqs.txt",
     vsearch_outfile = "output_assignments.txt",
     which_envir = "stool",
     which_phenotype = "prevalence",
@@ -52,7 +59,8 @@ default_params <- list(
     working_dir = '.',
     core_method = "phylogenize",
     rds_output_file = "core_output.rds",
-    fdr_method = "BY"
+    fdr_method = "BY",
+    quantile_normalize = FALSE
 )
 
 
@@ -79,18 +87,24 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{phenotype_file}{String. Name of input file for optional pre-calculated phenotype. Default: ""}
 #'   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
 #'   \item{separate_metadata}{Boolean. For BIOM data, is there a separate tabular abundance table? Default: FALSE}
+#'   \item{which_16s_method}{String. Can be "vsearch" (best-hit alignment), "appspam" (perform phylogenetic placement), or "jplace" (bring-your-own .jplace file). Default: "appspam"}
 #'   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_gtdb.frn"}
 #'   \item{vsearch_dir}{String. Path where the binary of the aligner is found. Default: "/usr/local/bin/"}
-#'   \item{vsearch_infile}{String. File name of the sequences written to disk and then read into the aligner. Default: "input_seqs.txt"}
+#'   \item{named_asv_file}{String. Path where sequences will be written to disk and then read into the aligner/AppSpam. Default: "input_seqs.txt"}
 #'   \item{vsearch_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
+#'   \item{jplace_file}{String. Path to write .jplace file (if which_16s_method is "appspam") or to read user-provided .jplace file (if which_16s_method is "jplace".) \emph{phylogenize}. Default: ""}
+#'   \item{aln_path_16s}{String. Path to the multiple alignment of 16S sequences used for phylogenetic placement. Default: ""}
+#'   \item{tree_path_16s}{String. Path to the tree of 16S sequences used for phylogenetic placement. \emph{phylogenize}. Default: ""}
+#'   \item{min_frac_16s}{Numeric. Should be between 0.5 and 1. Only keep ASVs where at least this fraction of assignments are to the same species. Allows some tolerance for mislabeled or phylogenetically-inconsistent 16S sequences in the database. Default: 0.8}
 #' }
 #'
 #' @section Computing phenotypes and results:
 #' \describe{
 #'   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
+#'   \item{quantile_normalize}{Boolean. If TRUE, all phenotypes will be quantile-normalized to the normal distribution. Default: FALSE}
 #'   \item{db}{String. Which database to use. Can be "gtdb" or "uhgp." Default: "gtdb"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
-#'   \item{env_column}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
+#'   \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}
 #'   \item{taxon_level}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
 #'   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
 #'   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: TRUE}
@@ -114,8 +128,8 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'
 #' @section Graphing:
 #' \describe{
-#'   \item{gene_color_absent}{String. When graphing gene presence/absence, this color indicates absence. Default: "black"}
-#'   \item{gene_color_present}{String. When graphing gene presence/absence, this color indicates presence. Default: "black"}
+#'   \item{gene_color_absent}{String. When graphing gene presence/absence, this color indicates absence. Default: "white"}
+#'   \item{gene_color_present}{String. When graphing gene presence/absence, this color indicates presence. Default: "coral"}
 #'   \item{prev_color_high}{String. When graphing prevalence on a tree, this color is the highest value. Default: "orange2"}
 #'   \item{prev_color_low}{String. When graphing prevalence on a tree, this color is the lowest value. Default: "black"}
 #'   \item{skip_graphs}{Boolean. If TRUE, skip making graphs in the report, which can be time- and memory-consuming. Default: FALSE}

@@ -10,21 +10,17 @@ The easiest way to install all the dependencies needed is by using mamba or cond
 
 To install miniforge, run `wget -c https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh` and then in a terminal type `bash Miniforge3-Linux-x86_64.sh`. You'll need to run through the prompts and then give it a download location if the default is not to your liking. Finally, you can let miniforge initialize itself if you want conda to always be in your "base" when you open the terminal. Otherwise, if you say `no` then you will have to manually source the executable for conda which can be done similarly as `source /your/path/to/miniforge3/bin/activate`.
 
-You can also install Phylogenize2 using [Pixi](https://pixi.sh) with the provided `pixi.toml` file.
-
 ### Now you are ready to start installing the dependencies.
 
 Create a new environment by typing `conda create -n phylogenize` and `conda activate phylogenize`. Then you can install phylogenize by running `conda install bioconda::phylogenize`. For any future analysis, all you have to do is activate this environment to have the dependencies run.
 
-To use Pixi, first use `git clone https://github.com/pbradleylab/phylogenize`, enter the `phylogenize` directory, then type `pixi install` to download all of the dependencies. You can then use Phylogenize2 from within an R session that you start by typing `pixi run R` from within the `phylogenize` directory.
-
 #### Locally - Command line and Rstudio (MacOS/Linux)
 
-Please note, we assume in these instructions you are working off of command line R and NOT Rstudio. We describe at the bottom of this section how to use Rstudio while still installing the dependencies with mamba.
+Please note, we assume in these instructions you are working off of base-r and NOT Rstudio. We describe at the bottom of this section how to use Rstudio while still installing the dependencies with mamba.
 
 #### Install with mamba - configuration file
 
-You can make a conda environment using the supplied yaml file and not worry about installing any dependencies. Run `conda env create -f environment.yml` and then `conda activate phylogenize`. Open R from the terminal, and then type `devtools::install_github("biocore/phylogenize")`.
+You can make a conda environment using the supplied yaml file and not worry about installing any dependencies. Run `conda env create -f environment.yml` and then `conda activate phylogenize`. Open base-r and then type `devtools::install_github("biocore/phylogenize")`.
 
 #### Install with conda - no configuration file
 
@@ -56,21 +52,10 @@ sudo apt install fontconfig
 
 ## Selecting a database
 
-Currently, two databases can be used with Phylogenize2:
-
-| Name | Environment        | Version | Database | Number of families | Number of species |
-|------|---------------|---------------|---------------|---------------|---------------|
-| uhgp | human gut          | v1.0  | MGnify   | 202                | 4542              |
-| gtdb | mixed environment  | v202    | GTDB     | 3003               | 43058             |
-
-These databases can be downloaded from our Zenodo page [here](https://zenodo.org/communities/bradley_phylogenize), then installed using Phylogenize2's `phylogenize::install_data("path/to/downloaded/file")`. Note that you will also have to download and install the `databases.csv` file in addition to one or both databases.
-
-The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
-
-We are currently preparing more biome-specific databases that may be better suited for particular environments (in progress):
+We have several premade databases that you can select from depending on what is expected to match your host's system. If you are unsure what database to use, then we recommend using GTDB as the default.
 
 | Environment        | Version | Database | Number of families | Number of species |
-|---------------|---------------|---------------|---------------|---------------|
+|--------------------|---------|----------|--------------------|-------------------|
 | chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |
 | cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |
 | honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |
@@ -84,9 +69,23 @@ We are currently preparing more biome-specific databases that may be better suit
 | pig gut            | v1.0    | MGnify   | 138                | 800               |
 | sheep rumen        | v1.0    | MGnify   | 117                | 2122              |
 | zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |
-| mixed environment  | v202    | GTDB     | 3003               | 43058             |
+| mixed environment  | v214    | GTDB     | 3003               | 43058             |
 
-All of the above databases will have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
+All databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
+
+Databases can be downloaded manually and decompressed from our Zenodo page [here](), or they can be downloaded and decompressed using Phylogenize2's `phylogenize::download.zenodo.db("your/html/link/here.zip")`. The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
+
+## Preparing your data
+
+If you are using shotgun metagenomes, you will need to first quantify species. The species definitions and names must match the database you plan to use. We recommend using Kraken2/Bracken with one of the following databases:
+
+ - UHGG v1.0 Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v1.0/uhgg_kraken2-db/
+ - GTDB v202 Kraken2 database: http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release202/kraken2/
+    * Thanks to Nick Youngblut who generated this database using [Struo2](https://github.com/leylabmpi/Struo2).
+  
+An example workflow for UHGG written in Snakemake can be seen under `shotgun_kraken2_example`. (Note that the names in the UHGG v1.0 database does not exactly match the database used in Phylogenize2, so they get processed further in `read-bracken.R`. We will make this easier in a future release.)
+
+Finally, we also recommend that you merge any technical replicates at this point, as leaving in multiple measurements per experimental unit will lead to overconfident predictions. `read-bracken.R` has an example of how to do this using run info downloaded from the SRA (provided as an example).
 
 ## Running Phylogenize2
 
@@ -97,7 +96,7 @@ Congratulations! Phylogenize2 should now be installed.
 The main function in Phylogenize2 is called `phylogenize`. The parameters that you are the most likely to use are as follows:
 
 | Option | Default | Description |
-|--------------------------|------------------------|----------------------|
+|----|----|----|
 | in_dir | "." | String. Path to input directory (i.e., where to look for input files. |
 | out_dir | "output" | String. Path to output directory. |
 | abundance_file | "test-abundance.tab" | String. Name of abundance tabular file. |
@@ -179,4 +178,4 @@ render_core_report(
 
 ## Contact
 
-If you have questions or comments, please contact [[support\@phylogenize.org](mailto:support@phylogenize.org){.email}]. If Phylogenize2 is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!
+If you have questions or comments, please contact [support\@phylogenize.org](mailto:support@phylogenize.org). If Phylogenize2 is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!
