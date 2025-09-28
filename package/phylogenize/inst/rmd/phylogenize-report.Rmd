@@ -131,6 +131,7 @@ pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
 pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
 plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pz.db$taxonomy, pheno.scale)
 
+
 # Template for plots
 template <- c(
     "### Page {{nm}}\n",
@@ -234,7 +235,6 @@ pos.sig.count <- purrr::map_dbl(core[["list_signif"]]$pos.sig, length)
 
 if ("neg.sig" %in% names(core[["list_signif"]])) {
     neg.sig.count <- purrr::map_dbl(core[["list_signif"]]$neg.sig, length)
-
     sig.count <- full_join(enframe(pos.sig.count, name="Taxon", value="Pos. Sig. Genes"),
                            enframe(neg.sig.count, name="Taxon", value="Neg. Sig. Genes"),
                            by="Taxon")
