@@ -18,79 +18,116 @@
 #'   genes to be tested (for debugging).
 #' @param abd.meta List containing abundances and metadata (only required for
 #'   POMS)
-#' @param poms Boolean; whether to run POMS instead of phylolm.
 #' @return Named list of p-value and effect-size matrices, one per taxon.
 #' @export result.wrapper.plm
-result.wrapper.plm <- function(taxa,
-                               pheno,
-                               tree,
-                               proteins,
-                               clusters,
-                               method = phylolm.fx.pv,
-                               restrict.figfams = NULL,
-                               drop.zero.var = FALSE,
-                               only.return.names = FALSE,
-                               abd.meta = FALSE,
-                               poms = FALSE,
-                               ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
-    lapply.across.names(taxa, function(p) {
-        message(p)
-        if (class(tree) == "phylo") {
-            tr <- tree
-        } else if (class(tree) == "list") {
-            tr <- tree[[p]]
-        } else {
-            stop("tree must be either an object of class phylo or a list")
-        }
-        valid <- Reduce(intersect,
-                        list(colnames(proteins[[p]]),
-                             clusters[[p]],
-                             tr$tip.label))
-        if (!is.null(pheno)) {
-            valid <- intersect(valid, names(pheno))
-        }
-        
-	if (is.null(restrict.figfams)) {
-            restrict.figfams <- rownames(proteins[[p]])
-        } else {
-            restrict.figfams <- intersect(rownames(proteins[[p]]),
-                                          restrict.figfams)
-        }
-        
-	if (drop.zero.var) {
-            fvar <- apply(proteins[[p]][, valid, drop=FALSE], 1, var)
-            message(paste0(sprintf("%.01f",
-                                   100 * mean(na.omit(fvar == 0))),
-                           "% dropped [no variance]"))
-            restrict.figfams <- intersect(restrict.figfams,
-                                          rownames(proteins[[p]])[
-                                              which(fvar > 0)])
-        }
-        
-	if (!only.return.names) {
-		if (poms) {
-			matrix.POMS(tr,
-				    proteins[[p]],
-				    abd.meta,
-				    restrict.taxa=valid,
-				    restrict.ff=restrict.figfams,
-				    ...)
-		} else {
-            matrix.plm(tr,
-                       proteins[[p]],
-                       pheno,
-                       method = method,
-                       restrict.taxa = valid,
-                       restrict.ff = restrict.figfams,
-                       ...)
-		}
-            
-        } else {
-            restrict.figfams
-	}
-})
-}
+result.wrapper.plm <- function(
+    taxa,
+    pheno,
+    tree,
+    proteins,
+    clusters,
+    method = phylolm.fx.pv,
+    restrict.figfams = NULL,
+    drop.zero.var = FALSE,
+    only.return.names = FALSE,
+    abd.meta = FALSE,
+    poms = FALSE,
+    ...) {
+        opts <- clone_and_merge(PZ_OPTIONS, ...)
+        core_method <- tolower(opts('core_method'))
+        lapply.across.names(taxa, function(p) {
+            message(p)
+            if (class(tree) == "phylo") {
+                tr <- tree
+            } else if (class(tree) == "list") {
+                tr <- tree[[p]]
+            } else {
+                stop("tree must be either an object of class phylo or a list")
+            }
+            valid <- Reduce(
+                intersect,
+                list(colnames(proteins[[p]]),
+                clusters[[p]],
+                tr$tip.label)
+            )
+            if (!is.null(pheno)) {
+                valid <- intersect(valid, names(pheno))
+            }
+            if (is.null(restrict.figfams)) {
+                restrict.figfams <- rownames(proteins[[p]])
+            } else {
+                restrict.figfams <- intersect(rownames(proteins[[p]]),
+                restrict.figfams)
+            }
+            if (drop.zero.var) {
+                fvar <- apply(proteins[[p]][, valid, drop=FALSE], 1, var)
+                message(paste0(sprintf("%.01f",
+                100 * mean(na.omit(fvar == 0))),
+                "% dropped [no variance]"))
+                restrict.figfams <- intersect(
+                    restrict.figfams,
+                    rownames(proteins[[p]])[
+                        which(fvar > 0)
+                    ]
+                )
+            }
+            if (!only.return.names) {
+                if (core_method=="poms") {
+                    matrix.POMS(
+                        tr,
+                        proteins[[p]],
+                        abd.meta,
+                        restrict.taxa=valid,
+                        restrict.ff=restrict.figfams,
+                        ...
+                    )
+                } else if (core_method=="repermulize") {
+                    # handle multicore outside of this function
+                    cores <- opts('ncl')
+                    if (opts('separate_process') || (cores > 1)) {
+                        cl <- parallel::makeCluster(cores)
+                        cluster.load.pkg(
+                            cl,
+                            opts('devel'),
+                            opts('devel_pkgdir')
+                        )
+                        force(pheno)
+                        force(tr)
+                        force(proteins)
+                    } else {
+                        cl <- NULL
+                    }
+                    repermulize_wrapper(
+                        pheno,
+                        proteins[[p]],
+                        tr,
+                        cl = cl
+                    )
+                } else if (core_method=="lm") { 
+                    matrix.plm(
+                        tr,
+                        proteins[[p]],
+                        pheno,
+                        method = lm.fx.pv,
+                        restrict.taxa = valid,
+                        restrict.ff = restrict.figfams,
+                        ...
+                    )
+                } else {
+                    matrix.plm(tr,
+                        proteins[[p]],
+                        pheno,
+                        method = phylolm.fx.pv,
+                        restrict.taxa = valid,
+                        restrict.ff = restrict.figfams,
+                        ...)
+                    }
+                } else {
+                    restrict.figfams
+                }
+            }
+        )
+    }
 
 #' Perform POMS modeling for a single clade.
 #'
@@ -1364,3 +1401,129 @@ add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
                                by="gene") %>%
         dplyr::rename(description=`function`)
 }
+
+
+#' Run permulations given a phenotype and a tree
+permulate <- function(pheno, tree, n = 1) {
+  sigma <- phylolm::phylolm(pheno ~ 1, phy = tree)$sigma2
+  random_traits <- phylolm::rTrait(n, tree, parameters = list(sigma2 = sigma))
+  if (n == 1) {
+    random_traits <- data.frame(random_traits)
+  }
+  apply(random_traits, 2, \(x) {
+    tr <- sort(pheno)[order(x)]
+    names(tr) <- names(x)
+    tr
+  })
+}
+
+#' Run robust test given a real phenotype, permulated phenotypes, and genes (all in PIC space)
+#' early_a, early_c: `a` and `c` parameters for early stopping
+repermulize_test <- function(
+  realphenoPIC,
+  permPICs,
+  genePIC,
+  early_a = 10,
+  early_p = 0.1,
+  mean_center_nulls = FALSE,
+  add_pseudocount = FALSE,
+  regression_method = "rlm"
+) {
+  early_c <- early_p / (1 + early_p)
+  if (regression_method=="rlm") regress <- MASS::rlm else regress <- lm
+  model_fit <- regress(realphenoPIC ~ genePIC - 1) # nb, leave out intercept in PIC
+  model_coef <- summary(model_fit)$coefficients
+  fg_tv <- model_coef[1, "t value"]
+  fg_est <- model_coef[1, 1]
+  bg_tvs <- numeric(ncol(permPICs)) # empty vector to start
+  permPICs <- permPICs[, sample(1:nrow(permPICs))] # "shuffle the deck" since we are using early stopping
+  nperms = ncol(permPICs)
+  for (ix in 1:nperms) {
+    bg_tvs[ix] <- summary(regress(permPICs[, ix] ~ genePIC - 1))$coefficients[
+      1,
+      "t value"
+    ]
+    # Use this if the null distribution is skewed away from 0 towards positives or negatives, but not before there is a meaningful mean
+    if (mean_center_nulls && (ix > 2)) {
+      null_tvs <- abs(bg_tvs[1:ix] - mean(bg_tvs[1:ix]))
+      test_tv <- abs(fg_tv - mean(bg_tvs[1:ix]))
+    } else {
+      null_tvs <- abs(bg_tvs[1:ix])
+      test_tv <- abs(fg_tv)
+    }
+    running_pv <- mean(null_tvs >= test_tv)
+    if (running_pv > ((early_a / ix) + early_c) / (1 + early_c)) {
+      break # early stopping rule
+    }
+  }
+  # exact 0 p-values can be problematic, so we can add the equivalent of one pseudocount
+  if (add_pseudocount) {
+    true_pv <- ((running_pv * nperms) + 1) / (nperms + 1)
+  } else {
+    true_pv <- running_pv
+  }
+  c(Estimate = fg_est, p.value = true_pv)
+}
+
+#' Wrap the entire thing including making PICs and running genes in parallel
+repermulize_wrapper <- function(
+  real_pheno,
+  real_genes,
+  real_tree,
+  perm_pheno = NULL,
+  save_everything = FALSE,
+  genes_are_PICs = FALSE,
+  n = 5000,
+  cl = NULL,
+  ...
+) {
+  # make sure same species represented in all
+  tips <- intersect(real_tree$tip.label, names(real_pheno))
+  reduced_tree <- ape::keep.tip(real_tree, tips)
+  real_pheno <- real_pheno[reduced_tree$tip.label] # put in same order as tree
+  if (is.null(perm_pheno)) {
+    perm_pheno <- permulate(real_pheno, reduced_tree, n)
+  }
+  perm_pheno <- perm_pheno[reduced_tree$tip.label, ]
+
+  # calculate PICs
+  real_PICs <- castor::get_independent_contrasts(reduced_tree, real_pheno)$PICs
+  perm_PICs <- apply(perm_pheno, 2, \(x) {
+    castor::get_independent_contrasts(real_tree, x)$PICs
+  })
+
+  # loop across genes, using futures to do parallel computing without requiring lots of memory
+  # note, we will calculate PICs inside the gene loop to avoid casting to a dense matrix
+  named_indices <- 1:nrow(real_genes)
+  names(named_indices) <- rownames(real_genes)
+
+  pbapply::pboptions(type = "timer")
+  res <- pbapply::pblapply(
+    named_indices,
+    \(i) {
+      if (genes_are_PICs) {
+        g_pic <- real_genes[i, ]
+      } else {
+        g_pic <- castor::get_independent_contrasts(reduced_tree, 1 * real_genes[i, ])$PICs
+      }
+      repermulize_test(real_PICs, perm_PICs, g_pic, ...)
+    },
+    cl = cl
+  )
+
+  # Collect and convert to a more familiar format
+  r_df <- res |> as.data.frame()
+
+  # Return PICs, etc. if desired (can't return the gene PICs since those are inside the parallel loop)
+  if (save_everything) {
+    return(list(
+      r_df = r_df,
+      perm_pheno = perm_pheno,
+      perm_PICs = perm_PICs,
+      real_PICs = real_PICs
+    ))
+  } else {
+    return(r_df)
+  }
+}
+
