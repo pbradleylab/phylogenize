@@ -252,8 +252,7 @@ read.abd.metadata.tabular <- function(...) {
 import.pz.db <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     db_csv <- file.path(opts('data_dir'), "databases.csv")
-    installed_dbs <- dplyr::mutate(readr::read_csv(db_csv),
-                                   database=tolower(database))
+    installed_dbs <- readr::read_delim(db_csv)
     requested_db <- tolower(opts('db'))
     if (!(requested_db %in% installed_dbs[["database"]])) {
         pz.error(paste0("Database not installed in ", opts('data_dir'), ": ",
