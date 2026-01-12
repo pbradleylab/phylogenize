@@ -84,6 +84,7 @@ result.wrapper.plm <- function(
                     )
                 } else if (core_method %in% c("permulate-lm", "permulate-rlm")) {
                     # handle multicore outside of this function
+                    pz.message(sprintf("Performing permulations with %s", core_method))
                     cores <- opts('ncl')
                     model_method <- stats::lm
                     if (core_method=="permulate-rlm") model_method <- MASS::rlm
