@@ -197,7 +197,7 @@ get_all_associated_genes <- function(list_pheno,
                                      p.method=phylolm.fx.pv,
                                      ...) {
     pz.options <- clone_and_merge(PZ_OPTIONS, ...)
-    do_POMS <- (tolower(opts('core_method')) == "poms")
+    do_POMS <- (tolower(pz.options('core_method')) == "poms")
     if (!do_POMS) {
         phenotype <- list_pheno$phenotype_results$phenotype
         taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
