@@ -34,7 +34,7 @@ result.wrapper.plm <- function(
     poms = FALSE,
     pheno_sd = NULL,
     ...) {
-        opts <- clone_and_merge(PZ_OPTIONS, ...)
+        opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
         core_method <- tolower(opts('core_method'))
         lapply.across.names(taxa, function(p) {
             message(p)
@@ -162,7 +162,7 @@ matrix.POMS <- function(tree,
                         ...) {
     message("POMS")
     
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     E <- opts('env_column')
     S <- opts('sample_column')
     envir <- opts('which_envir')
@@ -254,7 +254,7 @@ nonparallel.results.generator <- function(gene.matrix,
                                          remove.low.variance=TRUE,
                                          use.for.loop=TRUE,
                                          ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     message(taxon.name)
     restrict.taxa <- Reduce(intersect, list(colnames(gene.matrix),
                                             tree$tip.label,
@@ -486,7 +486,7 @@ matrix.plm <- function(tree,
                        restrict.taxa=NULL,
                        restrict.ff=NULL,
                        ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     cores <- opts('ncl')
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
@@ -821,7 +821,7 @@ b.scorer <- function(s, a) {
 #' @export
 prev.addw <- function(abd.meta,
                       ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     envir <- opts('which_envir')
     E <- opts('env_column')
     D <- opts('dset_column')
@@ -876,7 +876,7 @@ prev.addw <- function(abd.meta,
 #' @export
 correl.clr <- function(abd.meta,
                       ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     R <- opts('env_column')
     S <- opts('sample_column')
     D <- opts('dset_column')
@@ -948,7 +948,7 @@ calc.ess <- function(abd.meta,
                      pdata = NULL,
                      b.optim = NULL,
                      ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     E <- opts('env_column')
     D <- opts('dset_column')
     S <- opts('sample_column')
@@ -1233,7 +1233,7 @@ ashr.diff.abund <- function(abd.meta,
 #' @param errtext String: error message text.
 #' @export
 pz.error <- function(errtext, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
         tryCatch({
           cat(paste0(errtext, "\n"),
@@ -1255,7 +1255,7 @@ pz.error <- function(errtext, ...) {
 #' @param errtext String: message text.
 #' @export
 pz.message <- function(msgtext, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
         tryCatch({
             cat(paste0(msgtext, '\n'),
@@ -1277,7 +1277,7 @@ pz.message <- function(msgtext, ...) {
 #' @param errtext String: warning text.
 #' @export
 pz.warning <- function(msgtext, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
         tryCatch({
             cat(paste0(msgtext, '\n'),
@@ -1318,7 +1318,7 @@ make.results.matrix <- function(results) {
 #' @return A single data frame with entries from \code{results}.
 #' @export
 threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     Min <- opts('minimum')
     mapply(pz.db$trees[phy.with.sigs],
            pos.sig[phy.with.sigs],
@@ -1352,7 +1352,7 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 #'   from the list (if they had zero genes left after filtering).
 #' @export
 above_minimum_genes <- function(gene.presence, trees, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     Min <- opts('minimum')
     taxa <- names(trees)
     # keep track of which taxa should be dropped entirely

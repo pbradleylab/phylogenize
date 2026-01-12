@@ -1,25 +1,20 @@
 # functions to run robust PIC regression with permulations and early stopping
-# (permuly? pearly? earlyperm? e-permulize? repermulize for _r_obust _e_arly?)
-
-# Required:
-# library(phylolm)
-# library(Matrix)
-# library(ape)
-# library(castor)
-# library(tidyverse)
-# library(future)
-# library(pbapply)
-# To enable parallelism, first run `library(future)`, then run:
-#  plan(multisession, workers = 4)   # for 4 threads
-# To disable, run:
-#    plan(sequential)
 
 #' Run permulations given a phenotype and a tree
+#'
+#' @param pheno Named numeric vector giving phenotype values per species.
+#' @param tree A tree object.
+#' @param n Number of permulations to generate.
+#' @param p_model Optionally, a model of evolution other than Brownian motion (used to transform the tree; see `phylolm::transf.branch.lengths()`).
+#' @param ub Upper bound on parameter in p_model.
+#' @param lb Lower bound on parameter in p_model.
+#' @param pheno_sd Optionally, a vector of standard deviations around each measurement in `pheno`.
+#' @export permulate
 permulate <- function(
   pheno,
   tree,
   n = 1,
-  p_model = "lambda",
+  p_model = "BM",
   ub = 0.99,
   lb = 0.01,
   pheno_sd = NULL,
@@ -73,8 +68,16 @@ permulate <- function(
 }
 
 #' Run rate permutations given a phenotype and a tree
-#' rank: optionally quantile-normalize the resulting phenotype to have the same exact distribution as the original 
-#'       (if FALSE, we just shift the mean and sd)
+#' @param pheno Named numeric vector giving phenotype values per species.
+#' @param tree A tree object.
+#' @param n Number of permulations to generate.
+#' @param n_bins Number of bins to divide edges into.
+#' @param p_model Optionally, a model of evolution other than Brownian motion (used to transform the tree; see `phylolm::transf.branch.lengths()`).
+#' @param ub Upper bound on parameter in p_model.
+#' @param lb Lower bound on parameter in p_model.
+#' @param cut_by How to bin edges (default: "parent_depth"; can also be "edge_length". Any other value bins by child depth)
+#' @param rank Transform the permutrated values back to the original data points, as in permulation (default: FALSE).
+#' @export permutrate
 permutrate <- function(pheno, tree, n = 1, nbins = 10, p_model = "BM", ub=0.99, lb=0.01, cut_by="parent_depth", rank=FALSE) {
   # p_model is currently ignored since it seems to mess up more than it helps
   # if (!p_model == "BM") {
@@ -106,11 +109,11 @@ permutrate <- function(pheno, tree, n = 1, nbins = 10, p_model = "BM", ub=0.99, 
     dplyr::mutate(diff = node_tip_vals[V2] - node_tip_vals[V1]) |>
     dplyr::mutate(V3 = diff / rootlen)
   if (cut_by=="edge_length") {
-    edge_tbl <- mutate(edge_tbl, cut_by = rootlen)
+    edge_tbl <- dplyr::mutate(edge_tbl, cut_by = rootlen)
   } else if (cut_by=="parent_depth") {
-    edge_tbl <- mutate(edge_tbl, cut_by = top_node_depth)
+    edge_tbl <- dplyr::mutate(edge_tbl, cut_by = top_node_depth)
   } else {
-    edge_tbl <- mutate(edge_tbl, cut_by = btm_node_depth)
+    edge_tbl <- dplyr::mutate(edge_tbl, cut_by = btm_node_depth)
   }
   for (i in 1:n) {
     # permute rates within bins of equal size based on length, parent node depth, or child node depth
@@ -119,9 +122,9 @@ permutrate <- function(pheno, tree, n = 1, nbins = 10, p_model = "BM", ub=0.99, 
         top_node_depth,
         quantile(top_node_depth, seq(0, 1, 1/nbins))
       )) |>
-      group_by(binned_lengths) |>
-      mutate(scrambled_V3 = sample(V3)) |>
-      mutate(scrambled_rescale = scrambled_V3 * rootlen)
+      dplyr::group_by(binned_lengths) |>
+      dplyr::mutate(scrambled_V3 = sample(V3)) |>
+      dplyr::mutate(scrambled_rescale = scrambled_V3 * rootlen)
     new_nt_vals <- node_tip_vals
     # since these are already sorted in depth-first root to tip traversal order:
     for (x in 1:nrow(binned_edge_tbl)) {
@@ -140,10 +143,10 @@ permutrate <- function(pheno, tree, n = 1, nbins = 10, p_model = "BM", ub=0.99, 
 }
 
 
-#' Helper to z-score
+#' Helper to z-score a vector
 zsc <- function(x) (x - mean(na.omit(x))) / sd(na.omit(x))
 
-#' Estimate p-values using an empirical Z test
+#' Helper to estimate p-values using an empirical Z test
 normal_estimate_pval <- function(bg_stats, fg_stat) {
   center <- mean(bg_stats)
   sd <- sd(bg_stats)
@@ -151,9 +154,18 @@ normal_estimate_pval <- function(bg_stats, fg_stat) {
 }
 
 #' Run robust test given a real phenotype, permulated/permutrated phenotypes, and genes (all in PIC space)
-#' early_a, early_c: `a` and `c` parameters for early stopping
-#' approx_method: can be "normal" or "density"
-#' approx_pvals: use a continuous approximation for p-values
+#' @param realphenoPIC Real PIC vector for a phenotype.
+#' @param permPICs A matrix of PIC vectors for permulated phenotypes.
+#' @param genePIC PIC vector for a gene (predictor).
+#' @param early_a The `a` parameter for early stopping. Controls how fast the threshold decays before it is possible to stop early.
+#' @param early_p The `p` parameter for early stopping. All p-values below this threshold should be reliable.
+#' @param mean_center_nulls Should the null distribution be mean-centered?
+#' @param add_pseudocount Should a pseudocount be added to the top and bottom of the empirical p-value fraction?
+#' @param approx_pvals Should the p-values be approximated using a continuous function? (Default: TRUE)
+#' @param approx_method Can be either "normal" or "density." Controls how p-values are estimated if `approx_pvals==TRUE`.
+#' @param regression_method Controls the function used to fit the data (either "rlm" or "lm" are recognized).
+#' @param return_bgs Return the full set of null statistics?
+#' @export repermulize_test
 repermulize_test <- function(
   realphenoPIC,
   permPICs,
@@ -226,7 +238,7 @@ repermulize_test <- function(
   to_return
 }
 
-#' Put PICs in node order, leaving NAs if any missing (shouldn't be)
+#' Helper to put PICs in node order, leaving NAs if any missing (shouldn't be)
 order_pic_wrapper <- function(a, b) {
   ic <- castor::get_independent_contrasts(a, b)
   p <- rep(NA, a$Nnode)
@@ -237,6 +249,21 @@ order_pic_wrapper <- function(a, b) {
 }
 
 #' Wrap the entire thing including making PICs and running genes in parallel
+#' 
+#' Run robust test given a real phenotype, permulated/permutrated phenotypes, and genes (all in PIC space)
+#' @param real_pheno Real phenotype vector (named values).
+#' @param real_genes Real matrix of gene presence/absence (or pangenome prevalence).
+#' @param real_tree Tree to use for phylogenetic regressions.
+#' @param perm_pheno Optionally, can directly provide permulated or otherwise randomized phenotypes.
+#' @param real_pheno_sd Optionally, a vector giving the standard deviation of the mean for each phenotype value.
+#' @param save_everything Should intermediate results be returned? Useful for debugging. (Default: FALSE) 
+#' @param p_model Optionally, a model of evolution other than Brownian motion (used to transform the tree; see `phylolm::transf.branch.lengths()`).
+#' @param ub Upper bound on parameter in p_model.
+#' @param lb Lower bound on parameter in p_model.
+#' @param verbose Talk more?
+#' @param perm_method Should be "permulate" or "permutrate".
+#' @param rank For permutration specifically, should the values be replaced with the original values based on their rank, like in permulation? (Default: FALSE)
+#' @export repermulize_wrapper
 repermulize_wrapper <- function(
   real_pheno,
   real_genes,
@@ -251,7 +278,6 @@ repermulize_wrapper <- function(
   n = 1000,
   ub = 0.99,
   lb = 0.01,
-  nsamples = 10,
   verbose = TRUE,
   perm_method = "permulate",
   rank = FALSE,
@@ -265,10 +291,10 @@ repermulize_wrapper <- function(
     real_pheno_sd <- real_pheno_sd[reduced_tree$tip.label]
   }
 
-  if (verbose) message("Calculating real PICs...")
-
-  # calculate real PICs, allowing for varying signal via lambda/delta/kappa models
+  if (verbose) pz.message("Calculating real PICs...")
+  # calculate real PICs
   if (!is.null(real_pheno_sd)) {
+    # use the actual SDs to best augment the tree
     real_rescale <- add_uncertainty_to_tree(
       reduced_tree,
       real_pheno,
@@ -277,6 +303,7 @@ repermulize_wrapper <- function(
     )
     real_rescaled_tree <- real_rescale$aug_tree
   } else {
+    # still allow using an alternative model to capture, e.g., general measurement error
     real_rescaled_tree <- get_best_model_fit(
       real_pheno,
       reduced_tree,
@@ -287,12 +314,9 @@ repermulize_wrapper <- function(
     )
   }
   if (is.null(real_PICs)) {
-      real_PICs <- order_pic_wrapper(
-        real_rescaled_tree,
-        real_pheno
-      )
+      real_PICs <- order_pic_wrapper(real_rescaled_tree, real_pheno)
   }
-  if (verbose) message("Calculating fake PICs...")
+  if (verbose) pz.message("Calculating fake PICs...")
   if (is.null(real_pheno_sd)) perm_pheno_sd = NULL
   if (is.null(perm_pheno)) {
     if (just_scramble_PICs) {
@@ -304,7 +328,7 @@ repermulize_wrapper <- function(
           real_pheno,
           real_rescaled_tree,
           n,
-          pheno_sd = NULL,
+          pheno_sd = NULL, # don't re-fit based on the standard deviation
           p_model = "BM" # don't re-scale the tree since we're already doing that
         )
         
@@ -314,19 +338,7 @@ repermulize_wrapper <- function(
         stop(sprintf("unknown perm_method: %s", perm_method))
       }
       perm_pheno <- perm_pheno[reduced_tree$tip.label, ]
-      perm_PICs <- pbapply(perm_pheno, 2, \(x) {
-        # names(x) <- names(real_pheno)
-        # if (!is.null(real_pheno_sd)) {
-        #   perm_rescale <- add_uncertainty_to_tree(
-        #     reduced_tree,
-        #     x,
-        #     real_pheno_sd,
-        #     p_model)
-        #   perm_rescaled_tree <- perm_rescale$aug_tree
-        # } else {
-        #   perm_rescaled_tree <- get_best_model_fit(x, reduced_tree, perm_model, yield = "tree",ub=ub,lb=lb)
-        # }
-        #perm_rescaled_tree <- get_best_model_fit(x, reduced_tree, perm_model, yield = "tree",ub=ub,lb=lb)
+      perm_PICs <- pbapply::pbapply(perm_pheno, 2, \(x) {
         order_pic_wrapper(real_rescaled_tree, x)
       }, cl="future")}
   }
@@ -346,7 +358,6 @@ repermulize_wrapper <- function(
       } else {
         g_pic <- order_pic_wrapper(real_rescaled_tree, 1 * real_genes[i, ])
       }
-      if (!is.null(real_pheno_sd)) g_pic <- rep(g_pic, nsamples) # pad to length of real/perm
       tryCatch(
         repermulize_test(real_PICs, perm_PICs, g_pic, ...),
         error = function(e) { warning(paste(e)); c(Estimate=NA,p.value=NA) }
@@ -355,7 +366,7 @@ repermulize_wrapper <- function(
     cl = "future",
     future.seed=TRUE
   )
-  
+
   # Collect and convert to a more familiar format
   r_df <- res |> as.data.frame()
   
@@ -372,8 +383,7 @@ repermulize_wrapper <- function(
   }
 }
 
-
-#' Get best fit to a more complex model and either return model parameters or a rescaled tree
+#' Helper to get best fit to a more complex model and either return model parameters or a rescaled tree
 get_best_model_fit <- function(pheno, tree, p_model="lambda", ub=0.99, lb=0.01, yield="tree") {
   model_fit <- phylolm::phylolm(
     pheno ~ 1,
@@ -408,14 +418,20 @@ get_best_model_fit <- function(pheno, tree, p_model="lambda", ub=0.99, lb=0.01, 
   }
 }
 
-#' Estimate p-values using a Gaussian kernel density estimator instead of using the empirical distribution
+#' Helper to estimate p-values using a Gaussian kernel density estimator instead of using the empirical distribution
 density_estimate_pval <- function(bg_stats, fg_stat, bw=bw.SJ, ...) {
   bg_bw <- bw(bg_stats)
   tail_prob <- mean(pnorm(fg_stat, mean = bg_stats, sd = bg_bw))
   return(min(2 * tail_prob, 2 * (1-tail_prob)))
 }
 
-#' directly add measurement uncertainty to the tree
+#' Function to transform a tree by lengthening the tips to match measurement error for each individual taxon.
+#' @param phy Tree object to transform.
+#' @param pheno Named phenotype vector (numeric).
+#' @param sd Named vector of standard deviations around the means represented in `pheno`.
+#' @param lb In log10-space, the lower bound to search for the scale parameter.
+#' @param ub In log10-space, the upper bound to search for the scale parameter.
+#' @export add_uncertainty_to_tree
 add_uncertainty_to_tree <- function(phy, pheno, pheno_sd, lb = -3, ub = 3) {
   # make sure all aligned
   common_taxa <- na.omit(intersect(
@@ -449,13 +465,13 @@ add_uncertainty_to_tree <- function(phy, pheno, pheno_sd, lb = -3, ub = 3) {
 
 }
 
-#' Compute best AIC for a given scaling of per-tip stdevs
+#' Helper function to compute best AIC for a given scaling of per-tip stdevs
 AIC_scale_and_augment <- function(phy, pheno, v, scale, meas_err=FALSE) {
   phy_aug <- augment_tip_branch_lengths(phy, v * scale)
   AIC(phylolm::phylolm(pheno ~ 1, phy = phy_aug, lower.bound=0, measurement_error = meas_err))
 }
 
-#' Add a vector of "extra" tip-adjacent branch lengths to a tree
+#' Helper function to add a vector of "extra" tip-adjacent branch lengths to a tree
 augment_tip_branch_lengths <- function(phy, tip_amounts) {
   tip_amounts <- tip_amounts[phy$tip.label]
   edge_orders <- purrr::map_dbl(1:length(phy$tip.label),
