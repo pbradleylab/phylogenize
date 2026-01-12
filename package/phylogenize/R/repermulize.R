@@ -144,9 +144,11 @@ permutrate <- function(pheno, tree, n = 1, nbins = 10, p_model = "BM", ub=0.99, 
 
 
 #' Helper to z-score a vector
+#' @export zsc
 zsc <- function(x) (x - mean(na.omit(x))) / sd(na.omit(x))
 
 #' Helper to estimate p-values using an empirical Z test
+#' @export normal_estimate_pval
 normal_estimate_pval <- function(bg_stats, fg_stat) {
   center <- mean(bg_stats)
   sd <- sd(bg_stats)
@@ -239,6 +241,7 @@ repermulize_test <- function(
 }
 
 #' Helper to put PICs in node order, leaving NAs if any missing (shouldn't be)
+#' @export order_pic_wrapper
 order_pic_wrapper <- function(a, b) {
   ic <- castor::get_independent_contrasts(a, b)
   p <- rep(NA, a$Nnode)
@@ -384,6 +387,7 @@ repermulize_wrapper <- function(
 }
 
 #' Helper to get best fit to a more complex model and either return model parameters or a rescaled tree
+#' @export get_best_model_fit
 get_best_model_fit <- function(pheno, tree, p_model="lambda", ub=0.99, lb=0.01, yield="tree") {
   model_fit <- phylolm::phylolm(
     pheno ~ 1,
@@ -419,6 +423,7 @@ get_best_model_fit <- function(pheno, tree, p_model="lambda", ub=0.99, lb=0.01, 
 }
 
 #' Helper to estimate p-values using a Gaussian kernel density estimator instead of using the empirical distribution
+#' @export density_estimate_pval
 density_estimate_pval <- function(bg_stats, fg_stat, bw=bw.SJ, ...) {
   bg_bw <- bw(bg_stats)
   tail_prob <- mean(pnorm(fg_stat, mean = bg_stats, sd = bg_bw))
@@ -466,12 +471,14 @@ add_uncertainty_to_tree <- function(phy, pheno, pheno_sd, lb = -3, ub = 3) {
 }
 
 #' Helper function to compute best AIC for a given scaling of per-tip stdevs
+#' @export AIC_scale_and_augment
 AIC_scale_and_augment <- function(phy, pheno, v, scale, meas_err=FALSE) {
   phy_aug <- augment_tip_branch_lengths(phy, v * scale)
   AIC(phylolm::phylolm(pheno ~ 1, phy = phy_aug, lower.bound=0, measurement_error = meas_err))
 }
 
 #' Helper function to add a vector of "extra" tip-adjacent branch lengths to a tree
+#' @export augment_tip_branch_lengths
 augment_tip_branch_lengths <- function(phy, tip_amounts) {
   tip_amounts <- tip_amounts[phy$tip.label]
   edge_orders <- purrr::map_dbl(1:length(phy$tip.label),
