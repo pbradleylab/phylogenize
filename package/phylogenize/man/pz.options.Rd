@@ -67,7 +67,7 @@ These options are global because they affect how most of the functions in
   \item{phenotype_file}{String. If phenotype is provided, what is the path to the file? Default: "phenotype.tsv"}
   \item{categorical}{Boolean. For abundance estimates, is the environment in env_column a categorical variable (TRUE) or continuous (FALSE)? Default: TRUE}
   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "Maaslin2"}
-  \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "repermulize", "phylolm", "lm", or "POMS" (case insensitive). Default: "repermulize"}
+  \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "permulate-lm", "permulate-rlm", "phylolm", "lm", or "POMS" (case insensitive). Default: "permulate-lm"}
   \item{fdr_method}{String. Which method to correct FDR for significant results? Either "BH", "BY", or "qvalue". Default: "qvalue"}
 }
 }
