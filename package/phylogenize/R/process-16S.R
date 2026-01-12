@@ -174,7 +174,6 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
 #'   \item{appspam_path}{String. Path to appspam binary.}
 #'   \item{aln_path_16s}{String. Path to file containing aligned 16S sequences.}
 #'   \item{tree_path_16s}{String. Path to tree for phylogenetic placement.}
-#'   minimum for alignment results.}
 #'   \item{named_asv_file}{String. Path to FASTA file containing named ASVs (Row1, ...).}
 #'   \item{jplace_file}{String. Path giving where to store output .jplace file.}
 #' }

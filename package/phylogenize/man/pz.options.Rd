@@ -38,6 +38,7 @@ These options are global because they affect how most of the functions in
   \item{jplace_file}{String. Path to write .jplace file (if which_16s_method is "appspam") or to read user-provided .jplace file (if which_16s_method is "jplace".) \emph{phylogenize}. Default: ""}
   \item{aln_path_16s}{String. Path to the multiple alignment of 16S sequences used for phylogenetic placement. Default: ""}
   \item{tree_path_16s}{String. Path to the tree of 16S sequences used for phylogenetic placement. \emph{phylogenize}. Default: ""}
+  \item{min_frac_16s}{Numeric. Should be between 0.5 and 1. Only keep ASVs where at least this fraction of assignments are to the same species. Allows some tolerance for mislabeled or phylogenetically-inconsistent 16S sequences in the database. Default: 0.8}
 }
 }
 
@@ -45,9 +46,10 @@ These options are global because they affect how most of the functions in
 
 \describe{
   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
+  \item{quantile_normalize}{Boolean. If TRUE, all phenotypes will be quantile-normalized to the normal distribution. Default: FALSE}
   \item{db}{String. Which database to use. Can be "gtdb" or "uhgp." Default: "gtdb"}
   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
-  \item{env_column}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
+  \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}
   \item{taxon_level}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: TRUE}
@@ -65,7 +67,7 @@ These options are global because they affect how most of the functions in
   \item{phenotype_file}{String. If phenotype is provided, what is the path to the file? Default: "phenotype.tsv"}
   \item{categorical}{Boolean. For abundance estimates, is the environment in env_column a categorical variable (TRUE) or continuous (FALSE)? Default: TRUE}
   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "Maaslin2"}
-  \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "phylogenize" or "POMS" (case insensitive). Default: "phylogenize"}
+  \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "repermulize", "phylolm", "lm", or "POMS" (case insensitive). Default: "repermulize"}
   \item{fdr_method}{String. Which method to correct FDR for significant results? Either "BH", "BY", or "qvalue". Default: "qvalue"}
 }
 }
