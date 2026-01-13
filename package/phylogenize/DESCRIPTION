@@ -64,7 +64,8 @@ Imports:
     tidyr,
     treeio,
     tidytree,
-    yaml
+    yaml,
+    repermulize
 Suggests: 
     ANCOMBC,
     Maaslin2,

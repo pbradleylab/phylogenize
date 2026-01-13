@@ -317,7 +317,7 @@ repermulize_wrapper <- function(
     )
   }
   if (is.null(real_PICs)) {
-      real_PICs <- phylogenize:::order_pic_wrapper(real_rescaled_tree, real_pheno)
+      real_PICs <- order_pic_wrapper(real_rescaled_tree, real_pheno)
   }
   if (verbose) pz.message("Calculating fake PICs...")
   if (is.null(real_pheno_sd)) perm_pheno_sd = NULL
@@ -342,7 +342,7 @@ repermulize_wrapper <- function(
       }
       perm_pheno <- perm_pheno[reduced_tree$tip.label, ]
       perm_PICs <- pbapply::pbapply(perm_pheno, 2, \(x) {
-					    phylogenize:::order_pic_wrapper(real_rescaled_tree, x)
+					    order_pic_wrapper(real_rescaled_tree, x)
       }, cl="future")}
   }
   

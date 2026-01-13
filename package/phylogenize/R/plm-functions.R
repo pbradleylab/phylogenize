@@ -91,7 +91,7 @@ result.wrapper.plm <- function(
 		    user_maxsize <- options(future.globals.maxSize = 2.0e9)
 		    on.exit(options(user_maxsize))
                     future::plan(future::multisession, workers = cores)
-                    results <- repermulize_wrapper(
+                    results <- repermulize::repermulize_wrapper(
                         pheno,
                         proteins[[p]],
                         tr,
