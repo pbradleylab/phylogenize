@@ -1,0 +1,69 @@
+Package: repermulize
+Title: Perform permulation gene-to-phenotype tests w/ tree rescaling
+Version: 0.0.1.0001
+Authors@R: 
+    c(person(given = "Patrick",
+           family = "Bradley",
+           role = c("aut", "cre"),
+           email = "bradley.720@osu.edu"))
+Description: Repermulize contains functions to perform gene-to-phenotype tests with permulation.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Depends:
+    readr,
+    dplyr,
+    stringr,
+    tidyr,
+    tibble,
+    purrr,
+    Matrix
+Imports:
+    ape,
+    ashr,
+    biomformat,
+    castor,
+    crosstalk,
+    dplyr,
+    DT,
+    extraDistr,
+    forcats,
+    future,
+    ggplot2,
+    ggtree,
+    graphics,
+    grDevices,
+    htmlwidgets,
+    kableExtra,
+    knitr,
+    MASS,
+    Matrix,
+    methods,
+    parallel,
+    patchwork,
+    pbapply,
+    phylolm,
+    plotly,
+    purrr,
+    qvalue,
+    readr,
+    rlang,
+    rmarkdown,
+    S4Vectors,
+    scales,
+    seqinr,
+    settings,
+    stats,
+    stringr,
+    svglite,
+    tibble,
+    tidyr,
+    treeio,
+    tidytree,
+    yaml
+Suggests: 
+    ANCOMBC,
+    Maaslin2,
+    POMS,
+    clusterProfiler
+RoxygenNote: 7.3.2
