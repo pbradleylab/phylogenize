@@ -139,6 +139,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
         }
     }
     phenotype <- clean.pheno(phenotype, pz.db)
+    if (!is.null(pheno_sd)) pheno_sd <- pheno_sd[names(phenotype)]
     if (pz.options("which_phenotype") != "prevalence") {
         # Except for prevalence, retain observed taxa
         pz.db$trees <- retain.observed.taxa(pz.db$trees,
