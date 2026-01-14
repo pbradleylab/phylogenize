@@ -202,7 +202,9 @@ get_all_associated_genes <- function(list_pheno,
     if (!do_POMS) {
         phenotype <- list_pheno$phenotype_results$phenotype
         taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
+	pz.message(paste0("Valid taxa: ", paste(taxaN, collapse=", ")))
         if (!is.null(spec_taxa)) { taxaN <- intersect(taxaN, spec_taxa )}
+	if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
         if (pz.options('ncl') > 1) {
             results <- result.wrapper.plm(taxa=taxaN,
                                           pheno=phenotype,
@@ -224,9 +226,11 @@ get_all_associated_genes <- function(list_pheno,
         }
     } else {
         taxaN <- names(list_pheno$pz.db$species)
+	pz.message(paste0("Valid taxa: ", paste(taxaN, collapse=", ")))
         if (!is.null(spec_taxa)) {
             taxaN <- intersect(taxaN, spec_taxa)
         }
+	if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
         results <- result.wrapper.plm(taxa=taxaN,
                                       pheno=NULL,
                                       tree=list_pheno$pz.db$trees[taxaN],
