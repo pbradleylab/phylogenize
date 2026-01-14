@@ -104,8 +104,9 @@ make.sigs <- function(results,
                 valid <- setdiff(colnames(results[[x]]),
                                  exclude[[x]])
             } else { valid <- colnames(results[[x]]) }
-            tested <- na.omit(results[[x]][2, valid, drop=TRUE])
-            above.min <- nw(abs(results[[x]][1, valid, drop=TRUE]) >= min.fx)
+            # should work with repermulize output
+            tested <- na.omit(purrr::map_dbl(results[[x]][2, valid, drop = FALSE], ~.x))
+            above.min <- nw(purrr::map_lgl(results[[x]][1, valid, drop = FALSE], ~ abs(.x) >= min.fx))
             tryCatch(intersect(nw(method(tested, ...) <= cut), above.min),
                      error = function(e) character(0))
         })

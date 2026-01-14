@@ -88,8 +88,8 @@ result.wrapper.plm <- function(
                     cores <- opts('ncl')
                     model_method <- stats::lm
                     if (core_method=="permulate-rlm") model_method <- MASS::rlm
-		    user_maxsize <- options(future.globals.maxSize = 2.0e9)
-		    on.exit(options(user_maxsize))
+		            user_maxsize <- options(future.globals.maxSize = 2.0e9)
+		            on.exit(options(user_maxsize))
                     future::plan(future::multisession, workers = cores)
                     results <- repermulize::repermulize_wrapper(
                         pheno,
@@ -98,7 +98,7 @@ result.wrapper.plm <- function(
                         real_pheno_sd = pheno_sd
                     )
                     future::plan(future::sequential)
-                    return(results)
+                    return(as.data.frame(results))
                 } else if (core_method=="lm") { 
                     matrix.plm(
                         tr,
