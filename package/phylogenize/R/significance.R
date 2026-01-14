@@ -239,3 +239,21 @@ qvals <- function(x, ...) {
         return(q)
     }
 }
+
+
+#' Convert results into a long (vs. wide) format.
+#'
+#' @param results Output of result.wrapper.plm.
+#' @return A single data frame with entries from \code{results}.
+#' @export
+make.results.matrix <- function(results) {
+    Reduce(dplyr::bind_rows, lapply(names(results), function(rn) {
+        tibble::tibble(taxon = rn,
+                       gene = colnames(results[[rn]]),
+                       effect.size = unlist(results[[rn]][1,]),
+                       p.value = unlist(results[[rn]][2,]),
+                       std.err = unlist(results[[rn]][3,]),
+                       df = unlist(results[[rn]][4,])
+                    )
+    }))
+}
