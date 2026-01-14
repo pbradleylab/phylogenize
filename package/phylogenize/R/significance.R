@@ -36,23 +36,23 @@ nonequiv.pos.sig <- function(results,
     if (dir==0) { stop("dir must not be zero") }
     if (is.null(exclude)) exclude <- lapply(results, function(.) NULL)
     mapply(function(r, ex) {
-        valid <- colnames(r)[which(!is.na(r[1, , drop=TRUE]))]
+        valid <- colnames(r)[which(!is.na(unlist(r[1, , drop=FALSE])))]
         if (!is.null(ex)) {
             valid <- setdiff(valid, ex)
         }
         tryCatch({
-            tested <- na.omit(r[2, valid, drop=TRUE])
+            tested <- na.omit(unlist(r[2, valid, drop=FALSE]))
             qv <- method(tested)
             fx_sig <- nw(qv <= qcut_sig)
             if (min_fx > 0) {
-              neq <- apply(r[, valid, drop=TRUE], 2,
+              neq <- apply(unlist(r[, valid, drop=FALSE]), 2,
                           function(x) equiv_test(x[1], x[3], x[4], min_fx))
               neq_qv <- method(neq)
               neq_sig <- nw(neq_qv > qcut_eq)
             } else {
               neq_sig <- valid
             }
-            which_pos <- nw((dir * r[1, valid, drop=TRUE]) > 0)
+            which_pos <- nw((dir * unlist(r[1, valid, drop=FALSE])) > 0)
             Reduce(intersect, list(fx_sig,
                                    neq_sig,
                                    which_pos))
@@ -121,7 +121,7 @@ make.sigs <- function(results,
 #' @export
 make.signs <- function(results) {
   lapply(results, function(r) {
-    sign(r[1, , drop=TRUE]) %>% na.omit
+    sign(unlist(r[1, , drop=FALSE])) %>% na.omit
   })
 }
 
@@ -200,7 +200,7 @@ get.top.N <- function(p,
         gn <- names(which(genomes.per.protein[[p]] >= total.n.cutoff))
         sig.up <- intersect(sig.up, gn)
     }
-    sig.pv <- results[[p]][2, sig.up, drop=TRUE]
+    sig.pv <- unlist(results[[p]][2, sig.up, drop=FALSE])
     setdiff(names(sort(sig.pv, dec = F)), exclude)[1:N]
 }
 
