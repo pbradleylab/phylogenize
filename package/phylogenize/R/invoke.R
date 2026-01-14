@@ -70,7 +70,7 @@ phylogenize_core <- function(
         p.method=phylogenize:::phylolm.fx.pv,
         ...
 ) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     do_POMS <- (tolower(opts('core_method')) == "poms")
     list_pheno <- data_to_phenotypes(
         save_data = (!do_POMS || force_return_data),
@@ -196,11 +196,13 @@ augment_with_enrichments <- function(core) {
 get_all_associated_genes <- function(list_pheno,
                                      p.method=phylolm.fx.pv,
                                      ...) {
-    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+    pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
     do_POMS <- (tolower(pz.options('core_method')) == "poms")
+    spec_taxa <- pz.options('only_specific_taxa')
     if (!do_POMS) {
         phenotype <- list_pheno$phenotype_results$phenotype
         taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
+        if (!is.null(spec_taxa)) { taxaN <- intersect(taxaN, spec_taxa )}
         if (pz.options('ncl') > 1) {
             results <- result.wrapper.plm(taxa=taxaN,
                                           pheno=phenotype,
@@ -222,6 +224,9 @@ get_all_associated_genes <- function(list_pheno,
         }
     } else {
         taxaN <- names(list_pheno$pz.db$species)
+        if (!is.null(spec_taxa)) {
+            taxaN <- intersect(taxaN, spec_taxa)
+        }
         results <- result.wrapper.plm(taxa=taxaN,
                                       pheno=NULL,
                                       tree=list_pheno$pz.db$trees[taxaN],
@@ -247,7 +252,7 @@ get_all_associated_genes <- function(list_pheno,
 get_signif_associated_genes <- function(pz.db,
                                         results,
                                         ...) {
-    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+    pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
     signif <- make.sigs(results, ...)
     signs <- make.signs(results)
     pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))

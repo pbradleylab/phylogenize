@@ -59,7 +59,8 @@ default_params <- list(
     core_method = "permulate-lm",
     rds_output_file = "core_output.rds",
     fdr_method = "BH",
-    quantile_normalize = FALSE
+    quantile_normalize = FALSE,
+    only_specific_taxa = NULL
 )
 
 
