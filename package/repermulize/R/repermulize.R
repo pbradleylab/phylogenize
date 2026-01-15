@@ -301,8 +301,7 @@ repermulize_wrapper <- function(
     real_rescale <- add_uncertainty_to_tree(
       reduced_tree,
       real_pheno,
-      real_pheno_sd,
-      perm_model
+      real_pheno_sd
     )
     real_rescaled_tree <- real_rescale$aug_tree
   } else {
