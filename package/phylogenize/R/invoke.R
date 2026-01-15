@@ -56,8 +56,6 @@ phylogenize <- function(do_cache=TRUE,
 #' @details Note: this function uses package-wide options (see
 #'   \code{?pz.options}), which can be overridden using the \code{...} argument.
 #'
-#' @param do_POMS Run the POMS algorithm instead of phylogenetic regression
-#'   (default: FALSE).
 #' @param do_enr Run enrichment analysis. Can skip to save time (default: TRUE)
 #' @param force_return_data Return the input data and metadata, even if not
 #'   using POMS (default: FALSE).
@@ -67,26 +65,25 @@ phylogenize <- function(do_cache=TRUE,
 #' @param ... Parameters to override defaults.
 #' @export
 phylogenize_core <- function(
-        do_POMS=FALSE,
         do_enr=TRUE,
         force_return_data=FALSE,
         p.method=phylogenize:::phylolm.fx.pv,
         ...
 ) {
-    options <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    do_POMS <- (tolower(opts('core_method')) == "poms")
     list_pheno <- data_to_phenotypes(
         save_data = (!do_POMS || force_return_data),
         ...
     )
     list_signif <- get_all_associated_genes(
         list_pheno,
-        do_POMS,
         p.method,
         ...)
     if (!do_enr) {
         return(list(list_pheno=list_pheno,
                     list_signif=list_signif,
-                    options=options))
+                    options=opts))
     }
     enr_tbls <- get_enrichment_tbls(list_signif[["signif"]],
                                     list_signif[["signs"]],
@@ -98,7 +95,7 @@ phylogenize_core <- function(
     return(list(list_pheno=list_pheno,
                 list_signif=list_signif,
                 enr_tbls=enr_tbls,
-                options=options))
+                options=opts))
 }
 
 #' Take the output of `phylogenize_core` and generate a report.
@@ -197,13 +194,17 @@ augment_with_enrichments <- function(core) {
 #' @param ... Parameters to override defaults.
 #' @export
 get_all_associated_genes <- function(list_pheno,
-                                     do_POMS=FALSE,
                                      p.method=phylolm.fx.pv,
                                      ...) {
-    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+    pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    do_POMS <- (tolower(pz.options('core_method')) == "poms")
+    spec_taxa <- pz.options('only_specific_taxa')
     if (!do_POMS) {
         phenotype <- list_pheno$phenotype_results$phenotype
         taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
+	pz.message(paste0("Valid taxa: ", paste(taxaN, collapse=", ")))
+        if (!is.null(spec_taxa)) { taxaN <- intersect(taxaN, spec_taxa )}
+	if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
         if (pz.options('ncl') > 1) {
             results <- result.wrapper.plm(taxa=taxaN,
                                           pheno=phenotype,
@@ -225,6 +226,11 @@ get_all_associated_genes <- function(list_pheno,
         }
     } else {
         taxaN <- names(list_pheno$pz.db$species)
+	pz.message(paste0("Valid taxa: ", paste(taxaN, collapse=", ")))
+        if (!is.null(spec_taxa)) {
+            taxaN <- intersect(taxaN, spec_taxa)
+        }
+	if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
         results <- result.wrapper.plm(taxa=taxaN,
                                       pheno=NULL,
                                       tree=list_pheno$pz.db$trees[taxaN],
@@ -250,7 +256,7 @@ get_all_associated_genes <- function(list_pheno,
 get_signif_associated_genes <- function(pz.db,
                                         results,
                                         ...) {
-    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+    pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
     signif <- make.sigs(results, ...)
     signs <- make.signs(results)
     pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))

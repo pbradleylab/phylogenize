@@ -24,6 +24,10 @@ then sums any rows that mapped to the same MIDAS ID.
 \details{
 Some particularly relevant global options are:
 \describe{
+  \item{min_frac_16s}{Numeric. Should be between 0.5 and 1. Only keep ASVs
+  where at least this fraction of assignments are to the same species. 
+  Allows some tolerance for mislabeled or phylogenetically-inconsistent
+  16S sequences in the database. Default: 0.8}
   \item{out_dir}{String. Path to output directory. Default: "output"}
   \item{data_dir}{String. Path to directory containing the data files
   required to perform a \emph{phylogenize} analysis. Default: on package
