@@ -44,13 +44,13 @@ permulate <- function(
     if (use_density) {
       resampled_pheno <- sample(pheno, replace = TRUE) +
       rnorm(length(pheno), mean = 0, sd = bandwidth)
-      tr <- sort(resampled_pheno)[order(x)]
+      tr <- sort(resampled_pheno)[rank(x, ties.method = "random")]
     } else {
-      tr <- sort(pheno)[order(x)]
+      tr <- sort(pheno)[rank(x, ties.method = "random")]
     }
     names(tr) <- names(x)
     if (!is.null(pheno_sd)) {
-      tr_sd <- pheno_sd[names(sort(pheno))[order(x)]]
+      tr_sd <- pheno_sd[names(sort(pheno))[rank(x, ties.method = "random")]]
       names(tr_sd) <- names(x)
       return(list(tr = tr, s = tr_sd))
     } else {
@@ -342,7 +342,7 @@ repermulize_wrapper <- function(
         )
         
       } else if (perm_method=="permutrate") {
-        perm_pheno <- permutrate(real_pheno, reduced_tree, n, rank=rank)
+        perm_pheno <- permutrate(real_pheno, real_rescaled_tree, n, rank=rank)
       } else {
         stop(sprintf("unknown perm_method: %s", perm_method))
       }
@@ -375,7 +375,7 @@ repermulize_wrapper <- function(
       )
     },
     cl = "future",
-    seed=TRUE
+    future.seed=TRUE
   )
 
   # Collect and convert to a more familiar format
