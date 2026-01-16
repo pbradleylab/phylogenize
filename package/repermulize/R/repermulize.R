@@ -286,8 +286,10 @@ repermulize_wrapper <- function(
   rank = FALSE,
   ...
 ) {
-  # make sure same species represented in all
-  tips <- intersect(real_tree$tip.label, names(real_pheno))
+  # make sure same species represented in tree, genes, and phenotype
+  tips <- intersect(real_tree$tip.label,
+    intersect(colnames(real_genes), names(real_pheno)))
+  real_genes <- real_genes[, tips]
   reduced_tree <- ape::keep.tip(real_tree, tips)
   real_pheno <- real_pheno[reduced_tree$tip.label] # put in same order as tree
   if (!is.null(real_pheno_sd)) {
@@ -351,7 +353,7 @@ repermulize_wrapper <- function(
   # note, we will calculate PICs inside the gene loop to avoid casting to a dense matrix
   named_indices <- 1:nrow(real_genes)
   names(named_indices) <- rownames(real_genes)
-  
+
   if (verbose) message("Getting empirical p-values...")
   pbapply::pboptions(type = "timer")
   res <- pbapply::pblapply(

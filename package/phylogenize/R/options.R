@@ -164,35 +164,24 @@ set_data_internal <- function(fail=FALSE, startup=FALSE) {
     } else {
         M <- message
     }
-    dd <- system.file("extdata", package="phylogenize")
-    instdir <- system.file("", package="phylogenize")
+    dd <- system.file("extdata/databases.csv", package="phylogenize")
+    phd <- system.file("", package="phylogenize")
     success <- FALSE
     if (grepl("00LOCK-", instdir)) {
         success <- TRUE
         M("Skipping check for data during staged install")
     } else {
         if (dd == "") {
-            if (!fail) {
-                M("Installing data from Zenodo...")
-                success <- tryCatch(install.data.zenodo(opts('database_zenodo_url')), error = function(e) {
-                    warning(paste("Installing from Figshare failed: ", e))
-                    return(FALSE)
-                })
-            }
-            if (!success) {
-                warning(paste("Data not found; *phylogenize* will not run",
-                              "properly. Please try to download a database",
-			      "By default we will download gtdb using phylogenize::install.data.zenodo(url)",
-                              "for manual download install the data into",
-                              file.path(system.file("", package="phylogenize"),
-                                        "extdata"),
-                              "."))
-            }
+            M(sprintf("Note: databases.csv was not found under directory '%s'. You will need to manually set the directory later with the option 'data_dir=<PATH>'.", phd))
         } else {
             success <- TRUE
+            db <- readr::read_delim(dd)
+            M(sprintf("Databases listed:\n\t - %s", paste0(db[["database"]], collapse="\n\t - ")))
         }
     }
-    if (success) pz.options(data_dir=dd)
+    if (success && pz.options('data_dir') == "") {
+        pz.options(data_dir = dd)
+    }
 }
 
 #' Test whether data is installed and warn user if not.
@@ -205,22 +194,30 @@ check_data_found <- function(fail=FALSE, startup=FALSE) {
     } else {
         M <- message
     }
-    
-    dd <- system.file("extdata", package="phylogenize")
-    instdir <- system.file("", package="phylogenize")
+    dd <- system.file("extdata/databases.csv", package = "phylogenize")
+    phd <- system.file("", package = "phylogenize")
     success <- FALSE
-    if (dd == "") {
-        M(paste("Data not found; *phylogenize* will not run",
-                "properly. Please try",
-                "phylogenize::install.data.zenodo(url)",
-                "later or install the data manually into",
-                file.path(system.file("", package="phylogenize"),
-                          "extdata"),
-                "."))
-    } else {
+    if (grepl("00LOCK-", instdir)) {
         success <- TRUE
+        M("Skipping check for data during staged install")
+    } else {
+        if (dd == "") {
+            M(sprintf(
+                "Note: databases.csv was not found under directory '%s'. You will need to manually set the directory later with the option 'data_dir=<PATH>'.",
+                phd
+            ))
+        } else {
+            success <- TRUE
+            db <- readr::read_delim(dd)
+            M(sprintf(
+                "Databases listed:\n\t - %s",
+                paste0(db[["database"]], collapse = "\n\t - ")
+            ))
+        }
     }
-    if (success && pz.options('data_dir')=="") pz.options(data_dir=dd)
+    if (success && pz.options('data_dir') == "") {
+        pz.options(data_dir = dd)
+    }
 }
 
 .onLoad <- function(libname, pkgname) {
