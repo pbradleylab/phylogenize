@@ -289,6 +289,11 @@ repermulize_wrapper <- function(
   # make sure same species represented in tree, genes, and phenotype
   tips <- intersect(real_tree$tip.label,
     intersect(colnames(real_genes), names(real_pheno)))
+  if (length(tips) < 3) {
+    stop(
+      "Too few tips remaining after matching gene matrix, phenotype, and tree"
+    )
+  }
   real_genes <- real_genes[, tips]
   reduced_tree <- ape::keep.tip(real_tree, tips)
   real_pheno <- real_pheno[reduced_tree$tip.label] # put in same order as tree
