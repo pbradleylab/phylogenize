@@ -57,7 +57,7 @@ default_params <- list(
     categorical = TRUE,
     diff_abund_method = "maaslin2",
     working_dir = '.',
-    core_method = "permulate-lm",
+    core_method = "permulate-rlm",
     rds_output_file = "core_output.rds",
     fdr_method = "BH",
     quantile_normalize = FALSE,
