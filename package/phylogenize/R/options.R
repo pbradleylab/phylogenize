@@ -167,10 +167,10 @@ set_data_internal <- function(fail=FALSE, startup=FALSE) {
     dd <- system.file("extdata/databases.csv", package="phylogenize")
     phd <- system.file("", package="phylogenize")
     success <- FALSE
-    if (grepl("00LOCK-", instdir)) {
-        success <- TRUE
-        M("Skipping check for data during staged install")
-    } else {
+    #if (grepl("00LOCK-", instdir)) {
+    #    success <- TRUE
+    #    M("Skipping check for data during staged install")
+    #} else {
         if (dd == "") {
             M(sprintf("Note: databases.csv was not found under directory '%s'. You will need to manually set the directory later with the option 'data_dir=<PATH>'.", phd))
         } else {
@@ -178,7 +178,7 @@ set_data_internal <- function(fail=FALSE, startup=FALSE) {
             db <- readr::read_delim(dd)
             M(sprintf("Databases listed:\n\t - %s", paste0(db[["database"]], collapse="\n\t - ")))
         }
-    }
+    #}
     if (success && pz.options('data_dir') == "") {
         pz.options(data_dir = dd)
     }
@@ -197,10 +197,10 @@ check_data_found <- function(fail=FALSE, startup=FALSE) {
     dd <- system.file("extdata/databases.csv", package = "phylogenize")
     phd <- system.file("", package = "phylogenize")
     success <- FALSE
-    if (grepl("00LOCK-", instdir)) {
-        success <- TRUE
-        M("Skipping check for data during staged install")
-    } else {
+    #if (grepl("00LOCK-", instdir)) {
+    #    success <- TRUE
+    #    M("Skipping check for data during staged install")
+    #} else {
         if (dd == "") {
             M(sprintf(
                 "Note: databases.csv was not found under directory '%s'. You will need to manually set the directory later with the option 'data_dir=<PATH>'.",
@@ -214,7 +214,7 @@ check_data_found <- function(fail=FALSE, startup=FALSE) {
                 paste0(db[["database"]], collapse = "\n\t - ")
             ))
         }
-    }
+    #}
     if (success && pz.options('data_dir') == "") {
         pz.options(data_dir = dd)
     }
