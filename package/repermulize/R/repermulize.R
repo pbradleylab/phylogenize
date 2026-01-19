@@ -442,10 +442,10 @@ density_estimate_pval <- function(bg_stats, fg_stat, bw=bw.SJ, ...) {
 #' @param phy Tree object to transform.
 #' @param pheno Named phenotype vector (numeric).
 #' @param sd Named vector of standard deviations around the means represented in `pheno`.
-#' @param lb In log10-space, the lower bound to search for the scale parameter.
-#' @param ub In log10-space, the upper bound to search for the scale parameter.
+#' @param optim_method Optimization method to use (default: "Nelder-Mead").
+#' @param ... Extra arguments to pass to 'optim'.
 #' @export add_uncertainty_to_tree
-add_uncertainty_to_tree <- function(phy, pheno, pheno_sd, lb = -3, ub = 3) {
+add_uncertainty_to_tree <- function(phy, pheno, pheno_sd, optim_method="Nelder-Mead", ...) {
   # make sure all aligned
   common_taxa <- na.omit(intersect(
     phy$tip.label,
@@ -457,25 +457,41 @@ add_uncertainty_to_tree <- function(phy, pheno, pheno_sd, lb = -3, ub = 3) {
 
   pheno_var_std <- (pheno_sd) / mean(pheno_sd)
 
-  best_scale <- optimize(
-    f = function(s) {
-      AIC_scale_and_augment(phy, pheno, pheno_var_std, s)
-    },
-    interval = 10**seq(lb, ub, 0.01)
+  logistic <- \(x) (1 / (1 + exp(-x)))
+
+  best_params <- optim(
+    c(0, 0),
+    \(v) {
+      AIC_scale_mix_and_augment(
+        phy, pheno, pheno_var_std, scale=10**v[1], mix=logistic(v[2])
+      )
+    }
   )
-  if (abs(best_scale$minimum - lb) <= 1e-5) {
-    warning("Scale parameter was close to the lower bound")
-  }
-  if (abs(best_scale$minimum - ub) <= 1e-5) {
-    warning("Scale parameter was close to the upper bound")
-  }
+  best_aug <- 10 ** (best_params$par[1])
+  best_mix <- logistic(best_params$par[2])
+  # note, should be standardized so mean is already 1
+  unif <- rep(1, length(pheno_var_std)) |> setNames(names(pheno_var_std))
+  best_mixed <- (best_mix * unif) + ((1 - best_mix) * pheno_var_std)
   aug_tree <- augment_tip_branch_lengths(
     phy,
-    pheno_var_std * best_scale$minimum
+    (best_mixed * best_aug)
   )
+  list(best_par = best_params$par, aug_tree = aug_tree)
 
-  list(best_scale = best_scale, aug_tree = aug_tree)
+}
 
+#' Helper function to compute best AIC for a given scaling of per-tip stdevs with mixture from a uniform distribution
+#' @export AIC_scale_and_augment
+AIC_scale_mix_and_augment <- function(phy, pheno, v, scale, mix=0, meas_err = FALSE) {
+  uni <- rep(mean(v), length(v)) |> setNames(names(v))
+  mixed <- (mix * uni) + ((1-mix) * v)
+  phy_aug <- augment_tip_branch_lengths(phy, mixed * scale)
+  AIC(phylolm::phylolm(
+    pheno ~ 1,
+    phy = phy_aug,
+    lower.bound = 0,
+    measurement_error = meas_err
+  ))
 }
 
 #' Helper function to compute best AIC for a given scaling of per-tip stdevs
