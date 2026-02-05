@@ -21,7 +21,7 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
     }
     phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
     if (pz.options('quantile_normalize')) {
-	phenotype_results <- quantile_normalize(phenotype_results)
+	    phenotype_results <- quantile_normalize(phenotype_results)
     } 
     if (pz.options('which_phenotype') %in% c("specificity", "abundance")) {
         # only retain observed taxa
@@ -86,6 +86,7 @@ quant_norm <- function(x) {
 calculate_phenotypes <- function(abd.meta, pz.db, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
+    pheno_sd <- NULL
     if (tolower(opts('core_method')) == "poms") {
         pz.warning(paste0("Generating an approximate phenotype just for ",
                           "plotting POMS output (logit-AUC)..."))
@@ -121,10 +122,16 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
                     tibble::as_tibble(rownames="species") %>%
                     dplyr::select(species, PosteriorMean) %>%
                     tibble::deframe()
+                pheno_sd <- ashr_res$result %>%
+                    tibble::as_tibble(rownames = "species") %>%
+                    dplyr::select(species, PosteriorSD) %>%
+                    tibble::deframe()
             }
             phenoP <- 0
         } else if (opts("which_phenotype") == "abundance") {
-            phenotype <- ashr.diff.abund(abd.meta, ...)
+            pheno_list <- ashr.diff.abund(abd.meta, ...)
+            phenotype <- pheno_list$pheno
+            pheno_sd <- pheno_list$sd
             phenoP <- 0
         } else {
             pz.error(paste0("don't know how to calculate the phenotype ",
@@ -132,6 +139,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
         }
     }
     phenotype <- clean.pheno(phenotype, pz.db)
+    if (!is.null(pheno_sd)) pheno_sd <- pheno_sd[names(phenotype)]
     if (pz.options("which_phenotype") != "prevalence") {
         # Except for prevalence, retain observed taxa
         pz.db$trees <- retain.observed.taxa(pz.db$trees,
@@ -146,7 +154,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
         pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
         pz.db$ntaxa <- length(pz.db$trees)
     }
-    list(phenotype=phenotype, phenoP=phenoP, mapped.observed=mapped.observed)
+    list(phenotype=phenotype, phenoP=phenoP, mapped.observed=mapped.observed, pheno_sd=pheno_sd)
 }
 
 

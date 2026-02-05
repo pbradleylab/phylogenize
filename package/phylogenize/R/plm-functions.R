@@ -18,79 +18,112 @@
 #'   genes to be tested (for debugging).
 #' @param abd.meta List containing abundances and metadata (only required for
 #'   POMS)
-#' @param poms Boolean; whether to run POMS instead of phylolm.
 #' @return Named list of p-value and effect-size matrices, one per taxon.
 #' @export result.wrapper.plm
-result.wrapper.plm <- function(taxa,
-                               pheno,
-                               tree,
-                               proteins,
-                               clusters,
-                               method = phylolm.fx.pv,
-                               restrict.figfams = NULL,
-                               drop.zero.var = FALSE,
-                               only.return.names = FALSE,
-                               abd.meta = FALSE,
-                               poms = FALSE,
-                               ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
-    lapply.across.names(taxa, function(p) {
-        message(p)
-        if (class(tree) == "phylo") {
-            tr <- tree
-        } else if (class(tree) == "list") {
-            tr <- tree[[p]]
-        } else {
-            stop("tree must be either an object of class phylo or a list")
-        }
-        valid <- Reduce(intersect,
-                        list(colnames(proteins[[p]]),
-                             clusters[[p]],
-                             tr$tip.label))
-        if (!is.null(pheno)) {
-            valid <- intersect(valid, names(pheno))
-        }
-        
-	if (is.null(restrict.figfams)) {
-            restrict.figfams <- rownames(proteins[[p]])
-        } else {
-            restrict.figfams <- intersect(rownames(proteins[[p]]),
-                                          restrict.figfams)
-        }
-        
-	if (drop.zero.var) {
-            fvar <- apply(proteins[[p]][, valid, drop=FALSE], 1, var)
-            message(paste0(sprintf("%.01f",
-                                   100 * mean(na.omit(fvar == 0))),
-                           "% dropped [no variance]"))
-            restrict.figfams <- intersect(restrict.figfams,
-                                          rownames(proteins[[p]])[
-                                              which(fvar > 0)])
-        }
-        
-	if (!only.return.names) {
-		if (poms) {
-			matrix.POMS(tr,
-				    proteins[[p]],
-				    abd.meta,
-				    restrict.taxa=valid,
-				    restrict.ff=restrict.figfams,
-				    ...)
-		} else {
-            matrix.plm(tr,
-                       proteins[[p]],
-                       pheno,
-                       method = method,
-                       restrict.taxa = valid,
-                       restrict.ff = restrict.figfams,
-                       ...)
-		}
-            
-        } else {
-            restrict.figfams
-	}
-})
-}
+result.wrapper.plm <- function(
+    taxa,
+    pheno,
+    tree,
+    proteins,
+    clusters,
+    method = phylolm.fx.pv,
+    restrict.figfams = NULL,
+    drop.zero.var = FALSE,
+    only.return.names = FALSE,
+    abd.meta = FALSE,
+    poms = FALSE,
+    pheno_sd = NULL,
+    ...) {
+        opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+        core_method <- tolower(opts('core_method'))
+        lapply.across.names(taxa, function(p) {
+            message(p)
+            if (class(tree) == "phylo") {
+                tr <- tree
+            } else if (class(tree) == "list") {
+                tr <- tree[[p]]
+            } else {
+                stop("tree must be either an object of class phylo or a list")
+            }
+            valid <- Reduce(
+                intersect,
+                list(colnames(proteins[[p]]),
+                clusters[[p]],
+                tr$tip.label)
+            )
+            if (!is.null(pheno)) {
+                valid <- intersect(valid, names(pheno))
+            }
+            if (is.null(restrict.figfams)) {
+                restrict.figfams <- rownames(proteins[[p]])
+            } else {
+                restrict.figfams <- intersect(rownames(proteins[[p]]),
+                restrict.figfams)
+            }
+            if (drop.zero.var) {
+                fvar <- apply(proteins[[p]][, valid, drop=FALSE], 1, var)
+                message(paste0(sprintf("%.01f",
+                100 * mean(na.omit(fvar == 0))),
+                "% dropped [no variance]"))
+                restrict.figfams <- intersect(
+                    restrict.figfams,
+                    rownames(proteins[[p]])[
+                        which(fvar > 0)
+                    ]
+                )
+            }
+            if (!only.return.names) {
+                if (core_method=="poms") {
+                    matrix.POMS(
+                        tr,
+                        proteins[[p]],
+                        abd.meta,
+                        restrict.taxa=valid,
+                        restrict.ff=restrict.figfams,
+                        ...
+                    )
+                } else if (core_method %in% c("permulate-lm", "permulate-rlm")) {
+                    # handle multicore outside of this function
+                    pz.message(sprintf("Performing permulations with %s", core_method))
+                    cores <- opts('ncl')
+                    model_method <- stats::lm
+                    if (core_method=="permulate-rlm") model_method <- MASS::rlm
+		            user_maxsize <- options(future.globals.maxSize = 2.0e9)
+		            on.exit(options(user_maxsize))
+                    future::plan(future::multisession, workers = cores)
+                    results <- repermulize::repermulize_wrapper(
+                        pheno,
+                        proteins[[p]],
+                        tr,
+                        real_pheno_sd = pheno_sd
+                    )
+                    future::plan(future::sequential)
+                    return(as.data.frame(results))
+                } else if (core_method=="lm") { 
+                    matrix.plm(
+                        tr,
+                        proteins[[p]],
+                        pheno,
+                        method = lm.fx.pv,
+                        restrict.taxa = valid,
+                        restrict.ff = restrict.figfams,
+                        ...
+                    )
+                } else {
+                    matrix.plm(tr,
+                        proteins[[p]],
+                        pheno,
+                        method = phylolm.fx.pv,
+                        restrict.taxa = valid,
+                        restrict.ff = restrict.figfams,
+                        ...)
+                    }
+                } else {
+                    restrict.figfams
+                }
+            }
+        )
+    }
 
 #' Perform POMS modeling for a single clade.
 #'
@@ -132,7 +165,7 @@ matrix.POMS <- function(tree,
                         ...) {
     message("POMS")
     
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     E <- opts('env_column')
     S <- opts('sample_column')
     envir <- opts('which_envir')
@@ -224,7 +257,7 @@ nonparallel.results.generator <- function(gene.matrix,
                                          remove.low.variance=TRUE,
                                          use.for.loop=TRUE,
                                          ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     message(taxon.name)
     restrict.taxa <- Reduce(intersect, list(colnames(gene.matrix),
                                             tree$tip.label,
@@ -461,7 +494,7 @@ matrix.plm <- function(tree,
                        restrict.taxa=NULL,
                        restrict.ff=NULL,
                        ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     cores <- opts('ncl')
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
@@ -796,7 +829,7 @@ b.scorer <- function(s, a) {
 #' @export
 prev.addw <- function(abd.meta,
                       ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     envir <- opts('which_envir')
     E <- opts('env_column')
     D <- opts('dset_column')
@@ -851,7 +884,7 @@ prev.addw <- function(abd.meta,
 #' @export
 correl.clr <- function(abd.meta,
                       ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     R <- opts('env_column')
     S <- opts('sample_column')
     D <- opts('dset_column')
@@ -923,7 +956,7 @@ calc.ess <- function(abd.meta,
                      pdata = NULL,
                      b.optim = NULL,
                      ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     E <- opts('env_column')
     D <- opts('dset_column')
     S <- opts('sample_column')
@@ -1040,7 +1073,7 @@ ash_wrapper <- function(m, s, nw=10, ashr_df=5) {
 #' @export
 ashr.diff.abund <- function(abd.meta,
                             ...) {
-  opts <- clone_and_merge(PZ_OPTIONS, ...)
+  opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
   categorical <- opts('categorical')
   envir <- opts('which_envir')
   E <- opts('env_column')
@@ -1160,7 +1193,9 @@ ashr.diff.abund <- function(abd.meta,
   sample_pheno <- sample_ashr %>%
     dplyr::select(species, PosteriorMean) %>%
     tibble::deframe()
-  
+  sample_sd <- sample_ashr %>%
+    dplyr::select(species, PosteriorSD) %>%
+    tibble::deframe()
   # Fix automatic renaming of taxa that seem "numeric"
   spn <- names(sample_pheno)
   orign <- rownames(abd.meta$mtx)
@@ -1173,15 +1208,25 @@ ashr.diff.abund <- function(abd.meta,
   all_names <- dplyr::bind_rows(numeric_names,
                                 tibble::tibble(old_name=orign,
                                                new_name=orign))
+  sample_psd <- dplyr::full_join(
+    tibble::enframe(sample_pheno, name = "new_name", value = "pheno"),
+    tibble::enframe(sample_sd, name = "new_name", value = "sd"),
+    by="new_name"
+  )
+    
   sample_pheno_tbl <- dplyr::left_join(
-      tibble::enframe(sample_pheno, name="new_name", value="pheno"),
+      sample_psd,
       all_names)
   
   sample_pheno <- sample_pheno_tbl %>%
       dplyr::select(old_name, pheno) %>%
       tibble::deframe()
 
-  return(sample_pheno)
+  sample_sd <- sample_pheno_tbl %>%
+    dplyr::select(old_name, sd) %>%
+    tibble::deframe()
+    
+  return(list(pheno=sample_pheno, sd=sample_sd, tbl=sample_pheno_tbl))
 }
 
 
@@ -1196,7 +1241,7 @@ ashr.diff.abund <- function(abd.meta,
 #' @param errtext String: error message text.
 #' @export
 pz.error <- function(errtext, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
         tryCatch({
           cat(paste0(errtext, "\n"),
@@ -1218,7 +1263,7 @@ pz.error <- function(errtext, ...) {
 #' @param errtext String: message text.
 #' @export
 pz.message <- function(msgtext, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
         tryCatch({
             cat(paste0(msgtext, '\n'),
@@ -1240,7 +1285,7 @@ pz.message <- function(msgtext, ...) {
 #' @param errtext String: warning text.
 #' @export
 pz.warning <- function(msgtext, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
         tryCatch({
             cat(paste0(msgtext, '\n'),
@@ -1281,7 +1326,7 @@ make.results.matrix <- function(results) {
 #' @return A single data frame with entries from \code{results}.
 #' @export
 threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     Min <- opts('minimum')
     mapply(pz.db$trees[phy.with.sigs],
            pos.sig[phy.with.sigs],
@@ -1318,7 +1363,7 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 #'   from the list (if they had zero genes left after filtering).
 #' @export
 above_minimum_genes <- function(gene.presence, trees, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     Min <- opts('minimum')
     GMF <- opts('gene_min_frac')
     taxa <- names(trees)
