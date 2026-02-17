@@ -1042,9 +1042,9 @@ calc.ess <- function(abd.meta,
 #' @param m Estimates of parameter of interest.
 #' @param s Standard errors of parameters of interest.
 #' @param nw Null weight (default=10).
-#' @param ashr_df Degrees of freedom (default=5)
+#' @param ashr_df Degrees of freedom (default=Inf)
 #' @return A vector giving shrunken estimates of parameter.
-ash_wrapper <- function(m, s, nw=10, ashr_df=5) {
+ash_wrapper <- function(m, s, nw=10, ashr_df=Inf) {
     ashr::ash(m, s,
             mixcompdist="halfuniform",
             prior="nullbiased",
