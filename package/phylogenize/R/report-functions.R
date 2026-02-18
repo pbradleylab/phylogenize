@@ -370,6 +370,7 @@ single.cluster.plot <- function(gene.presence,
                                 verbose=FALSE,
                                 ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
+    if ((is.null(sig.genes)) || (length(sig.genes) == 0)) return(NULL)
     sig.bin <- gene.presence[intersect(rownames(gene.presence),
                                        sig.genes), , drop=FALSE]
     if (is.null(dim(sig.bin))) {
