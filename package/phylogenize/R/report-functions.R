@@ -456,7 +456,7 @@ get_rel_pd <- function(gene, tree, flip_sign=TRUE) {
             gene_bin <- 1 - gene_bin
         }
     }
-    taxa_present <- names(which(gene_bin))
+    taxa_present <- names(which(gene_bin > 0))
     taxa_in_common <- intersect(taxa_present, tree$tip.label)
     if (length(taxa_in_common) == 0) {
         pz.warning("no tips in common with tree")
