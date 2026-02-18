@@ -368,6 +368,7 @@ single.cluster.plot <- function(gene.presence,
                                 plotted.tree,
                                 taxon,
                                 verbose=FALSE,
+                                rel_pd_cut=c(-Inf,0.1,0.3,Inf),
                                 ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     if ((is.null(sig.genes)) || (length(sig.genes) == 0)) return(NULL)
@@ -403,34 +404,37 @@ single.cluster.plot <- function(gene.presence,
         if (length(sig.genes) >= 10) {
             # cluster within three relative PD groups
             rel_pds <- apply(sig.bin, 1, \(x) get_rel_pd(x, tree, flip_sign = TRUE))
-            pd_groups <- cut(rank(rel_pds), 3)
+            #pd_groups <- cut(rank(rel_pds), 3)
+            pd_groups <- cut(rel_pds, rel_pd_cut)
             names(pd_groups) <- names(rel_pds)
             within_group_orders <- lapply(levels(pd_groups), \(pd_g) {
                 these_genes <- names(pd_groups)[(which(pd_groups==pd_g))]
                 if (length(these_genes < 2)) {
                     return(these_genes)
                 } else {
-                    this_clust <- hclust(dist(sig.bin[these_genes, ], method='canberra'))
-                    return(these_genes[this_clust$order])
+                    this_clust <- hclust(dist(sig.bin[these_genes, ], method='binary'))
+                    return(this_clust$labels[this_clust$order])
                 }
             })
             overall_order <- Reduce(c, within_group_orders)
-            sig.ord <- sparseMelt(t(sig.bin)[, overall_order, drop = FALSE])
-            sig.ord$gene <- factor(
-                sig.ord$gene,
-                levels = overall_order
-            )
+            sig.ord <- tibble::as_tibble(as.matrix(sig.bin), rownames="gene") |>
+                tidyr::pivot_longer(!gene, names_to="id") |>
+                relocate("id") |>
+                mutate(gene = factor(gene, levels=overall_order))
         } else {
             pd_groups <- factor(rep(1, nrow(sig.bin)))
-            clust <- hclust(dist(sig.bin, method = "canberra"))
-            sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop=FALSE])
-            sig.ord$gene <- factor(sig.ord$gene, levels=clust$labels[clust$order])
+            clust <- hclust(dist(sig.bin, method = "binary"))
+            sig.ord <- tibble::as_tibble(as.matrix(sig.bin), rownames = "gene") |>
+                tidyr::pivot_longer(!gene, names_to = "id") |>
+                relocate("id") |>
+                mutate(gene = factor(gene, levels = clust$labels[clust$order]))
         }
     } else {
         pd_groups <- factor(rep(1, nrow(sig.bin)))
-        sig.ord <- sparseMelt(t(sig.bin))
-        sig.ord <- sig.ord[order(sig.ord[, 3]), , drop=FALSE]
-        sig.ord$gene <- factor(sig.ord$gene)
+        sig.ord <- tibble::as_tibble(as.matrix(sig.bin), rownames = "gene") |>
+            tidyr::pivot_longer(!gene, names_to = "id") |>
+            relocate("id") |>
+            mutate(gene = factor(gene))
     }
     tmp <- ggtree::facet_plot(p,
                               panel=paste0('heatmap: ', taxon),
