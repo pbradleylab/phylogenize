@@ -294,7 +294,7 @@ for (which_sign in c(1, -1)) {
 
   cluster.plots <- mapply(single.cluster.plot,
                           pz.db$gene.presence[valid_keys],
-                          signif_genes[valid_keys],
+                          sig_thresh[valid_keys],
                           pz.db$trees[valid_keys],
                           plotted.pheno.trees[valid_keys],
                           valid_keys,
