@@ -350,6 +350,7 @@ if (is.null(pz.options('relative_out_dir'))) {
 for (f in c("phenotype.tab",
             "all-results.csv",
             "pos-sig-thresholded.csv",
+            "neg-sig-thresholded.csv",
             "enr-table.csv",
             "enr-overlaps.csv",
             "enr-overlaps-sorted.csv")) {
