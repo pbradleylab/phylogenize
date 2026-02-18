@@ -9,7 +9,7 @@ default_params <- list(
     abundance_file = "",
     assume_below_LOD = TRUE,
     biom_file = "",
-    db = "gtdb",
+    db = "human-gut",
     data_dir = "",
     devel = FALSE,
     devel_pkgdir = 'package/phylogenize',

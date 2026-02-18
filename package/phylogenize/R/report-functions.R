@@ -399,10 +399,33 @@ single.cluster.plot <- function(gene.presence,
     
     if (length(sig.genes) == 0) { return(p) }
     if (length(sig.genes) > 1) {
-        clust <- hclust(dist(sig.bin, method = "canberra"))
-        sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop=FALSE])
-        sig.ord$gene <- factor(sig.ord$gene, levels=clust$labels[clust$order])
+        if (length(sig.genes) >= 10) {
+            # cluster within three relative PD groups
+            rel_pds <- apply(sig.bin, 1, \(x) get_rel_pd(x, tree, flip_sign = TRUE))
+            pd_groups <- cut(rank(rel_pds), 3)
+            within_group_orders <- lapply(levels(pd_groups), \(pd_g) {
+                these_genes <- names(which(pd_groups==pd_g))
+                if (length(these_genes < 2)) {
+                    return(these_genes)
+                } else {
+                    this_clust <- hclust(dist(sig.bin[these_genes, ], method='canberra'))
+                    return(these_genes[this_clust$order])
+                }
+            })
+            overall_order <- Reduce(c, within_group_orders)
+            sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop = FALSE])
+            sig.ord$gene <- factor(
+                sig.ord$gene,
+                levels = overall_order
+            )
+        } else {
+            pd_groups <- factor(rep(1, nrow(sig.bin)))
+            clust <- hclust(dist(sig.bin, method = "canberra"))
+            sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop=FALSE])
+            sig.ord$gene <- factor(sig.ord$gene, levels=clust$labels[clust$order])
+        }
     } else {
+        pd_groups <- factor(rep(1, nrow(sig.bin)))
         sig.ord <- sparseMelt(t(sig.bin))
         sig.ord <- sig.ord[order(sig.ord[, 3]), , drop=FALSE]
         sig.ord$gene <- factor(sig.ord$gene)
@@ -420,6 +443,28 @@ single.cluster.plot <- function(gene.presence,
         ggplot2::labs(color=opts("which_phenotype"), fill="gene presence") +
         ggplot2::scale_shape(guide="none")
     tmp
+}
+
+#' Get relative PD for a gene given a tree.
+#' Relative PD here means dividing by the total branch length of the original tree.
+#' If flip_sign is TRUE, will return PD of the minor allele.
+get_rel_pd <- function(gene, tree, flip_sign=TRUE) {
+    gene_bin <- 1 * (gene >= 0.05) # hardcoded for now
+    if (flip_sign) {
+        if (mean(gene_bin) > 0.5) {
+            gene_bin <- 1 - gene_bin
+        }
+    }
+    taxa_present <- names(which(gene_bin))
+    taxa_in_common <- intersect(taxa_present, tree$tip.label)
+    if (length(taxa_in_common) == 0) {
+        pz.warning("no tips in common with tree")
+        return(NA)
+    }
+    subt <- castor::get_subtree_with_tips(tree, taxa_in_common)$subtree
+    total_pd <- sum(tree$edge.length)
+    gene_pd <- sum(subt$edge.length)
+    return(gene_pd/total_pd)
 }
 
 

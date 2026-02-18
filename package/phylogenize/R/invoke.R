@@ -273,19 +273,33 @@ get_signif_associated_genes <- function(pz.db,
     pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs,
                                           pos.sig.thresh,
                                           pz.db$gene.to.fxn)
+        neg.sig.descs <- add.sig.descs(phy.with.sigs, neg.sig, pz.db$gene.to.fxn)
+        neg.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, neg.sig, ...)
+        neg.sig.thresh.descs <- add.sig.descs(
+            phy.with.sigs,
+            neg.sig.thresh,
+            pz.db$gene.to.fxn
+        )
     # recalculate, since some of these may go away
-    phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
+    phy.with.pos.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
+    phy.with.neg.sigs <- names(which(sapply(neg.sig.thresh, length) > 0))
+    phy.with.sigs <- union(phy.with.pos.sigs, phy.with.neg.sigs)
     return(list(
-        results=results, #1
-        signif=signif,   #2
-        signs=signs,     #3
-        pos.sig=pos.sig, #4
-        results.matrix=results.matrix,             #5
-        phy.with.sigs=phy.with.sigs,               #6
-        pos.sig.descs=pos.sig.descs,               #7
-        pos.sig.thresh=pos.sig.thresh,             #8
-        pos.sig.thresh.descs=pos.sig.thresh.descs, #9
-        neg.sig=neg.sig                            #10
+        results = results, #1
+        signif = signif, #2
+        signs = signs, #3
+        pos.sig = pos.sig, #4
+        results.matrix = results.matrix, #5
+        phy.with.sigs = phy.with.sigs, #6
+        pos.sig.descs = pos.sig.descs, #7
+        pos.sig.thresh = pos.sig.thresh, #8
+        pos.sig.thresh.descs = pos.sig.thresh.descs, #9
+        neg.sig = neg.sig, #10
+        neg.sig.descs = neg.sig.descs, #11
+        neg.sig.thresh = neg.sig.thresh, #12
+        neg.sig.thresh.descs = neg.sig.thresh.descs, #13
+        phy.with.pos.sigs = phy.with.pos.sigs, #14
+        phy.with.neg.sigs = phy.with.neg.sigs #15
     ))
 }
 
