@@ -41,7 +41,7 @@ default_params <- list(
     skip_graphs = FALSE,
     spec_color_high = 'tomato',
     spec_color_low = 'slateblue',
-    spec_color_mid = 'gray50',
+    spec_color_mid = 'gray80',
     treemin = 10,
     type_16S = FALSE,
     taxon_level = "family",
@@ -55,7 +55,7 @@ default_params <- list(
     which_phenotype = "prevalence",
     phenotype_file = "phenotype.tsv",
     categorical = TRUE,
-    diff_abund_method = "maaslin2",
+    diff_abund_method = "ANCOMBC2",
     working_dir = '.',
     core_method = "permulate-rlm",
     rds_output_file = "core_output.rds",
@@ -122,8 +122,8 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence", "specificity", "abundance", "provided"). Default: "prevalence"}
 #'   \item{phenotype_file}{String. If phenotype is provided, what is the path to the file? Default: "phenotype.tsv"}
 #'   \item{categorical}{Boolean. For abundance estimates, is the environment in env_column a categorical variable (TRUE) or continuous (FALSE)? Default: TRUE}
-#'   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "Maaslin2"}
-#'   \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "permulate-lm", "permulate-rlm", "phylolm", "lm", or "POMS" (case insensitive). Default: "permulate-lm"}
+#'   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "ANCOMBC2"}
+#'   \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "permulate-lm", "permulate-rlm", "phylolm", "lm", or "POMS" (case insensitive). Default: "permulate-rlm"}
 #'   \item{fdr_method}{String. Which method to correct FDR for significant results? Either "BH", "BY", or "qvalue". Default: "qvalue"}
 #' }
 #'
@@ -134,9 +134,9 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{prev_color_high}{String. When graphing prevalence on a tree, this color is the highest value. Default: "orange2"}
 #'   \item{prev_color_low}{String. When graphing prevalence on a tree, this color is the lowest value. Default: "black"}
 #'   \item{skip_graphs}{Boolean. If TRUE, skip making graphs in the report, which can be time- and memory-consuming. Default: FALSE}
-#'   \item{spec_color_high}{String. When graphing specificity on a tree, this color is the highest value (most specific). Default: "tomato"}
-#'   \item{spec_color_med}{String. When graphing specificity on a tree, this color denotes the prior (no association). Default: "gray50"}
-#'   \item{spec_color_low}{String. When graphing specificity on a tree, this color is the lowest value (most anti-specific). Default: "slateblue"}
+#'   \item{spec_color_high}{String. When graphing specificity or abundance on a tree, this color is the highest value (most specific). Default: "tomato"}
+#'   \item{spec_color_med}{String. When graphing specificity or abundance on a tree, this color denotes the prior (no association). Default: "gray50"}
+#'   \item{spec_color_low}{String. When graphing specificity or abundance on a tree, this color is the lowest value (most anti-specific). Default: "slateblue"}
 #' }
 #'
 #' @section Memory management:
