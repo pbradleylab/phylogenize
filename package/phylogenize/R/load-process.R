@@ -295,7 +295,12 @@ import.pz.db <- function(...) {
         " expected location given by ", db_csv))
     }
     
-    gene.to.fxn$gene <- gene.to.fxn$node_head
+    # remove extra info, make table a little more readable
+    gene.to.fxn <- gene.to.fxn %>%
+        dplyr::rename(gene = node_head) %>%
+        dplyr::select(gene, accession, `function`) %>%
+        distinct()
+
     # Make the files at the user requested taxon level. Here we adjust the
     # classification level to look at i.e family, class, order, etc.
     if (opts('taxon_level') != "phylum") {
