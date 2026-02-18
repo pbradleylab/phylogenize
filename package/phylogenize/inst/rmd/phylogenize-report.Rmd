@@ -261,7 +261,7 @@ have particularly extreme phenotypes. Positively-associated genes are plotted
 first, then negatively-associated genes.
 
 ```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=FALSE}
-for (which_sign %in% c(1, -1)) {
+for (which_sign in c(1, -1)) {
   if (which_sign==1) {
     if ("phy.with.pos.sigs" %in% signif_genes) {
       which_phy <- signif_genes[["phy.with.pos.sigs"]]
