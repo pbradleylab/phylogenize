@@ -415,7 +415,7 @@ single.cluster.plot <- function(gene.presence,
                 }
             })
             overall_order <- Reduce(c, within_group_orders)
-            sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop = FALSE])
+            sig.ord <- sparseMelt(t(sig.bin)[, overall_order, drop = FALSE])
             sig.ord$gene <- factor(
                 sig.ord$gene,
                 levels = overall_order
