@@ -412,7 +412,7 @@ single.cluster.plot <- function(gene.presence,
                 if (length(these_genes < 2)) {
                     return(these_genes)
                 } else {
-                    this_clust <- hclust(dist(sig.bin[these_genes, ], method='binary'))
+                    this_clust <- hclust(dist(sig.bin[these_genes, ], method='canberra'))
                     return(this_clust$labels[this_clust$order])
                 }
             })
@@ -423,7 +423,7 @@ single.cluster.plot <- function(gene.presence,
                 mutate(gene = factor(gene, levels=overall_order))
         } else {
             pd_groups <- factor(rep(1, nrow(sig.bin)))
-            clust <- hclust(dist(sig.bin, method = "binary"))
+            clust <- hclust(dist(sig.bin, method = "canberra"))
             sig.ord <- tibble::as_tibble(as.matrix(sig.bin), rownames = "gene") |>
                 tidyr::pivot_longer(!gene, names_to = "id") |>
                 relocate("id") |>
