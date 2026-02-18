@@ -228,27 +228,37 @@ This table gives an overview of how many genes were significantly associated at
 an FDR of 5%.
 
 ```{r write_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
-
 signif_genes <- core[["list_signif"]]
 
 pos.sig.count <- purrr::map_dbl(core[["list_signif"]]$pos.sig, length)
 
 if ("neg.sig" %in% names(core[["list_signif"]])) {
-    neg.sig.count <- purrr::map_dbl(core[["list_signif"]]$neg.sig, length)
-    sig.count <- full_join(enframe(pos.sig.count, name="Taxon", value="Pos. Sig. Genes"),
-                           enframe(neg.sig.count, name="Taxon", value="Neg. Sig. Genes"),
-                           by="Taxon")
+  neg.sig.count <- purrr::map_dbl(core[["list_signif"]]$neg.sig, length)
+  sig.count <- full_join(
+    enframe(pos.sig.count, name = "Taxon", value = "Pos. Sig. Genes"),
+    enframe(neg.sig.count, name = "Taxon", value = "Neg. Sig. Genes"),
+    by = "Taxon"
+  )
 } else {
-    sig.count <- enframe(pos.sig.count, name="Taxon", value="Pos. Sig. Genes")
+  sig.count <- enframe(pos.sig.count, name = "Taxon", value = "Pos. Sig. Genes")
 }
 
 phylogenize::getClinDT(sig.count)
 
-write.csv(file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
-	  signif_genes[["pos.sig.descs"]])
-write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
-          signif_genes[["results.matrix"]])
-
+write.csv(
+  file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
+  signif_genes[["pos.sig.descs"]]
+)
+if ("neg.sig" %in% names(core[["list_signif"]])) {
+  write.csv(
+    file = file.path(pz.options('out_dir'), "neg-sig-thresholded.csv"),
+    signif_genes[["neg.sig.descs"]]
+  )
+}
+write.csv(
+  file = file.path(pz.options('out_dir'), "all-results.csv"),
+  signif_genes[["results.matrix"]]
+)
 ```
 ## Gene association heat maps
 The left shows the phenotype painted on tips of the tree as above. The right
