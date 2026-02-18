@@ -412,7 +412,7 @@ single.cluster.plot <- function(gene.presence,
                 if (length(these_genes < 2)) {
                     return(these_genes)
                 } else {
-                    this_clust <- hclust(dist(sig.bin[these_genes, ], method='canberra'))
+                    this_clust <- hclust(dist(1 * (sig.bin[these_genes, ] >= 0.05), method='canberra'))
                     return(this_clust$labels[this_clust$order])
                 }
             })
