@@ -404,6 +404,7 @@ single.cluster.plot <- function(gene.presence,
             # cluster within three relative PD groups
             rel_pds <- apply(sig.bin, 1, \(x) get_rel_pd(x, tree, flip_sign = TRUE))
             pd_groups <- cut(rank(rel_pds), 3)
+            names(pd_groups) <- names(rel_pds)
             within_group_orders <- lapply(levels(pd_groups), \(pd_g) {
                 these_genes <- names(which(pd_groups==pd_g))
                 if (length(these_genes < 2)) {
