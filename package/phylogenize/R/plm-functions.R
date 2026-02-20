@@ -82,19 +82,22 @@ result.wrapper.plm <- function(
                         restrict.ff=restrict.figfams,
                         ...
                     )
-                } else if (core_method %in% c("permulate-lm", "permulate-rlm")) {
+                } else if (core_method %in% c("permulate-lm", "permulate-rlm", "permutrate-lm", "permutrate-rlm")) {
                     # handle multicore outside of this function
                     pz.message(sprintf("Performing permulations with %s", core_method))
+		    method_parsed <- stringr::str_split_1(core_method, "-")
+		    regression_m <- method_parsed[2]
+		    perm_m <- method_parsed[1]
                     cores <- opts('ncl')
-                    model_method <- stats::lm
-                    if (core_method=="permulate-rlm") model_method <- MASS::rlm
-		            user_maxsize <- options(future.globals.maxSize = 2.0e9)
-		            on.exit(options(user_maxsize))
+		    user_maxsize <- options(future.globals.maxSize = 2.0e9)
+		    on.exit(options(user_maxsize))
                     future::plan(future::multisession, workers = cores)
                     results <- repermulize::repermulize_wrapper(
                         pheno,
                         proteins[[p]],
                         tr,
+			perm_method = perm_m,
+			regression_method = regression_m,
                         real_pheno_sd = pheno_sd
                     )
                     future::plan(future::sequential)
