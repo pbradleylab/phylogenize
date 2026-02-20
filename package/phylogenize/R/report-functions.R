@@ -436,6 +436,7 @@ single.cluster.plot <- function(gene.presence,
             relocate("id") |>
             mutate(gene = factor(gene))
     }
+    sig.ord <- arrange(sig.ord, gene)
     tmp <- ggtree::facet_plot(p,
                               panel=paste0('heatmap: ', taxon),
                               data=sig.ord,
