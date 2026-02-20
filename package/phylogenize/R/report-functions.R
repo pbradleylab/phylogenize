@@ -409,7 +409,7 @@ single.cluster.plot <- function(gene.presence,
             names(pd_groups) <- names(rel_pds)
             within_group_orders <- lapply(levels(pd_groups), \(pd_g) {
                 these_genes <- names(pd_groups)[(which(pd_groups==pd_g))]
-                if (length(these_genes < 2)) {
+                if (length(these_genes) < 2) {
                     return(these_genes)
                 } else {
                     this_clust <- hclust(dist(1 * (sig.bin[these_genes, ] >= 0.05), method='canberra'))
