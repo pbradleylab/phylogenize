@@ -284,6 +284,7 @@ repermulize_wrapper <- function(
   verbose = TRUE,
   perm_method = "permulate",
   rank = FALSE,
+  chunk_size = 10,
   ...
 ) {
   # make sure same species represented in tree, genes, and phenotype
@@ -375,6 +376,7 @@ repermulize_wrapper <- function(
       )
     },
     cl = "future",
+    future.scheduling=structure(chunk_size, ordering="random"),
     future.seed=TRUE
   )
 
