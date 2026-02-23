@@ -286,7 +286,7 @@ repermulize_wrapper <- function(
   rank = FALSE,
   chunk_size = 10,
   use_futures = TRUE,
-  pb_type = "timer"
+  pb_type = "timer",
   ...
 ) {
   pbapply::pboptions(type = pb_type) # could be none, if running inside a big loop
