@@ -285,8 +285,11 @@ repermulize_wrapper <- function(
   perm_method = "permulate",
   rank = FALSE,
   chunk_size = 10,
+  use_futures = TRUE,
+  pb_type = "timer"
   ...
 ) {
+  pbapply::pboptions(type = pb_type) # could be none, if running inside a big loop
   # make sure same species represented in tree, genes, and phenotype
   tips <- intersect(real_tree$tip.label,
     intersect(colnames(real_genes), names(real_pheno)))
@@ -361,8 +364,17 @@ repermulize_wrapper <- function(
   names(named_indices) <- rownames(real_genes)
 
   if (verbose) message("Getting empirical p-values...")
-  pbapply::pboptions(type = "timer")
-  res <- pbapply::pblapply(
+  if (use_futures) {
+    pbl_fxn <- function(d, f) { pbapply::pblapply(d, f,
+                                                  cl="future",
+                                                  future.scheduling=structure(
+                                                    chunk_size,
+                                                    ordering="random",
+                                                    future.seed=TRUE)) }
+  } else {
+    pbl_fxn <- function(d, f) { pbapply::pblapply(d, f) }
+  }
+  res <- pbl_fxn(
     named_indices,
     \(i) {
       if (genes_are_PICs) {
@@ -374,10 +386,7 @@ repermulize_wrapper <- function(
         repermulize_test(real_PICs, perm_PICs, g_pic, ...),
         error = function(e) { warning(paste(e)); c(Estimate=NA,p.value=NA) }
       )
-    },
-    cl = "future",
-    future.scheduling=structure(chunk_size, ordering="random"),
-    future.seed=TRUE
+    }
   )
 
   # Collect and convert to a more familiar format
