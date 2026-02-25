@@ -188,13 +188,16 @@ repermulize_test <- function(
     model_fit <- regress(realphenoPIC ~ genePIC - 1)
     model_coef <- summary(model_fit)$coefficients
   }, error = \(e) {
-    warning(paste0(e))
-    return(c(Estimate = NA, p.value = NA))
+    stop("Regression failed on real trait (note: can happen with rlm in certain cases)")
   })
   model_fit <- regress(realphenoPIC ~ genePIC - 1) # nb, leave out intercept in PIC
   model_coef <- summary(model_fit)$coefficients
   fg_tv <- model_coef[1, "t value"]
   fg_est <- model_coef[1, 1]
+  if (is.na(fg_tv) || is.na(fg_est)) {
+    warning("Regression failed")
+    return(c(Estimate = NA, p.value = NA))
+  }
   fg_df <- summary(model_fit)$df
   bg_tvs <- numeric(ncol(permPICs)) # empty vector to start
   permPICs <- permPICs[, sample(1:ncol(permPICs))] # "shuffle the deck" since we are using early stopping

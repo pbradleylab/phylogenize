@@ -48,7 +48,7 @@ read.abd.metadata <- function(...) {
     abd.meta <- harmonize.abd.meta(abd.meta, ...)
     if ((opts('which_phenotype') != 'abundance') &&
         tolower(opts('core_method')) != "poms") {
-        pz.message("Binarizing input data...")
+        pz.message("Binarizing input data...", level=1)
         # binarize to save memory usage since we care about pres/abs
         abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
     }
@@ -166,10 +166,10 @@ check.process.metadata <- function(metadata, ...) {
 read.abd.metadata.biom <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     bf <- opts('biom_file')
-    pz.message(paste0("looking for file: ", normalizePath(bf)))
+    pz.message(paste0("looking for file: ", normalizePath(bf)), level=2)
     if (!(file.exists(bf))) {
         pz.error(paste0("file not found: ", bf))
-    } else { pz.message(paste0("located biom file: ", bf)) }
+    } else { pz.message(paste0("located biom file: ", bf, level=2)) }
     # biomf <- biomformat::read_biom(bf)
     biomf <- biomformat::read_biom(bf)
     abd.mtx <- biomformat::biom_data(biomf)
@@ -186,8 +186,8 @@ read.abd.metadata.biom <- function(...) {
         mf <- opts('metadata_file')
         if (!(file.exists(mf))) {
             pz.error(paste0("file not found: ", mf))
-        } else { pz.message(paste0("located metadata file: ", mf)) }
-        metadata <- readr::read_tsv(mf)
+        } else { pz.message(paste0("located metadata file: ", mf), level=2) }
+        metadata <- readr::read_tsv(mf, show_col_types = FALSE)
         metadata <- check.process.metadata(metadata, ...)
     }
     rm(biomf); gc()
@@ -213,17 +213,17 @@ read.abd.metadata.tabular <- function(...) {
     mf <- opts('metadata_file')
     if (!(file.exists(af))) {
         pz.error(paste0("file not found: ", af))
-    } else { pz.message(paste0("located abundance file: ", af)) }
+    } else { pz.message(paste0("located abundance file: ", af), level=2) }
     if (!(file.exists(mf))) {
         pz.error(paste0("file not found: ", mf))
-    } else { pz.message(paste0("located metadata file: ", mf)) }
+    } else { pz.message(paste0("located metadata file: ", mf), level=2) }
     
-    abd.df <- readr::read_tsv(af)
+    abd.df <- readr::read_tsv(af, show_col_types = FALSE)
     # convert to matrix
     abd.mtx <- data.matrix(abd.df[, -1])
     rownames(abd.mtx) <- abd.df[[1]]
     # can remain as tbl
-    metadata <- readr::read_tsv(mf)
+    metadata <- readr::read_tsv(mf, show_col_types = FALSE)
     metadata <- check.process.metadata(metadata, ...)
     
     return(list(mtx=abd.mtx, metadata=metadata))
@@ -252,7 +252,7 @@ read.abd.metadata.tabular <- function(...) {
 import.pz.db <- function(...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     db_csv <- file.path(opts('data_dir'), "databases.csv")
-    installed_dbs <- readr::read_delim(db_csv)
+    installed_dbs <- readr::read_delim(db_csv, show_col_types = FALSE)
     requested_db <- tolower(opts('db'))
     if (!(requested_db %in% installed_dbs[["database"]])) {
         pz.error(paste0("Database not installed in ", opts('data_dir'), ": ",
@@ -268,8 +268,10 @@ import.pz.db <- function(...) {
     gene.presence <- gene.presence[names(gene.presence) != ""]
     trees <- readRDS(file.path(opts('data_dir'),
                                found_db[["trees"]]))
-    taxonomy <- readr::read_csv(file.path(opts('data_dir'),
-                                          found_db[["taxonomy"]]))
+    taxonomy <- readr::read_csv(
+        file.path(opts('data_dir'), found_db[["taxonomy"]]),
+        show_col_types = FALSE
+    )
 
     # propagate cluster values up, as higher level taxonomic names may be missing
     taxonomy <- taxonomy %>% 
@@ -283,8 +285,10 @@ import.pz.db <- function(...) {
       mutate(domain = ifelse(is.na(domain), phylum, domain)) %>%
       ungroup()
 
-    gene.to.fxn <- readr::read_csv(file.path(opts('data_dir'),
-                                             found_db[["functions"]]))
+    gene.to.fxn <- readr::read_csv(
+        file.path(opts('data_dir'), found_db[["functions"]]),
+        show_col_types = FALSE
+    )
     # Check if the files exist instead of throwing a null error
     if (is.null(gene.presence) |
         is.null(trees) |
@@ -351,7 +355,7 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     totalL <- vapply(pz.db$trees, function(tr) { length(tr$tip.label) }, 1L)
     pct.obs <- mapply(function(x, y) x / y, tL, totalL)
     passed.pct <- nw(pct.obs >= opts('pctmin'))
-    pz.message("Determining which taxa to test...")
+    pz.message("Determining which taxa to test...", level=1)
     for (tn in 1:length(pz.db$trees)) {
         pz.message(paste0(names(pz.db$trees)[tn],
                           " (pct): ", format(pct.obs[tn] * 100, digits=2),
@@ -360,9 +364,16 @@ adjust.db <- function(pz.db, abd.meta, ...) {
                                             tL[tn] >= opts('treemin')),
                                        yes="kept",
                                        no="dropped")
-        ))
+        ), level=2)
     }
     saved.taxa <- intersect(passed.min, passed.pct)
+    pz.message(
+        paste0(
+            "  Taxa selected: ",
+            paste(saved.taxa, sep=", ")
+        ),
+        level=1
+    )
     if (length(saved.taxa) == 0) {
         pz.error(paste0("All trees had less than ",
                         format(opts('pctmin') * 100, digits=2),
@@ -478,7 +489,7 @@ change.tree.tax.level <- function(tree, taxon, tax) {
     clean <- tax %>%
         dplyr::select(cluster, taxon, phylum) %>%
         dplyr::distinct()
-    pz.message(head(clean))
+    pz.message(head(clean), level=3)
     # Drop empty values from the taxonomic level selected if they are not 
     clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
     # Arrange them so that the runtime is slightly less in the lookup
@@ -502,13 +513,13 @@ change.tree.tax.level <- function(tree, taxon, tax) {
         t <- clean[[name]]
         
         if (is.null(clean[[name]])) {
-            pz.message(names(clean))
-            pz.message(paste("Warning: No data found for taxon classification",
-                             name))
+            pz.message(names(clean), level=3)
+            pz.warning(paste("Warning: No data found for taxon classification",
+                             name), level=2)
             next 
         } else {
             pz.message(paste("Good news: Data found for taxon classification",
-                             name))
+                             name), level=2)
         }	
         # Generate a list of unique split names based on taxon
         split_names <- t %>%
@@ -635,7 +646,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
         }
         nonsingleton.envs <- names(which(env.number > 1))
         pz.message(paste0(length(nonsingleton.envs),
-                          " non-singleton environment(s) found"))
+                          " non-singleton environment(s) found"), level=1)
         if ((length(nonsingleton.envs) < 2) &&
             (opts('which_phenotype') == 'specificity')) {
             pz.error(paste0(
@@ -664,7 +675,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     names(dset.number) <- all.dsets
     nonsingleton.dsets <- names(which(dset.number > 1))
     pz.message(paste0(length(nonsingleton.dsets),
-                      " non-singleton dataset(s) found"))
+                      " non-singleton dataset(s) found"), level=2)
     f_dsets <- (abd.meta$metadata[[opts('dset_column')]] %in%
                     nonsingleton.dsets)
     if (!(opts('which_phenotype') %in% c("correlation", "provided"))) {

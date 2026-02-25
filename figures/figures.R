@@ -20,8 +20,8 @@ VSEARCH_DIR <- path.expand("~/bin/")
 perform_associations <- strsplit(""," ")[[1]]
 
 # Unzip 16S or shotgun data if necessary
-unzip_file(hmp_dir, "hmp-16s-dada2-full.tab"))
-unzip_file(hmp_dir, "hmp-shotgun-bodysite.tab"))
+unzip_file(hmp_dir, "hmp-16s-dada2-full.tab")
+unzip_file(hmp_dir, "hmp-shotgun-bodysite.tab")
 
 # Download EMP data from Figshare
 if (!file.exists(file.path(emp_dir, "emp_deblur_orig_metadata.biom"))) {

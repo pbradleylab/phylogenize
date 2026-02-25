@@ -84,7 +84,7 @@ result.wrapper.plm <- function(
                     )
                 } else if (core_method %in% c("permulate-lm", "permulate-rlm", "permutrate-lm", "permutrate-rlm")) {
                     # handle multicore outside of this function
-                    pz.message(sprintf("Performing permulations with %s", core_method))
+                    pz.message(sprintf("Performing permulations with %s", core_method), level=1)
 		    method_parsed <- stringr::str_split_1(core_method, "-")
 		    regression_m <- method_parsed[2]
 		    perm_m <- method_parsed[1]
@@ -1077,6 +1077,11 @@ ash_wrapper <- function(m, s, nw=10, ashr_df=Inf) {
 ashr.diff.abund <- function(abd.meta,
                             ...) {
   opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+  if (opts("error_to_file")) {
+    sink_for_externals <- file.path(opts('out_dir'), opts('error_file'))
+    sink(sink_for_externals)
+    on.exit(sink())
+  }
   categorical <- opts('categorical')
   envir <- opts('which_envir')
   E <- opts('env_column')
@@ -1247,9 +1252,11 @@ pz.error <- function(errtext, ...) {
     opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
         tryCatch({
-          cat(paste0(errtext, "\n"),
-              file = file.path(opts('out_dir'), "errmsg.txt"),
-              append = TRUE)
+          cat(
+            paste0(errtext, "\n"),
+            file = file.path(opts('out_dir'), opts('error_file')),
+            append = TRUE
+        )
           }, error=function(e) NULL)
         }
     stop(errtext)
@@ -1261,20 +1268,25 @@ pz.error <- function(errtext, ...) {
 #' \describe{
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
 #'   output to an error message file?}
+#'   \item{verbosity}{Integer (between 1-3). How verbosely should pz.message write to the console?}
 #'}
 #'
 #' @param errtext String: message text.
+#' @param level Level of verbosity (default: 1). If above the current level of verbosity, the message will be logged to a file (if appropriate) but not printed to console.
 #' @export
-pz.message <- function(msgtext, ...) {
+pz.message <- function(msgtext, level=1, ...) {
     opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    v <- opts("verbosity")
     if (opts('error_to_file')) {
         tryCatch({
-            cat(paste0(msgtext, '\n'),
-                file = file.path(opts('out_dir'), "errmsg.txt"),
-                append = TRUE)
+            cat(
+                paste0(msgtext, '\n'),
+                file = file.path(opts('out_dir'), opts('error_file')),
+                append = TRUE
+            )
         }, error=function(e) NULL)
     }
-    message(msgtext)
+    if (level <= v) message(msgtext)
 }
 
 #' Report a warning and optionally log it in errmsg.txt.
@@ -1291,9 +1303,11 @@ pz.warning <- function(msgtext, ...) {
     opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
         tryCatch({
-            cat(paste0(msgtext, '\n'),
-                file = file.path(opts('out_dir'), "errmsg.txt"),
-                append = TRUE)
+            cat(
+                paste0(msgtext, '\n'),
+                file = file.path(opts('out_dir'), opts('error_file')),
+                append = TRUE
+            )
         }, error=function(e) NULL)
     }
     warning(msgtext)
@@ -1373,7 +1387,7 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
     # keep track of which taxa should be dropped entirely
     to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)
     for (tx in taxa) {
-      pz.message(paste0("Processing taxon ", tx))
+      pz.message(paste0("Processing taxon ", tx), level=2)
         tips <- trees[[tx]]$tip.label
         colns <- colnames(gene.presence[[tx]])
         i <- na.omit(intersect(tips, colns))
@@ -1381,7 +1395,7 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
           mtx <- gene.presence[[tx]][, i, drop=FALSE]
 	  Max <- ncol(mtx) - Min
           g <- names(which((Matrix::rowSums(mtx > GMF) >= Min) & (Matrix::rowSums(mtx > GMF) <= Max)))
-	        pz.message(paste0("Retained ", length(g), " out of ", nrow(mtx), " genes..."))
+	        pz.message(paste0("Retained ", length(g), " out of ", nrow(mtx), " genes..."), level=2)
           gene.presence[[tx]] <- mtx[g, , drop=FALSE]
         }
 	    if ((length(i) == 0) || (length(g) == 0)) {

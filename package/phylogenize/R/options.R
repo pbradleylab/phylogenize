@@ -1,21 +1,20 @@
 # Set the default parameters
 default_params <- list(
-    min_frac_16s=0.8,		       
-    appspam_path="/usr/local/bin/appspam",
-    which_16s_method="appspam",
-    aln_path_16s="",
-    tree_path_16s="",
-    jplace_file="",
+    dset_column = "dataset",
+    env_column = "env",
+    diff_abund_method = "ANCOMBC2",
+    core_method = "permutrate-rlm",
+    verbosity = 1,
+    error_to_file = TRUE,
+    error_file = "errmsg.txt",
     abundance_file = "",
     assume_below_LOD = TRUE,
     biom_file = "",
     db = "human-gut",
+    working_dir = '.',
     data_dir = "",
     devel = FALSE,
     devel_pkgdir = 'package/phylogenize',
-    dset_column = "dataset",
-    env_column = "env",
-    error_to_file = TRUE,
     gene_color_absent = 'white',
     gene_color_present = 'coral',
     input_format = "tabular",
@@ -46,22 +45,26 @@ default_params <- list(
     type_16S = FALSE,
     taxon_level = "family",
     use_rmd_params = FALSE,
+    which_envir = "stool",
+    which_phenotype = "prevalence",
+    phenotype_file = "phenotype.tsv",
+    categorical = TRUE,
+    rds_output_file = "core_output.rds",
+    fdr_method = "BH",
+    quantile_normalize = FALSE,
+    only_specific_taxa = NULL,
+    # 16S stuff (not officially supported yet)
+    aln_path_16s="",
+    tree_path_16s="",
+    jplace_file="",
+    min_frac_16s=0.8,		       
+    appspam_path="/usr/local/bin/appspam",
+    which_16s_method="appspam",
     vsearch_16sfile = "16s_gtdb.frn",
     vsearch_cutoff = 0.985,
     vsearch_dir = "",
     named_asv_file = "input_seqs.txt",
     vsearch_outfile = "output_assignments.txt",
-    which_envir = "stool",
-    which_phenotype = "prevalence",
-    phenotype_file = "phenotype.tsv",
-    categorical = TRUE,
-    diff_abund_method = "ANCOMBC2",
-    working_dir = '.',
-    core_method = "permulate-rlm",
-    rds_output_file = "core_output.rds",
-    fdr_method = "BH",
-    quantile_normalize = FALSE,
-    only_specific_taxa = NULL
 )
 
 
@@ -81,6 +84,8 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
 #'   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: empty string, but on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message output to an error message file? Default: FALSE}
+#'   \item{error_file}{String. What should the filename of the error message file be? Default: "errmsg.txt"}
+#'   \item{verbosity}{Number. What level of pz.message (out of 3) should be reported? Default: 1}
 #'   \item{input_format}{String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). Default: "tabular"}
 #'   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
 #'   \item{rds_output_file}{String. Name of output RDS file containing the full results of applying `phylogenize_core()`. Set to empty string to disable. Default: "core_output.rds"}
@@ -123,7 +128,7 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{phenotype_file}{String. If phenotype is provided, what is the path to the file? Default: "phenotype.tsv"}
 #'   \item{categorical}{Boolean. For abundance estimates, is the environment in env_column a categorical variable (TRUE) or continuous (FALSE)? Default: TRUE}
 #'   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "ANCOMBC2"}
-#'   \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "permulate-lm", "permulate-rlm", "phylolm", "lm", or "POMS" (case insensitive). Default: "permulate-rlm"}
+#'   \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "permutrate-rlm", "permutrate-lm", "permulate-lm", "permulate-rlm", "phylolm", "lm", or "POMS" (case insensitive). Default: "permutrate-rlm"}
 #'   \item{fdr_method}{String. Which method to correct FDR for significant results? Either "BH", "BY", or "qvalue". Default: "qvalue"}
 #' }
 #'

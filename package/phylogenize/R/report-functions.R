@@ -263,11 +263,11 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                                          stroke.scale=0.3,
                                          units='%') {
     if (is.null(plotted.pheno.trees)) {
-        pz.message("warning: no trees found")
+        pz.warning("no trees found")
         return(NULL)
     }
     if (length(plotted.pheno.trees) == 0) {
-        pz.message("warning: no trees found")
+        pz.warning("no trees found")
         return(NULL)
     }
 
@@ -280,7 +280,7 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 	    tryCatch(
 		     plots[[name]] <- interactive.plot(plotted_tree, fn, name, label),
 		     error = function(e) {
-			    pz.message(e)
+			    pz.warning(e)
 			    plots[[name]] <- non.interactive.plot(plotted_tree, fn, name, label)
 	    })
     }
@@ -627,7 +627,7 @@ gg.cont.tree <- function(phy,
     
     if(!is.null(kept_tips)) {
         if(is.null(reduced.phy)) {reduced.phy <- fix.tree(kept_tips)}
-        pz.message("getting continuous trait ancestry")
+        pz.message("getting continuous trait ancestry", level=2)
         if (is.null(reduced.phy)) {
             pz.warning(paste0("all tips were dropped from ", cName))
             return(NA)
@@ -692,7 +692,7 @@ gg.cont.tree <- function(phy,
                     disp = cDisplay))
     } else {
         pz.message(paste0(cName, " has been removed from the phylogenetic ",
-                          "trees: No phenotype found associated"))
+                          "trees: No phenotype found associated"), level=2)
         return(NA)
     }
 }
