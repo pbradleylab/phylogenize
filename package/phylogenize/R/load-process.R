@@ -268,11 +268,11 @@ import.pz.db <- function(...) {
     gene.presence <- gene.presence[names(gene.presence) != ""]
     trees <- readRDS(file.path(opts('data_dir'),
                                found_db[["trees"]]))
-    taxonomy <- readr::read_csv(
-        file.path(opts('data_dir'), found_db[["taxonomy"]]),
-        show_col_types = FALSE
-    )
-
+    taxonomy <- readr::read_csv(file.path(opts('data_dir'),
+                                          found_db[["taxonomy"]]))
+    # Workaround for inconsistency with "_" vs. " " in pipeline...
+    names(trees) <- gsub(" ", "_", names(trees))
+    names(gene.presence) <- gsub(" ", "_", names(gene.presence))
     # propagate cluster values up, as higher level taxonomic names may be missing
     taxonomy <- taxonomy %>% 
       rowwise() %>%
