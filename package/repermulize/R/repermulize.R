@@ -384,14 +384,15 @@ repermulize_wrapper <- function(
       if ((perm_method=="permulate") && permulate_use_sd) {
         # re-fit tree to take into account permulated sd
         indices <- (1:ncol(perm_pheno$tr))
-        perm_PICs <- pbl_fxn(indices, \(i) {
+        perm_PIC_list <- pbl_fxn(indices, \(i) {
           perm_rescaled_tree <- add_uncertainty_to_tree(
             reduced_tree,
             perm_pheno$tr[, i],
-            perm_pheno$tr_sd[, i],
+            perm_pheno$s[, i],
           )$aug_tree
           order_pic_wrapper(perm_rescaled_tree, perm_pheno$tr[, i])
         })
+        perm_PICs <- Reduce(cbind, perm_PIC_list)
       } else {
         # Don't use parallel for this -- doesn't seem to be worth the overhead
         perm_PICs <- pbapply::pbapply(perm_pheno, 2, \(x) {
