@@ -301,9 +301,8 @@ repermulize_wrapper <- function(
         cl = "future",
         future.scheduling = structure(
           chunk_size,
-          ordering = "random",
-          future.seed = TRUE
-        )
+          ordering = "random"),
+        future.seed = TRUE
       )
     }
   } else {
