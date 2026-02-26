@@ -64,7 +64,7 @@ default_params <- list(
     vsearch_cutoff = 0.985,
     vsearch_dir = "",
     named_asv_file = "input_seqs.txt",
-    vsearch_outfile = "output_assignments.txt",
+    vsearch_outfile = "output_assignments.txt"
 )
 
 
