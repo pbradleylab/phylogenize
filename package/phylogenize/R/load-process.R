@@ -269,8 +269,8 @@ import.pz.db <- function(...) {
     trees <- readRDS(file.path(opts('data_dir'),
                                found_db[["trees"]]))
     taxonomy <- readr::read_csv(file.path(opts('data_dir'),
-                                          found_db[["taxonomy"]]))
-    # Workaround for inconsistency with "_" vs. " " in pipeline...
+                                          found_db[["taxonomy"]]), show_col_types=FALSE)
+    # Workaround for inconsistency with "_" vs. " " in pipeline...,
     names(trees) <- gsub(" ", "_", names(trees))
     names(gene.presence) <- gsub(" ", "_", names(gene.presence))
     # propagate cluster values up, as higher level taxonomic names may be missing
@@ -370,9 +370,9 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     pz.message(
         paste0(
             "  Taxa selected: ",
-            paste(saved.taxa, sep=", ")
+            paste(saved.taxa, collapse=", ")
         ),
-        level=1
+        level=2
     )
     if (length(saved.taxa) == 0) {
         pz.error(paste0("All trees had less than ",
