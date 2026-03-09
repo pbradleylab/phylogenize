@@ -35,29 +35,37 @@ nonequiv.pos.sig <- function(results,
     dir <- sign(dir)
     if (dir==0) { stop("dir must not be zero") }
     if (is.null(exclude)) exclude <- lapply(results, function(.) NULL)
-    mapply(function(r, ex) {
-        valid <- colnames(r)[which(!is.na(unlist(r[1, , drop=FALSE])))]
+    sig_fxn <- function(r, ex) {
+        valid <- colnames(r)[which(!is.na(unlist(r[1, , drop = FALSE])))]
         if (!is.null(ex)) {
             valid <- setdiff(valid, ex)
         }
-        tryCatch({
-            tested <- na.omit(unlist(r[2, valid, drop=FALSE]))
-            qv <- method(tested)
-            fx_sig <- nw(qv <= qcut_sig)
-            if (min_fx > 0) {
-              neq <- apply(unlist(r[, valid, drop=FALSE]), 2,
-                          function(x) equiv_test(x[1], x[3], x[4], min_fx))
-              neq_qv <- method(neq)
-              neq_sig <- nw(neq_qv > qcut_eq)
-            } else {
-              neq_sig <- valid
-            }
-            which_pos <- nw((dir * unlist(r[1, valid, drop=FALSE])) > 0)
-            Reduce(intersect, list(fx_sig,
-                                   neq_sig,
-                                   which_pos))
-            }, error=function(e) character(0))
-    }, results, exclude, SIMPLIFY=FALSE)
+        tryCatch(
+            {
+                tested <- na.omit(unlist(r[2, valid, drop = FALSE]))
+                if ("matrix" %in% class(tested)) {
+                    tested <- tested[1, ]
+                }
+                qv <- method(tested)
+                fx_sig <- nw(qv <= qcut_sig)
+                if (min_fx > 0) {
+                    neq <- apply(
+                        unlist(r[, valid, drop = FALSE]),
+                        2,
+                        function(x) equiv_test(x[1], x[3], x[4], min_fx)
+                    )
+                    neq_qv <- method(neq)
+                    neq_sig <- nw(neq_qv > qcut_eq)
+                } else {
+                    neq_sig <- valid
+                }
+                which_pos <- nw((dir * unlist(r[1, valid, drop = FALSE])) > 0)
+                Reduce(intersect, list(fx_sig, neq_sig, which_pos))
+            },
+            error = function(e) character(0)
+        )
+    }
+    mapply(sig_fxn, results, exclude, SIMPLIFY=FALSE)
 }
 
 #' Equivalence test based on two one-sided tests.
@@ -73,9 +81,9 @@ equiv_test <- function(fx, se, df, min_fx=0.25) {
     # test 2: H0 is fx <= -min_fx, HA is fx > -min_fx
     t_stat1 <- -(fx - min_fx) / se # more negative as fx >> min_fx
     t_stat2 <- -(-min_fx - fx) / se # more negative as fx << -min_fx
-    pv1 <- pt(t_stat1, df, lower.tail=FALSE)
-    pv2 <- pt(t_stat2, df, lower.tail=FALSE)
-    max(pv1, pv2)
+    pv1 <- pt(t_stat1, df, lower.tail=FALSE) * 2
+    pv2 <- pt(t_stat2, df, lower.tail=FALSE) * 2
+    min(pv1, pv2)
 }
 
 #' Get vectors of significant genes from result tables.
@@ -90,26 +98,39 @@ equiv_test <- function(fx, se, df, min_fx=0.25) {
 #' @param ... Extra parameters to be passed to `method`.
 #' @return List (per taxon) of string vectors of significant hits.
 #' @export
-make.sigs <- function(results,
-                      cuts = c(strong = 0.05,
-                               med = 0.1,
-                               weak = 0.25),
-                      method = qvals,
-                      exclude = NULL,
-                      min.fx = 0,
-		      ...) {
+make.sigs <- function(
+    results,
+    cuts = c(strong = 0.05, med = 0.1, weak = 0.25),
+    method = qvals,
+    exclude = NULL,
+    min.fx = 0,
+    ...
+) {
+    sig_fxn <- function(x, cut) {
+        if (!is.null(exclude)) {
+            valid <- setdiff(colnames(results[[x]]), exclude[[x]])
+        } else {
+            valid <- colnames(results[[x]])
+        }
+        # should work with repermulize output
+        all_tested <- na.omit(
+                purrr::map_dbl(results[[x]][2, valid, drop = FALSE], ~.x) |>
+                    setNames(valid)
+        )
+        above.min <- nw(
+            purrr::map_lgl(
+                results[[x]][1, valid, drop = FALSE],
+                ~ abs(.x) >= min.fx
+            ) |>
+                setNames(valid)
+        )
+        tryCatch(
+            intersect(nw(method(all_tested, ...) <= cut), above.min),
+            error = function(e) character(0)
+        )
+    }
     lapply.across.names(names(results), function(x) {
-        lapply(cuts, function(cut) {
-            if (!is.null(exclude)) {
-                valid <- setdiff(colnames(results[[x]]),
-                                 exclude[[x]])
-            } else { valid <- colnames(results[[x]]) }
-            # should work with repermulize output
-            tested <- na.omit(purrr::map_dbl(results[[x]][2, valid, drop = FALSE], ~.x))
-            above.min <- nw(purrr::map_lgl(results[[x]][1, valid, drop = FALSE], ~ abs(.x) >= min.fx))
-            tryCatch(intersect(nw(method(tested, ...) <= cut), above.min),
-                     error = function(e) character(0))
-        })
+        lapply(cuts, \(cut) sig_fxn(x, cut))
     })
 }
 
