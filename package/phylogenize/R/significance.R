@@ -88,11 +88,11 @@ nonequiv.pos.sig <- function(results,
 equiv_test <- function(fx, se, df, min_fx=0.25) {
     # test 1: H0 is fx >= min_fx, HA is fx < min_fx
     # test 2: H0 is fx <= -min_fx, HA is fx > -min_fx
-    t_stat1 <- (fx - min_fx) / se # more positive as fx >> min_fx
-    t_stat2 <- (-min_fx - fx) / se # more positive as fx << -min_fx
+    t_stat1 <- -(fx - min_fx) / se # more positive as fx << min_fx
+    t_stat2 <- -(-min_fx - fx) / se # more positive as fx >> -min_fx
     pv1 <- pt(t_stat1, df, lower.tail=FALSE)
     pv2 <- pt(t_stat2, df, lower.tail=FALSE)
-    min(pv1, pv2)
+    max(pv1, pv2)
 }
 
 #' Get vectors of significant genes from result tables.
