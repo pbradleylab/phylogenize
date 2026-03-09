@@ -33,100 +33,115 @@ result.wrapper.plm <- function(
     abd.meta = FALSE,
     poms = FALSE,
     pheno_sd = NULL,
-    ...) {
-        opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
-        core_method <- tolower(opts('core_method'))
-        lapply.across.names(taxa, function(p) {
-            message(p)
-            if (class(tree) == "phylo") {
-                tr <- tree
-            } else if (class(tree) == "list") {
-                tr <- tree[[p]]
-            } else {
-                stop("tree must be either an object of class phylo or a list")
-            }
-            valid <- Reduce(
-                intersect,
-                list(colnames(proteins[[p]]),
-                clusters[[p]],
-                tr$tip.label)
+    ...
+) {
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    core_method <- tolower(opts('core_method'))
+    lapply.across.names(taxa, function(p) {
+        message(p)
+        if (class(tree) == "phylo") {
+            tr <- tree
+        } else if (class(tree) == "list") {
+            tr <- tree[[p]]
+        } else {
+            stop("tree must be either an object of class phylo or a list")
+        }
+        valid <- Reduce(
+            intersect,
+            list(colnames(proteins[[p]]), clusters[[p]], tr$tip.label)
+        )
+        if (!is.null(pheno)) {
+            valid <- intersect(valid, names(pheno))
+        }
+        if (is.null(restrict.figfams)) {
+            restrict.figfams <- rownames(proteins[[p]])
+        } else {
+            restrict.figfams <- intersect(
+                rownames(proteins[[p]]),
+                restrict.figfams
             )
-            if (!is.null(pheno)) {
-                valid <- intersect(valid, names(pheno))
-            }
-            if (is.null(restrict.figfams)) {
-                restrict.figfams <- rownames(proteins[[p]])
+        }
+        if (drop.zero.var) {
+            fvar <- apply(proteins[[p]][, valid, drop = FALSE], 1, var)
+            message(paste0(
+                sprintf("%.01f", 100 * mean(na.omit(fvar == 0))),
+                "% dropped [no variance]"
+            ))
+            restrict.figfams <- intersect(
+                restrict.figfams,
+                rownames(proteins[[p]])[
+                    which(fvar > 0)
+                ]
+            )
+        }
+        if (!only.return.names) {
+            if (core_method == "poms") {
+                matrix.POMS(
+                    tr,
+                    proteins[[p]],
+                    abd.meta,
+                    restrict.taxa = valid,
+                    restrict.ff = restrict.figfams,
+                    ...
+                )
+            } else if (
+                core_method %in%
+                    c(
+                        "permulate-lm",
+                        "permulate-rlm",
+                        "permutrate-lm",
+                        "permutrate-rlm"
+                    )
+            ) {
+                # handle multicore outside of this function
+                pz.message(
+                    sprintf("Performing permulations with %s", core_method),
+                    level = 1
+                )
+                method_parsed <- stringr::str_split_1(core_method, "-")
+                regression_m <- method_parsed[2]
+                perm_m <- method_parsed[1]
+                cores <- opts('ncl')
+                user_maxsize <- options(future.globals.maxSize = 2.0e9)
+                on.exit(options(user_maxsize))
+                future::plan(future::multisession, workers = cores)
+                results <- repermulize::repermulize_wrapper(
+                    pheno,
+                    proteins[[p]],
+                    tr,
+                    perm_method = perm_m,
+                    regression_method = regression_m,
+                    real_pheno_sd = pheno_sd
+                )
+                future::plan(future::sequential)
+                return(as.data.frame(results))
+            } else if (core_method == "lm") {
+                matrix.plm(
+                    tr,
+                    proteins[[p]],
+                    pheno,
+                    method = lm.fx.pv,
+                    restrict.taxa = valid,
+                    restrict.ff = restrict.figfams,
+                    ...
+                )
             } else {
-                restrict.figfams <- intersect(rownames(proteins[[p]]),
-                restrict.figfams)
-            }
-            if (drop.zero.var) {
-                fvar <- apply(proteins[[p]][, valid, drop=FALSE], 1, var)
-                message(paste0(sprintf("%.01f",
-                100 * mean(na.omit(fvar == 0))),
-                "% dropped [no variance]"))
-                restrict.figfams <- intersect(
-                    restrict.figfams,
-                    rownames(proteins[[p]])[
-                        which(fvar > 0)
-                    ]
+                pz.warning(sprintf("Core method %s not found; reverting to regular phylolm", core_method))
+                matrix.plm(
+                    tr,
+                    proteins[[p]],
+                    pheno,
+                    method = phylolm.fx.pv,
+                    restrict.taxa = valid,
+                    restrict.ff = restrict.figfams,
+                    ...
                 )
             }
-            if (!only.return.names) {
-                if (core_method=="poms") {
-                    matrix.POMS(
-                        tr,
-                        proteins[[p]],
-                        abd.meta,
-                        restrict.taxa=valid,
-                        restrict.ff=restrict.figfams,
-                        ...
-                    )
-                } else if (core_method %in% c("permulate-lm", "permulate-rlm", "permutrate-lm", "permutrate-rlm")) {
-                    # handle multicore outside of this function
-                    pz.message(sprintf("Performing permulations with %s", core_method), level=1)
-		    method_parsed <- stringr::str_split_1(core_method, "-")
-		    regression_m <- method_parsed[2]
-		    perm_m <- method_parsed[1]
-                    cores <- opts('ncl')
-		    user_maxsize <- options(future.globals.maxSize = 2.0e9)
-		    on.exit(options(user_maxsize))
-                    future::plan(future::multisession, workers = cores)
-                    results <- repermulize::repermulize_wrapper(
-                        pheno,
-                        proteins[[p]],
-                        tr,
-			perm_method = perm_m,
-			regression_method = regression_m,
-                        real_pheno_sd = pheno_sd
-                    )
-                    future::plan(future::sequential)
-                    return(as.data.frame(results))
-                } else if (core_method=="lm") { 
-                    matrix.plm(
-                        tr,
-                        proteins[[p]],
-                        pheno,
-                        method = lm.fx.pv,
-                        restrict.taxa = valid,
-                        restrict.ff = restrict.figfams,
-                        ...
-                    )
-                } else {
-                    matrix.plm(tr,
-                        proteins[[p]],
-                        pheno,
-                        method = phylolm.fx.pv,
-                        restrict.taxa = valid,
-                        restrict.ff = restrict.figfams,
-                        ...)
-                    }
-                } else {
-                    restrict.figfams
-                }
-            }
-        )
-    }
+        } else {
+            restrict.figfams
+        }
+    })
+}
 
 #' Perform POMS modeling for a single clade.
 #'
