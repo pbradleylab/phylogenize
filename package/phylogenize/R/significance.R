@@ -48,18 +48,27 @@ nonequiv.pos.sig <- function(results,
                 }
                 qv <- method(tested)
                 fx_sig <- nw(qv <= qcut_sig)
+                neq_sig <- valid
                 if (min_fx > 0) {
-                    neq <- apply(
-                        unlist(r[, valid, drop = FALSE]),
-                        2,
-                        function(x) equiv_test(x[1], x[3], x[4], min_fx)
-                    )
-                    neq_qv <- method(neq)
-                    neq_sig <- nw(neq_qv > qcut_eq)
-                } else {
-                    neq_sig <- valid
+                    if (nrow(x) > 4) {
+                        neq <- apply(
+                            unlist(r[, valid, drop = FALSE]),
+                            2,
+                            function(x) equiv_test(x[1], x[3], x[4], min_fx)
+                        )
+                        neq_qv <- method(neq)
+                        neq_sig <- nw(neq_qv > qcut_eq)
+                    } else {
+                        pz.warning(
+                            "Cannot perform non-equivalence test with permulation/permutration"
+                        )
+                    }
                 }
-                which_pos <- nw((dir * unlist(r[1, valid, drop = FALSE])) > 0)
+                fx_sizes <- unlist(r[1, valid, drop=FALSE])
+                if ("matrix" %in% class(fx_sizes)) {
+                    fx_sizes <- fx_sizes[1, ]
+                }
+                which_pos <- nw((dir * fx_sizes) > 0)
                 Reduce(intersect, list(fx_sig, neq_sig, which_pos))
             },
             error = function(e) character(0)
