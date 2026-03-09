@@ -40,8 +40,8 @@ nonequiv.pos.sig <- function(results,
         if (!is.null(ex)) {
             valid <- setdiff(valid, ex)
         }
-        tryCatch(
-            {
+        #tryCatch(
+        #    {
                 tested <- na.omit(unlist(r[2, valid, drop = FALSE]))
                 if ("matrix" %in% class(tested)) {
                     tested <- tested[1, ]
@@ -50,7 +50,7 @@ nonequiv.pos.sig <- function(results,
                 fx_sig <- nw(qv <= qcut_sig)
                 neq_sig <- valid
                 if (min_fx > 0) {
-                    if (nrow(x) > 4) {
+                    if (nrow(r) >= 4) {
                         neq <- apply(
                             unlist(r[, valid, drop = FALSE]),
                             2,
@@ -70,9 +70,9 @@ nonequiv.pos.sig <- function(results,
                 }
                 which_pos <- nw((dir * fx_sizes) > 0)
                 Reduce(intersect, list(fx_sig, neq_sig, which_pos))
-            },
-            error = function(e) character(0)
-        )
+          #  },
+          #  error = function(e) character(0)
+        #)
     }
     mapply(sig_fxn, results, exclude, SIMPLIFY=FALSE)
 }
@@ -88,10 +88,10 @@ nonequiv.pos.sig <- function(results,
 equiv_test <- function(fx, se, df, min_fx=0.25) {
     # test 1: H0 is fx >= min_fx, HA is fx < min_fx
     # test 2: H0 is fx <= -min_fx, HA is fx > -min_fx
-    t_stat1 <- -(fx - min_fx) / se # more negative as fx >> min_fx
-    t_stat2 <- -(-min_fx - fx) / se # more negative as fx << -min_fx
-    pv1 <- pt(t_stat1, df, lower.tail=FALSE) * 2
-    pv2 <- pt(t_stat2, df, lower.tail=FALSE) * 2
+    t_stat1 <- (fx - min_fx) / se # more positive as fx >> min_fx
+    t_stat2 <- (-min_fx - fx) / se # more positive as fx << -min_fx
+    pv1 <- pt(t_stat1, df, lower.tail=FALSE)
+    pv2 <- pt(t_stat2, df, lower.tail=FALSE)
     min(pv1, pv2)
 }
 
