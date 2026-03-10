@@ -5,7 +5,7 @@
 #'   cutoff (inner), significant hits to test for enrichment.
 #' @param signs List giving, per taxonomic group, signs of all gene effect
 #'   sizes.
-#' @param pid_to_ko Protein ID to KO mapping table (columns "node_head",
+#' @param pid_to_ko Protein ID to KO mapping table (columns "gene",
 #'   "accession").
 #' @param dirxn Count only genes with this effect sign as significant.
 #' @param kegg_pw Optional downloaded data for KEGG pathways.
@@ -82,7 +82,7 @@ enrich_downloaded_KEGG <- function(KOs, background, qCut, downloaded, ...) {
 #'
 #' @param sc String vector of significant genes.
 #' @param sn Numeric vector of effect size signs.
-#' @param p2k Protein ID to KO mapping table (columns "node_head", "accession").
+#' @param p2k Protein ID to KO mapping table (columns "gene", "accession").
 #' @param cn String value to go in the "cutoff" column.
 #' @param d Integer (1 or -1) giving effect size directions to keep.
 #' @param tg String value to go in the "taxon" column.
@@ -97,7 +97,7 @@ kegg.enrich.single <- function(sc, sn, p2k, cn="test_cutoff",
                                kegg_mod_data=NULL) {
     genes <- intersect(sc, nw(sn == d))
     if (is.null(background)) { background <- unique(p2k[["accession"]]) }
-    KOs <- unique(dplyr::filter(p2k, node_head %in% genes)[["accession"]])
+    KOs <- unique(dplyr::filter(p2k, gene %in% genes)[["accession"]])
     
     if (is.null(kegg_pw_data)) {
         pwy_enr <- clusterProfiler::enrichKEGG(gene = KOs,

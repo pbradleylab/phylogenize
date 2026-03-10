@@ -263,11 +263,11 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
                                          stroke.scale=0.3,
                                          units='%') {
     if (is.null(plotted.pheno.trees)) {
-        pz.message("warning: no trees found")
+        pz.warning("no trees found")
         return(NULL)
     }
     if (length(plotted.pheno.trees) == 0) {
-        pz.message("warning: no trees found")
+        pz.warning("no trees found")
         return(NULL)
     }
 
@@ -280,7 +280,7 @@ plot.labeled.phenotype.trees <- function(plotted.pheno.trees,
 	    tryCatch(
 		     plots[[name]] <- interactive.plot(plotted_tree, fn, name, label),
 		     error = function(e) {
-			    pz.message(e)
+			    pz.warning(e)
 			    plots[[name]] <- non.interactive.plot(plotted_tree, fn, name, label)
 	    })
     }
@@ -368,8 +368,10 @@ single.cluster.plot <- function(gene.presence,
                                 plotted.tree,
                                 taxon,
                                 verbose=FALSE,
+                                rel_pd_cut=c(-Inf,0.1,0.3,Inf),
                                 ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
+    if ((is.null(sig.genes)) || (length(sig.genes) == 0)) return(NULL)
     sig.bin <- gene.presence[intersect(rownames(gene.presence),
                                        sig.genes), , drop=FALSE]
     if (is.null(dim(sig.bin))) {
@@ -399,14 +401,42 @@ single.cluster.plot <- function(gene.presence,
     
     if (length(sig.genes) == 0) { return(p) }
     if (length(sig.genes) > 1) {
-        clust <- hclust(dist(sig.bin, method = "canberra"))
-        sig.ord <- sparseMelt(t(sig.bin)[, clust$order, drop=FALSE])
-        sig.ord$gene <- factor(sig.ord$gene, levels=clust$labels[clust$order])
+        if (length(sig.genes) >= 10) {
+            # cluster within three relative PD groups
+            rel_pds <- apply(sig.bin, 1, \(x) get_rel_pd(x, tree, flip_sign = TRUE))
+            #pd_groups <- cut(rank(rel_pds), 3)
+            pd_groups <- cut(rel_pds, rel_pd_cut)
+            names(pd_groups) <- names(rel_pds)
+            within_group_orders <- lapply(levels(pd_groups), \(pd_g) {
+                these_genes <- names(pd_groups)[(which(pd_groups==pd_g))]
+                if (length(these_genes) < 2) {
+                    return(these_genes)
+                } else {
+                    this_clust <- hclust(dist(1 * (sig.bin[these_genes, ] >= 0.05), method='canberra'))
+                    return(this_clust$labels[this_clust$order])
+                }
+            })
+            overall_order <- Reduce(c, within_group_orders)
+            sig.ord <- tibble::as_tibble(as.matrix(sig.bin), rownames="gene") |>
+                tidyr::pivot_longer(!gene, names_to="id") |>
+                relocate("id") |>
+                mutate(gene = factor(gene, levels=overall_order))
+        } else {
+            pd_groups <- factor(rep(1, nrow(sig.bin)))
+            clust <- hclust(dist(sig.bin, method = "canberra"))
+            sig.ord <- tibble::as_tibble(as.matrix(sig.bin), rownames = "gene") |>
+                tidyr::pivot_longer(!gene, names_to = "id") |>
+                relocate("id") |>
+                mutate(gene = factor(gene, levels = clust$labels[clust$order]))
+        }
     } else {
-        sig.ord <- sparseMelt(t(sig.bin))
-        sig.ord <- sig.ord[order(sig.ord[, 3]), , drop=FALSE]
-        sig.ord$gene <- factor(sig.ord$gene)
+        pd_groups <- factor(rep(1, nrow(sig.bin)))
+        sig.ord <- tibble::as_tibble(as.matrix(sig.bin), rownames = "gene") |>
+            tidyr::pivot_longer(!gene, names_to = "id") |>
+            relocate("id") |>
+            mutate(gene = factor(gene))
     }
+    sig.ord <- arrange(sig.ord, gene)
     tmp <- ggtree::facet_plot(p,
                               panel=paste0('heatmap: ', taxon),
                               data=sig.ord,
@@ -420,6 +450,28 @@ single.cluster.plot <- function(gene.presence,
         ggplot2::labs(color=opts("which_phenotype"), fill="gene presence") +
         ggplot2::scale_shape(guide="none")
     tmp
+}
+
+#' Get relative PD for a gene given a tree.
+#' Relative PD here means dividing by the total branch length of the original tree.
+#' If flip_sign is TRUE, will return PD of the minor allele.
+get_rel_pd <- function(gene, tree, flip_sign=TRUE) {
+    gene_bin <- 1 * (gene >= 0.05) # hardcoded for now
+    if (flip_sign) {
+        if (mean(gene_bin) > 0.5) {
+            gene_bin <- 1 - gene_bin
+        }
+    }
+    taxa_present <- names(which(gene_bin > 0))
+    taxa_in_common <- intersect(taxa_present, tree$tip.label)
+    if (length(taxa_in_common) == 0) {
+        pz.warning("no tips in common with tree")
+        return(NA)
+    }
+    subt <- castor::get_subtree_with_tips(tree, taxa_in_common)$subtree
+    total_pd <- sum(tree$edge.length)
+    gene_pd <- sum(subt$edge.length)
+    return(gene_pd/total_pd)
 }
 
 
@@ -575,7 +627,7 @@ gg.cont.tree <- function(phy,
     
     if(!is.null(kept_tips)) {
         if(is.null(reduced.phy)) {reduced.phy <- fix.tree(kept_tips)}
-        pz.message("getting continuous trait ancestry")
+        pz.message("getting continuous trait ancestry", level=2)
         if (is.null(reduced.phy)) {
             pz.warning(paste0("all tips were dropped from ", cName))
             return(NA)
@@ -640,7 +692,7 @@ gg.cont.tree <- function(phy,
                     disp = cDisplay))
     } else {
         pz.message(paste0(cName, " has been removed from the phylogenetic ",
-                          "trees: No phenotype found associated"))
+                          "trees: No phenotype found associated"), level=2)
         return(NA)
     }
 }

@@ -41,16 +41,17 @@ permulate <- function(
     bandwidth <- bw.SJ(pheno)
   }
   rt <- apply(random_traits, 2, \(x) {
+    rx <- rank(x, ties.method = "random")
     if (use_density) {
       resampled_pheno <- sample(pheno, replace = TRUE) +
       rnorm(length(pheno), mean = 0, sd = bandwidth)
-      tr <- sort(resampled_pheno)[rank(x, ties.method = "random")]
+      tr <- sort(resampled_pheno)[rx]
     } else {
-      tr <- sort(pheno)[rank(x, ties.method = "random")]
+      tr <- sort(pheno)[rx]
     }
     names(tr) <- names(x)
     if (!is.null(pheno_sd)) {
-      tr_sd <- pheno_sd[names(sort(pheno))[rank(x, ties.method = "random")]]
+      tr_sd <- pheno_sd[names(sort(pheno))[rx]]
       names(tr_sd) <- names(x)
       return(list(tr = tr, s = tr_sd))
     } else {
@@ -187,13 +188,16 @@ repermulize_test <- function(
     model_fit <- regress(realphenoPIC ~ genePIC - 1)
     model_coef <- summary(model_fit)$coefficients
   }, error = \(e) {
-    warning(paste0(e))
-    return(c(Estimate = NA, p.value = NA))
+    stop("Regression failed on real trait (note: can happen with rlm in certain cases)")
   })
   model_fit <- regress(realphenoPIC ~ genePIC - 1) # nb, leave out intercept in PIC
   model_coef <- summary(model_fit)$coefficients
   fg_tv <- model_coef[1, "t value"]
   fg_est <- model_coef[1, 1]
+  if (is.na(fg_tv) || is.na(fg_est)) {
+    warning("Regression failed")
+    return(c(Estimate = NA, p.value = NA))
+  }
   fg_df <- summary(model_fit)$df
   bg_tvs <- numeric(ncol(permPICs)) # empty vector to start
   permPICs <- permPICs[, sample(1:ncol(permPICs))] # "shuffle the deck" since we are using early stopping
@@ -219,8 +223,10 @@ repermulize_test <- function(
       test_tv <- abs(fg_tv)
     }
     running_pv <- mean(na.omit(null_tvs) >= test_tv)
-    if (running_pv > ((early_a / n_actual_tests) + early_c) / (1 + early_c)) {
-      break # early stopping rule
+    if (!is.na(running_pv)) {
+      if (running_pv > ((early_a / n_actual_tests) + early_c) / (1 + early_c)) {
+        break # early stopping rule
+      }
     }
   }
   if (approx_pvals) {
@@ -284,74 +290,119 @@ repermulize_wrapper <- function(
   verbose = TRUE,
   perm_method = "permulate",
   rank = FALSE,
+  chunk_size = 10,
+  use_futures = TRUE,
+  pb_type = "timer",
+  permulate_use_sd = FALSE,
   ...
 ) {
+  pbapply::pboptions(type = pb_type) # could be none, if running inside a big loop
+  # pick appropriate function
+  if (use_futures) {
+    pbl_fxn <- function(d, f) {
+      pbapply::pblapply(
+        d,
+        f,
+        cl = "future",
+        future.scheduling = structure(
+          chunk_size,
+          ordering = "random",
+          future.seed = TRUE
+        )
+      )
+    }
+  } else {
+    pbl_fxn <- function(d, f) {
+      pbapply::pblapply(d, f)
+    }
+  }
+  
   # make sure same species represented in tree, genes, and phenotype
   tips <- intersect(real_tree$tip.label,
     intersect(colnames(real_genes), names(real_pheno)))
-  if (length(tips) < 3) {
-    stop(
-      "Too few tips remaining after matching gene matrix, phenotype, and tree"
-    )
-  }
-  real_genes <- real_genes[, tips]
-  reduced_tree <- ape::keep.tip(real_tree, tips)
-  real_pheno <- real_pheno[reduced_tree$tip.label] # put in same order as tree
-  if (!is.null(real_pheno_sd)) {
-    real_pheno_sd <- real_pheno_sd[reduced_tree$tip.label]
-  }
-
-  if (verbose) pz.message("Calculating real PICs...")
-  # calculate real PICs
-  if (!is.null(real_pheno_sd)) {
-    # use the actual SDs to best augment the tree
-    real_rescale <- add_uncertainty_to_tree(
-      reduced_tree,
-      real_pheno,
-      real_pheno_sd
-    )
-    real_rescaled_tree <- real_rescale$aug_tree
-  } else {
-    # still allow using an alternative model to capture, e.g., general measurement error
-    real_rescaled_tree <- get_best_model_fit(
-      real_pheno,
-      reduced_tree,
-      perm_model,
-      yield = "tree",
-      ub = ub,
-      lb = lb
-    )
-  }
-  if (is.null(real_PICs)) {
-      real_PICs <- order_pic_wrapper(real_rescaled_tree, real_pheno)
-  }
-  if (verbose) pz.message("Calculating fake PICs...")
-  if (is.null(real_pheno_sd)) perm_pheno_sd = NULL
-  if (is.null(perm_pheno)) {
-    if (just_scramble_PICs) {
-      perm_pheno <- NULL
-      perm_PICs <- Reduce(cbind, purrr::map(1:n, ~ sample(real_PICs)))
+    if (length(tips) < 3) {
+      stop(
+        "Too few tips remaining after matching gene matrix, phenotype, and tree"
+      )
+    }
+    real_genes <- real_genes[, tips]
+    reduced_tree <- ape::keep.tip(real_tree, tips)
+    real_pheno <- real_pheno[reduced_tree$tip.label] # put in same order as tree
+    if (!is.null(real_pheno_sd)) {
+      real_pheno_sd <- real_pheno_sd[reduced_tree$tip.label]
+    }
+    
+    if (verbose) pz.message("Calculating real PICs...")
+    # calculate real PICs
+    if (!is.null(real_pheno_sd)) {
+      # use the actual SDs to best augment the tree
+      real_rescale <- add_uncertainty_to_tree(
+        reduced_tree,
+        real_pheno,
+        real_pheno_sd
+      )
+      real_rescaled_tree <- real_rescale$aug_tree
     } else {
-      if (perm_method=="permulate") {
-        perm_pheno <- permulate(
-          real_pheno,
-          real_rescaled_tree,
-          n,
-          pheno_sd = NULL, # don't re-fit based on the standard deviation
-          p_model = "BM" # don't re-scale the tree since we're already doing that
-        )
-        
+      # still allow using an alternative model to capture, e.g., general measurement error
+      real_rescaled_tree <- get_best_model_fit(
+        real_pheno,
+        reduced_tree,
+        perm_model,
+        yield = "tree",
+        ub = ub,
+        lb = lb
+      )
+    }
+    if (is.null(real_PICs)) {
+      real_PICs <- order_pic_wrapper(real_rescaled_tree, real_pheno)
+    }
+    if (verbose) pz.message("Calculating fake PICs...")
+    if (is.null(real_pheno_sd)) perm_pheno_sd = NULL
+    if (is.null(perm_pheno)) {
+      if (just_scramble_PICs) {
+        perm_pheno <- NULL
+        perm_PICs <- Reduce(cbind, purrr::map(1:n, ~ sample(real_PICs)))
+      } else {
+        if (perm_method=="permulate") {
+          if (permulate_use_sd) {
+            psd <- real_pheno_sd
+          } else { psd <- NULL }
+          perm_pheno <- permulate(
+            real_pheno,
+            real_rescaled_tree,
+            n,
+            pheno_sd = psd,
+            p_model = "BM"
+          )
       } else if (perm_method=="permutrate") {
         perm_pheno <- permutrate(real_pheno, real_rescaled_tree, n, rank=rank)
       } else {
         stop(sprintf("unknown perm_method: %s", perm_method))
       }
-      perm_pheno <- perm_pheno[reduced_tree$tip.label, ]
-      # Don't use parallel for this -- doesn't seem to be worth the overhead
-      perm_PICs <- pbapply::pbapply(perm_pheno, 2, \(x) {
-					    order_pic_wrapper(real_rescaled_tree, x)
-      })
-    }
+      if (inherits(perm_pheno, "list")) {
+        perm_pheno <- lapply(perm_pheno, \(x) x[reduced_tree$tip.label, ])
+      } else {
+        perm_pheno <- perm_pheno[reduced_tree$tip.label, ]
+      }
+      if ((perm_method=="permulate") && permulate_use_sd) {
+        # re-fit tree to take into account permulated sd
+        indices <- (1:ncol(perm_pheno$tr))
+        perm_PIC_list <- pbl_fxn(indices, \(i) {
+          perm_rescaled_tree <- add_uncertainty_to_tree(
+            reduced_tree,
+            perm_pheno$tr[, i],
+            perm_pheno$s[, i],
+          )$aug_tree
+          order_pic_wrapper(perm_rescaled_tree, perm_pheno$tr[, i])
+        })
+        perm_PICs <- Reduce(cbind, perm_PIC_list)
+      } else {
+        # Don't use parallel for this -- doesn't seem to be worth the overhead
+        perm_PICs <- pbapply::pbapply(perm_pheno, 2, \(x) {
+          order_pic_wrapper(real_rescaled_tree, x)
+        })
+      }
+      }
   }
   
   # loop across genes, using futures to do parallel computing without requiring lots of memory
@@ -360,8 +411,8 @@ repermulize_wrapper <- function(
   names(named_indices) <- rownames(real_genes)
 
   if (verbose) message("Getting empirical p-values...")
-  pbapply::pboptions(type = "timer")
-  res <- pbapply::pblapply(
+
+  res <- pbl_fxn(
     named_indices,
     \(i) {
       if (genes_are_PICs) {
@@ -373,9 +424,7 @@ repermulize_wrapper <- function(
         repermulize_test(real_PICs, perm_PICs, g_pic, ...),
         error = function(e) { warning(paste(e)); c(Estimate=NA,p.value=NA) }
       )
-    },
-    cl = "future",
-    future.seed=TRUE
+    }
   )
 
   # Collect and convert to a more familiar format
@@ -442,10 +491,10 @@ density_estimate_pval <- function(bg_stats, fg_stat, bw=bw.SJ, ...) {
 #' @param phy Tree object to transform.
 #' @param pheno Named phenotype vector (numeric).
 #' @param sd Named vector of standard deviations around the means represented in `pheno`.
-#' @param lb In log10-space, the lower bound to search for the scale parameter.
-#' @param ub In log10-space, the upper bound to search for the scale parameter.
+#' @param optim_method Optimization method to use (default: "Nelder-Mead").
+#' @param ... Extra arguments to pass to 'optim'.
 #' @export add_uncertainty_to_tree
-add_uncertainty_to_tree <- function(phy, pheno, pheno_sd, lb = -3, ub = 3) {
+add_uncertainty_to_tree <- function(phy, pheno, pheno_sd, optim_method="Nelder-Mead", ...) {
   # make sure all aligned
   common_taxa <- na.omit(intersect(
     phy$tip.label,
@@ -457,25 +506,41 @@ add_uncertainty_to_tree <- function(phy, pheno, pheno_sd, lb = -3, ub = 3) {
 
   pheno_var_std <- (pheno_sd) / mean(pheno_sd)
 
-  best_scale <- optimize(
-    f = function(s) {
-      AIC_scale_and_augment(phy, pheno, pheno_var_std, s)
-    },
-    interval = 10**seq(lb, ub, 0.01)
+  logistic <- \(x) (1 / (1 + exp(-x)))
+
+  best_params <- optim(
+    c(0, 0),
+    \(v) {
+      AIC_scale_mix_and_augment(
+        phy, pheno, pheno_var_std, scale=10**v[1], mix=logistic(v[2])
+      )
+    }
   )
-  if (abs(best_scale$minimum - lb) <= 1e-5) {
-    warning("Scale parameter was close to the lower bound")
-  }
-  if (abs(best_scale$minimum - ub) <= 1e-5) {
-    warning("Scale parameter was close to the upper bound")
-  }
+  best_aug <- 10 ** (best_params$par[1])
+  best_mix <- logistic(best_params$par[2])
+  # note, should be standardized so mean is already 1
+  unif <- rep(1, length(pheno_var_std)) |> setNames(names(pheno_var_std))
+  best_mixed <- (best_mix * unif) + ((1 - best_mix) * pheno_var_std)
   aug_tree <- augment_tip_branch_lengths(
     phy,
-    pheno_var_std * best_scale$minimum
+    (best_mixed * best_aug)
   )
+  list(best_par = best_params$par, aug_tree = aug_tree)
 
-  list(best_scale = best_scale, aug_tree = aug_tree)
+}
 
+#' Helper function to compute best AIC for a given scaling of per-tip stdevs with mixture from a uniform distribution
+#' @export AIC_scale_and_augment
+AIC_scale_mix_and_augment <- function(phy, pheno, v, scale, mix=0, meas_err = FALSE) {
+  uni <- rep(mean(v), length(v)) |> setNames(names(v))
+  mixed <- (mix * uni) + ((1-mix) * v)
+  phy_aug <- augment_tip_branch_lengths(phy, mixed * scale)
+  AIC(phylolm::phylolm(
+    pheno ~ 1,
+    phy = phy_aug,
+    lower.bound = 0,
+    measurement_error = meas_err
+  ))
 }
 
 #' Helper function to compute best AIC for a given scaling of per-tip stdevs

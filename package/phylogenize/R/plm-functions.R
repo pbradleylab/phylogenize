@@ -33,97 +33,115 @@ result.wrapper.plm <- function(
     abd.meta = FALSE,
     poms = FALSE,
     pheno_sd = NULL,
-    ...) {
-        opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
-        core_method <- tolower(opts('core_method'))
-        lapply.across.names(taxa, function(p) {
-            message(p)
-            if (class(tree) == "phylo") {
-                tr <- tree
-            } else if (class(tree) == "list") {
-                tr <- tree[[p]]
-            } else {
-                stop("tree must be either an object of class phylo or a list")
-            }
-            valid <- Reduce(
-                intersect,
-                list(colnames(proteins[[p]]),
-                clusters[[p]],
-                tr$tip.label)
+    ...
+) {
+    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    core_method <- tolower(opts('core_method'))
+    lapply.across.names(taxa, function(p) {
+        message(p)
+        if (class(tree) == "phylo") {
+            tr <- tree
+        } else if (class(tree) == "list") {
+            tr <- tree[[p]]
+        } else {
+            stop("tree must be either an object of class phylo or a list")
+        }
+        valid <- Reduce(
+            intersect,
+            list(colnames(proteins[[p]]), clusters[[p]], tr$tip.label)
+        )
+        if (!is.null(pheno)) {
+            valid <- intersect(valid, names(pheno))
+        }
+        if (is.null(restrict.figfams)) {
+            restrict.figfams <- rownames(proteins[[p]])
+        } else {
+            restrict.figfams <- intersect(
+                rownames(proteins[[p]]),
+                restrict.figfams
             )
-            if (!is.null(pheno)) {
-                valid <- intersect(valid, names(pheno))
-            }
-            if (is.null(restrict.figfams)) {
-                restrict.figfams <- rownames(proteins[[p]])
+        }
+        if (drop.zero.var) {
+            fvar <- apply(proteins[[p]][, valid, drop = FALSE], 1, var)
+            message(paste0(
+                sprintf("%.01f", 100 * mean(na.omit(fvar == 0))),
+                "% dropped [no variance]"
+            ))
+            restrict.figfams <- intersect(
+                restrict.figfams,
+                rownames(proteins[[p]])[
+                    which(fvar > 0)
+                ]
+            )
+        }
+        if (!only.return.names) {
+            if (core_method == "poms") {
+                matrix.POMS(
+                    tr,
+                    proteins[[p]],
+                    abd.meta,
+                    restrict.taxa = valid,
+                    restrict.ff = restrict.figfams,
+                    ...
+                )
+            } else if (
+                core_method %in%
+                    c(
+                        "permulate-lm",
+                        "permulate-rlm",
+                        "permutrate-lm",
+                        "permutrate-rlm"
+                    )
+            ) {
+                # handle multicore outside of this function
+                pz.message(
+                    sprintf("Performing permulations with %s", core_method),
+                    level = 1
+                )
+                method_parsed <- stringr::str_split_1(core_method, "-")
+                regression_m <- method_parsed[2]
+                perm_m <- method_parsed[1]
+                cores <- opts('ncl')
+                user_maxsize <- options(future.globals.maxSize = 2.0e9)
+                on.exit(options(user_maxsize))
+                future::plan(future::multisession, workers = cores)
+                results <- repermulize::repermulize_wrapper(
+                    pheno,
+                    proteins[[p]],
+                    tr,
+                    perm_method = perm_m,
+                    regression_method = regression_m,
+                    real_pheno_sd = pheno_sd
+                )
+                future::plan(future::sequential)
+                return(as.data.frame(results))
+            } else if (core_method == "lm") {
+                matrix.plm(
+                    tr,
+                    proteins[[p]],
+                    pheno,
+                    method = lm.fx.pv,
+                    restrict.taxa = valid,
+                    restrict.ff = restrict.figfams,
+                    ...
+                )
             } else {
-                restrict.figfams <- intersect(rownames(proteins[[p]]),
-                restrict.figfams)
-            }
-            if (drop.zero.var) {
-                fvar <- apply(proteins[[p]][, valid, drop=FALSE], 1, var)
-                message(paste0(sprintf("%.01f",
-                100 * mean(na.omit(fvar == 0))),
-                "% dropped [no variance]"))
-                restrict.figfams <- intersect(
-                    restrict.figfams,
-                    rownames(proteins[[p]])[
-                        which(fvar > 0)
-                    ]
+                pz.warning(sprintf("Core method %s not found; reverting to regular phylolm", core_method))
+                matrix.plm(
+                    tr,
+                    proteins[[p]],
+                    pheno,
+                    method = phylolm.fx.pv,
+                    restrict.taxa = valid,
+                    restrict.ff = restrict.figfams,
+                    ...
                 )
             }
-            if (!only.return.names) {
-                if (core_method=="poms") {
-                    matrix.POMS(
-                        tr,
-                        proteins[[p]],
-                        abd.meta,
-                        restrict.taxa=valid,
-                        restrict.ff=restrict.figfams,
-                        ...
-                    )
-                } else if (core_method %in% c("permulate-lm", "permulate-rlm")) {
-                    # handle multicore outside of this function
-                    pz.message(sprintf("Performing permulations with %s", core_method))
-                    cores <- opts('ncl')
-                    model_method <- stats::lm
-                    if (core_method=="permulate-rlm") model_method <- MASS::rlm
-		            user_maxsize <- options(future.globals.maxSize = 2.0e9)
-		            on.exit(options(user_maxsize))
-                    future::plan(future::multisession, workers = cores)
-                    results <- repermulize::repermulize_wrapper(
-                        pheno,
-                        proteins[[p]],
-                        tr,
-                        real_pheno_sd = pheno_sd
-                    )
-                    future::plan(future::sequential)
-                    return(as.data.frame(results))
-                } else if (core_method=="lm") { 
-                    matrix.plm(
-                        tr,
-                        proteins[[p]],
-                        pheno,
-                        method = lm.fx.pv,
-                        restrict.taxa = valid,
-                        restrict.ff = restrict.figfams,
-                        ...
-                    )
-                } else {
-                    matrix.plm(tr,
-                        proteins[[p]],
-                        pheno,
-                        method = phylolm.fx.pv,
-                        restrict.taxa = valid,
-                        restrict.ff = restrict.figfams,
-                        ...)
-                    }
-                } else {
-                    restrict.figfams
-                }
-            }
-        )
-    }
+        } else {
+            restrict.figfams
+        }
+    })
+}
 
 #' Perform POMS modeling for a single clade.
 #'
@@ -1042,9 +1060,9 @@ calc.ess <- function(abd.meta,
 #' @param m Estimates of parameter of interest.
 #' @param s Standard errors of parameters of interest.
 #' @param nw Null weight (default=10).
-#' @param ashr_df Degrees of freedom (default=5)
+#' @param ashr_df Degrees of freedom (default=Inf)
 #' @return A vector giving shrunken estimates of parameter.
-ash_wrapper <- function(m, s, nw=10, ashr_df=5) {
+ash_wrapper <- function(m, s, nw=10, ashr_df=Inf) {
     ashr::ash(m, s,
             mixcompdist="halfuniform",
             prior="nullbiased",
@@ -1074,6 +1092,11 @@ ash_wrapper <- function(m, s, nw=10, ashr_df=5) {
 ashr.diff.abund <- function(abd.meta,
                             ...) {
   opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+  if (opts("error_to_file")) {
+    sink_for_externals <- file.path(opts('out_dir'), opts('error_file'))
+    sink(sink_for_externals)
+    on.exit(sink())
+  }
   categorical <- opts('categorical')
   envir <- opts('which_envir')
   E <- opts('env_column')
@@ -1244,9 +1267,11 @@ pz.error <- function(errtext, ...) {
     opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
         tryCatch({
-          cat(paste0(errtext, "\n"),
-              file = file.path(opts('out_dir'), "errmsg.txt"),
-              append = TRUE)
+          cat(
+            paste0(errtext, "\n"),
+            file = file.path(opts('out_dir'), opts('error_file')),
+            append = TRUE
+        )
           }, error=function(e) NULL)
         }
     stop(errtext)
@@ -1258,20 +1283,25 @@ pz.error <- function(errtext, ...) {
 #' \describe{
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
 #'   output to an error message file?}
+#'   \item{verbosity}{Integer (between 1-3). How verbosely should pz.message write to the console?}
 #'}
 #'
 #' @param errtext String: message text.
+#' @param level Level of verbosity (default: 1). If above the current level of verbosity, the message will be logged to a file (if appropriate) but not printed to console.
 #' @export
-pz.message <- function(msgtext, ...) {
+pz.message <- function(msgtext, level=1, ...) {
     opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    v <- opts("verbosity")
     if (opts('error_to_file')) {
         tryCatch({
-            cat(paste0(msgtext, '\n'),
-                file = file.path(opts('out_dir'), "errmsg.txt"),
-                append = TRUE)
+            cat(
+                paste0(msgtext, '\n'),
+                file = file.path(opts('out_dir'), opts('error_file')),
+                append = TRUE
+            )
         }, error=function(e) NULL)
     }
-    message(msgtext)
+    if (level <= v) message(msgtext)
 }
 
 #' Report a warning and optionally log it in errmsg.txt.
@@ -1288,9 +1318,11 @@ pz.warning <- function(msgtext, ...) {
     opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     if (opts('error_to_file')) {
         tryCatch({
-            cat(paste0(msgtext, '\n'),
-                file = file.path(opts('out_dir'), "errmsg.txt"),
-                append = TRUE)
+            cat(
+                paste0(msgtext, '\n'),
+                file = file.path(opts('out_dir'), opts('error_file')),
+                append = TRUE
+            )
         }, error=function(e) NULL)
     }
     warning(msgtext)
@@ -1370,7 +1402,7 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
     # keep track of which taxa should be dropped entirely
     to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)
     for (tx in taxa) {
-      pz.message(paste0("Processing taxon ", tx))
+      pz.message(paste0("Processing taxon ", tx), level=2)
         tips <- trees[[tx]]$tip.label
         colns <- colnames(gene.presence[[tx]])
         i <- na.omit(intersect(tips, colns))
@@ -1378,7 +1410,7 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
           mtx <- gene.presence[[tx]][, i, drop=FALSE]
 	  Max <- ncol(mtx) - Min
           g <- names(which((Matrix::rowSums(mtx > GMF) >= Min) & (Matrix::rowSums(mtx > GMF) <= Max)))
-	        pz.message(paste0("Retained ", length(g), " out of ", nrow(mtx), " genes..."))
+	        pz.message(paste0("Retained ", length(g), " out of ", nrow(mtx), " genes..."), level=2)
           gene.presence[[tx]] <- mtx[g, , drop=FALSE]
         }
 	    if ((length(i) == 0) || (length(g) == 0)) {

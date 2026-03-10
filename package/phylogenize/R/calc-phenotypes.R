@@ -9,6 +9,7 @@
 #' @export
 data_to_phenotypes <- function(save_data=FALSE, ...) {
     pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+    pz.message("  A) Reading data, metadata, and databases...")
     # Read in user-supplied data and metadata
     abd.meta <- read.abd.metadata(...)
     # Read in trees, gene presence/absence, taxonomy
@@ -19,6 +20,7 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
         abd.meta <- add.below.LOD(pz.db, abd.meta, ...)
         sanity.check.abundance(abd.meta$mtx, ...)
     }
+    pz.message("  B) Calculating phenotypes...")
     phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
     if (pz.options('quantile_normalize')) {
 	    phenotype_results <- quantile_normalize(phenotype_results)
@@ -33,7 +35,7 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
         pz.db$ntaxa <- length(pz.db$trees)
     }
     if (tolower(pz.options('core_method')) == "poms") {
-        pz.message("Saving abundance data to run POMS...")
+        pz.message("Saving abundance data to run POMS...", 2)
         save_data <- TRUE
     }
     if (save_data) return(list(
@@ -109,7 +111,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
             phenotype <- ess$ess
             phenoP <- ess$phenoP
         } else if (opts("which_phenotype") == "provided") {
-            p_tbl <- read_tsv(opts("phenotype_file"))
+            p_tbl <- readr::read_tsv(opts("phenotype_file"), show_col_types = FALSE)
             if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
                 phenotype <- tibble::deframe(p_tbl)
             } else { # perform shrinkage on the provided values w/ their stderrs
@@ -243,7 +245,7 @@ add.below.LOD <- function(pz.db, abd.meta, ...) {
     # Make sure still binary, if appropriate
     if ((opts('which_phenotype') != 'abundance') &&
         tolower(opts('core_method')) != "poms") {
-        pz.message("Binarizing input data...")
+        pz.message("Binarizing input data...", 2)
         # binarize to save memory usage since we care about pres/abs
         abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
     }
