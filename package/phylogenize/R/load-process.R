@@ -473,7 +473,6 @@ change.tree.tax.level <- function(tree, taxon, tax) {
     clean <- tax %>%
         dplyr::select(cluster, taxon, phylum) %>%
         dplyr::distinct()
-    pz.message(head(clean))
     # Drop empty values from the taxonomic level selected if they are not 
     clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
     # Arrange them so that the runtime is slightly less in the lookup

@@ -57,6 +57,7 @@ phylogenize <- function(do_cache=TRUE,
 #'   \code{?pz.options}), which can be overridden using the \code{...} argument.
 #'
 #' @param do_enr Run enrichment analysis. Can skip to save time (default: TRUE)
+#' @param do_POMS to run POMS method. (default: FALSE)
 #' @param force_return_data Return the input data and metadata, even if not
 #'   using POMS (default: FALSE).
 #' @param p.method Function that returns the effect size and p-value per gene
@@ -66,6 +67,7 @@ phylogenize <- function(do_cache=TRUE,
 #' @export
 phylogenize_core <- function(
         do_enr=TRUE,
+	do_POMS = FALSE,
         force_return_data=FALSE,
         p.method=phylogenize:::phylolm.fx.pv,
         ...
