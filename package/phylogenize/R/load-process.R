@@ -283,6 +283,7 @@ import.pz.db <- function(...) {
       mutate(class = ifelse(is.na(class), order, class)) %>%
       mutate(phylum = ifelse(is.na(phylum), class, phylum)) %>%
       mutate(domain = ifelse(is.na(domain), phylum, domain)) %>%
+      mutate(across(domain:genus, \(x) gsub(" ", "_", x))) %>%
       ungroup()
 
     gene.to.fxn <- readr::read_csv(
