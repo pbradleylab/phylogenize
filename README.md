@@ -54,31 +54,34 @@ sudo apt install fontconfig
 
 We have several premade databases that you can select from depending on what is expected to match your host's system. If you are unsure what database to use, then we recommend using GTDB as the default.
 
-| Environment        | Version | Database | Number of families | Number of species | Archaea Included? |
-|--------------------|---------|----------|--------------------|-------------------|-------------------|
-| barley rhizosphere | v1.0    | MGnify   | 23                 | 62                |                   |
-| chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |                   |
-| cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |                   |
-| multiple           | v226    | GlobDB   | 10906              | 306261            | True              |
-| honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |                   |
-| human gut          | v2.0.2  | MGnify   | 215                | 3445              |                   |
-| human oral         | v1.0.1  | MGnify   | 52                 | 260               |                   |
-| human skin         | v1.0    | MGnify   | 86                 | 552               |                   |
-| human vaginal      | v1.0    | MGnify   | 52                 | 189               |                   |
-| maize rhizosphere  | v1.0    | MGnify   | 153                | 268               |                   |
-| marine             | v2.0    | MGnify   | 1192               | 7408              | True              |
-| marine sediment    | v1.0    | MGnify   | 1569               | 4360              | True              |
-| mouse gut          | v1.0    | MGnify   | 136                | 1639              |                   |
-| non model fish gut | v2.0    | MGnify   | 60                 | 87                |                   |
-| pig gut            | v1.0    | MGnify   | 138                | 800               | True              |
-| sheep rumen        | v1.0    | MGnify   | 117                | 2122              |                   |
-| soil               | v1.0    | MGnify   | 1353               | 9122              | True              |
-| tomato rhizosphere | v1.0    | MGnify   | 153                | 268               | True              |
-| zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |                   |
+| Environment        | Version | Database | Number of families | Number of species | Archaea Included? | Zenodo |
+|--------------------|---------|----------|--------------------|-------------------|-------------------|--------|
+| barley rhizosphere | v1.0    | MGnify   | 23                 | 62                |                   |[here](https://zenodo.org/records/18672316)|
+| chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |                   |[here](https://zenodo.org/records/18706394)|
+| cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |                   | Coming Soon |
+| multiple           | v226    | GlobDB   | 10906              | 306261            | True              |[here](https://zenodo.org/records/18706772)|
+| honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |                   |[here](https://zenodo.org/records/18706413)|
+| human gut          | v2.0.2  | MGnify   | 215                | 3445              |                   |[here](https://zenodo.org/records/18706603)|
+| human oral         | v1.0.1  | MGnify   | 52                 | 260               |                   |[here](https://zenodo.org/records/18706578)|
+| human skin         | v1.0    | MGnify   | 86                 | 552               |                   |[here](https://zenodo.org/records/18706597)|
+| human vaginal      | v1.0    | MGnify   | 52                 | 189               |                   |[here](https://zenodo.org/records/18706478)|
+| maize rhizosphere  | v1.0    | MGnify   | 153                | 268               |                   |[here](https://zenodo.org/records/18706584)|
+| marine             | v2.0    | MGnify   | 1192               | 7408              | True              |[here](https://zenodo.org/records/18706676)|
+| marine sediment    | v1.0    | MGnify   | 1569               | 4360              | True              |[here] Coming Soon |
+| mouse gut          | v1.0    | MGnify   | 136                | 1639              |                   |[here](https://zenodo.org/records/18706664)|
+| non model fish gut | v2.0    | MGnify   | 60                 | 87                |                   |[here](https://zenodo.org/records/18706644)|
+| pig gut            | v1.0    | MGnify   | 138                | 800               | True              |[here](https://zenodo.org/records/18706629)|
+| sheep rumen        | v1.0    | MGnify   | 117                | 2122              |                   |[here](https://zenodo.org/records/18706500)|
+| soil               | v1.0    | MGnify   | 1353               | 9122              | True              |[here](https://zenodo.org/records/18707064)|
+| tomato rhizosphere | v1.0    | MGnify   | 153                | 268               | True              |[here](https://zenodo.org/records/18706452)|
+| zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |                   |[here](https://zenodo.org/records/18706621)|
 
-All databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
+### GlobDB v226 Special Note
+[GlobDB](https://globdb.org/) is a dereplicated database from multiple sources that are processed by Speth et al, 2025 (1). The project includes 14 genome consolidated resources: GTDB, mOTU, SPIRE, BCRBG, GEM, 13 MGnify Biome Mag catalogs, GOMC, SMAG, TPMC, cFMD, MRGM, HRGM2, sheep and goat gut microbiome compendium, genome catalog of anammox microbiotas, and GFS.
 
-Databases can be downloaded manually and decompressed from our Zenodo page [here](), or they can be downloaded and decompressed using Phylogenize2's `phylogenize::download.zenodo.db("your/html/link/here.zip")`. The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
+For phylogenize, all databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
+
+Databases can be downloaded manually and decompressed from our Zenodo pages in the table above. All the database files must be placed into a directory called `package/inst/extdata/`. A custom database can be generated using our snakemake workflow [here](https://github.com/pbradleylab/phylogenize-db-prep). 
 
 ## Preparing your data
 
@@ -190,3 +193,6 @@ render_core_report(
 ## Contact
 
 If you have questions or comments, please contact [support\@phylogenize.org](mailto:support@phylogenize.org). If Phylogenize2 is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!
+
+## Citations
+1. Daan R Speth, Nick Pullen, Samuel T N Aroney, Benjamin L Coltman, Jay Osvatic, Ben J Woodcroft, Thomas Rattei, Michael Wagner, GlobDB: a comprehensive species-dereplicated microbial genome resource, Bioinformatics Advances, Volume 5, Issue 1, 2025, vbaf280, https://doi.org/10.1093/bioadv/vbaf280
