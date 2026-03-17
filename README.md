@@ -67,7 +67,7 @@ We have several premade databases that you can select from depending on what is 
 | human vaginal      | v1.0    | MGnify   | 52                 | 189               |                   |[here](https://zenodo.org/records/18706478)|
 | maize rhizosphere  | v1.0    | MGnify   | 153                | 268               |                   |[here](https://zenodo.org/records/18706584)|
 | marine             | v2.0    | MGnify   | 1192               | 7408              | True              |[here](https://zenodo.org/records/18706676)|
-| marine sediment    | v1.0    | MGnify   | 1569               | 4360              | True              |[here] Coming Soon |
+| marine sediment    | v1.0    | MGnify   | 1569               | 4360              | True              | Coming Soon |
 | mouse gut          | v1.0    | MGnify   | 136                | 1639              |                   |[here](https://zenodo.org/records/18706664)|
 | non model fish gut | v2.0    | MGnify   | 60                 | 87                |                   |[here](https://zenodo.org/records/18706644)|
 | pig gut            | v1.0    | MGnify   | 138                | 800               | True              |[here](https://zenodo.org/records/18706629)|
