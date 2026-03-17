@@ -228,27 +228,37 @@ This table gives an overview of how many genes were significantly associated at
 an FDR of 5%.
 
 ```{r write_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
-
 signif_genes <- core[["list_signif"]]
 
 pos.sig.count <- purrr::map_dbl(core[["list_signif"]]$pos.sig, length)
 
 if ("neg.sig" %in% names(core[["list_signif"]])) {
-    neg.sig.count <- purrr::map_dbl(core[["list_signif"]]$neg.sig, length)
-    sig.count <- full_join(enframe(pos.sig.count, name="Taxon", value="Pos. Sig. Genes"),
-                           enframe(neg.sig.count, name="Taxon", value="Neg. Sig. Genes"),
-                           by="Taxon")
+  neg.sig.count <- purrr::map_dbl(core[["list_signif"]]$neg.sig, length)
+  sig.count <- full_join(
+    enframe(pos.sig.count, name = "Taxon", value = "Pos. Sig. Genes"),
+    enframe(neg.sig.count, name = "Taxon", value = "Neg. Sig. Genes"),
+    by = "Taxon"
+  )
 } else {
-    sig.count <- enframe(pos.sig.count, name="Taxon", value="Pos. Sig. Genes")
+  sig.count <- enframe(pos.sig.count, name = "Taxon", value = "Pos. Sig. Genes")
 }
 
 phylogenize::getClinDT(sig.count)
 
-write.csv(file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
-	  signif_genes[["pos.sig.descs"]])
-write.csv(file = file.path(pz.options('out_dir'), "all-results.csv"),
-          signif_genes[["results.matrix"]])
-
+write.csv(
+  file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
+  signif_genes[["pos.sig.descs"]]
+)
+if ("neg.sig" %in% names(core[["list_signif"]])) {
+  write.csv(
+    file = file.path(pz.options('out_dir'), "neg-sig-thresholded.csv"),
+    signif_genes[["neg.sig.descs"]]
+  )
+}
+write.csv(
+  file = file.path(pz.options('out_dir'), "all-results.csv"),
+  signif_genes[["results.matrix"]]
+)
 ```
 ## Gene association heat maps
 The left shows the phenotype painted on tips of the tree as above. The right
@@ -257,21 +267,40 @@ tips of the tree) and white points represent absence. Only
 significantly-associated genes are displayed. Genes are clustered from left to
 right by Jaccard dissimilarity, so genes with similar patterns of inheritance
 will form vertical stripes. Horizontal stripes may be visible for taxa that
-have particularly extreme phenotypes.
+have particularly extreme phenotypes. Positively-associated genes are plotted
+first, then negatively-associated genes.
 
 ```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=FALSE}
-valid_keys <- intersect(signif_genes[["phy.with.sigs"]], names(plotted.pheno.trees))
-valid_keys <- intersect(valid_keys, names(pz.db$gene.presence))
-valid_keys <- intersect(valid_keys, names(pz.db$trees))
+for (which_sign in c(1, -1)) {
+  if (which_sign==1) {
+    if ("phy.with.pos.sigs" %in% signif_genes) {
+      which_phy <- signif_genes[["phy.with.pos.sigs"]]
+      sig_thresh <- signif_genes[["pos.sig.thresh"]]
+    } else {
+      which_phy <- signif_genes[["phy.with.sigs"]]
+      sig_thresh <- signif_genes[["pos.sig.thresh"]]
+    }
+  } else {
+    if ("phy.with.neg.sigs" %in% signif_genes) {
+      which_phy <- signif_genes[["phy.with.neg.sigs"]]
+      sig_thresh <- signif_genes[["neg.sig.thresh"]]
+    } else {
+      break
+    }
+  }
+  valid_keys <- intersect(which_phy, names(plotted.pheno.trees))
+  valid_keys <- intersect(valid_keys, names(pz.db$gene.presence))
+  valid_keys <- intersect(valid_keys, names(pz.db$trees))
 
-cluster.plots <- mapply(single.cluster.plot,
-                        pz.db$gene.presence[valid_keys],
-                        signif_genes[["pos.sig.thresh"]][valid_keys],
-                        pz.db$trees[valid_keys],
-                        plotted.pheno.trees[valid_keys],
-                        valid_keys,
-                        SIMPLIFY = FALSE)
-lapply(cluster.plots, print)
+  cluster.plots <- mapply(single.cluster.plot,
+                          pz.db$gene.presence[valid_keys],
+                          sig_thresh[valid_keys],
+                          pz.db$trees[valid_keys],
+                          plotted.pheno.trees[valid_keys],
+                          valid_keys,
+                          SIMPLIFY = FALSE)
+  purrr::walk(cluster.plots, print)
+}
 
 ```
 
@@ -321,6 +350,7 @@ if (is.null(pz.options('relative_out_dir'))) {
 for (f in c("phenotype.tab",
             "all-results.csv",
             "pos-sig-thresholded.csv",
+            "neg-sig-thresholded.csv",
             "enr-table.csv",
             "enr-overlaps.csv",
             "enr-overlaps-sorted.csv")) {

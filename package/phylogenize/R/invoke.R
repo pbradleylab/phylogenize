@@ -57,6 +57,7 @@ phylogenize <- function(do_cache=TRUE,
 #'   \code{?pz.options}), which can be overridden using the \code{...} argument.
 #'
 #' @param do_enr Run enrichment analysis. Can skip to save time (default: TRUE)
+#' @param do_POMS to run POMS method. (default: FALSE)
 #' @param force_return_data Return the input data and metadata, even if not
 #'   using POMS (default: FALSE).
 #' @param p.method Function that returns the effect size and p-value per gene
@@ -66,16 +67,19 @@ phylogenize <- function(do_cache=TRUE,
 #' @export
 phylogenize_core <- function(
         do_enr=TRUE,
+	do_POMS = FALSE,
         force_return_data=FALSE,
         p.method=phylogenize:::phylolm.fx.pv,
         ...
 ) {
     opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     do_POMS <- (tolower(opts('core_method')) == "poms")
+    pz.message("I. Generating phenotypes...")
     list_pheno <- data_to_phenotypes(
         save_data = (!do_POMS || force_return_data),
         ...
     )
+    pz.message("II. Performing association tests...")
     list_signif <- get_all_associated_genes(
         list_pheno,
         p.method,
@@ -85,6 +89,7 @@ phylogenize_core <- function(
                     list_signif=list_signif,
                     options=opts))
     }
+    pz.message("III. Performing enrichment tests...")
     enr_tbls <- get_enrichment_tbls(list_signif[["signif"]],
                                     list_signif[["signs"]],
                                     list_pheno[["pz.db"]],
@@ -92,6 +97,7 @@ phylogenize_core <- function(
                                     export=TRUE,
                                     print_out=TRUE,
                                     ...)
+    pz.message("Done!")
     return(list(list_pheno=list_pheno,
                 list_signif=list_signif,
                 enr_tbls=enr_tbls,
@@ -194,53 +200,55 @@ augment_with_enrichments <- function(core) {
 #' @param ... Parameters to override defaults.
 #' @export
 get_all_associated_genes <- function(list_pheno,
-                                     p.method=phylolm.fx.pv,
-                                     ...) {
-    pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
-    do_POMS <- (tolower(pz.options('core_method')) == "poms")
-    spec_taxa <- pz.options('only_specific_taxa')
-    if (!do_POMS) {
-        phenotype <- list_pheno$phenotype_results$phenotype
-        taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
-	pz.message(paste0("Valid taxa: ", paste(taxaN, collapse=", ")))
-        if (!is.null(spec_taxa)) { taxaN <- intersect(taxaN, spec_taxa )}
-	if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
-        if (pz.options('ncl') > 1) {
-            results <- result.wrapper.plm(taxa=taxaN,
-                                          pheno=phenotype,
-                                          tree=list_pheno$pz.db$trees[taxaN],
-                                          clusters=list_pheno$pz.db$species[taxaN],
-                                          proteins=list_pheno$pz.db$gene.presence[taxaN],
-                                          method=p.method,
-                                          ncl=pz.options('ncl'))
+    p.method=phylolm.fx.pv,
+    ...) {
+        pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
+        do_POMS <- (tolower(pz.options('core_method')) == "poms")
+        spec_taxa <- pz.options('only_specific_taxa')
+        if (!do_POMS) {
+            phenotype <- list_pheno$phenotype_results$phenotype
+            taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
+            pz.message(paste0("All valid taxa: ", paste(taxaN, collapse = ", ")), level = 2)
+            if (!is.null(spec_taxa)) { taxaN <- intersect(taxaN, spec_taxa )}
+            pz.message(paste0("Valid taxa (after filtering): ", paste(taxaN, collapse=", ")), level=1)
+            if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
+            if (pz.options('ncl') > 1) {
+                results <- result.wrapper.plm(taxa=taxaN,
+                    pheno=phenotype,
+                    tree=list_pheno$pz.db$trees[taxaN],
+                    clusters=list_pheno$pz.db$species[taxaN],
+                    proteins=list_pheno$pz.db$gene.presence[taxaN],
+                    method=p.method,
+                    ncl=pz.options('ncl'))
+            } else {
+                results <- mapply(nonparallel.results.generator,
+                    list_pheno$pz.db$gene.presence[taxaN],
+                    list_pheno$pz.db$trees[taxaN],
+                    list_pheno$pz.db$species[taxaN],
+                    as.list(taxaN),
+                    MoreArgs=list(pheno=phenotype,
+                        method=p.method,
+                        use.for.loop=FALSE),
+                        SIMPLIFY=FALSE)
+            }
         } else {
-            results <- mapply(nonparallel.results.generator,
-                              list_pheno$pz.db$gene.presence[taxaN],
-                              list_pheno$pz.db$trees[taxaN],
-                              list_pheno$pz.db$species[taxaN],
-                              as.list(taxaN),
-                              MoreArgs=list(pheno=phenotype,
-                                            method=p.method,
-                                            use.for.loop=FALSE),
-                              SIMPLIFY=FALSE)
+            taxaN <- names(list_pheno$pz.db$species)
+            pz.message(paste0("All valid taxa: ", paste(taxaN, collapse = ", ")), level = 2)
+            if (!is.null(spec_taxa)) {
+                taxaN <- intersect(taxaN, spec_taxa)
+            }
+            pz.message(paste0("Valid taxa: ", paste(taxaN, collapse=", ")), level=1)
+            if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
+            results <- result.wrapper.plm(taxa=taxaN,
+                pheno=NULL,
+                tree=list_pheno$pz.db$trees[taxaN],
+                clusters=list_pheno$pz.db$species[taxaN],
+                proteins=list_pheno$pz.db$gene.presence[taxaN],
+                method=p.method,
+                poms=TRUE,
+                abd.meta=list_pheno$abd.meta
+            )
         }
-    } else {
-        taxaN <- names(list_pheno$pz.db$species)
-	pz.message(paste0("Valid taxa: ", paste(taxaN, collapse=", ")))
-        if (!is.null(spec_taxa)) {
-            taxaN <- intersect(taxaN, spec_taxa)
-        }
-	if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
-        results <- result.wrapper.plm(taxa=taxaN,
-                                      pheno=NULL,
-                                      tree=list_pheno$pz.db$trees[taxaN],
-                                      clusters=list_pheno$pz.db$species[taxaN],
-                                      proteins=list_pheno$pz.db$gene.presence[taxaN],
-                                      method=p.method,
-                                      poms=TRUE,
-                                      abd.meta=list_pheno$abd.meta
-        )
-    }
     # trim out any that didn't get dropped
     result_lens <- vapply(results, length, 1L)
     results <- results[names(which(na.omit(result_lens>0)))]
@@ -273,19 +281,33 @@ get_signif_associated_genes <- function(pz.db,
     pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs,
                                           pos.sig.thresh,
                                           pz.db$gene.to.fxn)
+        neg.sig.descs <- add.sig.descs(phy.with.sigs, neg.sig, pz.db$gene.to.fxn)
+        neg.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, neg.sig, ...)
+        neg.sig.thresh.descs <- add.sig.descs(
+            phy.with.sigs,
+            neg.sig.thresh,
+            pz.db$gene.to.fxn
+        )
     # recalculate, since some of these may go away
-    phy.with.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
+    phy.with.pos.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
+    phy.with.neg.sigs <- names(which(sapply(neg.sig.thresh, length) > 0))
+    phy.with.sigs <- union(phy.with.pos.sigs, phy.with.neg.sigs)
     return(list(
-        results=results, #1
-        signif=signif,   #2
-        signs=signs,     #3
-        pos.sig=pos.sig, #4
-        results.matrix=results.matrix,             #5
-        phy.with.sigs=phy.with.sigs,               #6
-        pos.sig.descs=pos.sig.descs,               #7
-        pos.sig.thresh=pos.sig.thresh,             #8
-        pos.sig.thresh.descs=pos.sig.thresh.descs, #9
-        neg.sig=neg.sig                            #10
+        results = results, #1
+        signif = signif, #2
+        signs = signs, #3
+        pos.sig = pos.sig, #4
+        results.matrix = results.matrix, #5
+        phy.with.sigs = phy.with.sigs, #6
+        pos.sig.descs = pos.sig.descs, #7
+        pos.sig.thresh = pos.sig.thresh, #8
+        pos.sig.thresh.descs = pos.sig.thresh.descs, #9
+        neg.sig = neg.sig, #10
+        neg.sig.descs = neg.sig.descs, #11
+        neg.sig.thresh = neg.sig.thresh, #12
+        neg.sig.thresh.descs = neg.sig.thresh.descs, #13
+        phy.with.pos.sigs = phy.with.pos.sigs, #14
+        phy.with.neg.sigs = phy.with.neg.sigs #15
     ))
 }
 

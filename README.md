@@ -69,7 +69,7 @@ We have several premade databases that you can select from depending on what is 
 | pig gut            | v1.0    | MGnify   | 138                | 800               |
 | sheep rumen        | v1.0    | MGnify   | 117                | 2122              |
 | zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |
-| mixed environment  | v214    | GTDB     | 3003               | 43058             |
+| global             |         | GlobDB   |                    |                   |
 
 All databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
 
@@ -77,15 +77,21 @@ Databases can be downloaded manually and decompressed from our Zenodo page [here
 
 ## Preparing your data
 
-If you are using shotgun metagenomes, you will need to first quantify species. The species definitions and names must match the database you plan to use. We recommend using Kraken2/Bracken with one of the following databases:
+If you are using shotgun metagenomes, you will need to first quantify species abundances. The species definitions and names must match the database you plan to use. We recommend using Kraken2 with Bracken, as there are Kraken2 databases for every MGnify database. (Make sure that the version numbers match!) For example:
 
- - UHGG v1.0 Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v1.0/uhgg_kraken2-db/
- - GTDB v202 Kraken2 database: http://ftp.tue.mpg.de/ebio/projects/struo2/GTDB_release202/kraken2/
-    * Thanks to Nick Youngblut who generated this database using [Struo2](https://github.com/leylabmpi/Struo2).
-  
-An example workflow for UHGG written in Snakemake can be seen under `shotgun_kraken2_example`. (Note that the names in the UHGG v1.0 database does not exactly match the database used in Phylogenize2, so they get processed further in `read-bracken.R`. We will make this easier in a future release.)
+ - Human gut v2.0.2 Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/human-gut/v2.0.2/kraken2_db_uhgg_v2.0.2/
+ - Mouse gut Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse-gut/v1.0/kraken2_db_mouse-gut_v1.0/
+ - Marine Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine/v2.0/kraken2_db_marine_v2.0/
 
-Finally, we also recommend that you merge any technical replicates at this point, as leaving in multiple measurements per experimental unit will lead to overconfident predictions. `read-bracken.R` has an example of how to do this using run info downloaded from the SRA (provided as an example).
+An example workflow for UHGG written in Snakemake can be seen under `shotgun_kraken2_example`.
+
+Finally, you will want to make the taxon names from Bracken match the IDs in Phylogenize2, and also to merge any technical replicates for the same biological sample (as these will lead to overconfident predictions). There is a script to perform this under `shotgun_kraken2_example` called `parse-bracken.R`. You can run this script as follows:
+
+```
+Rscript parse_bracken.R -t [path to taxonomy file] -i [path to bracken output files] -o [path to output tab-separated file] -m [path to metadata file]
+```
+
+The last option (`-m`) is optional, but allows you to provide a tab-separated file with "sample" and "run" columns that will merge any runs belonging to the same sample. The taxonomy file provided should be the one in the Phylogenize2 database that you are using (e.g. `mouse-gut-taxonomy.csv`). (If you are having trouble finding the path where a database was installed, try looking under the directory where Phylogenize2 was installed, which you should be able to see by running `system.file(package="phylogenize")` in R.)
 
 ## Running Phylogenize2
 
