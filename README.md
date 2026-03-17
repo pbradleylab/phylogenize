@@ -67,7 +67,7 @@ We have several premade databases that you can select from depending on what is 
 | human vaginal      | v1.0    | MGnify   | 52                 | 189               |                   |
 | maize rhizosphere  | v1.0    | MGnify   | 153                | 268               |                   |
 | marine             | v2.0    | MGnify   | 1192               | 7408              | True              |
-| marine sediment    | v1.0    | MGnify   | 1192               | 7408              | True              |
+| marine sediment    | v1.0    | MGnify   | 1569               | 4360              | True              |
 | mouse gut          | v1.0    | MGnify   | 136                | 1639              |                   |
 | non model fish gut | v2.0    | MGnify   | 60                 | 87                |                   |
 | pig gut            | v1.0    | MGnify   | 138                | 800               | True              |
