@@ -56,9 +56,9 @@ We have several premade databases that you can select from depending on what is 
 
 | Environment        | Version | Database | Number of families | Number of species | Archaea Included? | Zenodo |
 |--------------------|---------|----------|--------------------|-------------------|-------------------|--------|
-| barley rhizosphere | v1.0    | MGnify   | 23                 | 62                |                   |[here](https://zenodo.org/records/18672316)|
+| barley rhizosphere | v2.0    | MGnify   | 34                 | 66                |                   |[here](https://zenodo.org/records/18672316)|
 | chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |                   |[here](https://zenodo.org/records/18706394)|
-| cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |                   | Coming Soon |
+| cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |                   |[here](https://zenodo.org/records/19075302)|
 | multiple           | v226    | GlobDB   | 10906              | 306261            | True              |[here](https://zenodo.org/records/18706772)|
 | honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |                   |[here](https://zenodo.org/records/18706413)|
 | human gut          | v2.0.2  | MGnify   | 215                | 3445              |                   |[here](https://zenodo.org/records/18706603)|
@@ -67,7 +67,7 @@ We have several premade databases that you can select from depending on what is 
 | human vaginal      | v1.0    | MGnify   | 52                 | 189               |                   |[here](https://zenodo.org/records/18706478)|
 | maize rhizosphere  | v1.0    | MGnify   | 153                | 268               |                   |[here](https://zenodo.org/records/18706584)|
 | marine             | v2.0    | MGnify   | 1192               | 7408              | True              |[here](https://zenodo.org/records/18706676)|
-| marine sediment    | v1.0    | MGnify   | 1569               | 4360              | True              | Coming Soon |
+| marine sediment    | v1.0    | MGnify   | 1571               | 4362              | True              | Coming Soon |
 | mouse gut          | v1.0    | MGnify   | 136                | 1639              |                   |[here](https://zenodo.org/records/18706664)|
 | non model fish gut | v2.0    | MGnify   | 60                 | 87                |                   |[here](https://zenodo.org/records/18706644)|
 | pig gut            | v1.0    | MGnify   | 138                | 800               | True              |[here](https://zenodo.org/records/18706629)|
@@ -81,7 +81,7 @@ We have several premade databases that you can select from depending on what is 
 
 For phylogenize, all databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
 
-Databases can be downloaded manually and decompressed from our Zenodo pages in the table above. All the database files must be placed into a directory called `package/inst/extdata/`. A custom database can be generated using our snakemake workflow [here](https://github.com/pbradleylab/phylogenize-db-prep). 
+Databases can be downloaded manually and decompressed from our Zenodo pages in the table above. All the database files must be placed into a directory called `package/inst/extdata/`. A custom database can be generated using our snakemake workflow [here](https://github.com/pbradleylab/phylogenize-db-prep). Older database versions can also be located on the Zenodo in the phylogenize community.
 
 ## Preparing your data
 
@@ -91,13 +91,14 @@ If you are using shotgun metagenomes, you will need to first quantify species ab
  - Mouse gut Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse-gut/v1.0/kraken2_db_mouse-gut_v1.0/
  - Marine Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine/v2.0/kraken2_db_marine_v2.0/
 
-An example workflow for UHGG written in Snakemake can be seen under `shotgun_kraken2_example`.
+To use GlobDB, you will need to run taxonomic assignment using Sylph using GlobDB's pregenerated Sylph database.
 
-Finally, you will want to make the taxon names from Bracken match the IDs in Phylogenize2, and also to merge any technical replicates for the same biological sample (as these will lead to overconfident predictions). There is a script to perform this under `shotgun_kraken2_example` called `parse-bracken.R`. You can run this script as follows:
+Finally, you will want to make the taxon names from Bracken match the IDs in Phylogenize2. You can check this by seeing if the sampleid column's values match the values in the selected databases `cluster` column in the taxonomy file (i.e mouse-gut-taxonomy.csv). Additionally, you may wish to merge any technical replicates for the same biological sample (as these will lead to overconfident predictions). There is a script to perform this under `shotgun_kraken2_example` called `parse-bracken.R`. You can run this script as follows:
 
 ```
 Rscript parse_bracken.R -t [path to taxonomy file] -i [path to bracken output files] -o [path to output tab-separated file] -m [path to metadata file]
 ```
+
 
 The last option (`-m`) is optional, but allows you to provide a tab-separated file with "sample" and "run" columns that will merge any runs belonging to the same sample. The taxonomy file provided should be the one in the Phylogenize2 database that you are using (e.g. `mouse-gut-taxonomy.csv`). (If you are having trouble finding the path where a database was installed, try looking under the directory where Phylogenize2 was installed, which you should be able to see by running `system.file(package="phylogenize")` in R.)
 
