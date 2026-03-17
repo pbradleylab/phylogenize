@@ -54,22 +54,27 @@ sudo apt install fontconfig
 
 We have several premade databases that you can select from depending on what is expected to match your host's system. If you are unsure what database to use, then we recommend using GTDB as the default.
 
-| Environment        | Version | Database | Number of families | Number of species |
-|--------------------|---------|----------|--------------------|-------------------|
-| chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |
-| cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |
-| honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |
-| human gut          | v2.0.2  | MGnify   | 215                | 3445              |
-| human oral         | v1.0.1  | MGnify   | 52                 | 260               |
-| human vaginal      | v1.0    | MGnify   | 52                 | 189               |
-| marine eukaryotes  | vbeta   | MGnify   | 250                | 250               |
-| marine             | v2.0    | MGnify   | 1192               | 7408              |
-| mouse gut          | v1.0    | MGnify   | 136                | 1639              |
-| non model fish gut | v2.0    | MGnify   | 60                 | 87                |
-| pig gut            | v1.0    | MGnify   | 138                | 800               |
-| sheep rumen        | v1.0    | MGnify   | 117                | 2122              |
-| zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |
-| global             |         | GlobDB   |                    |                   |
+| Environment        | Version | Database | Number of families | Number of species | Archaea Included? |
+|--------------------|---------|----------|--------------------|-------------------|-------------------|
+| barley rhizosphere | v1.0    | MGnify   | 23                 | 62                |                   |
+| chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |                   |
+| cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |                   |
+| multiple           | v226    | GlobDB   | 10906              | 306261            | True              |
+| honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |                   |
+| human gut          | v2.0.2  | MGnify   | 215                | 3445              |                   |
+| human oral         | v1.0.1  | MGnify   | 52                 | 260               |                   |
+| human skin         | v1.0    | MGnify   | 86                 | 552               |                   |
+| human vaginal      | v1.0    | MGnify   | 52                 | 189               |                   |
+| maize rhizosphere  | v1.0    | MGnify   | 153                | 268               |                   |
+| marine             | v2.0    | MGnify   | 1192               | 7408              | True              |
+| marine sediment    | v1.0    | MGnify   | 1192               | 7408              | True              |
+| mouse gut          | v1.0    | MGnify   | 136                | 1639              |                   |
+| non model fish gut | v2.0    | MGnify   | 60                 | 87                |                   |
+| pig gut            | v1.0    | MGnify   | 138                | 800               | True              |
+| sheep rumen        | v1.0    | MGnify   | 117                | 2122              |                   |
+| soil               | v1.0    | MGnify   | 1353               | 9122              | True              |
+| tomato rhizosphere | v1.0    | MGnify   | 153                | 268               | True              |
+| zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |                   |
 
 All databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
 
