@@ -54,9 +54,9 @@ sudo apt install fontconfig
 
 We have several premade databases that you can select from depending on what is expected to match your host's system. If you are unsure what database to use, then we recommend using GTDB as the default.
 
-| Environment        | Version | Database | Number of families | Number of species | Archaea Included? | Zenodo |
-|--------------------|---------|----------|--------------------|-------------------|-------------------|--------|
-| barley rhizosphere | v2.0    | MGnify   | 34                 | 66                |                   |[here](https://zenodo.org/records/18672316)|
+| Environment        | Version | Database | Number of families | Number of species | Archaea Included? | Zenodo                                    |
+|--------------------|---------|----------|--------------------|-------------------|-------------------|-------------------------------------------|
+| barley rhizosphere | v2.0    | MGnify   | 34                 | 66                |                   |[here](https://zenodo.org/records/19094275)|
 | chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |                   |[here](https://zenodo.org/records/18706394)|
 | cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |                   |[here](https://zenodo.org/records/19075302)|
 | multiple           | v226    | GlobDB   | 10906              | 306261            | True              |[here](https://zenodo.org/records/18706772)|
@@ -91,14 +91,13 @@ If you are using shotgun metagenomes, you will need to first quantify species ab
  - Mouse gut Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse-gut/v1.0/kraken2_db_mouse-gut_v1.0/
  - Marine Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine/v2.0/kraken2_db_marine_v2.0/
 
-To use GlobDB, you will need to run taxonomic assignment using Sylph using GlobDB's pregenerated Sylph database.
+To use GlobDB, you will need to run taxonomic assignment using Sylph using GlobDB's pregenerated Sylph database found [here](https://fileshare.lisc.univie.ac.at/globdb/globdb_r226/taxonomic_profiling/)
 
 Finally, you will want to make the taxon names from Bracken match the IDs in Phylogenize2. You can check this by seeing if the sampleid column's values match the values in the selected databases `cluster` column in the taxonomy file (i.e mouse-gut-taxonomy.csv). Additionally, you may wish to merge any technical replicates for the same biological sample (as these will lead to overconfident predictions). There is a script to perform this under `shotgun_kraken2_example` called `parse-bracken.R`. You can run this script as follows:
 
 ```
 Rscript parse_bracken.R -t [path to taxonomy file] -i [path to bracken output files] -o [path to output tab-separated file] -m [path to metadata file]
 ```
-
 
 The last option (`-m`) is optional, but allows you to provide a tab-separated file with "sample" and "run" columns that will merge any runs belonging to the same sample. The taxonomy file provided should be the one in the Phylogenize2 database that you are using (e.g. `mouse-gut-taxonomy.csv`). (If you are having trouble finding the path where a database was installed, try looking under the directory where Phylogenize2 was installed, which you should be able to see by running `system.file(package="phylogenize")` in R.)
 
