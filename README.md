@@ -81,7 +81,10 @@ We have several premade databases that you can select from depending on what is 
 
 For phylogenize, all databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
 
-Databases can be downloaded manually and decompressed from our Zenodo pages in the table above. All the database files must be placed into a directory called `package/inst/extdata/`. A custom database can be generated using our snakemake workflow [here](https://github.com/pbradleylab/phylogenize-db-prep). Older database versions can also be located on the Zenodo in the phylogenize community.
+Databases can be downloaded manually and decompressed from our Zenodo pages in the table above. All the database files must be placed into a directory called `package/inst/extdata/`. Older database versions can also be located on the Zenodo in the phylogenize community. 
+
+### Making Your Own Database
+We recommend using MGnify's v3.0.0 pipeline [here](https://github.com/EBI-Metagenomics/genomes-catalogue-pipeline/releases/tag/v3.0.0) for processing raw files into workable databases. If the files follow standard MGnify format, then they will work in our custom workflow. After you have run their pipeline - a custom database can be generated using our snakemake workflow [here](https://github.com/pbradleylab/phylogenize-db-prep). 
 
 ## Preparing your data
 
