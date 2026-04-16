@@ -59,7 +59,7 @@ We have several premade databases that you can select from depending on what is 
 | barley rhizosphere | v2.0    | MGnify   | 34                 | 66                |                   |[here](https://zenodo.org/records/19094275)|
 | chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |                   |[here](https://zenodo.org/records/18706394)|
 | cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |                   |[here](https://zenodo.org/records/19075302)|
-| multiple           | v226    | GlobDB   | 10906              | 306261            | True              |[here](https://zenodo.org/records/18706772)|
+| multiple           | v226    | GlobDB   | 10906              | 306261            | True              |[here](https://zenodo.org/records/19607691)|
 | honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |                   |[here](https://zenodo.org/records/18706413)|
 | human gut          | v2.0.2  | MGnify   | 215                | 3445              |                   |[here](https://zenodo.org/records/18706603)|
 | human oral         | v1.0.1  | MGnify   | 52                 | 260               |                   |[here](https://zenodo.org/records/18706578)|
