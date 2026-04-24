@@ -401,7 +401,6 @@ sparseMelt <- function(mtx) {
     df
 }
 
-
 #' Check if a particular string is likely to be DNA.
 #'
 #' @param seq String to check for illegal characters.
@@ -409,6 +408,60 @@ sparseMelt <- function(mtx) {
 #' @keywords internal
 is.dna <- function(seq) {
     !(grepl("[^actguwsmkrybdhvn]", tolower(seq)))
+}
+
+#' Find a file given a pattern in a vector of files
+find_file <- function(pattern, files) {
+    out <- grep(pattern, files, value = TRUE, ignore.case = TRUE)
+    if (length(out) > 0) return(out[1]) else return(NA)
+}
+
+#' Decompress a phylogenize databases hosted on Zenodo
+#' q
+#' @param link; String that represents the path of the downloaded file to be decompressed
+#' @param name; String that represents the name the user will be calling the database in future runs.
+#' @return decompressed files form phylogenize database
+untar_database <- function(link, name) {
+    outdir <- "package/phylogenize/inst/extdata/"
+    dbfile <- "package/phylogenize/inst/extdata/databases.csv"
+    header <- paste(c("database", "genes", "trees", "taxonomy", "functions", "go", "16S"), collapse = ",")
+
+    if (!dir.exists(outdir)) {
+        dir.create(outdir, recursive = TRUE)
+    }
+    
+    pz.message(paste("Decompressing database into:", outdir))
+    before_tar <- list.files(outdir, full.names = TRUE, recursive = TRUE)
+    utils::untar(tarfile = link, exdir = outdir)
+    after_tar <- list.files(outdir, full.names = TRUE, recursive = TRUE)
+    files <- setdiff(after_tar, before_tar)
+    pz.message("Decompression done!")
+
+    # Check if database.csv exists correctly
+    if (!file.exists(dbfile) || file.info(dbfile)$size == 0) {
+        file.create(dbfile)
+        writeLines(header, dbfile)
+        message("File created: ", dbfile)
+    } else {
+        first <- readLines(dbfile, n=1)
+        if (first != header) {
+            pz.error("File exists but headers do not match the expected format.")
+        }		     
+    }
+    
+    # Add the name to the database
+    row <- c(
+        database = name,
+        genes = find_file("-binary\\.rds$|-continuous\\.rds$"),
+        trees = find_file("-tree\\.rds$"),
+        taxonomy = find_file("-taxonomy\\.csv$"),
+        functions = find_file("\\.functions$"),
+        go = find_file("-go\\.csv$"),
+        `16S` = find_file("\\.fna$")
+    )
+    row <- paste(row, collapse = ",")
+    cat(row, file = dbfile, sep = "\n", append = TRUE)
+    pz.message(paste("Database", name, "indexed successfully."))
 }
 
 #' Utility function to pivot species dataframes wider and convert to matrices

@@ -669,6 +669,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
             "environment"))
     }
     
+    pz.message(".....collecting all unique dsets")
     all.dsets <- unique(abd.meta$metadata[[opts('dset_column')]])
     dset.number <- sapply(all.dsets, function(d) {
         sum(abd.meta$metadata[[opts('dset_column')]] == d)
@@ -691,6 +692,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "dropping singletons and matching with abundance ",
                         "matrix (need at least 2)"))
     }
+    pz.message(".....Finding metadata and matrix intersections")
     abd.meta$metadata <- abd.meta$metadata[wrows, , drop=FALSE]
     wcols <- intersect(colnames(abd.meta$mtx),
                        abd.meta$metadata[[opts('sample_column')]])
@@ -700,6 +702,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "(need at least 2)"))
     }
     abd.meta$mtx <- abd.meta$mtx[, wcols, drop=FALSE]
+    pz.message(".....Removing all rows and columns that are completely 0")
     abd.meta$mtx <- remove.allzero.abundances(abd.meta$mtx)
     return(abd.meta)
 }
@@ -818,6 +821,7 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
     nz.cols <- which(cs > 0)
     z.col.logical <- (cs == 0)
     
+    pz.message("..........calculating column with zero")
     if (sum(z.col.logical) > 0) {
         pz.warning(paste0("Dropping ", sum(z.col.logical),
                           " column(s), since no mapped taxa had observations"))
@@ -831,11 +835,24 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
     if (length(nz.cols) < 2) {
         pz.error("Too few columns with at least one non-zero entry")
     }
-    nz.rows <- which(Matrix::colSums(abd.mtx[, nz.cols, drop=FALSE]) > 0)
-    if (length(nz.cols) < 2) {
+
+    pz.message("..........Final drop of columns")
+    abd.mtx <- abd.mtx[, nz.cols, drop = FALSE]
+
+    pz.message("..........calculating rows with zero")
+    rs <- Matrix::rowSums(abd.mtx)
+    nz.rows <- which(rs > 0)
+
+    #nz.rows <- which(Matrix::rowSums(abd.mtx[, nz.cols, drop=FALSE]) > 0)
+    if (length(nz.rows) < 2) {
         pz.error("Too few rows with at least one non-zero entry")
+    } else {
+	pz.message("..........Final drop of rows")
+        n_drop <- nrow(abd.mtx) - length(nz.rows)
+        pz.message(paste0("..........dropping ", n_drop, " all-zero row(s) out of ", nrow(abd.mtx)))
+        abd.mtx <- abd.mtx[nz.rows, , drop = FALSE]
     }
-    # pass
+    
     return(abd.mtx)
 }
 

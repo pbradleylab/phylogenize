@@ -37,6 +37,8 @@ multi.kegg.enrich <- function(sigs, signs, pid_to_ko, dirxn=1,
           })
           dplyr::bind_rows(all_cutoffs)
       })
+  
+  saveRDS(enrichment_tbls, "enrichment_tbls_abundance.rds")
   out <- tryCatch({
       # Put together and add direction of enrichment
       dplyr::bind_rows(enrichment_tbls) %>% 
@@ -121,17 +123,26 @@ kegg.enrich.single <- function(sc, sn, p2k, cn="test_cutoff",
                                           qCut = 0.25,
                                           kegg_mod_data)
     }
-    if (is.null(pwy_enr) || is.null(mod_enr)) {
-        return(NULL)
-    } else if(!is.null(pwy_enr) && !is.null(mod_enr)) {
-        total_enr_tbl <- dplyr::bind_rows(pwy_enr@result, mod_enr@result) %>%
-            tibble::as_tibble() %>%
-            dplyr::mutate(cutoff = cn, taxon = tg)
-        return(total_enr_tbl)
-    } else {
-        pz.error(paste0(
-            "Internal dataframe is malformed for kegg.enrich.single. ",
-            "Please file a bug report."))
-    }
+
+    if (is.null(pwy_enr) && is.null(mod_enr)) {
+	return(NULL)
+    } else if (!is.null(pwy_enr) && !is.null(mod_enr)) {
+	total_enr_tbl <- dplyr::bind_rows(pwy_enr@result, mod_enr@result) %>% 
+		tibble::as_tibble() %>% 
+		dplyr::mutate(cutoff = cn, taxon = tg)
+	return(total_enr_tbl)
+    } else if (!is.null(pwy_enr)) {
+	total_enr_tbl <- pwy_enr@result %>% 
+		tibble::as_tibble() %>% 
+		dplyr::mutate(cutoff = cn, taxon = tg)
+	return(total_enr_tbl)
+    } else if (!is.null(mod_enr)) {
+	total_enr_tbl <- mod_enr@result %>% 
+		tibble::as_tibble() %>% 
+		dplyr::mutate(cutoff = cn, taxon = tg) 
+	return(total_enr_tbl)
+    } else { 
+	    pz.error(paste0("Internal dataframe is malformed for kegg.enrich.single. ",
+			    "Please file a bug report."))}
 }
 
