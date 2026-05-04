@@ -18,22 +18,27 @@ Create a new environment by typing `conda create -n phylogenize` and `conda acti
 
 Please note, we assume in these instructions you are working off of base-r and NOT Rstudio. We describe at the bottom of this section how to use Rstudio while still installing the dependencies with mamba.
 
-#### Install with mamba - configuration file
-
-You can make a conda environment using the supplied yaml file and not worry about installing any dependencies. Run `conda env create -f environment.yml` and then `conda activate phylogenize`. Open base-r and then type `devtools::install_github("biocore/phylogenize")`.
-
-#### Install with conda - no configuration file
+#### Install with mamba/conda - no configuration file
 
 1.  Make sure you have R installed. You can verify if you type `R --version`. If you don't you can get the latest version [here](https://www.r-project.org/) or install it using conda [here](https://anaconda.org/r/r).
-2.  Create a new environment in conda by running `conda create -n phylogenize`
+2.  Create a new environment in mamba/conda by running `conda create -n phylogenize`
 3.  Activate your new environment with `conda activate phylogenize`
 4.  Install the dependencies with the bioconda and conda-forge channels as shown below
 
 ```         
 mamba install -y bioconda::phylogenize
 ```
+If you are running phylogenize2 and plan to use abundance phenotype calculations. The conda version comes with ancombc2 preinstalled. To use maaslin2, you will have to install that separately. 
 
-4.  Open R and then run `library("phylogenize")`.
+Additionally, you should install these packages to ensure a smooth workflow for abundance runs:
+```
+mamba install -c bioconda \
+  bioconductor-mia \
+  bioconductor-phyloseq \
+  bioconductor-microbiom
+```
+
+4.  Open R and then run `library("phylogenize")`. You should be all set to run phylogenize!
 
 #### Locally - Rstudio
 
