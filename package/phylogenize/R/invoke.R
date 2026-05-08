@@ -89,6 +89,7 @@ phylogenize_core <- function(
                     list_signif=list_signif,
                     options=opts))
     }
+    #list_signif <- readRDS("list_signif.rds")
     pz.message("III. Performing enrichment tests...")
     enr_tbls <- get_enrichment_tbls(list_signif[["signif"]],
                                     list_signif[["signs"]],
@@ -206,12 +207,14 @@ get_all_associated_genes <- function(list_pheno,
         do_POMS <- (tolower(pz.options('core_method')) == "poms")
         spec_taxa <- pz.options('only_specific_taxa')
         if (!do_POMS) {
+            pz.message("  A) Getting all associated genes")
             phenotype <- list_pheno$phenotype_results$phenotype
             taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
-            pz.message(paste0("All valid taxa: ", paste(taxaN, collapse = ", ")), level = 2)
+            pz.message(paste0("  .....All valid taxa: ", paste(taxaN, collapse = ", ")), level = 1)
             if (!is.null(spec_taxa)) { taxaN <- intersect(taxaN, spec_taxa )}
-            pz.message(paste0("Valid taxa (after filtering): ", paste(taxaN, collapse=", ")), level=1)
+            pz.message(paste0("  .....Valid taxa (after filtering): ", paste(taxaN, collapse=", ")), level=1)
             if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
+	    pz.message("  .....Running plm on valid taxa")
             if (pz.options('ncl') > 1) {
                 results <- result.wrapper.plm(taxa=taxaN,
                     pheno=phenotype,
@@ -232,12 +235,13 @@ get_all_associated_genes <- function(list_pheno,
                         SIMPLIFY=FALSE)
             }
         } else {
+	    pz.message("  A) Getting all associated genes")
             taxaN <- names(list_pheno$pz.db$species)
-            pz.message(paste0("All valid taxa: ", paste(taxaN, collapse = ", ")), level = 2)
+            pz.message(paste0("  .....All valid taxa: ", paste(taxaN, collapse = ", ")), level = 2)
             if (!is.null(spec_taxa)) {
                 taxaN <- intersect(taxaN, spec_taxa)
             }
-            pz.message(paste0("Valid taxa: ", paste(taxaN, collapse=", ")), level=1)
+            pz.message(paste0("  .....Valid taxa: ", paste(taxaN, collapse=", ")), level=1)
             if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
             results <- result.wrapper.plm(taxa=taxaN,
                 pheno=NULL,
@@ -249,9 +253,16 @@ get_all_associated_genes <- function(list_pheno,
                 abd.meta=list_pheno$abd.meta
             )
         }
+    
+    pz.message(paste0("  ..........Rows that remain: ", length(results)))
+    pz.message("  ..........Trimming any results that didn't get dropped")
     # trim out any that didn't get dropped
     result_lens <- vapply(results, length, 1L)
     results <- results[names(which(na.omit(result_lens>0)))]
+
+    pz.message(paste0("  ..........Rows that remain after trimming: ", length(results)))
+    results <- results[!vapply(results, is.null, logical(1))]
+    pz.message(paste0("  ..........Rows that remain after checking if not null: ", length(results)))
     return(get_signif_associated_genes(list_pheno$pz.db, results))
 }
 
@@ -264,11 +275,22 @@ get_all_associated_genes <- function(list_pheno,
 get_signif_associated_genes <- function(pz.db,
                                         results,
                                         ...) {
+    pz.message("  ..........Processing genes by significance threshold")
     pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    if (length(results) == 0) {
+        pz.message("  ..........No successful repermulize results to process.")
+        return(NULL)
+    }
+
+    pz.message("  ..........Making sigs")
     signif <- make.sigs(results, ...)
+    pz.message("  ..........Making signs")
     signs <- make.signs(results)
+    pz.message("  ..........Getting positive sigs")
     pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
+    pz.message("  ..........Getting negative sigs")
     neg.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'), dir=-1)
+    pz.message("  ..........Make results matrix")
     results.matrix <- make.results.matrix(results) %>%
         dplyr::filter(!is.na(p.value)) %>%
         dplyr::group_by(taxon) %>%
@@ -276,6 +298,7 @@ get_signif_associated_genes <- function(pz.db,
         dplyr::arrange(taxon, q.value) %>%
         dplyr::ungroup()
     phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
+    pz.message("  ..........Add sig descriptions")
     pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
     pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig, ...)
     pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs,
@@ -288,10 +311,12 @@ get_signif_associated_genes <- function(pz.db,
             neg.sig.thresh,
             pz.db$gene.to.fxn
         )
+    pz.message("  ..........Recalculate sigs")
     # recalculate, since some of these may go away
     phy.with.pos.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
     phy.with.neg.sigs <- names(which(sapply(neg.sig.thresh, length) > 0))
     phy.with.sigs <- union(phy.with.pos.sigs, phy.with.neg.sigs)
+    pz.message(paste0("  ..........Remaining results: ", nrow(results)))
     return(list(
         results = results, #1
         signif = signif, #2

@@ -12,15 +12,19 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
     pz.message("  A) Reading data, metadata, and databases...")
     # Read in user-supplied data and metadata
     abd.meta <- read.abd.metadata(...)
+    pz.message("  B) Read in user-supplied data and metadata")
     # Read in trees, gene presence/absence, taxonomy
     pz.db <- import.pz.db(...)
+    pz.message("  C) Read in trees, gene presence/absence, taxonomy")
     # Figure out how many trees to retain
     pz.db <- adjust.db(pz.db, abd.meta, ...)
     if (pz.options('assume_below_LOD')) {
         abd.meta <- add.below.LOD(pz.db, abd.meta, ...)
         sanity.check.abundance(abd.meta$mtx, ...)
     }
-    pz.message("  B) Calculating phenotypes...")
+    saveRDS(abd.meta, "abd.meta.rds")
+    saveRDS(pz.db, "pz.db.rds")
+    pz.message("  D) Calculating phenotypes...")
     phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
     if (pz.options('quantile_normalize')) {
 	    phenotype_results <- quantile_normalize(phenotype_results)
@@ -87,6 +91,7 @@ quant_norm <- function(x) {
 #' @export
 calculate_phenotypes <- function(abd.meta, pz.db, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
+    pz.message("  .....Collecting mapped observations greater than 0")
     mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
     pheno_sd <- NULL
     if (tolower(opts('core_method')) == "poms") {
@@ -96,9 +101,11 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
         phenoP <- 0
     } else {
         if (opts('which_phenotype') == "prevalence") {
+            pz.message("  .....Running prevalence")
             phenotype <- prev.addw(abd.meta, ...)
             phenoP <- NULL
         } else if (opts('which_phenotype') == "specificity") {
+	    pz.message("  .....Running specificity")
             if (opts('prior_type') == "file") {
                 prior.data <- read.table(file.path(opts('input_dir'),
                                                    opts('prior_file')))
@@ -131,6 +138,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
             }
             phenoP <- 0
         } else if (opts("which_phenotype") == "abundance") {
+            pz.message("  .....Running abundance")
             pheno_list <- ashr.diff.abund(abd.meta, ...)
             phenotype <- pheno_list$pheno
             pheno_sd <- pheno_list$sd
@@ -140,6 +148,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
                             opts('which_phenotype')))
         }
     }
+    pz.message("  .....cleaning phenotype")
     phenotype <- clean.pheno(phenotype, pz.db)
     if (!is.null(pheno_sd)) pheno_sd <- pheno_sd[names(phenotype)]
     if (pz.options("which_phenotype") != "prevalence") {
