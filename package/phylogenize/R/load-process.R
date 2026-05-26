@@ -123,7 +123,7 @@ check.process.metadata <- function(metadata, ...) {
         metadata[[E]] <- env_factor
     } else {
         metadata[[E]] <- as.numeric(metadata[[E]])
-        if (all(is.na(abd.meta$metadata[[E]]))) {
+        if (all(is.na(metadata[[E]]))) {
             pz.error(
                 paste0("Environment failed conversion to numeric; is this ",
                        "supposed to be a categorical variable?"))
