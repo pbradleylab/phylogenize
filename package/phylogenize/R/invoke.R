@@ -401,20 +401,12 @@ get_enrichment_tbls <- function(signif,
                                  accession_to_fxn,
                                  by=c("geneID"="accession")) %>%
                 dplyr::rename(gene=geneID, description=`function`) %>%
-                dplyr::mutate(effectsize=purrr::map2_dbl(
-                    taxon,
-                    gene,
-                    ~ {
-                        tryCatch({
-                            value <- results.matrix[[.x]][1, .y]
-                            if (length(value) == 0) {
-                                return(NA_real_)
-                            }
-                            return(value)
-                        }, error = function(e) {
-                            return(NA_real_)
-                        })
-                    }))
+                dplyr::left_join(
+                    results.matrix %>%
+                        dplyr::select(taxon, gene, effect.size),
+                    by=c("taxon", "gene")
+                ) %>%
+                dplyr::rename(effectsize=effect.size)
             if (export) {
                 write.csv(file=file.path(pz.options('out_dir'),
                                          "enr-overlaps.csv"),
@@ -431,5 +423,4 @@ get_enrichment_tbls <- function(signif,
     }
     return(pretty.enr.tbl)
 }  
-
 
