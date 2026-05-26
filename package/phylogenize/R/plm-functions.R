@@ -38,18 +38,21 @@ result.wrapper.plm <- function(
     opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
     core_method <- tolower(opts('core_method'))
     lapply.across.names(taxa, function(p) {
-        message(p)
-        if (class(tree) == "phylo") {
+        pz.message(paste0("  ..........Checking for type for taxa: ", p))
+	if (class(tree) == "phylo") {
             tr <- tree
         } else if (class(tree) == "list") {
             tr <- tree[[p]]
         } else {
             stop("tree must be either an object of class phylo or a list")
         }
+
         valid <- Reduce(
             intersect,
             list(colnames(proteins[[p]]), clusters[[p]], tr$tip.label)
         )
+	pz.message(paste0("  ..........Valid protien clusters: ", length(valid)))
+
         if (!is.null(pheno)) {
             valid <- intersect(valid, names(pheno))
         }
@@ -61,6 +64,7 @@ result.wrapper.plm <- function(
                 restrict.figfams
             )
         }
+	pz.message("  ..........Dropping zero variance")
         if (drop.zero.var) {
             fvar <- apply(proteins[[p]][, valid, drop = FALSE], 1, var)
             message(paste0(
@@ -73,6 +77,7 @@ result.wrapper.plm <- function(
                     which(fvar > 0)
                 ]
             )
+	    pz.message(paste0("  ..........Number of valid proteins after dropping zero variance:", length(restrict.figfams)))
         }
         if (!only.return.names) {
             if (core_method == "poms") {
@@ -95,7 +100,7 @@ result.wrapper.plm <- function(
             ) {
                 # handle multicore outside of this function
                 pz.message(
-                    sprintf("Performing permulations with %s", core_method),
+                    sprintf("  ..........Performing permulations with %s", core_method),
                     level = 1
                 )
                 method_parsed <- stringr::str_split_1(core_method, "-")
@@ -105,15 +110,28 @@ result.wrapper.plm <- function(
                 user_maxsize <- options(future.globals.maxSize = 2.0e9)
                 on.exit(options(user_maxsize))
                 future::plan(future::multisession, workers = cores)
-                results <- repermulize::repermulize_wrapper(
-                    pheno,
-                    proteins[[p]],
-                    tr,
-                    perm_method = perm_m,
-                    regression_method = regression_m,
-                    real_pheno_sd = pheno_sd
-                )
-                future::plan(future::sequential)
+		pz.message("  ..........Running repermulize")
+                
+		results <- tryCatch(
+		    {
+		       repermulize::repermulize_wrapper(
+			    pheno,
+			    proteins[[p]],
+			    tr,
+			    perm_method = perm_m,
+			    regression_method = regression_m,
+			    real_pheno_sd = pheno_sd)
+		    }, error = function(e) {
+			pz.message(paste0("Skipping protein/index ", p, " due to error: ", conditionMessage(e)))
+		        return(NULL)
+		    }
+		)
+		pz.message(paste0("Number of results: ", length(results)))
+		if (is.null(results)) {
+		    return(NULL)
+		}
+                
+		future::plan(future::sequential)
                 return(as.data.frame(results))
             } else if (core_method == "lm") {
                 matrix.plm(
@@ -1128,7 +1146,7 @@ ashr.diff.abund <- function(abd.meta,
   if (M=="ancombc2") { 
       
     named_metadata <- named_metadata %>%
-	    dplyr::mutate(dplyr::across(c(E, D), as.factor))
+	    dplyr::mutate(dplyr::across(any_of(c(E, D)), as.factor))
     if (length(levels(named_metadata[[D]])) < 2) {
       ancom_formula = E
       } else {
@@ -1140,7 +1158,7 @@ ashr.diff.abund <- function(abd.meta,
     }
     named_metadata <- named_metadata %>%
 	    filter(!is.na(E) | !is.na(D))
-    
+    pz.message("  ..........Running TreeSummarizedExperiment function...") 
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
       assays=S4Vectors::SimpleList(counts=abd.meta$mtx),
       colData=S4Vectors::DataFrame(named_metadata))
@@ -1402,16 +1420,19 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
     # keep track of which taxa should be dropped entirely
     to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)
     for (tx in taxa) {
-      pz.message(paste0("Processing taxon ", tx), level=2)
+        pz.message(paste0("Processing taxon ", tx), level=2)
         tips <- trees[[tx]]$tip.label
         colns <- colnames(gene.presence[[tx]])
         i <- na.omit(intersect(tips, colns))
         if (length(i) > 0) {
           mtx <- gene.presence[[tx]][, i, drop=FALSE]
 	  Max <- ncol(mtx) - Min
-          g <- names(which((Matrix::rowSums(mtx > GMF) >= Min) & (Matrix::rowSums(mtx > GMF) <= Max)))
+	  pz.message(paste0("  ..........Calculating rowsums for taxa: ", tx))
+	  rs <- Matrix::rowSums(mtx > GMF)
+          g <- names(which((rs >= Min) & (rs <= Max)))
 	        pz.message(paste0("Retained ", length(g), " out of ", nrow(mtx), " genes..."), level=2)
-          gene.presence[[tx]] <- mtx[g, , drop=FALSE]
+          pz.message("  ..........Filtering taxa to keep above minimum gene fraction")
+	  gene.presence[[tx]] <- mtx[g, , drop=FALSE]
         }
 	    if ((length(i) == 0) || (length(g) == 0)) {
         to_remove[tx] <- TRUE

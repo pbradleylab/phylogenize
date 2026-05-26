@@ -52,6 +52,7 @@ read.abd.metadata <- function(...) {
         # binarize to save memory usage since we care about pres/abs
         abd.meta$mtx <- Matrix::Matrix(abd.meta$mtx > 0)
     }
+    pz.message("  .....Harmonized data")
     gc()
     return(abd.meta)
 }
@@ -263,11 +264,14 @@ import.pz.db <- function(...) {
         pz.error(paste0("Duplicate data entries in db file: ", db_csv))
     }
 
+    pz.message("  .....Read in phylogenize2 gene presence file")
     gene.presence <- readRDS(file.path(opts('data_dir'),
                                        found_db[["genes"]]))
     gene.presence <- gene.presence[names(gene.presence) != ""]
+    pz.message("  .....Read in phylogenize2 tree file")
     trees <- readRDS(file.path(opts('data_dir'),
                                found_db[["trees"]]))
+    pz.message("  .....Read in phylogenize2 taxonomy file")
     taxonomy <- readr::read_csv(file.path(opts('data_dir'),
                                           found_db[["taxonomy"]]), show_col_types=FALSE)
     # Workaround for inconsistency with "_" vs. " " in pipeline...,
@@ -286,6 +290,7 @@ import.pz.db <- function(...) {
       mutate(across(domain:genus, \(x) gsub(" ", "_", x))) %>%
       ungroup()
 
+    pz.message("  .....Read in phylogenize2 gene functions file")
     gene.to.fxn <- readr::read_csv(
         file.path(opts('data_dir'), found_db[["functions"]]),
         show_col_types = FALSE
@@ -299,7 +304,7 @@ import.pz.db <- function(...) {
         " is not found. Please check these have been downloaded and are in the", 
         " expected location given by ", db_csv))
     }
-    
+    pz.message("  .....Remove extra info, make table a little more readable")
     # remove extra info, make table a little more readable
     gene.to.fxn <- gene.to.fxn %>%
         dplyr::rename(gene = node_head) %>%
@@ -309,6 +314,7 @@ import.pz.db <- function(...) {
     # Make the files at the user requested taxon level. Here we adjust the
     # classification level to look at i.e family, class, order, etc.
     if (opts('taxon_level') != "phylum") {
+	pz.message("  .....Change taxonomy level for analysis")
         gene.presence <- change.presence.tax.level(gene.presence,
                                                    opts('taxon_level'),
                                                    taxonomy)
@@ -317,8 +323,10 @@ import.pz.db <- function(...) {
     }
     
     # filter based on the minimum number of observations
+    pz.message("  .....Filter based on the minimum number of observations")
     gene.presence <- above_minimum_genes(gene.presence, trees)
-    
+   
+    pz.message("  .....Drop any taxa that got culled in tree object") 
     # drop any taxa that got culled in above_minimum_genes
     trees <- trees[intersect(names(trees), names(gene.presence))]
     
@@ -669,7 +677,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
             "environment"))
     }
     
-    pz.message(".....collecting all unique dsets")
+    pz.message("  .....collecting all unique dsets")
     all.dsets <- unique(abd.meta$metadata[[opts('dset_column')]])
     dset.number <- sapply(all.dsets, function(d) {
         sum(abd.meta$metadata[[opts('dset_column')]] == d)
@@ -692,7 +700,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "dropping singletons and matching with abundance ",
                         "matrix (need at least 2)"))
     }
-    pz.message(".....Finding metadata and matrix intersections")
+    pz.message("  .....Finding metadata and matrix intersections")
     abd.meta$metadata <- abd.meta$metadata[wrows, , drop=FALSE]
     wcols <- intersect(colnames(abd.meta$mtx),
                        abd.meta$metadata[[opts('sample_column')]])
@@ -702,7 +710,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "(need at least 2)"))
     }
     abd.meta$mtx <- abd.meta$mtx[, wcols, drop=FALSE]
-    pz.message(".....Removing all rows and columns that are completely 0")
+    pz.message("  .....Removing all rows and columns that are completely 0")
     abd.meta$mtx <- remove.allzero.abundances(abd.meta$mtx)
     return(abd.meta)
 }
@@ -821,7 +829,7 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
     nz.cols <- which(cs > 0)
     z.col.logical <- (cs == 0)
     
-    pz.message("..........calculating column with zero")
+    pz.message("  ..........calculating column with zero")
     if (sum(z.col.logical) > 0) {
         pz.warning(paste0("Dropping ", sum(z.col.logical),
                           " column(s), since no mapped taxa had observations"))
@@ -836,10 +844,10 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
         pz.error("Too few columns with at least one non-zero entry")
     }
 
-    pz.message("..........Final drop of columns")
+    pz.message("  ..........Final drop of columns")
     abd.mtx <- abd.mtx[, nz.cols, drop = FALSE]
 
-    pz.message("..........calculating rows with zero")
+    pz.message("  ..........calculating rows with zero")
     rs <- Matrix::rowSums(abd.mtx)
     nz.rows <- which(rs > 0)
 
@@ -847,9 +855,9 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
     if (length(nz.rows) < 2) {
         pz.error("Too few rows with at least one non-zero entry")
     } else {
-	pz.message("..........Final drop of rows")
+	pz.message("  ..........Final drop of rows")
         n_drop <- nrow(abd.mtx) - length(nz.rows)
-        pz.message(paste0("..........dropping ", n_drop, " all-zero row(s) out of ", nrow(abd.mtx)))
+        pz.message(paste0("  ..........dropping ", n_drop, " all-zero row(s) out of ", nrow(abd.mtx)))
         abd.mtx <- abd.mtx[nz.rows, , drop = FALSE]
     }
     
