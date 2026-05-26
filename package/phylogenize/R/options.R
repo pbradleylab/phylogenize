@@ -185,7 +185,7 @@ set_data_internal <- function(fail=FALSE, startup=FALSE) {
         }
     #}
     if (success && pz.options('data_dir') == "") {
-        pz.options(data_dir = dd)
+        pz.options(data_dir = dirname(dd))
     }
 }
 
@@ -221,11 +221,10 @@ check_data_found <- function(fail=FALSE, startup=FALSE) {
         }
     #}
     if (success && pz.options('data_dir') == "") {
-        pz.options(data_dir = dd)
+        pz.options(data_dir = dirname(dd))
     }
 }
 
 .onLoad <- function(libname, pkgname) {
     check_data_found(startup=TRUE)
 }
-
