@@ -208,8 +208,8 @@ matrix.POMS <- function(tree,
     cores <- opts('ncl')
     
     # Note: dataset column is ignored
-    poms_group1 <- abd.meta$meta[[S]][abd.meta$meta[[E]] == envir]
-    poms_group2 <- abd.meta$meta[[S]][abd.meta$meta[[E]] != envir]
+    poms_group1 <- abd.meta$metadata[[S]][abd.meta$metadata[[E]] == envir]
+    poms_group2 <- abd.meta$metadata[[S]][abd.meta$metadata[[E]] != envir]
     
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
