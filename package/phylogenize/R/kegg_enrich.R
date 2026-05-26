@@ -32,6 +32,7 @@ multi.kegg.enrich <- function(sigs, signs, pid_to_ko, dirxn=1,
       function(s, sn, tg) {
           all_cutoffs <- purrr::map2(s, names(s), function(sc, cn) {
               kegg.enrich.single(sc, sn, pid_to_ko, cn, d, tg,
+                                 background=background,
                                  kegg_pw_data=kegg_pw,
                                  kegg_mod_data=kegg_mod)
           })
