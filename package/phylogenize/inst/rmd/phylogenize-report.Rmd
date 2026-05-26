@@ -211,12 +211,14 @@ if (!pz.options('skip_graphs')) {
 				     )
 }
 
-phylogenize::knitPrintListPlots(
-        plotsList = subplots,
-        type = "plotly",
-        titles = NULL,
-        titleLevel = NULL
-)
+if (length(subplots) > 0) {
+        phylogenize::knitPrintListPlots(
+                plotsList = subplots,
+                type = "plotly",
+                titles = NULL,
+                titleLevel = NULL
+        )
+}
 }
 ```
 # Gene Associations and Significance
