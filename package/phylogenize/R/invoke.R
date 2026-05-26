@@ -344,6 +344,14 @@ get_signif_associated_genes <- function(pz.db,
 #' @param pz.db A database (typically obtained with \code{import.pz.db}).
 #' @param results.matrix Matrix of full results.
 #' @param export Write enrichment tables to disk? (Default: FALSE)
+#' @param kegg_pw_data Optional downloaded KEGG pathway data from
+#'   \code{clusterProfiler::download_KEGG("ko", keggType="KEGG")}.
+#' @param kegg_mod_data Optional downloaded KEGG module data from
+#'   \code{clusterProfiler::download_KEGG("ko", keggType="MKEGG")}.
+#' @param use_kegg_cache Reuse downloaded KEGG data from disk when available?
+#'   (Default: TRUE)
+#' @param kegg_cache_file File name for the KEGG cache, relative to
+#'   \code{pz.options("out_dir")} unless an absolute path is supplied.
 #' @param ... Parameters to override defaults.
 #' @export
 get_enrichment_tbls <- function(signif,
@@ -351,11 +359,51 @@ get_enrichment_tbls <- function(signif,
                                 pz.db,
                                 results.matrix,
                                 export=FALSE,
+                                kegg_pw_data=NULL,
+                                kegg_mod_data=NULL,
+                                use_kegg_cache=TRUE,
+                                kegg_cache_file="kegg-cache.rds",
                                 ...) {
     pretty.enr.tbl <- NULL
     enr.overlap <- NULL
-    kegg_pw_data <- clusterProfiler::download_KEGG("ko", keggType="KEGG")
-    kegg_mod_data <- clusterProfiler::download_KEGG("ko", keggType="MKEGG")
+    kegg_cache_path <- kegg_cache_file
+    if (!grepl("^(/|[A-Za-z]:[/\\\\])", kegg_cache_path)) {
+        kegg_cache_path <- file.path(pz.options("out_dir"), kegg_cache_path)
+    }
+    if (use_kegg_cache && (is.null(kegg_pw_data) || is.null(kegg_mod_data)) &&
+        file.exists(kegg_cache_path)) {
+        kegg_cache <- tryCatch(readRDS(kegg_cache_path),
+                               error=function(e) {
+                                   pz.warning(paste(
+                                       "Could not read KEGG cache:",
+                                       conditionMessage(e)
+                                   ))
+                                   NULL
+                               })
+        if (is.null(kegg_pw_data) && !is.null(kegg_cache[["KEGG"]])) {
+            kegg_pw_data <- kegg_cache[["KEGG"]]
+        }
+        if (is.null(kegg_mod_data) && !is.null(kegg_cache[["MKEGG"]])) {
+            kegg_mod_data <- kegg_cache[["MKEGG"]]
+        }
+    }
+    if (is.null(kegg_pw_data)) {
+        kegg_pw_data <- clusterProfiler::download_KEGG("ko", keggType="KEGG")
+    }
+    if (is.null(kegg_mod_data)) {
+        kegg_mod_data <- clusterProfiler::download_KEGG("ko", keggType="MKEGG")
+    }
+    if (use_kegg_cache) {
+        tryCatch({
+            cache_dir <- dirname(kegg_cache_path)
+            if (!dir.exists(cache_dir)) dir.create(cache_dir, recursive=TRUE)
+            saveRDS(list(KEGG=kegg_pw_data, MKEGG=kegg_mod_data),
+                    kegg_cache_path)
+        }, error=function(e) {
+            pz.warning(paste("Could not write KEGG cache:",
+                             conditionMessage(e)))
+        })
+    }
     enrichment.tbl <- multi.kegg.enrich(signif,
                                         signs,
                                         pz.db$gene.to.fxn,
@@ -431,5 +479,4 @@ get_enrichment_tbls <- function(signif,
     }
     return(pretty.enr.tbl)
 }  
-
 
