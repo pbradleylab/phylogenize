@@ -37,8 +37,6 @@ multi.kegg.enrich <- function(sigs, signs, pid_to_ko, dirxn=1,
           })
           dplyr::bind_rows(all_cutoffs)
       })
-  
-  saveRDS(enrichment_tbls, "enrichment_tbls_abundance.rds")
   out <- tryCatch({
       # Put together and add direction of enrichment
       dplyr::bind_rows(enrichment_tbls) %>% 
@@ -145,4 +143,3 @@ kegg.enrich.single <- function(sc, sn, p2k, cn="test_cutoff",
 	    pz.error(paste0("Internal dataframe is malformed for kegg.enrich.single. ",
 			    "Please file a bug report."))}
 }
-
