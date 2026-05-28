@@ -116,6 +116,13 @@ phylogenize_core <- function(
                     list_signif=list_signif,
                     options=opts))
     }
+    if (is.null(list_signif)) {
+        pz.warning("Association testing returned no results; skipping enrichment.")
+        return(list(list_pheno=list_pheno,
+                    list_signif=list_signif,
+                    enr_tbls=NULL,
+                    options=opts))
+    }
     #list_signif <- readRDS("list_signif.rds")
     pz.message("III. Performing enrichment tests...")
     enr_tbls <- get_enrichment_tbls(list_signif[["signif"]],
