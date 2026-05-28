@@ -51,7 +51,7 @@ result.wrapper.plm <- function(
             intersect,
             list(colnames(proteins[[p]]), clusters[[p]], tr$tip.label)
         )
-	pz.message(paste0("  ..........Valid protien clusters: ", length(valid)))
+	pz.message(paste0("  ..........Valid protein clusters: ", length(valid)))
 
         if (!is.null(pheno)) {
             valid <- intersect(valid, names(pheno))
@@ -64,6 +64,7 @@ result.wrapper.plm <- function(
                 restrict.figfams
             )
         }
+	pz.message(paste0("  ..........Candidate genes to test: ", length(restrict.figfams)))
 	pz.message("  ..........Dropping zero variance")
         if (drop.zero.var) {
             fvar <- apply(proteins[[p]][, valid, drop = FALSE], 1, var)

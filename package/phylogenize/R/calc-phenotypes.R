@@ -12,29 +12,61 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
     pz.message("  A) Reading data, metadata, and databases...")
     # Read in user-supplied data and metadata
     abd.meta <- read.abd.metadata(...)
+    pz.message(paste0(
+        "  .....Input abundance matrix has ",
+        nrow(abd.meta$mtx),
+        " row(s) and ",
+        ncol(abd.meta$mtx),
+        " sample(s)"
+    ))
+    pz.message(paste0(
+        "  .....Input metadata has ",
+        nrow(abd.meta$metadata),
+        " row(s)"
+    ), level=2)
     pz.message("  B) Read in user-supplied data and metadata")
     # Read in trees, gene presence/absence, taxonomy
     pz.db <- import.pz.db(...)
+    pz.message(paste0(
+        "  .....Database loaded with ",
+        length(pz.db$trees),
+        " tree(s) and ",
+        length(pz.db$gene.presence),
+        " gene presence matrix/matrices"
+    ))
     pz.message("  C) Read in trees, gene presence/absence, taxonomy")
     # Figure out how many trees to retain
     pz.db <- adjust.db(pz.db, abd.meta, ...)
+    pz.message(paste0(
+        "  .....Database adjusted to ",
+        pz.db$ntaxa,
+        " testable taxon/taxa"
+    ))
     if (pz.options('assume_below_LOD')) {
+        pz.message("  .....Adding unobserved taxa as below limit of detection")
         abd.meta <- add.below.LOD(pz.db, abd.meta, ...)
         sanity.check.abundance(abd.meta$mtx, ...)
     }
     pz.message("  D) Calculating phenotypes...")
     phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
     if (pz.options('quantile_normalize')) {
+	    pz.message("  .....Quantile-normalizing phenotype")
 	    phenotype_results <- quantile_normalize(phenotype_results)
     } 
     if (pz.options('which_phenotype') %in% c("specificity", "abundance")) {
         # only retain observed taxa
+        pz.message("  .....Retaining observed taxa in trees")
         pz.db$trees <- retain.observed.taxa(pz.db$trees,
                                             phenotype_results$phenotype,
                                             phenotype_results$phenoP,
                                             phenotype_results$mapped.observed)
         pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
         pz.db$ntaxa <- length(pz.db$trees)
+        pz.message(paste0(
+            "  .....Retained ",
+            pz.db$ntaxa,
+            " observed testable taxon/taxa"
+        ))
     }
     if (tolower(pz.options('core_method')) == "poms") {
         pz.message("Saving abundance data to run POMS...", 2)
@@ -91,6 +123,10 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     pz.message("  .....Collecting mapped observations greater than 0")
     mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
+    pz.message(paste0(
+        "  ..........Mapped observations retained: ",
+        length(mapped.observed)
+    ))
     pheno_sd <- NULL
     if (tolower(opts('core_method')) == "poms") {
         pz.warning(paste0("Generating an approximate phenotype just for ",
@@ -116,10 +152,19 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
             phenotype <- ess$ess
             phenoP <- ess$phenoP
         } else if (opts("which_phenotype") == "provided") {
+            pz.message("  .....Reading provided phenotype")
             p_tbl <- readr::read_tsv(opts("phenotype_file"), show_col_types = FALSE)
+            pz.message(paste0(
+                "  ..........Provided phenotype table has ",
+                nrow(p_tbl),
+                " row(s) and ",
+                ncol(p_tbl),
+                " column(s)"
+            ))
             if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
                 phenotype <- tibble::deframe(p_tbl)
             } else { # perform shrinkage on the provided values w/ their stderrs
+                pz.message("  ..........Running shrinkage on provided phenotype")
                 p_est <- as.numeric(p_tbl[["estimate"]])
                 p_se <- as.numeric(p_tbl[["stderr"]])
                 names(p_est) <- p_tbl[[1]]
@@ -148,9 +193,15 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
     }
     pz.message("  .....cleaning phenotype")
     phenotype <- clean.pheno(phenotype, pz.db)
+    pz.message(paste0(
+        "  ..........Cleaned phenotype retains ",
+        length(phenotype),
+        " taxon/taxa"
+    ))
     if (!is.null(pheno_sd)) pheno_sd <- pheno_sd[names(phenotype)]
     if (pz.options("which_phenotype") != "prevalence") {
         # Except for prevalence, retain observed taxa
+        pz.message("  .....Filtering trees to observed taxa")
         pz.db$trees <- retain.observed.taxa(pz.db$trees,
                                             phenotype,
                                             phenoP,
@@ -162,6 +213,11 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
         if (length(pz.db$trees) == 0) { pz.error("all trees dropped") }
         pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
         pz.db$ntaxa <- length(pz.db$trees)
+        pz.message(paste0(
+            "  ..........",
+            pz.db$ntaxa,
+            " tree(s) remain after observed-taxa filtering"
+        ))
     }
     list(phenotype=phenotype, phenoP=phenoP, mapped.observed=mapped.observed, pheno_sd=pheno_sd)
 }
@@ -303,4 +359,3 @@ logit_auc_pheno <- function(abd.meta,
     })
     return(logit_auc)
 }
-
