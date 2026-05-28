@@ -1,8 +1,8 @@
-# Phylogenize2 (v2.0.0-alpha)
+# Phylogenize2 (v2.0.1)
 
 Phylogenize2 allows users to link microbial genes to environments, accounting for phylogeny. More specifically, given community composition data Phylogenize2 links patterns of microbes in a given environment to genes in those microbes' pangenomes, while taking into account an important potential confounder: the phylogenetic relationships between microbes. We allow several different patterns to be calculated, including prevalence, specificity, and differential abundance (using [MaAsLin2](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1009442) or [ANCOM-BC2](https://www.nature.com/articles/s41467-020-17041-7)). By default, we use phylogenetic regression, but we also allow users to apply the alternative method [POMS](https://academic.oup.com/bioinformatics/article/38/22/5055/6731923). The method is described in a forthcoming preprint (Kananen et al., in preparation).
 
-In addition, we highly recommend using v2.0.0-alpha or later. We no longer support the use of earlier versions, as there are significant improvements since v0.91.
+In addition, we highly recommend using v2.0.1 or later. We no longer support the use of earlier versions, as there are significant improvements since v0.91.
 
 ## Installing Phylogenize2
 
@@ -18,22 +18,27 @@ Create a new environment by typing `conda create -n phylogenize` and `conda acti
 
 Please note, we assume in these instructions you are working off of base-r and NOT Rstudio. We describe at the bottom of this section how to use Rstudio while still installing the dependencies with mamba.
 
-#### Install with mamba - configuration file
-
-You can make a conda environment using the supplied yaml file and not worry about installing any dependencies. Run `conda env create -f environment.yml` and then `conda activate phylogenize`. Open base-r and then type `devtools::install_github("biocore/phylogenize")`.
-
-#### Install with conda - no configuration file
+#### Install with mamba/conda - no configuration file
 
 1.  Make sure you have R installed. You can verify if you type `R --version`. If you don't you can get the latest version [here](https://www.r-project.org/) or install it using conda [here](https://anaconda.org/r/r).
-2.  Create a new environment in conda by running `conda create -n phylogenize`
+2.  Create a new environment in mamba/conda by running `conda create -n phylogenize`
 3.  Activate your new environment with `conda activate phylogenize`
 4.  Install the dependencies with the bioconda and conda-forge channels as shown below
 
 ```         
 mamba install -y bioconda::phylogenize
 ```
+If you are running phylogenize2 and plan to use abundance phenotype calculations. The conda version comes with ancombc2 preinstalled. To use maaslin2, you will have to install that separately. 
 
-4.  Open R and then run `library("phylogenize")`.
+Additionally, you should install these packages to ensure a smooth workflow for abundance runs:
+```
+mamba install -c bioconda \
+  bioconductor-mia \
+  bioconductor-phyloseq \
+  bioconductor-microbiom
+```
+
+4.  Open R and then run `library("phylogenize")`. You should be all set to run phylogenize!
 
 #### Locally - Rstudio
 
@@ -54,26 +59,37 @@ sudo apt install fontconfig
 
 We have several premade databases that you can select from depending on what is expected to match your host's system. If you are unsure what database to use, then we recommend using GTDB as the default.
 
-| Environment        | Version | Database | Number of families | Number of species |
-|--------------------|---------|----------|--------------------|-------------------|
-| chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |
-| cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |
-| honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |
-| human gut          | v2.0.2  | MGnify   | 215                | 3445              |
-| human oral         | v1.0.1  | MGnify   | 52                 | 260               |
-| human vaginal      | v1.0    | MGnify   | 52                 | 189               |
-| marine eukaryotes  | vbeta   | MGnify   | 250                | 250               |
-| marine             | v2.0    | MGnify   | 1192               | 7408              |
-| mouse gut          | v1.0    | MGnify   | 136                | 1639              |
-| non model fish gut | v2.0    | MGnify   | 60                 | 87                |
-| pig gut            | v1.0    | MGnify   | 138                | 800               |
-| sheep rumen        | v1.0    | MGnify   | 117                | 2122              |
-| zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |
-| global             |         | GlobDB   |                    |                   |
+| Environment        | Version | Database | Number of families | Number of species | Archaea Included? | Zenodo                                    |
+|--------------------|---------|----------|--------------------|-------------------|-------------------|-------------------------------------------|
+| barley rhizosphere | v2.0    | MGnify   | 34                 | 66                |                   |[here](https://zenodo.org/records/19094275)|
+| chicken gut        | v1.0.1  | MGnify   | 142                | 1007              |                   |[here](https://zenodo.org/records/18706394)|
+| cow rumen          | v1.0.1  | MGnify   | 121                | 1914              |                   |[here](https://zenodo.org/records/19075302)|
+| multiple           | v226    | GlobDB   | 10906              | 306261            | True              |[here](https://zenodo.org/records/19607691)|
+| honeybee gut       | v1.0.1  | MGnify   | 31                 | 131               |                   |[here](https://zenodo.org/records/18706413)|
+| human gut          | v2.0.2  | MGnify   | 215                | 3445              |                   |[here](https://zenodo.org/records/18706603)|
+| human oral         | v1.0.1  | MGnify   | 52                 | 260               |                   |[here](https://zenodo.org/records/18706578)|
+| human skin         | v1.0    | MGnify   | 86                 | 552               |                   |[here](https://zenodo.org/records/18706597)|
+| human vaginal      | v1.0    | MGnify   | 52                 | 189               |                   |[here](https://zenodo.org/records/18706478)|
+| maize rhizosphere  | v1.0    | MGnify   | 153                | 268               |                   |[here](https://zenodo.org/records/18706584)|
+| marine             | v2.0    | MGnify   | 1192               | 7408              | True              |[here](https://zenodo.org/records/18706676)|
+| marine sediment    | v1.0    | MGnify   | 1571               | 4362              | True              |[here](https://zenodo.org/records/19154534)|
+| mouse gut          | v1.0    | MGnify   | 136                | 1639              |                   |[here](https://zenodo.org/records/18706664)|
+| non model fish gut | v2.0    | MGnify   | 60                 | 87                |                   |[here](https://zenodo.org/records/18706644)|
+| pig gut            | v1.0    | MGnify   | 138                | 800               | True              |[here](https://zenodo.org/records/18706629)|
+| sheep rumen        | v1.0    | MGnify   | 117                | 2122              |                   |[here](https://zenodo.org/records/18706500)|
+| soil               | v1.0    | MGnify   | 1353               | 9122              | True              |[here](https://zenodo.org/records/18707064)|
+| tomato rhizosphere | v1.0    | MGnify   | 153                | 268               | True              |[here](https://zenodo.org/records/18706452)|
+| zebrafish fecal    | v1.0    | MGnify   | 41                 | 24                |                   |[here](https://zenodo.org/records/18706621)|
 
-All databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
+### GlobDB v226 Special Note
+[GlobDB](https://globdb.org/) is a dereplicated database from multiple sources that are processed by Speth et al, 2025 (1). The project includes 14 genome consolidated resources: GTDB, mOTU, SPIRE, BCRBG, GEM, 13 MGnify Biome Mag catalogs, GOMC, SMAG, TPMC, cFMD, MRGM, HRGM2, sheep and goat gut microbiome compendium, genome catalog of anammox microbiotas, and GFS.
 
-Databases can be downloaded manually and decompressed from our Zenodo page [here](), or they can be downloaded and decompressed using Phylogenize2's `phylogenize::download.zenodo.db("your/html/link/here.zip")`. The default if no database is available is GTDB. If using a custom database, then all the database files must be placed into a directory called `package/inst/extdata/`.
+For phylogenize, all databases have been been matched against the UniRef50, FesNov, and UHGP databases, and any remaining protein sequences have been clustered *de novo*. Functional annotations have been obtained using [anvi'o](https://peerj.com/articles/1319/) and [KEGG](https://www.genome.jp/kegg/pathway.html) KOfams as described in Kananen et al., 2025.
+
+Databases can be downloaded manually and decompressed from our Zenodo pages in the table above. All the database files must be placed into a directory called `package/inst/extdata/`. Older database versions can also be located on the Zenodo in the phylogenize community. 
+
+### Making Your Own Database
+We recommend using MGnify's v3.0.0 pipeline [here](https://github.com/EBI-Metagenomics/genomes-catalogue-pipeline/releases/tag/v3.0.0) for processing raw files into workable databases. If the files follow standard MGnify format, then they will work in our custom workflow. After you have run their pipeline - a custom database can be generated using our snakemake workflow [here](https://github.com/pbradleylab/phylogenize-db-prep). 
 
 ## Preparing your data
 
@@ -83,9 +99,9 @@ If you are using shotgun metagenomes, you will need to first quantify species ab
  - Mouse gut Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/mouse-gut/v1.0/kraken2_db_mouse-gut_v1.0/
  - Marine Kraken2 database: https://ftp.ebi.ac.uk/pub/databases/metagenomics/mgnify_genomes/marine/v2.0/kraken2_db_marine_v2.0/
 
-An example workflow for UHGG written in Snakemake can be seen under `shotgun_kraken2_example`.
+To use GlobDB, you will need to run taxonomic assignment using Sylph using GlobDB's pregenerated Sylph database found [here](https://fileshare.lisc.univie.ac.at/globdb/globdb_r226/taxonomic_profiling/)
 
-Finally, you will want to make the taxon names from Bracken match the IDs in Phylogenize2, and also to merge any technical replicates for the same biological sample (as these will lead to overconfident predictions). There is a script to perform this under `shotgun_kraken2_example` called `parse-bracken.R`. You can run this script as follows:
+Finally, you will want to make the taxon names from Bracken match the IDs in Phylogenize2. You can check this by seeing if the sampleid column's values match the values in the selected databases `cluster` column in the taxonomy file (i.e mouse-gut-taxonomy.csv). Additionally, you may wish to merge any technical replicates for the same biological sample (as these will lead to overconfident predictions). There is a script to perform this under `shotgun_kraken2_example` called `parse-bracken.R`. You can run this script as follows:
 
 ```
 Rscript parse_bracken.R -t [path to taxonomy file] -i [path to bracken output files] -o [path to output tab-separated file] -m [path to metadata file]
@@ -267,3 +283,6 @@ render_core_report(
 ## Contact
 
 If you have questions or comments, please contact [support\@phylogenize.org](mailto:support@phylogenize.org). If Phylogenize2 is giving you an error, please also feel free to file a bug using our [issue tracker](https://bitbucket.org/pbradz/phylogenize/issues?status=new&status=open). Thanks for your feedback!
+
+## Citations
+1. Daan R Speth, Nick Pullen, Samuel T N Aroney, Benjamin L Coltman, Jay Osvatic, Ben J Woodcroft, Thomas Rattei, Michael Wagner, GlobDB: a comprehensive species-dereplicated microbial genome resource, Bioinformatics Advances, Volume 5, Issue 1, 2025, vbaf280, https://doi.org/10.1093/bioadv/vbaf280
