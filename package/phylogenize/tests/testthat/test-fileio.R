@@ -79,6 +79,44 @@ test_that("tabular import binarizes non-abundance phenotypes", {
     expect_equal(as.numeric(abd.meta$mtx["sp2", ]), c(0, 1, 0, 1))
 })
 
+test_that("tabular import rejects nonnumeric abundance values", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempdir()
+    abundance_file <- file.path(tmp, "bad-abundance.tsv")
+    metadata_file <- file.path(tmp, "bad-metadata.tsv")
+
+    writeLines(c(
+        "taxon\ts1\ts2\ts3\ts4",
+        "sp1\t1\tbad\t2\t3",
+        "sp2\t0\t4\t1\t5"
+    ), abundance_file)
+    writeLines(c(
+        "sample\tdataset\tenv",
+        "s1\td1\tA",
+        "s2\td1\tA",
+        "s3\td1\tB",
+        "s4\td1\tB"
+    ), metadata_file)
+
+    expect_error(
+        read.abd.metadata(
+            input_format="tabular",
+            abundance_file=abundance_file,
+            metadata_file=metadata_file,
+            sample_column="sample",
+            dset_column="dataset",
+            env_column="env",
+            which_envir="A",
+            which_phenotype="abundance",
+            categorical=TRUE,
+            error_to_file=FALSE
+        ),
+        "nonnumeric value"
+    )
+})
+
 test_that("BIOM import test documents optional external dependency", {
     skip("BIOM round-trip helper still depends on obsolete biom_dir/external biom tooling.")
 })

@@ -247,9 +247,28 @@ read.abd.metadata.tabular <- function(...) {
     } else { pz.message(paste0("located metadata file: ", mf), level=2) }
     
     pz.message("  ..........Reading abundance table")
-    abd.df <- readr::read_tsv(af, show_col_types = FALSE)
+    abd.df <- readr::read_tsv(
+        af,
+        col_types=readr::cols(.default=readr::col_character()),
+        show_col_types=FALSE
+    )
     # convert to matrix
-    abd.mtx <- data.matrix(abd.df[, -1])
+    abd.values <- as.data.frame(
+        lapply(abd.df[, -1, drop=FALSE], function(x) {
+            suppressWarnings(as.numeric(x))
+        }),
+        check.names=FALSE
+    )
+    bad.cols <- names(abd.values)[
+        vapply(abd.values, function(x) any(is.na(x)), logical(1))
+    ]
+    if (length(bad.cols) > 0) {
+        pz.error(paste0(
+            "Abundance table contains nonnumeric value(s) in column(s): ",
+            paste(bad.cols, collapse=", ")
+        ))
+    }
+    abd.mtx <- as.matrix(abd.values)
     rownames(abd.mtx) <- abd.df[[1]]
     pz.message(paste0(
         "  ..........Abundance matrix: ",
@@ -513,7 +532,7 @@ change.presence.tax.level <- function(binary, taxon, tax){
     # Make a mapping file that is at the taxonomic level selected from the tax
     # file.
     clean <- tax %>%
-        dplyr::select(cluster, taxon, phylum) %>%
+        dplyr::select(cluster, tidyselect::all_of(taxon), phylum) %>%
         dplyr::distinct()
     # Drop empty values from the taxonomic level selected if they are not
     clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
@@ -535,6 +554,11 @@ change.presence.tax.level <- function(binary, taxon, tax){
         name <- names(binary)[i]
         b <- binary[[name]]
         t <- clean[[name]]
+        if (is.null(t)) {
+            pz.warning(paste("Warning: No data found for taxon classification",
+                             name))
+            next
+        }
         
         # make a named list in one step
         named_tax_list <- t %>%

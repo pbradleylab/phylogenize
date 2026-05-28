@@ -17,15 +17,50 @@ test_that("change.presence.tax.level splits sparse matrices by requested taxon",
         )
     )
 
-    expect_warning(
-        split_binary <- change.presence.tax.level(binary, "family", tax),
-        "Using an external vector"
-    )
+    split_binary <- change.presence.tax.level(binary, "family", tax)
 
     expect_setequal(names(split_binary), c("f1", "f2"))
     expect_equal(colnames(split_binary$f1), c("s1", "s2"))
     expect_equal(colnames(split_binary$f2), c("s3", "s4"))
     expect_equal(rownames(split_binary$f1), c("gene1", "gene2"))
+})
+
+test_that("change.presence.tax.level skips missing taxonomy mappings", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    pz.options(verbosity=0, error_to_file=FALSE)
+
+    tax <- tibble::tibble(
+        cluster=paste0("s", 1:2),
+        phylum="p1",
+        family=c("f1", "f1")
+    )
+    binary <- list(
+        p1=Matrix::Matrix(
+            matrix(
+                c(1, 0),
+                nrow=1,
+                dimnames=list("gene1", paste0("s", 1:2))
+            ),
+            sparse=TRUE
+        ),
+        p2=Matrix::Matrix(
+            matrix(
+                c(1, 0),
+                nrow=1,
+                dimnames=list("gene1", paste0("s", 3:4))
+            ),
+            sparse=TRUE
+        )
+    )
+
+    expect_warning(
+        split_binary <- change.presence.tax.level(binary, "family", tax),
+        "No data found for taxon classification p2"
+    )
+
+    expect_equal(names(split_binary), "f1")
+    expect_equal(colnames(split_binary$f1), c("s1", "s2"))
 })
 
 test_that("change.tree.tax.level returns matching subtrees", {
