@@ -22,8 +22,6 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
         abd.meta <- add.below.LOD(pz.db, abd.meta, ...)
         sanity.check.abundance(abd.meta$mtx, ...)
     }
-    saveRDS(abd.meta, "abd.meta.rds")
-    saveRDS(pz.db, "pz.db.rds")
     pz.message("  D) Calculating phenotypes...")
     phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
     if (pz.options('quantile_normalize')) {
@@ -305,5 +303,4 @@ logit_auc_pheno <- function(abd.meta,
     })
     return(logit_auc)
 }
-
 
