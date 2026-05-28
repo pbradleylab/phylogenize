@@ -1,5 +1,3 @@
-context("Enrichment exports")
-
 test_that("enrichment overlap exports include effect sizes", {
     out_dir <- file.path(tempdir(), "phylogenize-enrichment-export-test")
     dir.create(out_dir, showWarnings=FALSE, recursive=TRUE)
