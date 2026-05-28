@@ -108,10 +108,10 @@ taxa that are neither.
 # First do some sanity checking
 tree_lengths <- vapply(core[["list_pheno"]][["pz.db"]][["trees"]], \(.) length(.[["tip.label"]]), 1L)
 if (max(tree_lengths) <= 1) stop("No tree had more than 1 tip")
-core[["pz.db"]][["list_pheno"]][["trees"]] <- core[["pz.db"]][["list_pheno"]][["trees"]][tree_lengths > 1]
-core[["pz.db"]][["list_pheno"]][["gene.presence"]] <- core[["pz.db"]][["list_pheno"]][["gene.presence"]][names(which(tree_lengths > 1))]
-core[["pz.db"]][["list_pheno"]][["species"]] <- core[["pz.db"]][["list_pheno"]][["species"]][names(which(tree_lengths > 1))]
-core[["pz.db"]][["list_pheno"]][["ntaxa"]] <- length(names(which(tree_lengths > 1)))
+core[["list_pheno"]][["pz.db"]][["trees"]] <- core[["list_pheno"]][["pz.db"]][["trees"]][tree_lengths > 1]
+core[["list_pheno"]][["pz.db"]][["gene.presence"]] <- core[["list_pheno"]][["pz.db"]][["gene.presence"]][names(which(tree_lengths > 1))]
+core[["list_pheno"]][["pz.db"]][["species"]] <- core[["list_pheno"]][["pz.db"]][["species"]][names(which(tree_lengths > 1))]
+core[["list_pheno"]][["pz.db"]][["ntaxa"]] <- length(names(which(tree_lengths > 1)))
 
 
 list2env(core[["list_pheno"]], environment())
@@ -153,7 +153,7 @@ write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
 pz.message("Skipping phenotypes, as not found (possibly because POMS was used)")
 
 # Create dummy phenotypes for significant gene plot 
-all_species <- Reduce(union, map(pz.db$trees, \(.) .$tip.label))
+all_species <- Reduce(union, purrr::map(pz.db$trees, \(.) .$tip.label))
 phenotype <- setNames(rep(0, length(all_species)), all_species)
 phenoP <- 0
 
@@ -193,7 +193,7 @@ phylogenize::knitPrintListPlots(
 if (!(skip_phenotypes)) {
 pheno.labels <- names(phenotype)
 subtrees <- lapply(pz.db$trees, function(tr) {
-  keep.tips(tr, intersect(mapped.observed, pheno.labels))
+  phylogenize::keep.tips(tr, intersect(mapped.observed, pheno.labels))
 })
 
 subtrees <- Filter(function(x) {
@@ -232,35 +232,39 @@ an FDR of 5%.
 ```{r write_associations, warning = FALSE, message = FALSE, echo=FALSE, cache=FALSE}
 signif_genes <- core[["list_signif"]]
 
-pos.sig.count <- purrr::map_dbl(core[["list_signif"]]$pos.sig, length)
-
-if ("neg.sig" %in% names(core[["list_signif"]])) {
-  neg.sig.count <- purrr::map_dbl(core[["list_signif"]]$neg.sig, length)
-  sig.count <- full_join(
-    enframe(pos.sig.count, name = "Taxon", value = "Pos. Sig. Genes"),
-    enframe(neg.sig.count, name = "Taxon", value = "Neg. Sig. Genes"),
-    by = "Taxon"
-  )
+if (is.null(signif_genes)) {
+  pz.message("Skipping association summary because no association results were found")
 } else {
-  sig.count <- enframe(pos.sig.count, name = "Taxon", value = "Pos. Sig. Genes")
-}
+  pos.sig.count <- purrr::map_dbl(signif_genes$pos.sig, length)
 
-phylogenize::getClinDT(sig.count)
+  if ("neg.sig" %in% names(signif_genes)) {
+    neg.sig.count <- purrr::map_dbl(signif_genes$neg.sig, length)
+    sig.count <- dplyr::full_join(
+      tibble::enframe(pos.sig.count, name = "Taxon", value = "Pos. Sig. Genes"),
+      tibble::enframe(neg.sig.count, name = "Taxon", value = "Neg. Sig. Genes"),
+      by = "Taxon"
+    )
+  } else {
+    sig.count <- tibble::enframe(pos.sig.count, name = "Taxon", value = "Pos. Sig. Genes")
+  }
 
-write.csv(
-  file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
-  signif_genes[["pos.sig.descs"]]
-)
-if ("neg.sig" %in% names(core[["list_signif"]])) {
+  phylogenize::getClinDT(sig.count)
+
   write.csv(
-    file = file.path(pz.options('out_dir'), "neg-sig-thresholded.csv"),
-    signif_genes[["neg.sig.descs"]]
+    file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
+    signif_genes[["pos.sig.descs"]]
+  )
+  if ("neg.sig" %in% names(signif_genes)) {
+    write.csv(
+      file = file.path(pz.options('out_dir'), "neg-sig-thresholded.csv"),
+      signif_genes[["neg.sig.descs"]]
+    )
+  }
+  write.csv(
+    file = file.path(pz.options('out_dir'), "all-results.csv"),
+    signif_genes[["results.matrix"]]
   )
 }
-write.csv(
-  file = file.path(pz.options('out_dir'), "all-results.csv"),
-  signif_genes[["results.matrix"]]
-)
 ```
 ## Gene association heat maps
 The left shows the phenotype painted on tips of the tree as above. The right
@@ -273,35 +277,39 @@ have particularly extreme phenotypes. Positively-associated genes are plotted
 first, then negatively-associated genes.
 
 ```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=FALSE}
-for (which_sign in c(1, -1)) {
-  if (which_sign==1) {
-    if ("phy.with.pos.sigs" %in% signif_genes) {
-      which_phy <- signif_genes[["phy.with.pos.sigs"]]
-      sig_thresh <- signif_genes[["pos.sig.thresh"]]
+if (is.null(signif_genes)) {
+  pz.message("Skipping gene association heat maps because no association results were found")
+} else {
+  for (which_sign in c(1, -1)) {
+    if (which_sign==1) {
+      if ("phy.with.pos.sigs" %in% signif_genes) {
+        which_phy <- signif_genes[["phy.with.pos.sigs"]]
+        sig_thresh <- signif_genes[["pos.sig.thresh"]]
+      } else {
+        which_phy <- signif_genes[["phy.with.sigs"]]
+        sig_thresh <- signif_genes[["pos.sig.thresh"]]
+      }
     } else {
-      which_phy <- signif_genes[["phy.with.sigs"]]
-      sig_thresh <- signif_genes[["pos.sig.thresh"]]
+      if ("phy.with.neg.sigs" %in% signif_genes) {
+        which_phy <- signif_genes[["phy.with.neg.sigs"]]
+        sig_thresh <- signif_genes[["neg.sig.thresh"]]
+      } else {
+        break
+      }
     }
-  } else {
-    if ("phy.with.neg.sigs" %in% signif_genes) {
-      which_phy <- signif_genes[["phy.with.neg.sigs"]]
-      sig_thresh <- signif_genes[["neg.sig.thresh"]]
-    } else {
-      break
-    }
-  }
-  valid_keys <- intersect(which_phy, names(plotted.pheno.trees))
-  valid_keys <- intersect(valid_keys, names(pz.db$gene.presence))
-  valid_keys <- intersect(valid_keys, names(pz.db$trees))
+    valid_keys <- intersect(which_phy, names(plotted.pheno.trees))
+    valid_keys <- intersect(valid_keys, names(pz.db$gene.presence))
+    valid_keys <- intersect(valid_keys, names(pz.db$trees))
 
-  cluster.plots <- mapply(single.cluster.plot,
-                          pz.db$gene.presence[valid_keys],
-                          sig_thresh[valid_keys],
-                          pz.db$trees[valid_keys],
-                          plotted.pheno.trees[valid_keys],
-                          valid_keys,
-                          SIMPLIFY = FALSE)
-  purrr::walk(cluster.plots, print)
+    cluster.plots <- mapply(phylogenize::single.cluster.plot,
+                            pz.db$gene.presence[valid_keys],
+                            sig_thresh[valid_keys],
+                            pz.db$trees[valid_keys],
+                            plotted.pheno.trees[valid_keys],
+                            valid_keys,
+                            SIMPLIFY = FALSE)
+    purrr::walk(cluster.plots, print)
+  }
 }
 
 ```
