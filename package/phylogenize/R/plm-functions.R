@@ -1007,7 +1007,7 @@ calc.ess <- function(abd.meta,
     if (length(dsets) > 1) {
         warning("datasets are ignored when calculating specificity")
     }
-    meta.present <- abd.meta$meta[(abd.meta$meta[[S]] %>%
+    meta.present <- abd.meta$metadata[(abd.meta$metadata[[S]] %>%
                                    as.character %in%
                                    colnames(abd.meta$mtx)), ]
     envirs <- unique(meta.present[[E]])
@@ -1024,7 +1024,9 @@ calc.ess <- function(abd.meta,
         stop(paste0("don't know how to compute priors of type ", ptype))
     }
     ids <- sapply(colnames(abd.meta$mtx),
-                  function (sn) abd.meta$meta[(abd.meta$meta[[S]] == sn), E])
+                  function (sn) {
+                      abd.meta$metadata[(abd.meta$metadata[[S]] == sn), E]
+                  })
     if (length(unique(ids)) < 2) { 
         stop("error: only one environment found")
     }
