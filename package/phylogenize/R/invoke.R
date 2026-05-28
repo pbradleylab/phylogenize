@@ -435,9 +435,13 @@ get_enrichment_tbls <- function(signif,
     }
     if (!is.null(pretty.enr.tbl)) {
         accession_to_fxn <- pz.db$gene.to.fxn %>%
-            dplyr::select(accession, `function`) %>%
+            dplyr::select(accession, gene, `function`) %>%
             dplyr::distinct()
         if (nrow(enrichment.tbl) > 0) {
+            effect_lookup <- results.matrix %>%
+                dplyr::select(taxon, gene, effect.size) %>%
+                dplyr::rename(mapped_gene=gene,
+                              effectsize=effect.size)
             enr.overlap <- dplyr::select(enrichment.tbl,
                                          taxon,
                                          cutoff,
@@ -448,13 +452,11 @@ get_enrichment_tbls <- function(signif,
                 dplyr::left_join(.,
                                  accession_to_fxn,
                                  by=c("geneID"="accession")) %>%
-                dplyr::rename(gene=geneID, description=`function`) %>%
-                dplyr::left_join(
-                    results.matrix %>%
-                        dplyr::select(taxon, gene, effect.size),
-                    by=c("taxon", "gene")
-                ) %>%
-                dplyr::rename(effectsize=effect.size)
+                dplyr::rename(gene=geneID,
+                              mapped_gene=gene,
+                              description=`function`) %>%
+                dplyr::left_join(effect_lookup,
+                                 by=c("taxon", "mapped_gene"))
             if (export) {
                 write.csv(file=file.path(pz.options('out_dir'),
                                          "enr-overlaps.csv"),
@@ -471,4 +473,3 @@ get_enrichment_tbls <- function(signif,
     }
     return(pretty.enr.tbl)
 }  
-
