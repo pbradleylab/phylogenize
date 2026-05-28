@@ -117,6 +117,39 @@ test_that("tabular import rejects nonnumeric abundance values", {
     )
 })
 
+test_that("harmonization trims sample identifiers before matching", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 0, 2, 3,
+              0, 4, 1, 5),
+            nrow=2,
+            byrow=TRUE,
+            dimnames=list(c("sp1", "sp2"), c("s1 ", "s2", " s3", "s4"))
+        ),
+        metadata=tibble::tibble(
+            sample=c("s1", " s2", "s3 ", "s4"),
+            dataset=c("d1", "d1", "d1", "d1"),
+            env=c("A", "A", "B", "B")
+        )
+    )
+
+    harmonized <- harmonize.abd.meta(
+        abd.meta,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        which_phenotype="abundance",
+        error_to_file=FALSE
+    )
+
+    expect_equal(colnames(harmonized$mtx), paste0("s", 1:4))
+    expect_equal(harmonized$metadata$sample, paste0("s", 1:4))
+    expect_equal(as.numeric(harmonized$mtx["sp1", ]), c(1, 0, 2, 3))
+})
+
 test_that("BIOM import test documents optional external dependency", {
     skip("BIOM round-trip helper still depends on obsolete biom_dir/external biom tooling.")
 })

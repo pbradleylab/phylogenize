@@ -24,8 +24,12 @@ phylogenize <- function(do_cache=TRUE,
     do.call(pz.options, list(...))
     poms_flag <- tolower(pz.options("core_method"))=="poms"
     pz.options(working_dir=normalizePath(getwd()))
-    pz.options(out_dir=normalizePath(pz.options("out_dir")))
-    if (!(dir.exists(pz.options("out_dir")))) dir.create(pz.options("out_dir"))
+    pz.options(out_dir=normalizePath(pz.options("out_dir"), mustWork=FALSE))
+    if (!(dir.exists(pz.options("out_dir"))) &&
+        !dir.create(pz.options("out_dir"), recursive=TRUE, showWarnings=FALSE)) {
+        pz.error(paste0("Could not create output directory: ",
+                        pz.options("out_dir")))
+    }
     
     pz.message("Running the core of phylogenize...")
     core <- phylogenize_core(do_POMS=poms_flag,
@@ -165,9 +169,11 @@ render_core_report <- function(core,
     }
     do.call(pz.options, list(...))
     pz.options(working_dir=normalizePath(getwd()))
-    pz.options(out_dir=normalizePath(pz.options("out_dir")))
-    if (!dir.exists(pz.options('out_dir'))) {
-        dir.create(pz.options('out_dir'))
+    pz.options(out_dir=normalizePath(pz.options("out_dir"), mustWork=FALSE))
+    if (!dir.exists(pz.options('out_dir')) &&
+        !dir.create(pz.options('out_dir'), recursive=TRUE, showWarnings=FALSE)) {
+        pz.error(paste0("Could not create output directory: ",
+                        pz.options("out_dir")))
     }
     p <- pz.options()
     if (verbose) {

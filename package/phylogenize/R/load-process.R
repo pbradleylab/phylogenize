@@ -732,9 +732,13 @@ process.16s <- function(abd.meta, ...) {
 #' @export
 harmonize.abd.meta <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
+    abd.meta$metadata[[opts('sample_column')]] <- trimws(
+        abd.meta$metadata[[opts('sample_column')]]
+    )
+    colnames(abd.meta$mtx) <- trimws(colnames(abd.meta$mtx))
     samples.present <- intersect(
-        trimws(abd.meta$metadata[[opts('sample_column')]]),
-        trimws(colnames(abd.meta$mtx)))
+        abd.meta$metadata[[opts('sample_column')]],
+        colnames(abd.meta$mtx))
     pz.message(paste0(
         "  ..........Samples present in both metadata and matrix: ",
         length(samples.present)
