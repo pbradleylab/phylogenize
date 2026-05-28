@@ -82,13 +82,16 @@ phylogenize_core <- function(
         p.method=phylogenize:::phylolm.fx.pv,
         ...
 ) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
-    do_POMS <- (tolower(opts('core_method')) == "poms")
+    dots <- list(...)
+    opts <- do.call(settings::clone_and_merge, c(list(PZ_OPTIONS), dots))
+    do_POMS <- do_POMS || (tolower(opts('core_method')) == "poms")
+    if (do_POMS) {
+        dots[["core_method"]] <- "poms"
+    }
     pz.message("I. Generating phenotypes...")
-    list_pheno <- data_to_phenotypes(
-        save_data = (!do_POMS || force_return_data),
-        ...
-    )
+    list_pheno <- do.call(data_to_phenotypes,
+                          c(list(save_data = (!do_POMS || force_return_data)),
+                            dots))
     pz.message(paste0(
         "  .....Phenotypes generated for ",
         length(list_pheno[["phenotype_results"]][["phenotype"]]),
@@ -97,10 +100,10 @@ phylogenize_core <- function(
         " testable group(s)"
     ))
     pz.message("II. Performing association tests...")
-    list_signif <- get_all_associated_genes(
-        list_pheno,
-        p.method,
-        ...)
+    list_signif <- do.call(get_all_associated_genes,
+                            c(list(list_pheno=list_pheno,
+                                   p.method=p.method),
+                              dots))
     if (!is.null(list_signif)) {
         pz.message(paste0(
             "  .....Association testing returned ",
