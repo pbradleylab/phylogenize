@@ -199,7 +199,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
         " taxon/taxa"
     ))
     if (!is.null(pheno_sd)) pheno_sd <- pheno_sd[names(phenotype)]
-    if (pz.options("which_phenotype") != "prevalence") {
+    if (opts("which_phenotype") != "prevalence") {
         # Except for prevalence, retain observed taxa
         pz.message("  .....Filtering trees to observed taxa")
         pz.db$trees <- retain.observed.taxa(pz.db$trees,
@@ -208,7 +208,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
                                             mapped.observed)
         pz.db$trees <- pz.db$trees[
             vapply(pz.db$trees, \(.) length(.$tip.label), 1L) >=
-                pz.options("treemin")
+                opts("treemin")
         ]
         if (length(pz.db$trees) == 0) { pz.error("all trees dropped") }
         pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)

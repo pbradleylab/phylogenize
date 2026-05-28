@@ -30,6 +30,9 @@ test_that("qvals uses configured p.adjust methods", {
 
     pz.options(fdr_method="BY")
     expect_equal(phylogenize:::qvals(p), p.adjust(p, "BY"))
+
+    pz.options(fdr_method="BH")
+    expect_equal(phylogenize:::qvals(p, fdr_method="BY"), p.adjust(p, "BY"))
 })
 
 test_that("negative-only significant taxa are retained after thresholding", {

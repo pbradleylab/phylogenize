@@ -745,9 +745,10 @@ non.interactive.plot <- function(tree.obj, file=NULL, name="taxon", plabel="phen
     high_color <- tree.obj$cols["high.col"]
     
     tree <- ggtree::ggtree(ape::as.phylo(tree.obj$rphy),
-			   ladderize=TRUE) +
+                           ladderize=TRUE) +
+        ggtree::geom_tree(color = "grey35", size = 0.4) +
         ggtree::geom_point(data = valid_labels,
-                   ggplot2::aes(text = label, color = color)) +
+                           ggplot2::aes(text = label, color = color)) +
         ggtree::geom_tiplab(data = valid_labels,
                     ggplot2::aes(color = color)) +
         ggplot2::ggtitle(name) +
@@ -880,4 +881,3 @@ int.cluster.plot <- function(gene.presence,
         ggplot2::scale_shape(guide="none")
     plotly::ggplotly(tmp)
 }
-
