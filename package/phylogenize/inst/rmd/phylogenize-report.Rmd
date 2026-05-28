@@ -25,8 +25,8 @@ library(Matrix)
 pz.warning(paste(names(core)))
 
 cache.d <- file.path(pz.options('out_dir'), 'cache')
-dir.create(pz.options('out_dir'))
-dir.create(cache.d)
+dir.create(pz.options('out_dir'), recursive=TRUE, showWarnings=FALSE)
+dir.create(cache.d, recursive=TRUE, showWarnings=FALSE)
 knitr::opts_chunk$set(cache.path=cache.d)
 
 if (pz.options('use_rmd_params')) {
@@ -64,7 +64,7 @@ if (!pz.options('skip_graphs')) {
     })
 }
 
-dir.create(pz.options('out_dir'))
+dir.create(pz.options('out_dir'), recursive=TRUE, showWarnings=FALSE)
 do_POMS <- (tolower(pz.options('core_method'))=="poms")
 
 
