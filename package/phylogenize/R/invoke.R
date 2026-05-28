@@ -352,20 +352,21 @@ get_signif_associated_genes <- function(pz.db,
         nrow(results.matrix),
         " row(s)"
     ))
-    phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
+    phy.with.pos.sigs <- names(which(sapply(pos.sig, length) > 0))
+    phy.with.neg.sigs <- names(which(sapply(neg.sig, length) > 0))
     pz.message("  ..........Add sig descriptions")
-    pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
-    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig, ...)
-    pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs,
+    pos.sig.descs <- add.sig.descs(phy.with.pos.sigs, pos.sig, pz.db$gene.to.fxn)
+    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.pos.sigs, pos.sig, ...)
+    pos.sig.thresh.descs <- add.sig.descs(phy.with.pos.sigs,
                                           pos.sig.thresh,
                                           pz.db$gene.to.fxn)
-        neg.sig.descs <- add.sig.descs(phy.with.sigs, neg.sig, pz.db$gene.to.fxn)
-        neg.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, neg.sig, ...)
-        neg.sig.thresh.descs <- add.sig.descs(
-            phy.with.sigs,
-            neg.sig.thresh,
-            pz.db$gene.to.fxn
-        )
+    neg.sig.descs <- add.sig.descs(phy.with.neg.sigs, neg.sig, pz.db$gene.to.fxn)
+    neg.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.neg.sigs, neg.sig, ...)
+    neg.sig.thresh.descs <- add.sig.descs(
+        phy.with.neg.sigs,
+        neg.sig.thresh,
+        pz.db$gene.to.fxn
+    )
     pz.message("  ..........Recalculate sigs")
     # recalculate, since some of these may go away
     phy.with.pos.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
