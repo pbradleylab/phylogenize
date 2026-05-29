@@ -150,6 +150,39 @@ test_that("harmonization trims sample identifiers before matching", {
     expect_equal(as.numeric(harmonized$mtx["sp1", ]), c(1, 0, 2, 3))
 })
 
+test_that("harmonization keeps metadata aligned to retained abundance columns", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 2, 3, 4, 0,
+              5, 6, 7, 8, 0),
+            nrow=2,
+            byrow=TRUE,
+            dimnames=list(c("sp1", "sp2"), paste0("s", 1:5))
+        ),
+        metadata=data.frame(
+            sample=c("s3", "s1", "s5", "s4", "s2"),
+            dataset=rep("d1", 5),
+            env=c("B", "A", "A", "B", "A")
+        )
+    )
+
+    harmonized <- harmonize.abd.meta(
+        abd.meta,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        which_phenotype="abundance",
+        error_to_file=FALSE
+    )
+
+    expect_equal(harmonized$metadata$sample, colnames(harmonized$mtx))
+    expect_equal(colnames(harmonized$mtx), c("s3", "s1", "s4", "s2"))
+    expect_false("s5" %in% harmonized$metadata$sample)
+})
+
 test_that("BIOM import test documents optional external dependency", {
     skip("BIOM round-trip helper still depends on obsolete biom_dir/external biom tooling.")
 })
