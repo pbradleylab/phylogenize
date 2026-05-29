@@ -35,6 +35,33 @@ test_that("qvals uses configured p.adjust methods", {
     expect_equal(phylogenize:::qvals(p, fdr_method="BY"), p.adjust(p, "BY"))
 })
 
+test_that("calc.alpha.power compares named rejected tests to named truth sets", {
+    pvs <- c(g_null=0.01, g_alt=0.02, g_miss=0.50, g_alt2=0.20)
+
+    out <- calc.alpha.power(
+        pvs,
+        null=c("g_null", "g_miss"),
+        alt=c("g_alt", "g_alt2"),
+        alpha=0.05
+    )
+
+    expect_equal(unname(out["r"]), 0.5)
+    expect_equal(unname(out["p"]), 0.5)
+    expect_equal(unname(out["a"]), 0.5)
+
+    filtered <- calc.alpha.power(
+        pvs,
+        null=c("g_null", "g_miss"),
+        alt=c("g_alt", "g_alt2"),
+        alpha=0.05,
+        filter=c("g_alt", "g_miss")
+    )
+
+    expect_equal(unname(filtered["r"]), 0.25)
+    expect_equal(unname(filtered["p"]), 1)
+    expect_equal(unname(filtered["a"]), 0)
+})
+
 test_that("negative-only significant taxa are retained after thresholding", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)
