@@ -537,6 +537,7 @@ matrix.plm <- function(tree,
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     if (opts('separate_process') || (cores > 1)) {
         cl <- parallel::makeCluster(cores)
+        on.exit(parallel::stopCluster(cl), add=TRUE)
         cluster.load.pkg(cl, opts('devel'), opts('devel_pkgdir'))
         force(pheno)
         force(tree)
@@ -554,9 +555,6 @@ matrix.plm <- function(tree,
                        tr=tree,
                        restrict=restrict.taxa,
                        meas_err=opts('meas_err'))
-    if (opts('separate_process') || (cores > 1)) {
-        parallel::stopCluster(cl)
-    }
     r
 }
 
