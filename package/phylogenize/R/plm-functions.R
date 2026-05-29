@@ -947,12 +947,22 @@ correl.clr <- function(abd.meta,
         "Trait looks binary; are you sure you want to take correlation?") }
     corr_values <- apply(clr_mtx, 1, function(x) cor(x, trait))
     # take care of any perfect correlations before taking fisher transform
-    corr_values[corr_values == 1] <- (
-        (max(corr_values[corr_values < 1]) + 1) / 2
-    )
-    corr_values[corr_values == -1] <- (
-        (min(corr_values[corr_values > 1]) + -1) / 2
-    )
+    if (any(corr_values == 1)) {
+        below_one <- corr_values[corr_values < 1]
+        corr_values[corr_values == 1] <- if (length(below_one) > 0) {
+            (max(below_one) + 1) / 2
+        } else {
+            1 - .Machine$double.eps
+        }
+    }
+    if (any(corr_values == -1)) {
+        above_neg_one <- corr_values[corr_values > -1]
+        corr_values[corr_values == -1] <- if (length(above_neg_one) > 0) {
+            (min(above_neg_one) + -1) / 2
+        } else {
+            -1 + .Machine$double.eps
+        }
+    }
     return(atanh(corr_values))
 }
 
