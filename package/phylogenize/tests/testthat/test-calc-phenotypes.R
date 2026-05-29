@@ -102,6 +102,35 @@ test_that("correl.clr returns finite values for perfect negative correlations", 
     expect_lt(observed[["taxon2"]], 0)
 })
 
+test_that("differential abundance restores numeric taxon names without duplicates", {
+    restored <- restore.diff.abund.taxon.names(
+        sample_pheno=c(X123=1.5, taxonA=-0.5),
+        sample_sd=c(X123=0.2, taxonA=0.3),
+        original_names=c("123", "taxonA")
+    )
+
+    expect_equal(restored$old_name, c("123", "taxonA"))
+    expect_equal(restored$new_name, c("X123", "taxonA"))
+    expect_equal(restored$pheno, c(1.5, -0.5))
+    expect_equal(restored$sd, c(0.2, 0.3))
+    expect_equal(nrow(restored), 2)
+})
+
+test_that("differential abundance rejects ambiguous numeric taxon remapping", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    pz.options(error_to_file=FALSE)
+
+    expect_error(
+        restore.diff.abund.taxon.names(
+            sample_pheno=c(X123=1.5),
+            sample_sd=c(X123=0.2),
+            original_names=c("123", "X123")
+        ),
+        "ambiguous renamed value"
+    )
+})
+
 test_that("logit_auc_pheno indexes environments by sample ID", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)
