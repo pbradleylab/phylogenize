@@ -18,6 +18,28 @@ test_that("non.interactive.plot adds an explicit visible branch layer", {
     expect_true("grey35" %in% layer_colors)
 })
 
+test_that("change_tree_plot_internals maps cluster tip labels to species labels", {
+    taxonomy <- data.frame(
+        cluster=c("cluster1", "cluster2"),
+        species=c("Species one", "Species two")
+    )
+    ctree <- list(
+        data=data.frame(
+            node=c(1, 2, 3),
+            label=c("cluster1", "cluster2", NA)
+        ),
+        mapping=list(colour=c(cluster1=1.25, cluster2=-0.5))
+    )
+
+    updated <- change_tree_plot_internals(taxonomy, NULL, ctree)
+
+    tip_labels <- updated$data$label[updated$data$node %in% c(1, 2)]
+    expect_true(any(grepl("Species one", tip_labels, fixed=TRUE)))
+    expect_true(any(grepl("Species two", tip_labels, fixed=TRUE)))
+    expect_false(any(grepl("cluster1", tip_labels, fixed=TRUE)))
+    expect_equal(names(updated$mapping$colour), c("Species one", "Species two"))
+})
+
 test_that("tree.branch.segments extracts plotly-safe tree coordinates", {
     tree <- list(data=data.frame(
         node = c(3, 1, 2),

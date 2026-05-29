@@ -523,28 +523,20 @@ change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
     # interactive trees
     tax_filt <- taxonomy[taxonomy$cluster %in% ctree$data$label,
                          c("species", "cluster")]
-    ctree_data <- merge(ctree$data,
-                        tax_filt,
-                        by.x = "label",
-                        by.y = "species",
-                        all.x = TRUE)
-    tax_colors <- data.frame(label = as.character(names(ctree$mapping$colour)),
-                             color = ctree$mapping$colour
+    tax_filt <- dplyr::mutate(tax_filt, cluster = as.character(cluster))
+    tax_colors <- data.frame(
+        cluster = as.character(names(ctree$mapping$colour)),
+        color = ctree$mapping$colour,
+        stringsAsFactors = FALSE
     )
-    ctree_data <- merge(ctree_data, tax_colors, by = "label", all.x = TRUE)
+    ctree_data <- ctree$data %>%
+        dplyr::mutate(cluster = as.character(label)) %>%
+        dplyr::left_join(tax_filt, by = "cluster") %>%
+        dplyr::left_join(tax_colors, by = "cluster")
     ctree_data$color <- ifelse(is.na(ctree_data$color), 0, ctree_data$color)
-    
-    colnames(taxonomy)[colnames(taxonomy) == "cluster"] <- "label"
-    ctree_data <- merge(ctree_data, taxonomy[c("label", "species")],
-                        by = "label",
-                        all.x = TRUE)
-    ctree_data$label <- ctree_data$species
-    
-    ctree_data <- merge(ctree$data,
-                        ctree_data[c("node", "species", "color")],
-                        by = "node",
-                        all.x = TRUE)
-    ctree_data$label <- ctree_data$species
+    ctree_data$label <- ifelse(is.na(ctree_data$species),
+                               ctree_data$label,
+                               ctree_data$species)
     ctree$data <- ctree_data
     
     ctree$data$rounded <- signif(ctree$data$color, digits = 2)
@@ -554,15 +546,10 @@ change_tree_plot_internals <- function(taxonomy, reduced.phy, ctree) {
         paste0(ctree$data$label, " (phenotype: ", ctree$data$rounded, ")")
     )
     
-    #Change color section in tree to avoid error
-    swap <- tax_filt %>%
-        dplyr::mutate(cluster = as.character(cluster)) %>%
-        dplyr::select(cluster, species) 
-    
     color_head <- data.frame(cluster = names(ctree$mapping$colour),
                              stringsAsFactors = FALSE)
     color_head <- color_head %>%
-        dplyr::left_join(swap, by = "cluster")
+        dplyr::left_join(tax_filt, by = "cluster")
     
     color_head$final_name <- ifelse(is.na(color_head$species),
                                     color_head$cluster,
