@@ -36,7 +36,7 @@ result.wrapper.plm <- function(
     ...
 ) {
     opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
-    core_method <- tolower(opts('core_method'))
+    core_method <- if (isTRUE(poms)) "poms" else tolower(opts('core_method'))
     lapply.across.names(taxa, function(p) {
         pz.message(paste0("  ..........Checking for type for taxa: ", p))
 	if (class(tree) == "phylo") {
@@ -225,12 +225,19 @@ matrix.POMS <- function(tree,
     poms_group1 <- poms_samples[poms_meta[[E]] == envir]
     poms_group2 <- poms_samples[poms_meta[[E]] != envir]
     poms_abun <- abd.meta$mtx[, poms_samples, drop=FALSE]
+    if (length(poms_group1) == 0 || length(poms_group2) == 0) {
+        pz.error(paste0(
+            "POMS requires at least one sample in both target and ",
+            "non-target environment groups"
+        ))
+    }
     
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     
     phylotype_df <- data.frame(
-        as.matrix(t(mtx[restrict.ff, restrict.taxa, drop=FALSE]))
+        as.matrix(t(mtx[restrict.ff, restrict.taxa, drop=FALSE])),
+        check.names=FALSE
     )
     
     if (length(unique(as.numeric(poms_abun))) <= 2) {
