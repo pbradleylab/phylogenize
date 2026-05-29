@@ -314,6 +314,12 @@ nonparallel.results.generator <- function(gene.matrix,
                         ))
         restrict.ff <- restrict.both
     }
+    if (length(restrict.ff) == 0) {
+        ans <- matrix(nr = 4, nc = 0, NA)
+        dimnames(ans) <- list(c("Estimate", "p.value", "StdErr", "df"),
+                              character(0))
+        return(ans)
+    }
     restrict.tree <- keep.tips(tree, restrict.taxa)
     if (use.for.loop) {
         ans <- matrix(nr = 4, nc = length(restrict.ff), NA)
@@ -329,7 +335,7 @@ nonparallel.results.generator <- function(gene.matrix,
                                    file = stderr())
         pheno.restrict <- pheno[restrict.taxa]
         # replaces an apply to avoid copying
-        for (fn in 1:length(restrict.ff)) {
+        for (fn in seq_along(restrict.ff)) {
             setTxtProgressBar(progress, fn)
             ans[, fn] <- method(gene.matrix[restrict.ff[fn], restrict.taxa],
                                 pheno.restrict,
