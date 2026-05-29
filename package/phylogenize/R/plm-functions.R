@@ -1284,6 +1284,15 @@ ashr.diff.abund <- function(abd.meta,
 }
 
 
+pz.log.options <- function(...) {
+    overrides <- list(...)
+    if (length(overrides) == 0) {
+        PZ_OPTIONS
+    } else {
+        do.call(settings::clone_and_merge, c(list(PZ_OPTIONS), overrides))
+    }
+}
+
 #' Throw an error and optionally log it in errmsg.txt.
 #'
 #' Some particularly relevant global options are:
@@ -1295,7 +1304,7 @@ ashr.diff.abund <- function(abd.meta,
 #' @param errtext String: error message text.
 #' @export
 pz.error <- function(errtext, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.log.options(...)
     if (opts('error_to_file')) {
         tryCatch({
           cat(
@@ -1321,7 +1330,7 @@ pz.error <- function(errtext, ...) {
 #' @param level Level of verbosity (default: 1). If above the current level of verbosity, the message will be logged to a file (if appropriate) but not printed to console.
 #' @export
 pz.message <- function(msgtext, level=1, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.log.options(...)
     v <- opts("verbosity")
     if (opts('error_to_file')) {
         tryCatch({
@@ -1346,7 +1355,7 @@ pz.message <- function(msgtext, level=1, ...) {
 #' @param errtext String: warning text.
 #' @export
 pz.warning <- function(msgtext, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.log.options(...)
     if (opts('error_to_file')) {
         tryCatch({
             cat(
