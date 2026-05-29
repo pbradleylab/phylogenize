@@ -311,6 +311,7 @@ do.clust.plot <- function(gene.presence,
     opts <- clone_and_merge(PZ_OPTIONS, ...)
     # Run these on a separate process to avoid memory leak
     cl <- parallel::makeCluster(1)
+    on.exit(parallel::stopCluster(cl), add=TRUE)
     if (verbose) message("importing source...")
     # parallel::clusterCall(cl, library, phylogenize)
     cluster.load.pkg(cl, opts("devel"), opts("devel_pkgdir"))
@@ -336,7 +337,6 @@ do.clust.plot <- function(gene.presence,
                         ...)
     print(tmpL[[1]])
     rm(tmpL)
-    parallel::stopCluster(cl)
     gc()
     return(NULL) # Avoid wasting memory since we never touch these
 }
