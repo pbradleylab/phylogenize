@@ -215,7 +215,9 @@ matrix.POMS <- function(tree,
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     
-    phylotype_df <- data.frame(as.matrix(t(mtx[restrict.ff, ])))
+    phylotype_df <- data.frame(
+        as.matrix(t(mtx[restrict.ff, restrict.taxa, drop=FALSE]))
+    )
     
     if (length(unique(as.numeric(abd.meta$mtx))) <= 2) {
         pz.error(paste0(
