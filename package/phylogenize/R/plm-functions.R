@@ -209,8 +209,22 @@ matrix.POMS <- function(tree,
     cores <- opts('ncl')
     
     # Note: dataset column is ignored
-    poms_group1 <- abd.meta$metadata[[S]][abd.meta$metadata[[E]] == envir]
-    poms_group2 <- abd.meta$metadata[[S]][abd.meta$metadata[[E]] != envir]
+    poms_sample_ids <- as.character(abd.meta$metadata[[S]])
+    poms_valid_metadata <- (
+        !is.na(abd.meta$metadata[[E]]) &
+        !is.na(poms_sample_ids) &
+        poms_sample_ids %in% colnames(abd.meta$mtx)
+    )
+    poms_valid_sample_ids <- poms_sample_ids[poms_valid_metadata]
+    poms_samples <- intersect(colnames(abd.meta$mtx), poms_valid_sample_ids)
+    poms_meta <- abd.meta$metadata[
+        which(poms_valid_metadata)[match(poms_samples, poms_valid_sample_ids)],
+        ,
+        drop=FALSE
+    ]
+    poms_group1 <- poms_samples[poms_meta[[E]] == envir]
+    poms_group2 <- poms_samples[poms_meta[[E]] != envir]
+    poms_abun <- abd.meta$mtx[, poms_samples, drop=FALSE]
     
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
@@ -219,7 +233,7 @@ matrix.POMS <- function(tree,
         as.matrix(t(mtx[restrict.ff, restrict.taxa, drop=FALSE]))
     )
     
-    if (length(unique(as.numeric(abd.meta$mtx))) <= 2) {
+    if (length(unique(as.numeric(poms_abun))) <= 2) {
         pz.error(paste0(
             "Abundance matrix has two or fewer unique values; ",
             "suggests matrix is binary (which will not work for POMS). ",
@@ -232,7 +246,7 @@ matrix.POMS <- function(tree,
     poms_output <- tryCatch({
 			    POMS::POMS_pipeline(
         abun=data.frame(
-            as.matrix(abd.meta$mtx),
+            as.matrix(poms_abun),
             check.names=FALSE),
         func=phylotype_df,
         tree=tree_nodes,
@@ -257,9 +271,8 @@ matrix.POMS <- function(tree,
     }
     poms_tbl <- tibble::as_tibble(poms_output$results, rownames="gene") %>%
         dplyr::mutate(
-              Estimate = abs(
-                           log2((num_FSNs_group1_enrich + 0.5) /
-                                (num_FSNs_group2_enrich + 0.5))),
+              Estimate = log2((num_FSNs_group1_enrich + poms_pseudocount) /
+                              (num_FSNs_group2_enrich + poms_pseudocount)),
               p.value = multinomial_p,
 	      StdErr = NA,
               df = NA) %>%
