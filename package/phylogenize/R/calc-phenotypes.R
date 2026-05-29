@@ -333,9 +333,6 @@ logit_auc_pheno <- function(abd.meta,
         stop(paste0("environment ", envir, " not found in metadata"))
     }
     env.rows <- (abd.meta$metadata[[E]] == envir)
-    nenv.rows <- (abd.meta$metadata[[E]] != envir)
-    env.w <- which(env.rows)
-    nenv.w <- which(nenv.rows)
     dsets <- unique(abd.meta$metadata[env.rows, D, drop=TRUE])
     if (length(dsets) > 1) {
         warning("datasets are ignored when calculating wilcox phenotype")
@@ -353,11 +350,13 @@ logit_auc_pheno <- function(abd.meta,
     }
     names(ids) <- colnames(abd.meta$mtx)
     ids <- simplify2array(ids)
+    env.cols <- (ids == envir)
+    nenv.cols <- (ids != envir)
     clr_mtx <- clr(abd.meta$mtx, pc = 1)
     logit_auc <- apply(clr_mtx, 1, \(x) {
-        st <- wilcox.test(x[env.w], x[nenv.w])$statistic
+        st <- wilcox.test(x[env.cols], x[nenv.cols])$statistic
         # convert to AUC, then take logit
-        logit(st / (length(env.w) * length(nenv.w)))
+        logit(st / (sum(env.cols) * sum(nenv.cols)))
     })
     return(logit_auc)
 }
