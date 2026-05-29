@@ -52,6 +52,25 @@ test_that("calculate_phenotypes uses direct treemin override", {
     expect_equal(phenotype_results$phenotype, c(s1=1, s2=2, s3=3))
 })
 
+test_that("quantile_normalize preserves prevalence phenotypes with NULL phenoP", {
+    phenotype_results <- list(
+        phenotype=c(taxon1=2, taxon2=1, taxon3=3),
+        phenoP=NULL
+    )
+
+    observed <- quantile_normalize(phenotype_results)
+    expected <- quant_norm(phenotype_results$phenotype)
+
+    old_normed <- quant_norm(c(phenotype_results$phenoP,
+                               phenotype_results$phenotype))
+    old_phenotype <- old_normed[-1]
+
+    expect_equal(observed$phenotype, expected)
+    expect_null(observed$phenoP)
+    expect_equal(names(observed$phenotype), names(phenotype_results$phenotype))
+    expect_false(identical(observed$phenotype, old_phenotype))
+})
+
 test_that("logit_auc_pheno indexes environments by sample ID", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)

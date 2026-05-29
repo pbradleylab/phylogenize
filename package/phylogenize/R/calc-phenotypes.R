@@ -86,13 +86,14 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
 #' @param phenotype_results A list with named components "phenotype" and optionally "phenoP".
 #' @export
 quantile_normalize <- function(phenotype_results) {
-  if ("phenoP" %in% names(phenotype_results)) {
+  has_phenoP <- !is.null(phenotype_results$phenoP)
+  if (has_phenoP) {
 	  ph <- c(phenotype_results$phenoP, phenotype_results$phenotype)
   } else {
 	  ph <- phenotype_results$phenotype
   }
   normed <- quant_norm(ph)
-  if ("phenoP" %in% names(phenotype_results)) {
+  if (has_phenoP) {
 	  phenotype_results$phenotype <- normed[-1]
 	  phenotype_results$phenoP <- normed[1]
   } else {
