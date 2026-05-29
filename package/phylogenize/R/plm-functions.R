@@ -189,7 +189,7 @@ result.wrapper.plm <- function(
 #' @param poms_pseudocount Pseudocount value for POMS; default 0.5.
 #' @return Matrix of "effect-sizes" (row 1) and p-values (row 2) per gene
 #'   (columns). Here, we "fake" effect sizes by taking the log2-ratio of
-#'   num_FSNs_group1_enrich and num_FSNs_group2_enrich with a 0.5 pseudocount.
+#'   num_FSNs_group1_enrich and num_FSNs_group2_enrich with poms_pseudocount.
 #' @export
 matrix.POMS <- function(tree,
                         mtx,
