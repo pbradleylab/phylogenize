@@ -247,18 +247,27 @@ read.abd.metadata.tabular <- function(...) {
     } else { pz.message(paste0("located metadata file: ", mf), level=2) }
     
     pz.message("  ..........Reading abundance table")
+    abundance_header <- names(readr::read_tsv(
+        af,
+        n_max=0,
+        show_col_types=FALSE
+    ))
+    if (length(abundance_header) < 2) {
+        pz.error("Abundance table must contain a taxon column and at least one sample column")
+    }
+    abundance_col_types <- do.call(
+        readr::cols,
+        c(
+            stats::setNames(list(readr::col_character()), abundance_header[1]),
+            list(.default=readr::col_double())
+        )
+    )
     abd.df <- readr::read_tsv(
         af,
-        col_types=readr::cols(.default=readr::col_character()),
+        col_types=abundance_col_types,
         show_col_types=FALSE
     )
-    # convert to matrix
-    abd.values <- as.data.frame(
-        lapply(abd.df[, -1, drop=FALSE], function(x) {
-            suppressWarnings(as.numeric(x))
-        }),
-        check.names=FALSE
-    )
+    abd.values <- abd.df[, -1, drop=FALSE]
     bad.cols <- names(abd.values)[
         vapply(abd.values, function(x) any(is.na(x)), logical(1))
     ]
@@ -763,11 +772,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     if (opts('which_phenotype') %in% c("specificity",
                                        "prevalence",
                                        "abundance")) {
-        all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
-        env.number <- sapply(all.envs, function(e) {
-            sum(abd.meta$metadata[[opts('env_column')]] == e)
-        })
-        names(env.number) <- all.envs
+        env.number <- table(abd.meta$metadata[[opts('env_column')]])
         singleton.envs <- names(which(env.number == 1))
         if (length(singleton.envs) > 0) {
             pz.warning(paste0(
@@ -803,11 +808,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     }
     
     pz.message("  .....collecting all unique dsets")
-    all.dsets <- unique(abd.meta$metadata[[opts('dset_column')]])
-    dset.number <- sapply(all.dsets, function(d) {
-        sum(abd.meta$metadata[[opts('dset_column')]] == d)
-    })
-    names(dset.number) <- all.dsets
+    dset.number <- table(abd.meta$metadata[[opts('dset_column')]])
     nonsingleton.dsets <- names(which(dset.number > 1))
     pz.message(paste0(length(nonsingleton.dsets),
                       " non-singleton dataset(s) found"), level=2)
