@@ -246,6 +246,14 @@ read.abd.metadata.tabular <- function(...) {
         pz.error(paste0("file not found: ", mf))
     } else { pz.message(paste0("located metadata file: ", mf), level=2) }
     
+    pz.message("  ..........Reading metadata table")
+    metadata <- readr::read_tsv(mf, show_col_types = FALSE)
+    metadata <- check.process.metadata(metadata, ...)
+    pz.message(paste0(
+        "  ..........Metadata rows: ",
+        nrow(metadata)
+    ))
+
     pz.message("  ..........Reading abundance table")
     abundance_header <- names(readr::read_tsv(
         af,
@@ -255,6 +263,20 @@ read.abd.metadata.tabular <- function(...) {
     if (length(abundance_header) < 2) {
         pz.error("Abundance table must contain a taxon column and at least one sample column")
     }
+    metadata_samples <- trimws(as.character(metadata[[opts('sample_column')]]))
+    abundance_keep_cols <- c(
+        abundance_header[1],
+        intersect(abundance_header[-1], metadata_samples)
+    )
+    if (length(abundance_keep_cols) < 2) {
+        pz.error(paste0("No abundance table sample columns matched metadata ",
+                        "sample IDs"))
+    }
+    pz.message(paste0(
+        "  ..........Reading ",
+        length(abundance_keep_cols) - 1,
+        " abundance sample column(s) matching metadata"
+    ))
     abundance_col_types <- do.call(
         readr::cols,
         c(
@@ -264,6 +286,7 @@ read.abd.metadata.tabular <- function(...) {
     )
     abd.df <- readr::read_tsv(
         af,
+        col_select=tidyselect::all_of(abundance_keep_cols),
         col_types=abundance_col_types,
         show_col_types=FALSE
     )
@@ -286,15 +309,6 @@ read.abd.metadata.tabular <- function(...) {
         ncol(abd.mtx),
         " sample(s)"
     ))
-    # can remain as tbl
-    pz.message("  ..........Reading metadata table")
-    metadata <- readr::read_tsv(mf, show_col_types = FALSE)
-    metadata <- check.process.metadata(metadata, ...)
-    pz.message(paste0(
-        "  ..........Metadata rows: ",
-        nrow(metadata)
-    ))
-    
     return(list(mtx=abd.mtx, metadata=metadata))
     
 }
