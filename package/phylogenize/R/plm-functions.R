@@ -1,3 +1,8 @@
+is.future.long.vector.error <- function(e) {
+    msg <- conditionMessage(e)
+    grepl("long vectors not supported yet", msg, fixed = TRUE)
+}
+
 #' Fit phylogenetic (or linear) models, or perform POMS.
 #'
 #' @param taxa Character vector giving the names of the taxa.
@@ -109,20 +114,64 @@ result.wrapper.plm <- function(
                 perm_m <- method_parsed[1]
                 cores <- opts('ncl')
                 user_maxsize <- options(future.globals.maxSize = 2.0e9)
-                on.exit(options(user_maxsize))
-                future::plan(future::multisession, workers = cores)
+                on.exit(options(user_maxsize), add = TRUE)
+                old_plan <- future::plan()
+                on.exit(future::plan(old_plan), add = TRUE)
+                future_setup_ok <- tryCatch(
+                    {
+                        future::plan(future::multisession, workers = cores)
+                        TRUE
+                    }, error = function(e) {
+                        if (is.future.long.vector.error(e)) {
+                            pz.warning(paste0(
+                                "Future parallelization failed while ",
+                                "starting workers; retrying repermulize ",
+                                "sequentially. Original error: ",
+                                conditionMessage(e)
+                            ))
+                            future::plan(future::sequential)
+                            return(FALSE)
+                        }
+                        stop(e)
+                    }
+                )
 		pz.message("  ..........Running repermulize")
-                
+
+                run_repermulize <- function() {
+                    repermulize::repermulize_wrapper(
+                        pheno,
+                        proteins[[p]],
+                        tr,
+                        perm_method = perm_m,
+                        regression_method = regression_m,
+                        real_pheno_sd = pheno_sd)
+                }
+
 		results <- tryCatch(
 		    {
-		       repermulize::repermulize_wrapper(
-			    pheno,
-			    proteins[[p]],
-			    tr,
-			    perm_method = perm_m,
-			    regression_method = regression_m,
-			    real_pheno_sd = pheno_sd)
+		       run_repermulize()
 		    }, error = function(e) {
+                        if (future_setup_ok && is.future.long.vector.error(e)) {
+                            pz.warning(paste0(
+                                "Future parallelization failed while ",
+                                "serializing a large object; retrying ",
+                                "repermulize sequentially. Original error: ",
+                                conditionMessage(e)
+                            ))
+                            future::plan(future::sequential)
+                            return(tryCatch(
+                                run_repermulize(),
+                                error = function(e2) {
+                                    pz.message(paste0(
+                                        "Skipping protein/index ",
+                                        p,
+                                        " after sequential retry failed: ",
+                                        conditionMessage(e2)
+                                    ))
+                                    return(NULL)
+                                }
+                            ))
+                        }
 			pz.message(paste0("Skipping protein/index ", p, " due to error: ", conditionMessage(e)))
 		        return(NULL)
 		    }
@@ -131,8 +180,6 @@ result.wrapper.plm <- function(
 		if (is.null(results)) {
 		    return(NULL)
 		}
-                
-		future::plan(future::sequential)
                 return(as.data.frame(results))
             } else if (core_method == "lm") {
                 matrix.plm(
