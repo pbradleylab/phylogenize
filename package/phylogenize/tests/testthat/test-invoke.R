@@ -65,3 +65,43 @@ test_that("phylogenize_core skips enrichment when associations return NULL", {
     expect_null(core$enr_tbls)
     expect_false(seen$enrichment_called)
 })
+
+test_that("phylogenize wrapper passes resolved options without mutating globals", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    out_dir <- file.path(tempdir(), "phylogenize-wrapper-options-test")
+    seen <- new.env(parent=emptyenv())
+
+    testthat::local_mocked_bindings(
+        phylogenize_core=function(..., .opts=NULL) {
+            seen$core_opts <- .opts
+            list(
+                list_pheno=list(),
+                list_signif=NULL,
+                enr_tbls=NULL,
+                options=.opts
+            )
+        },
+        render_core_report=function(core, ..., .opts=NULL) {
+            seen$render_opts <- .opts
+            file.path(.opts("out_dir"), basename(.opts("output_file")))
+        },
+        .package="phylogenize"
+    )
+
+    pz.options(out_dir="global-out", output_file="global.html")
+    phylogenize(
+        out_dir=out_dir,
+        output_file="local.html",
+        rds_output_file="",
+        error_to_file=FALSE,
+        reset_after=TRUE
+    )
+
+    expect_equal(seen$core_opts("out_dir"), normalizePath(out_dir, mustWork=FALSE))
+    expect_equal(seen$core_opts("output_file"), "local.html")
+    expect_equal(seen$render_opts("out_dir"), normalizePath(out_dir, mustWork=FALSE))
+    expect_equal(pz.options("out_dir"), "global-out")
+    expect_equal(pz.options("output_file"), "global.html")
+})

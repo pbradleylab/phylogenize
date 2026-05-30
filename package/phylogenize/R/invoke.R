@@ -20,41 +20,44 @@ phylogenize <- function(do_cache=TRUE,
                         do_enr=TRUE,
                         ...) {
     
-    prev.options <- pz.options()
-    do.call(pz.options, list(...))
-    poms_flag <- tolower(pz.options("core_method"))=="poms"
-    pz.options(working_dir=normalizePath(getwd()))
-    pz.options(out_dir=normalizePath(pz.options("out_dir"), mustWork=FALSE))
-    if (!(dir.exists(pz.options("out_dir"))) &&
-        !dir.create(pz.options("out_dir"), recursive=TRUE, showWarnings=FALSE)) {
+    opts <- pz.resolve.options(...)
+    opts <- pz.resolve.options(
+        .opts=opts,
+        working_dir=normalizePath(getwd()),
+        out_dir=normalizePath(opts("out_dir"), mustWork=FALSE)
+    )
+    poms_flag <- tolower(opts("core_method"))=="poms"
+    if (!(dir.exists(opts("out_dir"))) &&
+        !dir.create(opts("out_dir"), recursive=TRUE, showWarnings=FALSE)) {
         pz.error(paste0("Could not create output directory: ",
-                        pz.options("out_dir")))
+                        opts("out_dir")),
+                 .opts=opts)
     }
     
-    pz.message("Running the core of phylogenize...")
+    pz.message("Running the core of phylogenize...", .opts=opts)
     core <- phylogenize_core(do_POMS=poms_flag,
-                             do_enr=do_enr)
+                             do_enr=do_enr,
+                             ...,
+                             .opts=opts)
     
-    if (pz.options("rds_output_file") != "") {
-        core_path <- file.path(pz.options("out_dir"), 
-                               pz.options("rds_output_file"))
-        pz.message(paste0("Saving core results to ", core_path))
+    if (opts("rds_output_file") != "") {
+        core_path <- file.path(opts("out_dir"),
+                               opts("rds_output_file"))
+        pz.message(paste0("Saving core results to ", core_path), .opts=opts)
         saveRDS(object=core, file=core_path)
     }
     
-    pz.message("Generating report...")
+    pz.message("Generating report...", .opts=opts)
     report_path <- file.path(
-        pz.options("out_dir"),
-        basename(pz.options("output_file"))
+        opts("out_dir"),
+        basename(opts("output_file"))
     )
     render_core_report(core,
-                       output_file=pz.options("output_file"),
+                       output_file=opts("output_file"),
                        do_cache=do_cache,
-                       reset_after=reset_after)
-    pz.message(paste0("Report written to ", report_path))
-    if (reset_after) {
-        do.call(pz.options, prev.options)
-    }
+                       reset_after=reset_after,
+                       .opts=opts)
+    pz.message(paste0("Report written to ", report_path), .opts=opts)
     return(core)
 }
 
@@ -80,10 +83,11 @@ phylogenize_core <- function(
 	do_POMS = FALSE,
         force_return_data=FALSE,
         p.method=phylogenize:::phylolm.fx.pv,
-        ...
+        ...,
+        .opts=NULL
 ) {
     dots <- list(...)
-    opts <- pz.resolve.options(...)
+    opts <- pz.resolve.options(..., .opts=.opts)
     do_POMS <- do_POMS || (tolower(opts('core_method')) == "poms")
     if (do_POMS) {
         dots[["core_method"]] <- "poms"
@@ -169,27 +173,36 @@ render_core_report <- function(core,
                                do_cache=FALSE,
                                reset_after=TRUE,
                                verbose=FALSE,
-                               ...) {
+                               ...,
+                               .opts=NULL) {
     
     prev.options <- pz.options()
+    if (reset_after) {
+        on.exit(do.call(pz.options, prev.options), add=TRUE)
+    }
     if (!("list_pheno" %in% names(core)) || !("list_signif" %in% names(core))) {
         pz.error(paste0(
 	  "`core` does not look like Phylogenize2 output; did you pass ",
 	  "a path to an RDS file instead of reading it with readRDS?"
 	))
     }
-    if ("options" %in% names(core)) {
-        do.call(pz.options, core[["options"]]())
+    base_opts <- .opts
+    if (is.null(base_opts) && "options" %in% names(core)) {
+        base_opts <- core[["options"]]
     }
-    do.call(pz.options, list(...))
-    pz.options(working_dir=normalizePath(getwd()))
-    pz.options(out_dir=normalizePath(pz.options("out_dir"), mustWork=FALSE))
-    if (!dir.exists(pz.options('out_dir')) &&
-        !dir.create(pz.options('out_dir'), recursive=TRUE, showWarnings=FALSE)) {
+    opts <- pz.resolve.options(..., .opts=base_opts)
+    opts <- pz.resolve.options(
+        .opts=opts,
+        working_dir=normalizePath(getwd()),
+        out_dir=normalizePath(opts("out_dir"), mustWork=FALSE)
+    )
+    if (!dir.exists(opts('out_dir')) &&
+        !dir.create(opts('out_dir'), recursive=TRUE, showWarnings=FALSE)) {
         pz.error(paste0("Could not create output directory: ",
-                        pz.options("out_dir")))
+                        opts("out_dir")),
+                 .opts=opts)
     }
-    p <- pz.options()
+    p <- opts()
     if (verbose) {
         for (n in names(p)) {
             message(paste0(n, ": ", p[[n]]))
@@ -198,24 +211,24 @@ render_core_report <- function(core,
     file.copy(system.file("rmd",
                           report_input,
                           package="phylogenize"),
-              pz.options("out_dir"),
+              opts("out_dir"),
               overwrite=TRUE)
-    pz.message(paste0("Rendering report from ", report_input), level=1)
+    pz.message(paste0("Rendering report from ", report_input),
+               level=1,
+               .opts=opts)
     e <- environment()
-    r <- rmarkdown::render(file.path(pz.options("out_dir"),
+    do.call(pz.options, opts())
+    r <- rmarkdown::render(file.path(opts("out_dir"),
                                      report_input),
                            output_file=basename(output_file),
-                           output_dir=pz.options("out_dir"),
+                           output_dir=opts("out_dir"),
                            output_options=list(
-                               cache.path=pz.options("out_dir"),
+                               cache.path=opts("out_dir"),
                                cache=do_cache
                            ),
-                           intermediates_dir=pz.options("out_dir"),
-                           knit_root_dir=pz.options("out_dir"),
+                           intermediates_dir=opts("out_dir"),
+                           knit_root_dir=opts("out_dir"),
                            envir = e)
-    if (reset_after) {
-        do.call(pz.options, prev.options)
-    }
     r
 }
 
