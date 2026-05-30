@@ -1,0 +1,42 @@
+.RData
+.Rhistory
+.Rproj.user/
+*.Rproj
+
+# Editor and OS noise
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Local logs and scheduler output
+*.log
+slurm-*.out
+*.out
+errmsg.txt
+
+# Local/generated analysis outputs
+output/
+temp/
+comms/
+/*.html
+/*.csv
+/*.tab
+/*.tsv
+/*.rds
+/*.RDS
+
+# Package build/check artifacts
+*.tar.gz
+*.Rcheck/
+package/phylogenize/check/
+package/phylogenize/test-results/
+
+# Locally downloaded database payloads
+package/phylogenize/inst/extdata/*.tar.gz
+package/phylogenize/inst/extdata/*.rds
+package/phylogenize/inst/extdata/*.RDS
+package/phylogenize/inst/extdata/*.fna
+package/phylogenize/inst/extdata/*.frn
+package/phylogenize/inst/extdata/*.functions
+package/phylogenize/inst/extdata/*/

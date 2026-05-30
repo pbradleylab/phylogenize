@@ -27,7 +27,6 @@ These options are global because they affect how most of the functions in
   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
   \item{rds_output_file}{String. Name of output RDS file containing the full results of applying `phylogenize_core()`. Set to empty string to disable. Default: "core_output.rds"}
   \item{output_file}{String. Name of output file: "results.html"}
-  \item{phenotype_file}{String. Name of input file for optional pre-calculated phenotype. Default: ""}
   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
   \item{separate_metadata}{Boolean. For BIOM data, is there a separate tabular metadata table? Default: FALSE}
   \item{which_16s_method}{String. Can be "vsearch" (best-hit alignment), "appspam" (perform phylogenetic placement), or "jplace" (bring-your-own .jplace file). Default: "appspam"}
@@ -68,7 +67,7 @@ These options are global because they affect how most of the functions in
   \item{categorical}{Boolean. For abundance estimates, is the environment in env_column a categorical variable (TRUE) or continuous (FALSE)? Default: TRUE}
   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "ANCOMBC2"}
   \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "permutrate-rlm", "permutrate-lm", "permulate-lm", "permulate-rlm", "phylolm", "lm", or "POMS" (case insensitive). Default: "permutrate-rlm"}
-  \item{fdr_method}{String. Which method to correct FDR for significant results? Either "BH", "BY", or "qvalue". Default: "qvalue"}
+  \item{fdr_method}{String. Which method to correct FDR for significant results? Either "BH", "BY", or "qvalue". Default: "BH"}
 }
 }
 
