@@ -134,6 +134,7 @@ phylogenize_core <- function(
                                     list_signif[["results.matrix"]],
                                     export=TRUE,
                                     print_out=TRUE,
+                                    .opts=opts,
                                     ...)
     pz.message(paste0(
         "  .....Enrichment testing returned ",
@@ -274,16 +275,18 @@ get_all_associated_genes <- function(list_pheno,
                     clusters=list_pheno$pz.db$species[taxaN],
                     proteins=list_pheno$pz.db$gene.presence[taxaN],
                     method=p.method,
-                    ncl=opts('ncl'))
+                    ncl=opts('ncl'),
+                    .opts=opts)
             } else {
                 results <- mapply(nonparallel.results.generator,
                     list_pheno$pz.db$gene.presence[taxaN],
                     list_pheno$pz.db$trees[taxaN],
                     list_pheno$pz.db$species[taxaN],
                     as.list(taxaN),
-                    MoreArgs=list(pheno=phenotype,
-                        method=p.method,
-                        use.for.loop=FALSE),
+                        MoreArgs=list(pheno=phenotype,
+                            method=p.method,
+                            use.for.loop=FALSE,
+                            .opts=opts),
                         SIMPLIFY=FALSE)
             }
         } else {
@@ -304,6 +307,7 @@ get_all_associated_genes <- function(list_pheno,
                 method=p.method,
                 poms=TRUE,
                 abd.meta=list_pheno$abd.meta,
+                .opts=opts,
                 ...
             )
         }
@@ -339,18 +343,18 @@ get_signif_associated_genes <- function(pz.db,
     }
 
     pz.message("  ..........Making sigs")
-    signif <- make.sigs(results, ...)
+    signif <- make.sigs(results, ..., .opts=opts)
     pz.message("  ..........Making signs")
     signs <- make.signs(results)
     pz.message("  ..........Getting positive sigs")
-    pos.sig <- nonequiv.pos.sig(results, min_fx=opts('min_fx'))
+    pos.sig <- nonequiv.pos.sig(results, min_fx=opts('min_fx'), .opts=opts)
     pz.message("  ..........Getting negative sigs")
-    neg.sig <- nonequiv.pos.sig(results, min_fx=opts('min_fx'), dir=-1)
+    neg.sig <- nonequiv.pos.sig(results, min_fx=opts('min_fx'), dir=-1, .opts=opts)
     pz.message("  ..........Make results matrix")
     results.matrix <- make.results.matrix(results) %>%
         dplyr::filter(!is.na(p.value)) %>%
         dplyr::group_by(taxon) %>%
-        dplyr::mutate(q.value = qvals(p.value, ...)) %>%
+        dplyr::mutate(q.value = qvals(p.value, ..., .opts=opts)) %>%
         dplyr::arrange(taxon, q.value) %>%
         dplyr::ungroup()
     pz.message(paste0(
@@ -362,12 +366,24 @@ get_signif_associated_genes <- function(pz.db,
     phy.with.neg.sigs <- names(which(sapply(neg.sig, length) > 0))
     pz.message("  ..........Add sig descriptions")
     pos.sig.descs <- add.sig.descs(phy.with.pos.sigs, pos.sig, pz.db$gene.to.fxn)
-    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.pos.sigs, pos.sig, ...)
+    pos.sig.thresh <- threshold.pos.sigs(
+        pz.db,
+        phy.with.pos.sigs,
+        pos.sig,
+        ...,
+        .opts=opts
+    )
     pos.sig.thresh.descs <- add.sig.descs(phy.with.pos.sigs,
                                           pos.sig.thresh,
                                           pz.db$gene.to.fxn)
     neg.sig.descs <- add.sig.descs(phy.with.neg.sigs, neg.sig, pz.db$gene.to.fxn)
-    neg.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.neg.sigs, neg.sig, ...)
+    neg.sig.thresh <- threshold.pos.sigs(
+        pz.db,
+        phy.with.neg.sigs,
+        neg.sig,
+        ...,
+        .opts=opts
+    )
     neg.sig.thresh.descs <- add.sig.descs(
         phy.with.neg.sigs,
         neg.sig.thresh,
@@ -433,12 +449,14 @@ get_enrichment_tbls <- function(signif,
                                 kegg_mod_data=NULL,
                                 use_kegg_cache=TRUE,
                                 kegg_cache_file="kegg-cache.rds",
-                                ...) {
+                                ...,
+                                .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     pretty.enr.tbl <- NULL
     enr.overlap <- NULL
     kegg_cache_path <- kegg_cache_file
     if (!grepl("^(/|[A-Za-z]:[/\\\\])", kegg_cache_path)) {
-        kegg_cache_path <- file.path(pz.options("out_dir"), kegg_cache_path)
+        kegg_cache_path <- file.path(opts("out_dir"), kegg_cache_path)
     }
     if (use_kegg_cache && (is.null(kegg_pw_data) || is.null(kegg_mod_data)) &&
         file.exists(kegg_cache_path)) {
@@ -511,7 +529,7 @@ get_enrichment_tbls <- function(signif,
                            q_value)
         if (export) {
             pz.message("  .....Writing enrichment table")
-            write.csv(file=file.path(pz.options('out_dir'),
+            write.csv(file=file.path(opts('out_dir'),
                                      "enr-table.csv"),
                       pretty.enr.tbl)
         }
@@ -542,10 +560,10 @@ get_enrichment_tbls <- function(signif,
                                  by=c("taxon", "mapped_gene"))
             if (export) {
                 pz.message("  .....Writing enrichment overlap tables")
-                write.csv(file=file.path(pz.options('out_dir'),
+                write.csv(file=file.path(opts('out_dir'),
                                          "enr-overlaps.csv"),
                           enr.overlap)
-                write.csv(file=file.path(pz.options('out_dir'),
+                write.csv(file=file.path(opts('out_dir'),
                                          "enr-overlaps-sorted.csv"),
                           dplyr::arrange(enr.overlap,
                                          taxon,

@@ -31,7 +31,21 @@ nonequiv.pos.sig <- function(results,
                              qcut_eq=0.05,
                              min_fx=0.25,
                              exclude=NULL,
-                             dir=1) {
+                             dir=1,
+                             ...,
+                             .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    call_method <- function(vals) {
+        tryCatch(
+            method(vals, .opts=opts),
+            error=function(e) {
+                if (grepl("unused argument.*\\.opts", conditionMessage(e))) {
+                    return(method(vals))
+                }
+                stop(e)
+            }
+        )
+    }
     dir <- sign(dir)
     if (dir==0) { stop("dir must not be zero") }
     if (is.null(exclude)) exclude <- lapply(results, function(.) NULL)
@@ -46,7 +60,7 @@ nonequiv.pos.sig <- function(results,
                 if ("matrix" %in% class(tested)) {
                     tested <- tested[1, ]
                 }
-                qv <- method(tested)
+                qv <- call_method(tested)
                 fx_sig <- nw(qv <= qcut_sig)
                 neq_sig <- valid
                 if (min_fx > 0) {
@@ -56,7 +70,7 @@ nonequiv.pos.sig <- function(results,
                             2,
                             function(x) equiv_test(x[1], x[3], x[4], min_fx)
                         )
-                        neq_qv <- method(neq)
+                        neq_qv <- call_method(neq)
                         neq_sig <- nw(neq_qv > qcut_eq)
                     } else {
                         pz.warning(
@@ -113,8 +127,21 @@ make.sigs <- function(
     method = qvals,
     exclude = NULL,
     min.fx = 0,
-    ...
+    ...,
+    .opts=NULL
 ) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    call_method <- function(vals) {
+        tryCatch(
+            method(vals, ..., .opts=opts),
+            error=function(e) {
+                if (grepl("unused argument.*\\.opts", conditionMessage(e))) {
+                    return(method(vals, ...))
+                }
+                stop(e)
+            }
+        )
+    }
     sig_fxn <- function(x, cut) {
         if (!is.null(exclude)) {
             valid <- setdiff(colnames(results[[x]]), exclude[[x]])
@@ -134,7 +161,7 @@ make.sigs <- function(
                 setNames(valid)
         )
         tryCatch(
-            intersect(nw(method(all_tested, ...) <= cut), above.min),
+            intersect(nw(call_method(all_tested) <= cut), above.min),
             error = function(e) character(0)
         )
     }
@@ -248,8 +275,8 @@ get.top.N <- function(p,
 #'   (which can be "BH", "BY", or "qvalue).
 #' @return A vector of q-values.
 #' @keywords internal
-qvals <- function(x, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+qvals <- function(x, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     if (toupper(opts("fdr_method"))=="BH") {
         return(p.adjust(x, 'BH'))
     }

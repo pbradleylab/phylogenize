@@ -137,7 +137,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ..., .opts=NULL) {
     } else {
         if (opts('which_phenotype') == "prevalence") {
             pz.message("  .....Running prevalence")
-            phenotype <- prev.addw(abd.meta, ...)
+            phenotype <- prev.addw(abd.meta, ..., .opts=opts)
             phenoP <- NULL
         } else if (opts('which_phenotype') == "specificity") {
 	    pz.message("  .....Running specificity")
@@ -149,7 +149,8 @@ calculate_phenotypes <- function(abd.meta, pz.db, ..., .opts=NULL) {
             }
             ess <- calc.ess(abd.meta,
                             prior.data,
-                            ...)
+                            ...,
+                            .opts=opts)
             phenotype <- ess$ess
             phenoP <- ess$phenoP
         } else if (opts("which_phenotype") == "provided") {
@@ -183,7 +184,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ..., .opts=NULL) {
             phenoP <- 0
         } else if (opts("which_phenotype") == "abundance") {
             pz.message("  .....Running abundance")
-            pheno_list <- ashr.diff.abund(abd.meta, ...)
+            pheno_list <- ashr.diff.abund(abd.meta, ..., .opts=opts)
             phenotype <- pheno_list$pheno
             pheno_sd <- pheno_list$sd
             phenoP <- 0

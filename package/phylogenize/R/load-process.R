@@ -429,7 +429,7 @@ import.pz.db <- function(..., .opts=NULL) {
     
     # filter based on the minimum number of observations
     pz.message("  .....Filter based on the minimum number of observations")
-    gene.presence <- above_minimum_genes(gene.presence, trees)
+    gene.presence <- above_minimum_genes(gene.presence, trees, .opts=opts)
     pz.message(paste0(
         "  ..........",
         length(gene.presence),
@@ -517,7 +517,11 @@ adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
 	ape::keep.tip(tr, tips)
     })
     pz.message("  .....Filtering gene presence matrices to retained trees")
-    pz.db$gene.presence <- above_minimum_genes(pz.db$gene.presence, pz.db$trees)
+    pz.db$gene.presence <- above_minimum_genes(
+        pz.db$gene.presence,
+        pz.db$trees,
+        .opts=opts
+    )
     pz.db$trees <- pz.db$trees[intersect(names(pz.db$trees), names(pz.db$gene.presence))]
     pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
     pz.db$ntaxa <- length(pz.db$trees)

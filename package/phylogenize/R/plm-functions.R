@@ -38,9 +38,10 @@ result.wrapper.plm <- function(
     abd.meta = FALSE,
     poms = FALSE,
     pheno_sd = NULL,
-    ...
+    ...,
+    .opts=NULL
 ) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.resolve.options(..., .opts=.opts)
     core_method <- if (isTRUE(poms)) "poms" else tolower(opts('core_method'))
     lapply.across.names(taxa, function(p) {
         pz.message(paste0("  ..........Checking for type for taxa: ", p))
@@ -93,6 +94,7 @@ result.wrapper.plm <- function(
                     abd.meta,
                     restrict.taxa = valid,
                     restrict.ff = restrict.figfams,
+                    .opts = opts,
                     ...
                 )
             } else if (
@@ -189,6 +191,7 @@ result.wrapper.plm <- function(
                     method = lm.fx.pv,
                     restrict.taxa = valid,
                     restrict.ff = restrict.figfams,
+                    .opts = opts,
                     ...
                 )
             } else {
@@ -200,6 +203,7 @@ result.wrapper.plm <- function(
                     method = phylolm.fx.pv,
                     restrict.taxa = valid,
                     restrict.ff = restrict.figfams,
+                    .opts = opts,
                     ...
                 )
             }
@@ -246,10 +250,11 @@ matrix.POMS <- function(tree,
                         poms_min_tips=2,
                         poms_min_func=2,
                         poms_pseudocount=0.5,
-                        ...) {
+                        ...,
+                        .opts=NULL) {
     message("POMS")
     
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.resolve.options(..., .opts=.opts)
     E <- opts('env_column')
     S <- opts('sample_column')
     envir <- opts('which_envir')
@@ -362,8 +367,9 @@ nonparallel.results.generator <- function(gene.matrix,
                                          restrict.ff=NULL,
                                          remove.low.variance=TRUE,
                                          use.for.loop=TRUE,
-                                         ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                                         ...,
+                                         .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     message(taxon.name)
     restrict.taxa <- Reduce(intersect, list(colnames(gene.matrix),
                                             tree$tip.label,
@@ -605,8 +611,9 @@ matrix.plm <- function(tree,
                        method=phylolm.fx.pv,
                        restrict.taxa=NULL,
                        restrict.ff=NULL,
-                       ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                       ...,
+                       .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     cores <- opts('ncl')
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
@@ -938,8 +945,9 @@ b.scorer <- function(s, a) {
 #' @return An additively-smoothed estimate of taxon prevalences.
 #' @export
 prev.addw <- function(abd.meta,
-                      ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                      ...,
+                      .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     envir <- opts('which_envir')
     E <- opts('env_column')
     D <- opts('dset_column')
@@ -993,8 +1001,9 @@ prev.addw <- function(abd.meta,
 #' @return An estimate of taxon abundance correlations with a phenotype.
 #' @export
 correl.clr <- function(abd.meta,
-                      ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                       ...,
+                       .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     R <- opts('env_column')
     S <- opts('sample_column')
     D <- opts('dset_column')
@@ -1075,8 +1084,9 @@ clr <- function(mtx, pc = 0.5) {
 calc.ess <- function(abd.meta,
                      pdata = NULL,
                      b.optim = NULL,
-                     ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                     ...,
+                     .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     E <- opts('env_column')
     D <- opts('dset_column')
     S <- opts('sample_column')
@@ -1229,8 +1239,9 @@ restore.diff.abund.taxon.names <- function(sample_pheno, sample_sd, original_nam
 #' @return A vector giving shrunken estimates of differential abundance.
 #' @export
 ashr.diff.abund <- function(abd.meta,
-                            ...) {
-  opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                            ...,
+                            .opts=NULL) {
+  opts <- pz.resolve.options(..., .opts=.opts)
   if (opts("error_to_file")) {
     sink_for_externals <- file.path(opts('out_dir'), opts('error_file'))
     sink(sink_for_externals)
@@ -1376,13 +1387,8 @@ ashr.diff.abund <- function(abd.meta,
 }
 
 
-pz.log.options <- function(...) {
-    overrides <- list(...)
-    if (length(overrides) == 0) {
-        PZ_OPTIONS
-    } else {
-        do.call(settings::clone_and_merge, c(list(PZ_OPTIONS), overrides))
-    }
+pz.log.options <- function(..., .opts=NULL) {
+    pz.resolve.options(..., .opts=.opts)
 }
 
 #' Throw an error and optionally log it in errmsg.txt.
@@ -1489,8 +1495,8 @@ make.results.matrix <- function(results) {
 #'     results.
 #' @return A single data frame with entries from \code{results}.
 #' @export
-threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     Min <- opts('minimum')
     mapply(pz.db$trees[phy.with.sigs],
            pos.sig[phy.with.sigs],
@@ -1526,8 +1532,8 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 #' @return A revised `gene.presence` list. Note that some taxa may be dropped
 #'   from the list (if they had zero genes left after filtering).
 #' @export
-above_minimum_genes <- function(gene.presence, trees, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+above_minimum_genes <- function(gene.presence, trees, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     Min <- opts('minimum')
     GMF <- opts('gene_min_frac')
     taxa <- names(trees)
