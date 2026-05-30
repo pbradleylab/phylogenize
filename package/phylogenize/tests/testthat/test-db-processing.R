@@ -75,10 +75,7 @@ test_that("change.tree.tax.level returns matching subtrees", {
     )
     tree <- list(p1=ape::read.tree(text="((s1:1,s2:1):1,(s3:1,s4:1):1);"))
 
-    expect_warning(
-        split_trees <- change.tree.tax.level(tree, "family", tax),
-        "Using an external vector"
-    )
+    split_trees <- change.tree.tax.level(tree, "family", tax)
 
     expect_setequal(names(split_trees), c("f1", "f2"))
     expect_equal(split_trees$f1$tip.label, c("s1", "s2"))

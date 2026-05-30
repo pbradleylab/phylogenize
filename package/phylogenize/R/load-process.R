@@ -629,7 +629,7 @@ change.tree.tax.level <- function(tree, taxon, tax) {
     # Make a mapping file that is at the taxonomic level selected from the tax
     # file.
     clean <- tax %>%
-        dplyr::select(cluster, taxon, phylum) %>%
+        dplyr::select(cluster, tidyselect::all_of(taxon), phylum) %>%
         dplyr::distinct()
     pz.message(head(clean), level=3)
     # Drop empty values from the taxonomic level selected if they are not 
@@ -663,21 +663,14 @@ change.tree.tax.level <- function(tree, taxon, tax) {
             pz.message(paste("Good news: Data found for taxon classification",
                              name), level=2)
         }	
-        # Generate a list of unique split names based on taxon
-        split_names <- t %>%
-            dplyr::group_split(!!(rlang::sym(taxon))) %>%
-            purrr::map(~ dplyr::pull(.x, !!(rlang::sym(taxon)))) %>%
-            unlist() %>%
-            unique()
+        tips_by_taxon <- split(t[["cluster"]], t[[taxon]])
         
-        for (j in seq_along(split_names)) {
-            tips <- tr$tip.label
-            split_tips <- t %>%
-                dplyr::filter(!!(rlang::sym(taxon)) == split_names[[j]])
-            tips <- intersect(tips, split_tips[["cluster"]])
+        for (taxon_name in names(tips_by_taxon)) {
+            tips <- intersect(tr$tip.label, tips_by_taxon[[taxon_name]])
+            if (length(tips) <= 1) next
             subtree <- ape::keep.tip(tr, tips)
             if (!is.null(subtree) && length(subtree$tip.label) > 1) {
-                tree_matrices[[split_names[j]]] <- subtree    
+                tree_matrices[[taxon_name]] <- subtree
             }
         }
     }
