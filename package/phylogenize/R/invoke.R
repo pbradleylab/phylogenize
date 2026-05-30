@@ -83,14 +83,16 @@ phylogenize_core <- function(
         ...
 ) {
     dots <- list(...)
-    opts <- do.call(settings::clone_and_merge, c(list(PZ_OPTIONS), dots))
+    opts <- pz.resolve.options(...)
     do_POMS <- do_POMS || (tolower(opts('core_method')) == "poms")
     if (do_POMS) {
         dots[["core_method"]] <- "poms"
+        opts <- pz.resolve.options(.opts=opts, core_method="poms")
     }
     pz.message("I. Generating phenotypes...")
     list_pheno <- do.call(data_to_phenotypes,
                           c(list(save_data = (!do_POMS || force_return_data)),
+                            list(.opts=opts),
                             dots))
     pz.message(paste0(
         "  .....Phenotypes generated for ",
@@ -102,7 +104,8 @@ phylogenize_core <- function(
     pz.message("II. Performing association tests...")
     list_signif <- do.call(get_all_associated_genes,
                             c(list(list_pheno=list_pheno,
-                                   p.method=p.method),
+                                   p.method=p.method,
+                                   .opts=opts),
                               dots))
     if (!is.null(list_signif)) {
         pz.message(paste0(
@@ -244,10 +247,11 @@ augment_with_enrichments <- function(core) {
 #' @export
 get_all_associated_genes <- function(list_pheno,
     p.method=phylolm.fx.pv,
-    ...) {
-        pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
-        do_POMS <- (tolower(pz.options('core_method')) == "poms")
-        spec_taxa <- pz.options('only_specific_taxa')
+    ...,
+    .opts=NULL) {
+        opts <- pz.resolve.options(..., .opts=.opts)
+        do_POMS <- (tolower(opts('core_method')) == "poms")
+        spec_taxa <- opts('only_specific_taxa')
         if (!do_POMS) {
             pz.message("  A) Getting all associated genes")
             phenotype <- list_pheno$phenotype_results$phenotype
@@ -258,10 +262,10 @@ get_all_associated_genes <- function(list_pheno,
             if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
 	    pz.message("  .....Running plm on valid taxa")
             pz.message(paste0("  ..........Testing ", length(taxaN), " taxon/taxa"))
-            if (pz.options('ncl') > 1) {
+            if (opts('ncl') > 1) {
                 pz.message(paste0(
                     "  ..........Using ",
-                    pz.options('ncl'),
+                    opts('ncl'),
                     " parallel worker(s)"
                 ))
                 results <- result.wrapper.plm(taxa=taxaN,
@@ -270,7 +274,7 @@ get_all_associated_genes <- function(list_pheno,
                     clusters=list_pheno$pz.db$species[taxaN],
                     proteins=list_pheno$pz.db$gene.presence[taxaN],
                     method=p.method,
-                    ncl=pz.options('ncl'))
+                    ncl=opts('ncl'))
             } else {
                 results <- mapply(nonparallel.results.generator,
                     list_pheno$pz.db$gene.presence[taxaN],
@@ -314,7 +318,7 @@ get_all_associated_genes <- function(list_pheno,
     results <- results[!vapply(results, is.null, logical(1))]
     pz.message(paste0("  ..........Rows that remain after checking if not null: ", length(results)))
     pz.message("  B) Summarizing significant associations")
-    return(get_signif_associated_genes(list_pheno$pz.db, results))
+    return(get_signif_associated_genes(list_pheno$pz.db, results, ..., .opts=opts))
 }
 
 #' Process genes by significance threshold.
@@ -325,9 +329,10 @@ get_all_associated_genes <- function(list_pheno,
 #' @export
 get_signif_associated_genes <- function(pz.db,
                                         results,
-                                        ...) {
+                                        ...,
+                                        .opts=NULL) {
     pz.message("  ..........Processing genes by significance threshold")
-    pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.resolve.options(..., .opts=.opts)
     if (length(results) == 0) {
         pz.message("  ..........No successful repermulize results to process.")
         return(NULL)
@@ -338,9 +343,9 @@ get_signif_associated_genes <- function(pz.db,
     pz.message("  ..........Making signs")
     signs <- make.signs(results)
     pz.message("  ..........Getting positive sigs")
-    pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
+    pos.sig <- nonequiv.pos.sig(results, min_fx=opts('min_fx'))
     pz.message("  ..........Getting negative sigs")
-    neg.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'), dir=-1)
+    neg.sig <- nonequiv.pos.sig(results, min_fx=opts('min_fx'), dir=-1)
     pz.message("  ..........Make results matrix")
     results.matrix <- make.results.matrix(results) %>%
         dplyr::filter(!is.na(p.value)) %>%

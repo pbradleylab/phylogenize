@@ -155,6 +155,26 @@ pz.options <- function(...) {
     PZ_OPTIONS(...)
 }
 
+#' Resolve options for one phylogenize call.
+#'
+#' Internal helper used to pass a single resolved option object through a call
+#' chain instead of repeatedly reading package-global options.
+#'
+#' @param ... Option overrides.
+#' @param .opts Existing resolved options object. When supplied, overrides in
+#'   \code{...} are merged into this object.
+#' @noRd
+pz.resolve.options <- function(..., .opts=NULL) {
+    dots <- list(...)
+    if (is.null(.opts)) {
+        return(do.call(settings::clone_and_merge, c(list(PZ_OPTIONS), dots)))
+    }
+    if (length(dots) == 0) {
+        return(.opts)
+    }
+    do.call(settings::clone_and_merge, c(list(.opts), dots))
+}
+
 #' Set data directory to internal
 #'
 #' @param fail Boolean. If TRUE, set_data_internal will not attempt to download

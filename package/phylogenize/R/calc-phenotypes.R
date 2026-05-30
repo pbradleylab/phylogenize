@@ -7,11 +7,11 @@
 #'   memory. Must set to TRUE if running POMS.
 #' @param ... Parameters to override defaults.
 #' @export
-data_to_phenotypes <- function(save_data=FALSE, ...) {
-    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+data_to_phenotypes <- function(save_data=FALSE, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     pz.message("  A) Reading data, metadata, and databases...")
     # Read in user-supplied data and metadata
-    abd.meta <- read.abd.metadata(...)
+    abd.meta <- read.abd.metadata(..., .opts=opts)
     pz.message(paste0(
         "  .....Input abundance matrix has ",
         nrow(abd.meta$mtx),
@@ -26,7 +26,7 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
     ), level=2)
     pz.message("  B) Read in user-supplied data and metadata")
     # Read in trees, gene presence/absence, taxonomy
-    pz.db <- import.pz.db(...)
+    pz.db <- import.pz.db(..., .opts=opts)
     pz.message(paste0(
         "  .....Database loaded with ",
         length(pz.db$trees),
@@ -36,24 +36,24 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
     ))
     pz.message("  C) Read in trees, gene presence/absence, taxonomy")
     # Figure out how many trees to retain
-    pz.db <- adjust.db(pz.db, abd.meta, ...)
+    pz.db <- adjust.db(pz.db, abd.meta, ..., .opts=opts)
     pz.message(paste0(
         "  .....Database adjusted to ",
         pz.db$ntaxa,
         " testable taxon/taxa"
     ))
-    if (pz.options('assume_below_LOD')) {
+    if (opts('assume_below_LOD')) {
         pz.message("  .....Adding unobserved taxa as below limit of detection")
-        abd.meta <- add.below.LOD(pz.db, abd.meta, ...)
+        abd.meta <- add.below.LOD(pz.db, abd.meta, ..., .opts=opts)
         sanity.check.abundance(abd.meta$mtx, ...)
     }
     pz.message("  D) Calculating phenotypes...")
-    phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
-    if (pz.options('quantile_normalize')) {
+    phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ..., .opts=opts)
+    if (opts('quantile_normalize')) {
 	    pz.message("  .....Quantile-normalizing phenotype")
 	    phenotype_results <- quantile_normalize(phenotype_results)
     } 
-    if (pz.options('which_phenotype') %in% c("specificity", "abundance")) {
+    if (opts('which_phenotype') %in% c("specificity", "abundance")) {
         # only retain observed taxa
         pz.message("  .....Retaining observed taxa in trees")
         pz.db$trees <- retain.observed.taxa(pz.db$trees,
@@ -68,7 +68,7 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
             " observed testable taxon/taxa"
         ))
     }
-    if (tolower(pz.options('core_method')) == "poms") {
+    if (tolower(opts('core_method')) == "poms") {
         pz.message("Saving abundance data to run POMS...", 2)
         save_data <- TRUE
     }
@@ -120,8 +120,8 @@ quant_norm <- function(x) {
 #'     metadata (from read.abd.metadata or data_to_phenotypes).
 #' @param ... Parameters to override defaults.
 #' @export
-calculate_phenotypes <- function(abd.meta, pz.db, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+calculate_phenotypes <- function(abd.meta, pz.db, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     pz.message("  .....Collecting mapped observations greater than 0")
     mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
     pz.message(paste0(
@@ -132,7 +132,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
     if (tolower(opts('core_method')) == "poms") {
         pz.warning(paste0("Generating an approximate phenotype just for ",
                           "plotting POMS output (logit-AUC)..."))
-        phenotype <- logit_auc_pheno(abd.meta, ...)
+        phenotype <- logit_auc_pheno(abd.meta, ..., .opts=opts)
         phenoP <- 0
     } else {
         if (opts('which_phenotype') == "prevalence") {
@@ -291,8 +291,8 @@ retain.observed.taxa <- function(trees, phenotype, phenoP, mapped.observed) {
 #'     metadata.
 #' @return An updated version of \code{abd.meta}.
 #' @export
-add.below.LOD <- function(pz.db, abd.meta, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+add.below.LOD <- function(pz.db, abd.meta, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     species.observed <- rownames(abd.meta$mtx)
     all.possible.taxa <- Reduce(union,
                                 lapply(pz.db$gene.presence, colnames))
@@ -324,8 +324,9 @@ add.below.LOD <- function(pz.db, abd.meta, ...) {
 #' @return An updated version of \code{abd.meta}.
 #' @export
 logit_auc_pheno <- function(abd.meta,
-                            ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                            ...,
+                            .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     E <- opts('env_column')
     D <- opts('dset_column')
     S <- opts('sample_column')

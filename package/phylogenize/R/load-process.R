@@ -24,8 +24,8 @@
 #'     to a sparse binary presence/absence matrix (see \code{Matrix} package)
 #'     and a metadata data frame.
 #' @export
-read.abd.metadata <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+read.abd.metadata <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     colns <- c(opts('env_column'), opts('dset_column'), opts('sample_column'))
     if (length(unique(colns)) < length(colns)) {
         pz.error(
@@ -34,24 +34,24 @@ read.abd.metadata <- function(...) {
     }
     if (opts('input_format') == "tabular") {
         pz.message("  .....Reading tabular abundance and metadata files")
-        abd.meta <- read.abd.metadata.tabular(...)
+        abd.meta <- read.abd.metadata.tabular(..., .opts=opts)
     } else if (opts('input_format') == "biom") {
         pz.message("  .....Reading BIOM abundance and metadata file")
-        abd.meta <- read.abd.metadata.biom(...)
+        abd.meta <- read.abd.metadata.biom(..., .opts=opts)
     } else {
         pz.error(paste0("Invalid input format: ", opts('input_format')))
     }
     
     pz.message("  .....Checking abundance matrix")
-    sanity.check.abundance(abd.meta$mtx, ...)
+    sanity.check.abundance(abd.meta$mtx, ..., .opts=opts)
     pz.message("  .....Checking metadata")
-    sanity.check.metadata(abd.meta$metadata, ...)
+    sanity.check.metadata(abd.meta$metadata, ..., .opts=opts)
     if (opts('type_16S') == TRUE) {
         pz.message("  .....Processing 16S input")
-        abd.meta <- process.16s(abd.meta, ...)
+        abd.meta <- process.16s(abd.meta, ..., .opts=opts)
     }
     pz.message("  .....Harmonizing abundance matrix and metadata")
-    abd.meta <- harmonize.abd.meta(abd.meta, ...)
+    abd.meta <- harmonize.abd.meta(abd.meta, ..., .opts=opts)
     if ((opts('which_phenotype') != 'abundance') &&
         tolower(opts('core_method')) != "poms") {
         pz.message("Binarizing input data...", level=1)
@@ -102,8 +102,8 @@ read.abd.metadata <- function(...) {
 #'     that it is guaranteed to appear in the output of differential abundance 
 #'     estimators.
 #' @export
-check.process.metadata <- function(metadata, ...) {
-    opts <- clone_and_merge(phylogenize:::PZ_OPTIONS, ...)
+check.process.metadata <- function(metadata, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     orig_md <- metadata
     E <- opts('env_column')
     S <- opts('sample_column')
@@ -181,8 +181,8 @@ check.process.metadata <- function(metadata, ...) {
 #' @return A list with components \code{mtx} (matrix of abundances) and
 #'     \code{metadata} (data frame of metadata).
 #' @keywords internal
-read.abd.metadata.biom <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+read.abd.metadata.biom <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     bf <- opts('biom_file')
     pz.message(paste0("looking for file: ", normalizePath(bf)), level=2)
     if (!(file.exists(bf))) {
@@ -202,7 +202,7 @@ read.abd.metadata.biom <- function(...) {
     if (!opts('separate_metadata')) {
         pz.message("  ..........Reading metadata from BIOM file")
         metadata <- biomformat::sample_metadata(biomf)
-        metadata <- check.process.metadata(metadata, ...)
+        metadata <- check.process.metadata(metadata, ..., .opts=opts)
         # work around different naming convention
         if (is.null(rownames(metadata))) {
             pz.error(paste0("metadata had no sample names; should not be ",
@@ -216,7 +216,7 @@ read.abd.metadata.biom <- function(...) {
         } else { pz.message(paste0("located metadata file: ", mf), level=2) }
         pz.message("  ..........Reading separate metadata file")
         metadata <- readr::read_tsv(mf, show_col_types = FALSE)
-        metadata <- check.process.metadata(metadata, ...)
+        metadata <- check.process.metadata(metadata, ..., .opts=opts)
     }
     rm(biomf); gc()
     return(list(mtx=abd.mtx, metadata=metadata))
@@ -235,8 +235,8 @@ read.abd.metadata.biom <- function(...) {
 #' @return A list with components \code{mtx} (matrix of abundances) and
 #'     \code{metadata} (data frame of metadata).
 #' @keywords internal
-read.abd.metadata.tabular <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+read.abd.metadata.tabular <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     af <- opts('abundance_file')
     mf <- opts('metadata_file')
     if (!(file.exists(af))) {
@@ -248,7 +248,7 @@ read.abd.metadata.tabular <- function(...) {
     
     pz.message("  ..........Reading metadata table")
     metadata <- readr::read_tsv(mf, show_col_types = FALSE)
-    metadata <- check.process.metadata(metadata, ...)
+    metadata <- check.process.metadata(metadata, ..., .opts=opts)
     pz.message(paste0(
         "  ..........Metadata rows: ",
         nrow(metadata)
@@ -332,8 +332,8 @@ read.abd.metadata.tabular <- function(...) {
 #'     analysis, with components \code{gene.presence}, \code{trees},
 #'     \code{taxonomy}, \code{g.mappings}, and \code{gene.to.fxn}.
 #' @export
-import.pz.db <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+import.pz.db <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     db_csv <- file.path(opts('data_dir'), "databases.csv")
     pz.message(paste0("  .....Reading database index: ", db_csv), level=2)
     installed_dbs <- readr::read_delim(db_csv, show_col_types = FALSE)
@@ -459,8 +459,8 @@ import.pz.db <- function(...) {
 #'     metadata.
 #' @return An updated database.
 #' @export
-adjust.db <- function(pz.db, abd.meta, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     species.observed <- rownames(abd.meta$mtx)
     pz.message(paste0(
         "  .....Matching database to ",
@@ -697,8 +697,8 @@ change.tree.tax.level <- function(tree, taxon, tax) {
 #'   amplicon sequence variant DNA sequences.
 #' @return none
 #' @export
-process.16s <- function(abd.meta, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+process.16s <- function(abd.meta, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     if (!(all(is.dna(rownames(abd.meta$mtx))))) {
         pz.error(paste0("expected rows to be DNA sequences but found illegal ",
                         "characters"))
@@ -746,8 +746,8 @@ process.16s <- function(abd.meta, ...) {
 #'     package) and a metadata data frame.
 #' @return A list of the same form as \code{abd.meta}.
 #' @export
-harmonize.abd.meta <- function(abd.meta, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+harmonize.abd.meta <- function(abd.meta, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     align.metadata.to.matrix <- function(abd.meta) {
         metadata_order <- match(colnames(abd.meta$mtx),
                                 abd.meta$metadata[[opts('sample_column')]])
@@ -925,8 +925,8 @@ sanity.check.abundance <- function(abd.mtx, ...) {
 #' @return Always returns TRUE, but will throw errors if the metadata does not
 #'   match specifications.
 #' @export
-sanity.check.metadata <- function(metadata, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+sanity.check.metadata <- function(metadata, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     if (!(opts('env_column') %in% colnames(metadata))) {
         pz.error(
             paste0("When looking for environment, no column found labeled ",
@@ -962,8 +962,8 @@ sanity.check.metadata <- function(metadata, ...) {
 #' @return A matrix of abundance values (double), with all-zero columns and rows
 #'     removed.
 #' @export
-remove.allzero.abundances <- function(abd.mtx, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+remove.allzero.abundances <- function(abd.mtx, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     cs <- Matrix::colSums(abd.mtx)
     nz.cols <- which(cs > 0)
     z.col.logical <- (cs == 0)
