@@ -234,15 +234,23 @@ render_core_report <- function(core,
 #'   any overrides supplied through \code{...}.
 #'
 #' @param core The named list obtained from running `phylogenize_core()`.
+#' @param ... Option overrides.
 #' @export
-augment_with_enrichments <- function(core) {
+augment_with_enrichments <- function(core, ..., .opts=NULL) {
+    base_opts <- .opts
+    if (is.null(base_opts) && "options" %in% names(core)) {
+        base_opts <- core[["options"]]
+    }
+    opts <- pz.resolve.options(..., .opts=base_opts)
     core[["enr_tbls"]] <- get_enrichment_tbls(
         core[["list_signif"]][["signif"]],
         core[["list_signif"]][["signs"]],
         core[["list_pheno"]][["pz.db"]],
         core[["list_signif"]][["results.matrix"]],
         export=TRUE,
-        print_out=TRUE)
+        print_out=TRUE,
+        ...,
+        .opts=opts)
     core
 }
 

@@ -105,3 +105,40 @@ test_that("phylogenize wrapper passes resolved options without mutating globals"
     expect_equal(pz.options("out_dir"), "global-out")
     expect_equal(pz.options("output_file"), "global.html")
 })
+
+test_that("augment_with_enrichments uses options stored in core", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    seen <- new.env(parent=emptyenv())
+    core_opts <- pz.resolve.options(
+        out_dir="core-out",
+        fdr_method="BY",
+        error_to_file=FALSE
+    )
+    core <- list(
+        list_signif=list(
+            signif=list(TaxonA=character()),
+            signs=list(TaxonA=character()),
+            results.matrix=tibble::tibble()
+        ),
+        list_pheno=list(pz.db=list()),
+        options=core_opts
+    )
+
+    testthat::local_mocked_bindings(
+        get_enrichment_tbls=function(..., .opts=NULL) {
+            seen$opts <- .opts
+            tibble::tibble()
+        },
+        .package="phylogenize"
+    )
+
+    pz.options(out_dir="global-out", fdr_method="BH", error_to_file=FALSE)
+    augmented <- augment_with_enrichments(core)
+
+    expect_s3_class(augmented$enr_tbls, "tbl_df")
+    expect_equal(seen$opts("out_dir"), "core-out")
+    expect_equal(seen$opts("fdr_method"), "BY")
+    expect_equal(pz.options("out_dir"), "global-out")
+})

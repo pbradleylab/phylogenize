@@ -4,14 +4,22 @@
 \alias{augment_with_enrichments}
 \title{Add enrichments to a core phylogenize object}
 \usage{
-augment_with_enrichments(core)
+augment_with_enrichments(core, ..., .opts = NULL)
 }
 \arguments{
 \item{core}{The named list obtained from running \code{phylogenize_core()}.}
+
+\item{...}{Option overrides.}
+
+\item{.opts}{Internal resolved options object.}
 }
 \value{
 The input core object with an \code{enr_tbls} element added.
 }
 \description{
 Add enrichment tables after the fact to a phylogenize core object.
+}
+\details{
+This helper resolves options from \code{core$options}, \code{pz.options()}
+defaults, and any overrides supplied through \code{...}.
 }
