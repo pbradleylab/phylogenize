@@ -22,26 +22,40 @@ params:
 library(phylogenize)
 library(Matrix)
 
-pz.warning(paste(names(core)))
+if (!exists("opts")) {
+    if ("options" %in% names(core)) {
+        opts <- core[["options"]]
+    } else {
+        opts <- phylogenize:::pz.resolve.options()
+    }
+}
 
-cache.d <- file.path(pz.options('out_dir'), 'cache')
-dir.create(pz.options('out_dir'), recursive=TRUE, showWarnings=FALSE)
+pz.warning(paste(names(core)), .opts=opts)
+
+cache.d <- file.path(opts('out_dir'), 'cache')
+dir.create(opts('out_dir'), recursive=TRUE, showWarnings=FALSE)
 dir.create(cache.d, recursive=TRUE, showWarnings=FALSE)
 knitr::opts_chunk$set(cache.path=cache.d)
 
-if (pz.options('use_rmd_params')) {
-    do.call(pz.options, args=params)
+if (opts('use_rmd_params')) {
+    opts <- do.call(
+        phylogenize:::pz.resolve.options,
+        c(list(.opts=opts), params)
+    )
 }
 
-if (is.null(pz.options('relative_out_dir'))) {
-  pz.options(relative_out_dir=pz.options('out_dir'))
+if (is.null(opts('relative_out_dir'))) {
+  opts <- phylogenize:::pz.resolve.options(
+      .opts=opts,
+      relative_out_dir=opts('out_dir')
+  )
 }
 
 # Note that params give defaults for the web tool, while PZ_OPTIONS gives
 # defaults for the package
 
 # set graphing hook
-if (!pz.options('skip_graphs')) {
+if (!opts('skip_graphs')) {
     library(svglite)
     knitr::knit_hooks$set(custom.plot = knitr::hook_plot_custom)
     # Thanks to Yihui Xie:
@@ -64,8 +78,8 @@ if (!pz.options('skip_graphs')) {
     })
 }
 
-dir.create(pz.options('out_dir'), recursive=TRUE, showWarnings=FALSE)
-do_POMS <- (tolower(pz.options('core_method'))=="poms")
+dir.create(opts('out_dir'), recursive=TRUE, showWarnings=FALSE)
+do_POMS <- (tolower(opts('core_method'))=="poms")
 
 
 ```
@@ -78,7 +92,7 @@ This report was generated automatically by [Phylogenize2](https://phylogenize.or
 <summary>Click to show options</summary>
 ```{r show_options, results='asis', echo=FALSE}
 
-o <- pz.options()
+o <- opts()
 for (i in 1:length(o)) {
 	if ((is.null(o[i])) || (o[i] == "")) { o[i] <- "*(empty)*" }
 	cat(paste0(" - ", names(o)[i], " = ", o[i]), "\n")
@@ -89,10 +103,10 @@ for (i in 1:length(o)) {
 
 # Phenotypic Calculation
 
-Below, trees for all taxa with at least `r pz.options('treemin')`
+Below, trees for all taxa with at least `r opts('treemin')`
 representatives in the input data are presented. Trees are colored according to
-the phenotype chosen (here, `r pz.options('which_phenotype')` in the environment
- `r pz.options('which_envir') `).
+the phenotype chosen (here, `r opts('which_phenotype')` in the environment
+ `r opts('which_envir') `).
 
 For prevalence, the tree is colored black (low prevalence) to orange (high
 prevalence). For specificity, the tree is colored red for taxa that are
@@ -127,9 +141,9 @@ if (!(skip_phenotypes)) {
 # Also unpack "phenotype, phenoP, mapped.observed" into current environment
 list2env(core[["list_pheno"]][["phenotype_results"]], environment())
 
-pheno.distros <- plot.pheno.distributions(phenotype, pz.db)
-pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
-plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pz.db$taxonomy, pheno.scale)
+pheno.distros <- plot.pheno.distributions(phenotype, pz.db, .opts=opts)
+pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP, .opts=opts)
+plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pz.db$taxonomy, pheno.scale, .opts=opts)
 
 
 # Template for plots
@@ -145,20 +159,20 @@ plots <- lapply(seq_along(pheno.distros), function(nm) {
     knitr::knit_expand(text = template, nm = nm)
 })
 
-write.table(file=file.path(pz.options('out_dir'), "phenotype.tab"),
+write.table(file=file.path(opts('out_dir'), "phenotype.tab"),
             phenotype,
             sep = '\t')
 } else {
 
-pz.message("Skipping phenotypes, as not found (possibly because POMS was used)")
+pz.message("Skipping phenotypes, as not found (possibly because POMS was used)", .opts=opts)
 
 # Create dummy phenotypes for significant gene plot 
 all_species <- Reduce(union, purrr::map(pz.db$trees, \(.) .$tip.label))
 phenotype <- setNames(rep(0, length(all_species)), all_species)
 phenoP <- 0
 
-pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP)
-plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pz.db$taxonomy, pheno.scale)
+pheno.scale <- get.pheno.plotting.scales(phenotype, pz.db$trees, phenoP, .opts=opts)
+plotted.pheno.trees <- plot.phenotype.trees(phenotype, pz.db$trees, pz.db$taxonomy, pheno.scale, .opts=opts)
 
 plots <- NULL 
 }
@@ -172,10 +186,10 @@ gc()
 
 if (!(skip_phenotypes)) {
 plots <- list()
-if (!pz.options('skip_graphs')) {
+if (!opts('skip_graphs')) {
 	plots <- plot.labeled.phenotype.trees(plotted.pheno.trees,
 				     100*logistic(phenotype),
-				     label=pz.options('which_phenotype'))
+				     label=opts('which_phenotype'))
 }
 
 phylogenize::knitPrintListPlots(
@@ -203,11 +217,11 @@ subtrees <- Filter(function(x) {
 }, subtrees)
 
 subplots <- list()
-if (!pz.options('skip_graphs')) {
-       plotted.pheno.subtrees <- plot.phenotype.trees(phenotype, subtrees, pz.db$taxonomy, pheno.scale)
+if (!opts('skip_graphs')) {
+       plotted.pheno.subtrees <- plot.phenotype.trees(phenotype, subtrees, pz.db$taxonomy, pheno.scale, .opts=opts)
        subplots <- plot.labeled.phenotype.trees(plotted.pheno.subtrees,
 						 100*logistic(phenotype),
-						 label=pz.options('which_phenotype')
+						 label=opts('which_phenotype')
 				     )
 }
 
@@ -233,7 +247,7 @@ an FDR of 5%.
 signif_genes <- core[["list_signif"]]
 
 if (is.null(signif_genes)) {
-  pz.message("Skipping association summary because no association results were found")
+  pz.message("Skipping association summary because no association results were found", .opts=opts)
 } else {
   pos.sig.count <- purrr::map_dbl(signif_genes$pos.sig, length)
 
@@ -251,17 +265,17 @@ if (is.null(signif_genes)) {
   phylogenize::getClinDT(sig.count)
 
   write.csv(
-    file = file.path(pz.options('out_dir'), "pos-sig-thresholded.csv"),
+    file = file.path(opts('out_dir'), "pos-sig-thresholded.csv"),
     signif_genes[["pos.sig.descs"]]
   )
   if ("neg.sig" %in% names(signif_genes)) {
     write.csv(
-      file = file.path(pz.options('out_dir'), "neg-sig-thresholded.csv"),
+      file = file.path(opts('out_dir'), "neg-sig-thresholded.csv"),
       signif_genes[["neg.sig.descs"]]
     )
   }
   write.csv(
-    file = file.path(pz.options('out_dir'), "all-results.csv"),
+    file = file.path(opts('out_dir'), "all-results.csv"),
     signif_genes[["results.matrix"]]
   )
 }
@@ -278,7 +292,7 @@ first, then negatively-associated genes.
 
 ```{r gene_assoc_heat_maps, warning = FALSE, message = FALSE, echo=FALSE, results="hide", dev = "png", dpi = 300, cache=FALSE}
 if (is.null(signif_genes)) {
-  pz.message("Skipping gene association heat maps because no association results were found")
+  pz.message("Skipping gene association heat maps because no association results were found", .opts=opts)
 } else {
   for (which_sign in c(1, -1)) {
     if (which_sign==1) {
@@ -307,6 +321,7 @@ if (is.null(signif_genes)) {
                             pz.db$trees[valid_keys],
                             plotted.pheno.trees[valid_keys],
                             valid_keys,
+                            MoreArgs=list(.opts=opts),
                             SIMPLIFY = FALSE)
     purrr::walk(cluster.plots, print)
   }
@@ -341,7 +356,8 @@ if (do_enrichment) {
     table
 } else {
     pz.message(
-        "Skipping enrichment as tables could not be found in provided object"
+        "Skipping enrichment as tables could not be found in provided object",
+        .opts=opts
     )
 }
 ```
@@ -352,10 +368,10 @@ Links to other files generated by the report:
 
 ```{r, results='asis', echo=FALSE}
 
-if (is.null(pz.options('relative_out_dir'))) {
-  r.outdir <- pz.options('out_dir')
+if (is.null(opts('relative_out_dir'))) {
+  r.outdir <- opts('out_dir')
 } else {
-  r.outdir <- pz.options('relative_out_dir')
+  r.outdir <- opts('relative_out_dir')
 }
 for (f in c("phenotype.tab",
             "all-results.csv",
@@ -367,7 +383,7 @@ for (f in c("phenotype.tab",
   fp <- file.path(r.outdir, f)
   # Note, check the actual output directory when we're trying to figure out what
   # got made
-  if (file.exists(file.path(pz.options('out_dir'), f))) {
+  if (file.exists(file.path(opts('out_dir'), f))) {
     cat(paste0(' * [**', f, '**](', fp, ')\n'))
   }
 }

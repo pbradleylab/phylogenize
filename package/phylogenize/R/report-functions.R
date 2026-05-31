@@ -24,17 +24,19 @@
 #'     (\code{phy.limits}), a color scale (\code{colors}), and the zero point
 #'     (\code{zero}).
 #' @export
-get.pheno.plotting.scales <- function(phenotype, trees, phenoP=0, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+get.pheno.plotting.scales <- function(phenotype, trees, phenoP=0, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     if (opts('which_phenotype') == 'prevalence') {
         get.pheno.plotting.scales.prevalence(phenotype,
                                              trees,
                                              phenoP,
+                                             .opts=opts,
                                              ...)
     } else if (opts('which_phenotype') %in% c('specificity', 'abundance', 'provided')) {
         get.pheno.plotting.scales.specificity(phenotype,
                                               trees,
                                               phenoP,
+                                              .opts=opts,
                                               ...)
     }
 }
@@ -60,8 +62,9 @@ get.pheno.plotting.scales <- function(phenotype, trees, phenoP=0, ...) {
 get.pheno.plotting.scales.prevalence <- function(phenotype,
                                                  trees,
                                                  phenoP=0,
-                                                 ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                                                 ...,
+                                                 .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     phenoLimits <- quantile(unique(phenotype), c(0.2, 0.8))
     phenoLimitsTaxon <- lapply(trees, function(tr) {      
         phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>%
@@ -104,8 +107,9 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
 get.pheno.plotting.scales.specificity <- function(phenotype,
                                                   trees,
                                                   phenoP=0,
-                                                  ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                                                  ...,
+                                                  .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     phenoLimits <- c(phenoP - 1 * sd(phenotype),
                      phenoP + 1 * sd(phenotype))
     phenoLimitsTaxon <- lapply(trees, function(tr) {
@@ -142,10 +146,12 @@ plot.phenotype.trees <- function(phenotype,
                                  trees,
                                  taxonomy,
                                  scale,
-                                 ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                                 ...,
+                                 .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     if (any(!(names(trees) %in% names(scale$phy.limits)))) {
-        pz.error("taxon-specific limits must be calculated for every tree")
+        pz.error("taxon-specific limits must be calculated for every tree",
+                 .opts=opts)
     }
     
     plotted.pheno.trees <- lapply(names(trees), function(tn) {
@@ -183,12 +189,13 @@ plot.phenotype.trees <- function(phenotype,
 #' @export plot.pheno.distributions
 plot.pheno.distributions <- function(phenotype,
                                      pz.db,
-                                     ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                                     ...,
+                                     .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     kept.species <- Reduce(c, lapply(pz.db$trees, function(x) x$tip.label))
     pheno.taxon <- pz.db$taxonomy[match(names(phenotype),
                                         pz.db$taxonomy$cluster),
-                                   pz.options("taxon_level"),
+                                   opts("taxon_level"),
                                    drop=TRUE]
     pheno.characteristics <- data.frame(pheno=phenotype,
                                         taxon=pheno.taxon,
@@ -307,8 +314,9 @@ do.clust.plot <- function(gene.presence,
                           plotted.tree,
                           taxon,
                           verbose=FALSE,
-                          ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                          ...,
+                          .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     # Run these on a separate process to avoid memory leak
     cl <- parallel::makeCluster(1)
     on.exit(parallel::stopCluster(cl), add=TRUE)
@@ -334,6 +342,7 @@ do.clust.plot <- function(gene.presence,
                         plotted.tree,
                         taxon,
                         verbose,
+                        .opts=opts,
                         ...)
     print(tmpL[[1]])
     rm(tmpL)
@@ -369,8 +378,9 @@ single.cluster.plot <- function(gene.presence,
                                 taxon,
                                 verbose=FALSE,
                                 rel_pd_cut=c(-Inf,0.1,0.3,Inf),
-                                ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                                ...,
+                                .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     if ((is.null(sig.genes)) || (length(sig.genes) == 0)) return(NULL)
     sig.bin <- gene.presence[intersect(rownames(gene.presence),
                                        sig.genes), , drop=FALSE]
@@ -824,7 +834,9 @@ generate_interactive_cluster_plot <- function(results,
 					      fx_thresh=1,
 					      dir=0,
 					      metric='canberra',
-					      ...) {
+					      ...,
+                          .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
 	rm <- results$list_signif$results.matrix %>%
 		dplyr::filter(taxon==which_taxon) %>%
 		dplyr::filter(q.value <= q_thresh) %>%
@@ -834,7 +846,8 @@ generate_interactive_cluster_plot <- function(results,
 	g <- dplyr::pull(rm, gene)
 	pl <- get.pheno.plotting.scales.specificity(
 		results$list_pheno$phenotype_results$phenotype,
-		results$list_pheno$pz.db$trees
+		results$list_pheno$pz.db$trees,
+        .opts=opts
 	)
 	tr <- gg.cont.tree(results$list_pheno$pz.db$trees[[which_taxon]],
 			   results$list_pheno$phenotype_results$phenotype,
@@ -852,6 +865,7 @@ generate_interactive_cluster_plot <- function(results,
 			 results$list_pheno$pz.db$gene.to.fxn,
 			 results$list_signif$results.matrix,
 			 metric,
+             .opts=opts,
 			 ...)
 
 
@@ -887,8 +901,9 @@ int.cluster.plot <- function(gene.presence,
 			     results.matrix,
 			     metric='canberra',
                              verbose=FALSE,
-                             ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                             ...,
+                             .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     sig.bin <- gene.presence[intersect(rownames(gene.presence),
                                        sig.genes), , drop=FALSE]
     if (is.null(dim(sig.bin))) {

@@ -9,8 +9,8 @@ NULL
 #' results.
 #'
 #' @param do_cache Turn on or off Rmarkdown's caching (default: TRUE).
-#' @param reset_after Reset global options to package defaults after running?
-#'   (default: TRUE)
+#' @param reset_after Deprecated compatibility argument; options are resolved
+#'   locally.
 #' @param do_enr Generate enrichment tables? (default: TRUE)
 #' @param ... Other parameters to override defaults (see ?pz.options for a full
 #'   list).
@@ -163,9 +163,9 @@ phylogenize_core <- function(
 #' @param report_input Optionally specify which notebook to knit (useful for
 #'   testing).
 #' @param do_cache Turn on or off Rmarkdown's caching. (Default: TRUE)
-#' @param reset_after Reset global options after running? (Default: TRUE)
-#' @param ... Other options to be passed to `pz.options` that will override
-#'   options in `core`.
+#' @param reset_after Deprecated compatibility argument; report options are
+#'   resolved locally.
+#' @param ... Other options to override options in `core`.
 #' @export
 render_core_report <- function(core,
                                output_file="phylogenize-report.html",
@@ -175,11 +175,6 @@ render_core_report <- function(core,
                                verbose=FALSE,
                                ...,
                                .opts=NULL) {
-    
-    prev.options <- pz.options()
-    if (reset_after) {
-        on.exit(do.call(pz.options, prev.options), add=TRUE)
-    }
     if (!("list_pheno" %in% names(core)) || !("list_signif" %in% names(core))) {
         pz.error(paste0(
 	  "`core` does not look like Phylogenize2 output; did you pass ",
@@ -217,7 +212,6 @@ render_core_report <- function(core,
                level=1,
                .opts=opts)
     e <- environment()
-    do.call(pz.options, opts())
     r <- rmarkdown::render(file.path(opts("out_dir"),
                                      report_input),
                            output_file=basename(output_file),
