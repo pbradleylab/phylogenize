@@ -4,9 +4,11 @@
 \alias{sum.nonunique.vsearch}
 \title{Sum non-unique rows after vsearch mapping.}
 \usage{
-\method{sum}{nonunique.vsearch}(vsearch, mtx, ...)
+\method{sum}{nonunique.vsearch}(vsearch, mtx, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{vsearch}{A list obtained by running \code{get.vsearch.results}.}
 
 \item{mtx}{A presence/absence or abundance matrix, with row names equal to
@@ -22,7 +24,7 @@ presence/absence matrix, drops any rows that mapped to multiple MIDAS IDs
 then sums any rows that mapped to the same MIDAS ID.
 }
 \details{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{min_frac_16s}{Numeric. Should be between 0.5 and 1. Only keep ASVs
   where at least this fraction of assignments are to the same species. 

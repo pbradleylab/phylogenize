@@ -4,9 +4,11 @@
 \alias{calc.ess}
 \title{Main function to calculate environmental specificity scores.}
 \usage{
-calc.ess(abd.meta, pdata = NULL, b.optim = NULL, ...)
+calc.ess(abd.meta, pdata = NULL, b.optim = NULL, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{abd.meta}{A list giving an abundance matrix and metadata.}
 
 \item{pdata}{Named numeric vector giving priors per environment.}
@@ -25,7 +27,7 @@ A list with the following components:
 }
 }
 \description{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{env_column}{String. Name of column in metadata file containing the
   environment annotations.}

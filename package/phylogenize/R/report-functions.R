@@ -2,7 +2,7 @@
 
 #' Get phenotype plotting scales.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
 #'   or "specificity" or "correlation").}
@@ -44,7 +44,7 @@ get.pheno.plotting.scales <- function(phenotype, trees, phenoP=0, ..., .opts=NUL
 
 #' Get phenotype plotting scales (prevalence-specific).
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{prev_color_low}{String. When graphing prevalence on a tree, this
 #'   color is the lowest value.}
@@ -87,7 +87,7 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
 
 #' Get phenotype plotting scales (specificity or abundance).
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{spec_color_high}{String. When graphing specificity on a tree, this
 #'   color is the lowest value (most anti-specific).}
@@ -129,7 +129,7 @@ get.pheno.plotting.scales.specificity <- function(phenotype,
 
 #' Plot a phenotype along a list of trees.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
 #'   or "specificity").}
@@ -178,7 +178,7 @@ plot.phenotype.trees <- function(phenotype,
 
 #' Plot distributions of a phenotype across taxa.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
 #'   or "specificity").}
@@ -250,7 +250,7 @@ plot.pheno.distributions <- function(phenotype,
 #' This function adds fancy SVG highlight labels to ggtree objects and then
 #' plots them. If there's an error, it will fall back to a regular plot.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
 #'   or "specificity").}
@@ -353,7 +353,7 @@ do.clust.plot <- function(gene.presence,
 #' Make a hybrid tree-heatmap plot showing the taxon distribution of significant
 #' hits.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
 #'   or "specificity").}
@@ -875,7 +875,7 @@ generate_interactive_cluster_plot <- function(results,
 #' Make an interactive hybrid tree-heatmap plot showing the taxon distribution of 
 #' significant hits.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
 #'   or "specificity").}

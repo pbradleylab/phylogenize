@@ -12,10 +12,13 @@ single.cluster.plot(
   plotted.tree,
   taxon,
   verbose = FALSE,
-  ...
+  ...,
+  .opts = NULL
 )
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{gene.presence}{Gene presence/absence matrix.}
 
 \item{sig.genes}{Character vector of the significant genes.}
@@ -32,7 +35,7 @@ single.cluster.plot(
 A faceted ggplot object.
 }
 \description{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
   or "specificity").}

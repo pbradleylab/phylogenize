@@ -4,9 +4,11 @@
 \alias{write.test.biom}
 \title{Write and then read in tabular data.}
 \usage{
-write.test.biom(abd.meta, overwrite = FALSE, ...)
+write.test.biom(abd.meta, overwrite = FALSE, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{abd.meta}{List containing a matrix of abundance values, \code{mtx}, and
 a data frame of metadata, \code{metadata}.}
 
@@ -14,7 +16,7 @@ a data frame of metadata, \code{metadata}.}
 overwrite it?}
 }
 \description{
-Some global options that may be helpful include:
+Some options that may be helpful include:
 \describe{
   \item{biom_file}{String. Name of BIOM abundance-and-metadata file (in this
   case, to write to disk).}

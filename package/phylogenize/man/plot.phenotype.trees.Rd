@@ -4,9 +4,11 @@
 \alias{plot.phenotype.trees}
 \title{Plot a phenotype along a list of trees.}
 \usage{
-\method{plot}{phenotype.trees}(phenotype, trees, taxonomy, scale, ...)
+\method{plot}{phenotype.trees}(phenotype, trees, taxonomy, scale, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{phenotype}{A named vector with the phenotype values for each taxon.}
 
 \item{trees}{A list of trees.}
@@ -20,7 +22,7 @@ A list of ggtree objects in which the phenotype has been plotted
     across each tree in \code{trees}.
 }
 \description{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
   or "specificity").}

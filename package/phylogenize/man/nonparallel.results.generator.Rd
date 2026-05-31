@@ -14,10 +14,13 @@ nonparallel.results.generator(
   restrict.ff = NULL,
   remove.low.variance = TRUE,
   use.for.loop = TRUE,
-  ...
+  ...,
+  .opts = NULL
 )
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{gene.matrix}{Gene presence/absence matrix.}
 
 \item{tree}{Phylogeny relating taxa.}

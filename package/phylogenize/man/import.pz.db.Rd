@@ -4,7 +4,10 @@
 \alias{import.pz.db}
 \title{Import the data necessary for *phylogenize* analysis.}
 \usage{
-import.pz.db(...)
+import.pz.db(..., .opts = NULL)
+}
+\arguments{
+\item{.opts}{Internal resolved options object.}
 }
 \value{
 A list of the data objects required to perform a *phylogenize*
@@ -12,11 +15,11 @@ A list of the data objects required to perform a *phylogenize*
     \code{taxonomy}, \code{g.mappings}, and \code{gene.to.fxn}.
 }
 \description{
-\code{import.pz.db} decides based on global options which data files to
+\code{import.pz.db} decides based on resolved options which data files to
 import.
 }
 \details{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{type_16S}{Boolean. If 16S data, TRUE, otherwise shotgun data is
     assumed. Default: FALSE}

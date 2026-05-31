@@ -215,7 +215,7 @@ result.wrapper.plm <- function(
 
 #' Perform POMS modeling for a single clade.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{ncl}{Integer. Number of cores to use for parallel computation.
 #'   Default: 1}
@@ -931,7 +931,7 @@ b.scorer <- function(s, a) {
 
 #' Main function to calculate taxon prevalences with additive smoothing.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{String. Name of column in metadata file containing the
 #'   environment annotations.}
@@ -987,7 +987,7 @@ prev.addw <- function(abd.meta,
 #' Main function to calculate taxon-to-phenotype correlations, using
 #' clr-transformed abundances.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{String. Name of column in metadata file containing (in
 #'   this case) the correlation variable.}
@@ -1056,7 +1056,7 @@ clr <- function(mtx, pc = 0.5) {
 
 #' Main function to calculate environmental specificity scores.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{String. Name of column in metadata file containing the
 #'   environment annotations.}
@@ -1224,7 +1224,7 @@ restore.diff.abund.taxon.names <- function(sample_pheno, sample_sd, original_nam
 #' or MaAsLin2, then smooth the results with adaptive shrinkage. Note that the
 #' packages for ANCOMBC2 or MaAsLin2 must already be installed.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{String. Name of column in metadata file containing the
 #'   environment annotations.}
@@ -1393,7 +1393,7 @@ pz.log.options <- function(..., .opts=NULL) {
 
 #' Throw an error and optionally log it in errmsg.txt.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
 #'   output to an error message file?}
@@ -1417,7 +1417,7 @@ pz.error <- function(errtext, ...) {
 
 #' Report a message and optionally log it in errmsg.txt.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
 #'   output to an error message file?}
@@ -1444,7 +1444,7 @@ pz.message <- function(msgtext, level=1, ...) {
 
 #' Report a warning and optionally log it in errmsg.txt.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
 #'   output to an error message file?}
@@ -1484,7 +1484,7 @@ make.results.matrix <- function(results) {
 
 #' Filter out genes that are almost always present or absent.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{minimum}{Integer. A particular gene must be observed, and also
 #'   absent, at least this many times to be reported as a significant positive
@@ -1517,7 +1517,7 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ..., .opts=NULL) {
 #' regressions. Also screen out genes that are only observed at a low frequency
 #' (if working with continuous pangenomes).
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{minimum}{Integer. A particular gene must be observed, and also
 #'   absent, at least this many times to be reported as a significant positive

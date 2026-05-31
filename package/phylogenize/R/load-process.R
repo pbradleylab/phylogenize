@@ -5,9 +5,9 @@
 #' Read in abundance and metadata, either as one BIOM-format file or as two
 #' tab-delimited files.
 #'
-#' @details This function uses package-wide options (see \code{?pz.options}),
-#'     which can be overridden using the \code{...} argument. Some particularly
-#'     relevant options are:
+#' @details This function resolves options from \code{pz.options()} defaults
+#'     plus any overrides supplied through \code{...}. Some particularly relevant
+#'     options are:
 #'
 #' \describe{
 #'   \item{env_column}{String. Name of column in metadata file containing the
@@ -78,10 +78,10 @@ read.abd.metadata <- function(..., .opts=NULL) {
 #' Check and process metadata
 #'
 #' \code{check.process.metadata} is used to make sure that the metadata
-#' satisfies the requirements specified by the global options and to make sure
+#' satisfies the requirements specified by the resolved options and to make sure
 #' that the metadata are of the correct type.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment
 #'     annotations.}
@@ -93,8 +93,7 @@ read.abd.metadata <- function(..., .opts=NULL) {
 #' }
 #'
 #' @param metadata A data frame of metadata with environment, dataset, and
-#'     sample columns corresponding to those in the global options (see
-#'     \?pz.options).
+#'     sample columns corresponding to the resolved options.
 #' @return A data frame of metadata, with environment and
 #'     dataset columns converted to factors, *unless* calculating correlation
 #'     in which case environment column will be cast as numeric. The environment
@@ -170,9 +169,9 @@ check.process.metadata <- function(metadata, ..., .opts=NULL) {
 #' Read in taxon-by-sample matrix of abundances and metadata (sample
 #' annotations) from a single BIOM-formatted file.
 #'
-#' @details This function uses package-wide options (see \code{?pz.options}),
-#'     which can be overridden using the \code{...} argument. Some particularly
-#'     relevant options are:
+#' @details This function resolves options from \code{pz.options()} defaults
+#'     plus any overrides supplied through \code{...}. Some particularly relevant
+#'     options are:
 #'
 #' \describe{
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
@@ -227,7 +226,7 @@ read.abd.metadata.biom <- function(..., .opts=NULL) {
 #' Read in taxon-by-sample matrix of abundances and metadata (sample
 #' annotations) from two tab-delimited files.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #' }
@@ -317,10 +316,10 @@ read.abd.metadata.tabular <- function(..., .opts=NULL) {
 
 #' Import the data necessary for *phylogenize* analysis.
 #'
-#' \code{import.pz.db} decides based on global options which data files to
+#' \code{import.pz.db} decides based on resolved options which data files to
 #' import.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{type_16S}{Boolean. If 16S data, TRUE, otherwise shotgun data is
 #'     assumed. Default: FALSE}
@@ -543,7 +542,7 @@ adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
 #'
 #' \code{import.pz.db} filters down the binary file for database
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{binary}{Matrix. Object that represents a phylogenize-prepared
 #'     internal database}
@@ -617,7 +616,7 @@ change.presence.tax.level <- function(binary, taxon, tax){
 #'
 #' \code{import.pz.db} filters down the binary file for database
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{tree}{List. Object that represent a phylogenize-prepared internal
 #'     database}
@@ -691,7 +690,7 @@ change.tree.tax.level <- function(tree, taxon, tax) {
 #' 16S sequences; then return a list of abundance and metadata values where the
 #' rows of the abundance matrix are now MIDAS IDs.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk
 #'     and then read into vsearch.}
@@ -740,7 +739,7 @@ process.16s <- function(abd.meta, ..., .opts=NULL) {
 #' perform an \emph{phylogenize} analysis, after dropping any singleton datasets
 #' or environments (effects for these cannot be estimated).
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment
 #'   annotations.}
@@ -919,7 +918,7 @@ sanity.check.abundance <- function(abd.mtx, ...) {
 #' frame satisfies the requirements specified by the \emph{phylogenize}
 #' application.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment
 #'     annotations.}

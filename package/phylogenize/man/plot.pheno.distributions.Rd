@@ -4,9 +4,11 @@
 \alias{plot.pheno.distributions}
 \title{Plot distributions of a phenotype across taxa.}
 \usage{
-\method{plot}{pheno.distributions}(phenotype, pz.db, ...)
+\method{plot}{pheno.distributions}(phenotype, pz.db, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{phenotype}{A named vector with the phenotype values for each species.}
 
 \item{pz.db}{A database containing a \code{taxonomy} and \code{trees}.}
@@ -15,7 +17,7 @@
 A ggplot object with the phenotype distribution plotted per taxon.
 }
 \description{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
   or "specificity").}

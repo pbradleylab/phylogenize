@@ -72,10 +72,12 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 
 #' Set and get options for phylogenize.
 #'
-#' Function to set and get global options for the \emph{phylogenize} package.
+#' Function to set and get default options for the \emph{phylogenize} package.
 #'
-#' These options are global because they affect how most of the functions in
-#' \emph{phylogenize} work. Descriptions of these options follow.
+#' These package-level defaults are used when a phylogenize call does not
+#' provide an explicit override. Core workflows resolve the defaults and any
+#' overrides once, then pass that resolved option object through the call chain.
+#' Descriptions of these options follow.
 #'
 #' @section File input/output and paths:
 #' \describe{
@@ -158,7 +160,7 @@ pz.options <- function(...) {
 #' Resolve options for one phylogenize call.
 #'
 #' Internal helper used to pass a single resolved option object through a call
-#' chain instead of repeatedly reading package-global options.
+#' chain instead of repeatedly reading package-level defaults.
 #'
 #' @param ... Option overrides.
 #' @param .opts Existing resolved options object. When supplied, overrides in

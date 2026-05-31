@@ -65,8 +65,9 @@ phylogenize <- function(do_cache=TRUE,
 #' making all of the plots. Useful when incorporating phylogenize into a longer
 #' analysis, or when you don't want to wait for everything to render.
 #'
-#' @details Note: this function uses package-wide options (see
-#'   \code{?pz.options}), which can be overridden using the \code{...} argument.
+#' @details This function resolves options from \code{pz.options()} defaults
+#'   plus any overrides supplied through \code{...}, then passes that resolved
+#'   option object through the pipeline.
 #'
 #' @param do_enr Run enrichment analysis. Can skip to save time (default: TRUE)
 #' @param do_POMS to run POMS method. (default: FALSE)
@@ -153,8 +154,9 @@ phylogenize_core <- function(
 
 #' Take the output of `phylogenize_core` and generate a report.
 #'
-#' @details Note: this function uses package-wide options (see
-#'   \code{?pz.options}), which can be overridden using the \code{...} argument.
+#' @details This function renders from options stored in \code{core$options}
+#'   plus any overrides supplied through \code{...}; it does not mutate
+#'   \code{pz.options()} during rendering.
 #'
 #' @param core Output from `phylogenize_core()` (a named list; see
 #'   `?phylogenize_core`).
@@ -228,8 +230,8 @@ render_core_report <- function(core,
 
 #' Add enrichments after the fact to a phylogenize core object.
 #' 
-#' @details Note: this function uses package-wide options (see
-#'   \code{?pz.options}), which can be overridden using the \code{...} argument.
+#' @details This helper resolves options from \code{pz.options()} defaults plus
+#'   any overrides supplied through \code{...}.
 #'
 #' @param core The named list obtained from running `phylogenize_core()`.
 #' @export

@@ -4,9 +4,11 @@
 \alias{remove.allzero.abundances}
 \title{Remove rows and columns of a matrix that are all zero.}
 \usage{
-remove.allzero.abundances(abd.mtx, ...)
+remove.allzero.abundances(abd.mtx, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{abd.mtx}{A matrix of abundance values (double or logical).}
 }
 \value{

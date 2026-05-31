@@ -6,7 +6,7 @@
 #' \code{prepare.vsearch.input} outputs a FASTA file of the sequences in the
 #' input 16S data for analysis using vsearch or vsearch.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{named_asv_file}{String. File name of the sequences written to disk
 #'   and then read into vsearch/vsearch.}
@@ -45,7 +45,7 @@ prepare.vsearch.input <- function(mtx, ..., .opts=NULL) {
 #' not"vsearch", \emph{phylogenize} will assume an old version of vsearch is
 #' being called that doesn't have the ability to search both strands.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{named_asv_file}{String. File name of the sequences to be read into
 #' vsearch.}
@@ -98,7 +98,7 @@ run.vsearch <- function(..., .opts=NULL) {
 #' species_or_genus_ID;;MIDAS_ID". Only MIDAS_ID is used so the contents of
 #' "gene" and "species_or_genus_ID" can be arbitrary.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output
 #'   which is then read back into \emph{phylogenize}.}
@@ -128,7 +128,7 @@ get.vsearch.results <- function(..., .opts=NULL) {
 #' (i.e. that couldn't confidently be assigned to a MIDAS species),
 #' then sums any rows that mapped to the same MIDAS ID.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{min_frac_16s}{Numeric. Should be between 0.5 and 1. Only keep ASVs
 #'   where at least this fraction of assignments are to the same species. 
@@ -171,7 +171,7 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
 
 #' Run AppSpam analysis on a FASTA file of sequences.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{appspam_path}{String. Path to appspam binary.}
 #'   \item{aln_path_16s}{String. Path to file containing aligned 16S sequences.}
@@ -207,7 +207,7 @@ run.appspam <- function(..., .opts=NULL) {
 
 #' Read in results from AppSpam
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{jplace_file}{String. Path giving where to store input .jplace file.}
 #' }

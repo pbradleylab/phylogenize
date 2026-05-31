@@ -450,7 +450,7 @@ prep.mtx.for.write <- function(mtx, initial.octo=FALSE) {
 
 #' Write and then read in tabular data.
 #'
-#' Some global options that may be helpful include:
+#' Some options that may be helpful include:
 #' \describe{
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file (in this
 #'   case, to write to disk).}
@@ -507,7 +507,7 @@ write.test.biom <- function(abd.meta,
 
 #' Simulate amplicon sequence variants (ASVs) from a database of 16S sequences.
 #'
-#' Some global options that may be helpful include:
+#' Some options that may be helpful include:
 #' \describe{
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis. Here, this is where the

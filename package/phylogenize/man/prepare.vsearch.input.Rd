@@ -4,9 +4,11 @@
 \alias{prepare.vsearch.input}
 \title{Prepare input file for alignment}
 \usage{
-prepare.vsearch.input(mtx, ...)
+prepare.vsearch.input(mtx, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{mtx}{A presence/absence or abundance matrix, with row names equal to
 amplicon sequence variant DNA sequences.}
 }
@@ -15,7 +17,7 @@ amplicon sequence variant DNA sequences.}
 input 16S data for analysis using vsearch or vsearch.
 }
 \details{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{named_asv_file}{String. File name of the sequences written to disk
   and then read into vsearch/vsearch.}

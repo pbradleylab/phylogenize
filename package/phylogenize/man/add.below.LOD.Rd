@@ -5,9 +5,11 @@
 \title{Add in taxa that were not observed, assuming this means they were
 zero-prevalence.}
 \usage{
-add.below.LOD(pz.db, abd.meta, ...)
+add.below.LOD(pz.db, abd.meta, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{pz.db}{A database (typically obtained with \code{import.pz.db}).}
 
 \item{abd.meta}{A list consisting of a taxon abundance matrix and the
