@@ -1387,8 +1387,36 @@ ashr.diff.abund <- function(abd.meta,
 }
 
 
+pz.is.resolved.options <- function(x) {
+    if (!is.function(x)) {
+        return(FALSE)
+    }
+    vals <- tryCatch(x(), error=function(e) NULL)
+    is.list(vals) &&
+        all(c("out_dir", "error_to_file", "verbosity") %in% names(vals))
+}
+
+pz.infer.options <- function() {
+    frames <- sys.frames()
+    for (i in rev(seq_along(frames))) {
+        frame <- frames[[i]]
+        if (!exists("opts", envir=frame, inherits=FALSE)) {
+            next
+        }
+        candidate <- get("opts", envir=frame, inherits=FALSE)
+        if (pz.is.resolved.options(candidate)) {
+            return(candidate)
+        }
+    }
+    NULL
+}
+
 pz.log.options <- function(..., .opts=NULL) {
-    pz.resolve.options(..., .opts=.opts)
+    base_opts <- .opts
+    if (is.null(base_opts)) {
+        base_opts <- pz.infer.options()
+    }
+    pz.resolve.options(..., .opts=base_opts)
 }
 
 #' Throw an error and optionally log it in errmsg.txt.
