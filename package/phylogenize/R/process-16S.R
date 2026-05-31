@@ -15,16 +15,16 @@
 #' @param mtx A presence/absence or abundance matrix, with row names equal to
 #'   amplicon sequence variant DNA sequences.
 #' @export
-prepare.vsearch.input <- function(mtx, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
-    binary = basename(opts('vsearch_dir'))
+prepare.vsearch.input <- function(mtx, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     check.dna <- is.dna(rownames(mtx))
     if (!(all(check.dna))) {
         pz.error(paste0(
             "Rownames in 16S data must correspond to the actual sequences of ", 
             "denoised amplicon sequence variants, but some rownames contained ",
             "invalid characters ",
-            "(e.g. ", rownames(mtx)[which(!check.dna)[1]], ")."))
+            "(e.g. ", rownames(mtx)[which(!check.dna)[1]], ")."),
+            .opts=opts)
     }
     asvnames = paste0("Row", (1:nrow(mtx)))
     asvs = rownames(mtx)
@@ -62,8 +62,8 @@ prepare.vsearch.input <- function(mtx, ...) {
 #'
 #' @return Returns TRUE unless an error is thrown.
 #' @export run.vsearch
-run.vsearch <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+run.vsearch <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     binary = basename(opts('vsearch_dir'))
     pid = opts('vsearch_cutoff')
     vsearch_args = c("--db",
@@ -80,11 +80,12 @@ run.vsearch <- function(...) {
 		     "--blast6out",
 		     opts('vsearch_outfile'))
     pz.message(paste0("Calling aligner ", binary, " with arguments: ",
-                      paste(vsearch_args, sep=" ", collapse=" ")))
+                      paste(vsearch_args, sep=" ", collapse=" ")),
+               .opts=opts)
     r <- system2(opts('vsearch_dir'),
                  args = vsearch_args)
     if (r != 0) {
-        pz.error(paste0("Aligner failed with error code ", r))
+        pz.error(paste0("Aligner failed with error code ", r), .opts=opts)
     }
     return(TRUE)
 }
@@ -106,8 +107,8 @@ run.vsearch <- function(...) {
 #' @return List containing a vector of hits, a vector of MIDAS ID targets, and a
 #'     data frame of the assignments as they came out of vsearch.
 #' @export
-get.vsearch.results <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+get.vsearch.results <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     # map to MIDAS IDs using vsearch (note X1 is query name, X3 is pctid)
     assignments <- 
         readr::read_tsv(opts('vsearch_outfile'), col_names=FALSE) %>%
@@ -145,8 +146,8 @@ get.vsearch.results <- function(...) {
 #'     amplicon sequence variant DNA sequences.
 #' @return A new matrix with MIDAS IDs as rows.
 #' @export sum.nonunique.vsearch
-sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     min_frac <- opts("min_frac_16s")
     vs_tbl <- tibble::tibble(hits=vsearch$hits, targets=vsearch$targets) %>% 
 	    dplyr::group_by(hits) %>%
@@ -180,9 +181,9 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
 #' }
 #'
 #' @return Returns TRUE unless an error is thrown.
-#' @export run.vsearch
-run.appspam <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+#' @export run.appspam
+run.appspam <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     r <- system2(
         opts('appspam_path'), 
         args = c(
@@ -199,7 +200,7 @@ run.appspam <- function(...) {
         )
     )
     if (r != 0) {
-        pz.error(paste0("AppSpam failed with error code ", r))
+        pz.error(paste0("AppSpam failed with error code ", r), .opts=opts)
     }
     return(TRUE)
 }
@@ -213,8 +214,8 @@ run.appspam <- function(...) {
 #' @return List containing a vector of hits, a vector of MIDAS ID targets, and a
 #'     data frame of the assignments as they came out of AppSpam 
 #' @export
-get.appspam.results <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+get.appspam.results <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     # map to MIDAS IDs using vsearch
     placements <- treeio::read.jplace(opts('jplace_file'))
     tr <- treeio::get.tree(placements)

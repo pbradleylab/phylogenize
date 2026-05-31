@@ -705,22 +705,24 @@ process.16s <- function(abd.meta, ..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
     if (!(all(is.dna(rownames(abd.meta$mtx))))) {
         pz.error(paste0("expected rows to be DNA sequences but found illegal ",
-                        "characters"))
+                        "characters"),
+                 .opts=opts)
     }
     if (opts('which_16s_method')=="vsearch") {
-        prepare.vsearch.input(abd.meta$mtx, ...)
-        run.vsearch(...)
-        results_16s <- get.vsearch.results(...)
+        prepare.vsearch.input(abd.meta$mtx, ..., .opts=opts)
+        run.vsearch(..., .opts=opts)
+        results_16s <- get.vsearch.results(..., .opts=opts)
     } else if (opts('which_16s_method')=="appspam") {
-        prepare.vsearch.input(abd.meta$mtx, ...)
-        run.appspam(...)
-        results_16s <- get.appspam.results(...)
+        prepare.vsearch.input(abd.meta$mtx, ..., .opts=opts)
+        run.appspam(..., .opts=opts)
+        results_16s <- get.appspam.results(..., .opts=opts)
     } else if (opts('which_16s_method')=="jplace") {
-        results_16s <- get.appspam.results(...)        
+        results_16s <- get.appspam.results(..., .opts=opts)
     } else {
-        pz.error("which_16s_method must be vsearch, appspam, or jplace")
+        pz.error("which_16s_method must be vsearch, appspam, or jplace",
+                 .opts=opts)
     }
-    summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ...)
+    summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ..., .opts=opts)
     csu <- colSums(summed.uniq)
     abd.meta$mtx <- summed.uniq[, which(csu > 0), drop=FALSE]
     # don't convert to relative abundance...
