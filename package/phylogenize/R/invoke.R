@@ -4,6 +4,18 @@ NULL
 
 #--- Main ways to invoke phylogenize: ---#
 
+ensure_output_dir <- function(out_dir, .opts=NULL) {
+    if (!(dir.exists(out_dir)) &&
+        !dir.create(out_dir, recursive=TRUE, showWarnings=FALSE)) {
+        pz.error(paste0("Could not create output directory: ", out_dir),
+                 .opts=.opts)
+    }
+}
+
+ensure_parent_dir <- function(path, .opts=NULL) {
+    ensure_output_dir(dirname(path), .opts=.opts)
+}
+
 #' Run *phylogenize* start to finish, then render an interactive report on the
 #' results.
 #'
@@ -26,12 +38,7 @@ phylogenize <- function(do_cache=TRUE,
         out_dir=normalizePath(opts("out_dir"), mustWork=FALSE)
     )
     poms_flag <- tolower(opts("core_method"))=="poms"
-    if (!(dir.exists(opts("out_dir"))) &&
-        !dir.create(opts("out_dir"), recursive=TRUE, showWarnings=FALSE)) {
-        pz.error(paste0("Could not create output directory: ",
-                        opts("out_dir")),
-                 .opts=opts)
-    }
+    ensure_output_dir(opts("out_dir"), .opts=opts)
     
     pz.message("Running the core of phylogenize...", .opts=opts)
     core <- phylogenize_core(do_POMS=poms_flag,
@@ -43,6 +50,7 @@ phylogenize <- function(do_cache=TRUE,
         core_path <- file.path(opts("out_dir"),
                                opts("rds_output_file"))
         pz.message(paste0("Saving core results to ", core_path), .opts=opts)
+        ensure_parent_dir(core_path, .opts=opts)
         saveRDS(object=core, file=core_path)
     }
     
@@ -88,6 +96,11 @@ phylogenize_core <- function(
 ) {
     dots <- list(...)
     opts <- pz.resolve.options(..., .opts=.opts)
+    opts <- pz.resolve.options(
+        .opts=opts,
+        out_dir=normalizePath(opts("out_dir"), mustWork=FALSE)
+    )
+    ensure_output_dir(opts("out_dir"), .opts=opts)
     do_POMS <- do_POMS || (tolower(opts('core_method')) == "poms")
     if (do_POMS) {
         dots[["core_method"]] <- "poms"
@@ -192,12 +205,7 @@ render_core_report <- function(core,
         working_dir=normalizePath(getwd()),
         out_dir=normalizePath(opts("out_dir"), mustWork=FALSE)
     )
-    if (!dir.exists(opts('out_dir')) &&
-        !dir.create(opts('out_dir'), recursive=TRUE, showWarnings=FALSE)) {
-        pz.error(paste0("Could not create output directory: ",
-                        opts("out_dir")),
-                 .opts=opts)
-    }
+    ensure_output_dir(opts("out_dir"), .opts=opts)
     p <- opts()
     if (verbose) {
         for (n in names(p)) {
@@ -504,7 +512,7 @@ get_enrichment_tbls <- function(signif,
         pz.message(paste0("  .....Writing KEGG cache to ", kegg_cache_path), level=2)
         tryCatch({
             cache_dir <- dirname(kegg_cache_path)
-            if (!dir.exists(cache_dir)) dir.create(cache_dir, recursive=TRUE)
+            ensure_output_dir(cache_dir, .opts=opts)
             saveRDS(list(KEGG=kegg_pw_data, MKEGG=kegg_mod_data),
                     kegg_cache_path)
         }, error=function(e) {

@@ -66,6 +66,35 @@ test_that("phylogenize_core skips enrichment when associations return NULL", {
     expect_false(seen$enrichment_called)
 })
 
+test_that("phylogenize_core creates configured output directory", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    out_dir <- file.path(tempdir(), "phylogenize-core-output-dir-test")
+    if (dir.exists(out_dir)) unlink(out_dir, recursive=TRUE)
+
+    testthat::local_mocked_bindings(
+        data_to_phenotypes=function(save_data=FALSE, ...) {
+            list(
+                phenotype_results=list(phenotype=c(sp1=1)),
+                pz.db=list(ntaxa=1)
+            )
+        },
+        get_all_associated_genes=function(list_pheno, p.method, ...) {
+            NULL
+        },
+        .package="phylogenize"
+    )
+
+    phylogenize_core(
+        do_enr=FALSE,
+        out_dir=out_dir,
+        error_to_file=FALSE
+    )
+
+    expect_true(dir.exists(out_dir))
+})
+
 test_that("phylogenize wrapper passes resolved options without mutating globals", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)
