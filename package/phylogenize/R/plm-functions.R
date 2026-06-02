@@ -1572,6 +1572,7 @@ above_minimum_genes <- function(gene.presence, trees, ..., .opts=NULL) {
         tips <- trees[[tx]]$tip.label
         colns <- colnames(gene.presence[[tx]])
         i <- na.omit(intersect(tips, colns))
+        g <- character(0)
         if (length(i) > 0) {
           mtx <- gene.presence[[tx]][, i, drop=FALSE]
 	  Max <- ncol(mtx) - Min

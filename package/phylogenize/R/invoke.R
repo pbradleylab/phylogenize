@@ -478,6 +478,10 @@ get_enrichment_tbls <- function(signif,
     opts <- pz.resolve.options(..., .opts=.opts)
     pretty.enr.tbl <- NULL
     enr.overlap <- NULL
+    if (length(unlist(signif, recursive=TRUE, use.names=FALSE)) == 0) {
+        pz.warning("No significant genes available for enrichment; skipping.")
+        return(tibble::tibble())
+    }
     kegg_cache_path <- kegg_cache_file
     if (!grepl("^(/|[A-Za-z]:[/\\\\])", kegg_cache_path)) {
         kegg_cache_path <- file.path(opts("out_dir"), kegg_cache_path)

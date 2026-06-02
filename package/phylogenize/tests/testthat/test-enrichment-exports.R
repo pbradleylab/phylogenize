@@ -57,3 +57,22 @@ test_that("enrichment overlap exports include effect sizes", {
     expect_false(all(is.na(overlap$effectsize)))
     expect_equal(overlap$effectsize, 1.5)
 })
+
+test_that("enrichment is skipped when no significant genes are available", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    pz.options(error_to_file=FALSE)
+
+    observed <- get_enrichment_tbls(
+        signif=list(TaxonEmpty=list(strong=character(),
+                                    med=character(),
+                                    weak=character())),
+        signs=list(TaxonEmpty=numeric()),
+        pz.db=list(gene.to.fxn=tibble::tibble()),
+        results.matrix=tibble::tibble(),
+        use_kegg_cache=FALSE
+    )
+
+    expect_s3_class(observed, "tbl_df")
+    expect_equal(nrow(observed), 0)
+})

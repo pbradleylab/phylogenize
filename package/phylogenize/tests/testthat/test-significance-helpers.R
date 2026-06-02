@@ -117,3 +117,54 @@ test_that("negative-only significant taxa are retained after thresholding", {
     expect_equal(out$neg.sig.thresh$TaxonNeg, "g_neg")
     expect_equal(out$phy.with.sigs, "TaxonNeg")
 })
+
+test_that("nonequiv.pos.sig handles empty result matrices", {
+    empty <- matrix(
+        nrow=4,
+        ncol=0,
+        dimnames=list(c("Estimate", "p.value", "StdErr", "df"), character(0))
+    )
+
+    observed <- nonequiv.pos.sig(list(TaxonEmpty=empty), min_fx=0)
+
+    expect_equal(observed$TaxonEmpty, character(0))
+})
+
+test_that("significance processing handles taxa with no tested genes", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    pz.options(fdr_method="BH",
+               min_fx=0,
+               minimum=3,
+               error_to_file=FALSE)
+
+    empty <- matrix(
+        nrow=4,
+        ncol=0,
+        dimnames=list(c("Estimate", "p.value", "StdErr", "df"), character(0))
+    )
+    pz.db <- list(
+        trees=list(TaxonEmpty=ape::read.tree(text="(s1:1,s2:1,s3:1);")),
+        gene.presence=list(
+            TaxonEmpty=Matrix::Matrix(
+                matrix(
+                    numeric(0),
+                    nrow=0,
+                    ncol=3,
+                    dimnames=list(character(0), paste0("s", 1:3))
+                ),
+                sparse=TRUE
+            )
+        ),
+        gene.to.fxn=tibble::tibble(
+            gene=character(),
+            accession=character(),
+            `function`=character()
+        )
+    )
+
+    out <- get_signif_associated_genes(pz.db, list(TaxonEmpty=empty))
+
+    expect_equal(out$phy.with.sigs, character(0))
+    expect_equal(nrow(out$results.matrix), 0)
+})

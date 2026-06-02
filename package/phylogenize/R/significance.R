@@ -50,9 +50,18 @@ nonequiv.pos.sig <- function(results,
     if (dir==0) { stop("dir must not be zero") }
     if (is.null(exclude)) exclude <- lapply(results, function(.) NULL)
     sig_fxn <- function(r, ex) {
+        if (is.null(r) || length(dim(r)) != 2 || nrow(r) < 2 || ncol(r) == 0) {
+            return(character(0))
+        }
         valid <- colnames(r)[which(!is.na(unlist(r[1, , drop = FALSE])))]
+        if (length(valid) == 0) {
+            return(character(0))
+        }
         if (!is.null(ex)) {
             valid <- setdiff(valid, ex)
+        }
+        if (length(valid) == 0) {
+            return(character(0))
         }
         #tryCatch(
         #    {
