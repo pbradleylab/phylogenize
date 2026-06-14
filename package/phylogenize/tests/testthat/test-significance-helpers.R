@@ -104,6 +104,85 @@ test_that("qvals validates methods and p-values", {
     )
 })
 
+test_that("FDR method snapshots preserve q-values, names, and missingness", {
+    p <- c(
+        g_strong=0.001,
+        g_mid=0.020,
+        g_border=0.049,
+        g_null=0.200,
+        g_missing=NA_real_,
+        g_high=0.800
+    )
+    expected_bh <- c(
+        g_strong=0.00500000,
+        g_mid=0.05000000,
+        g_border=0.0816666666666667,
+        g_null=0.25000000,
+        g_missing=NA_real_,
+        g_high=0.80000000
+    )
+    expected_by <- c(
+        g_strong=0.0114166666666667,
+        g_mid=0.1141666666666667,
+        g_border=0.1864722222222222,
+        g_null=0.5708333333333333,
+        g_missing=NA_real_,
+        g_high=1.00000000
+    )
+
+    observed_bh <- phylogenize:::qvals(p, fdr_method="BH",
+                                       error_to_file=FALSE)
+    observed_by <- phylogenize:::qvals(p, fdr_method="BY",
+                                       error_to_file=FALSE)
+    expect_warning(
+        observed_qvalue <- phylogenize:::qvals(p, fdr_method="qvalue",
+                                               error_to_file=FALSE),
+        "Trying lambda=0"
+    )
+
+    expect_named(observed_bh, names(p))
+    expect_named(observed_by, names(p))
+    expect_named(observed_qvalue, names(p))
+    expect_equal(observed_bh, expected_bh, tolerance=1e-8)
+    expect_equal(observed_by, expected_by, tolerance=1e-8)
+    expect_equal(observed_qvalue, expected_bh, tolerance=1e-8)
+    expect_true(is.na(observed_bh[["g_missing"]]))
+    expect_true(is.na(observed_by[["g_missing"]]))
+    expect_true(is.na(observed_qvalue[["g_missing"]]))
+})
+
+test_that("FDR method choice changes significant hits on fixed result objects", {
+    results <- list(
+        TaxonFDR=matrix(
+            c(1.5, 1.2, -1.1, 0.8,
+              0.001, 0.020, 0.049, 0.200,
+              0.10, 0.10, 0.10, 0.10,
+              20.0, 20.0, 20.0, 20.0),
+            nrow=4,
+            byrow=TRUE,
+            dimnames=list(
+                c("Estimate", "p.value", "StdErr", "df"),
+                c("g_strong", "g_mid", "g_border", "g_null")
+            )
+        )
+    )
+    cuts <- c(strong=0.05)
+    opts_bh <- pz.resolve.options(fdr_method="BH", error_to_file=FALSE)
+    opts_by <- pz.resolve.options(fdr_method="BY", error_to_file=FALSE)
+
+    sigs_bh <- make.sigs(results, cuts=cuts, min.fx=0, .opts=opts_bh)
+    sigs_by <- make.sigs(results, cuts=cuts, min.fx=0, .opts=opts_by)
+    signs <- list(
+        TaxonFDR=c(g_strong=1, g_mid=1, g_border=-1, g_null=1)
+    )
+
+    expect_equal(sigs_bh$TaxonFDR$strong, c("g_strong", "g_mid"))
+    expect_equal(sigs_by$TaxonFDR$strong, "g_strong")
+    expect_equal(make.pos.sig(sigs_bh, signs)$TaxonFDR,
+                 c("g_strong", "g_mid"))
+    expect_equal(make.pos.sig(sigs_by, signs)$TaxonFDR, "g_strong")
+})
+
 test_that("calc.alpha.power compares named rejected tests to named truth sets", {
     pvs <- c(g_null=0.01, g_alt=0.02, g_miss=0.50, g_alt2=0.20)
 
