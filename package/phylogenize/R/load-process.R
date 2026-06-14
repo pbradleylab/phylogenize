@@ -975,6 +975,28 @@ sanity.check.abundance <- function(abd.mtx, ...) {
     if (is.null(colnames(abd.mtx))) {
         pz.error("Abundance matrix is lacking column (sample) names")
     }
+    taxon_ids <- trimws(rownames(abd.mtx))
+    sample_ids <- trimws(colnames(abd.mtx))
+    if (any(is.na(taxon_ids)) || any(taxon_ids == "")) {
+        pz.error("Abundance matrix contains blank or missing taxon names")
+    }
+    if (any(is.na(sample_ids)) || any(sample_ids == "")) {
+        pz.error("Abundance matrix contains blank or missing sample names")
+    }
+    if (any(duplicated(taxon_ids))) {
+        duplicate_taxa <- unique(taxon_ids[duplicated(taxon_ids)])
+        pz.error(paste0(
+            "Abundance matrix contains duplicate taxon names: ",
+            paste(duplicate_taxa, collapse=", ")
+        ))
+    }
+    if (any(duplicated(sample_ids))) {
+        duplicate_samples <- unique(sample_ids[duplicated(sample_ids)])
+        pz.error(paste0(
+            "Abundance matrix contains duplicate sample names: ",
+            paste(duplicate_samples, collapse=", ")
+        ))
+    }
     return(TRUE)
 }
 
@@ -1019,6 +1041,17 @@ sanity.check.metadata <- function(metadata, ..., .opts=NULL) {
     }
     if (nrow(metadata) < 2) {
         pz.error("Fewer than two rows found in metadata")
+    }
+    sample_ids <- trimws(as.character(metadata[[opts('sample_column')]]))
+    if (any(is.na(sample_ids)) || any(sample_ids == "")) {
+        pz.error("Metadata contains blank or missing sample IDs")
+    }
+    if (any(duplicated(sample_ids))) {
+        duplicate_samples <- unique(sample_ids[duplicated(sample_ids)])
+        pz.error(paste0(
+            "Metadata contains duplicate sample IDs: ",
+            paste(duplicate_samples, collapse=", ")
+        ))
     }
     return(TRUE)
 }

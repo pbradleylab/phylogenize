@@ -167,6 +167,68 @@ test_that("tabular import rejects nonnumeric abundance values", {
     )
 })
 
+test_that("abundance sanity check rejects duplicate and blank identifiers", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    duplicate_taxa <- matrix(
+        c(1, 0, 0, 1),
+        nrow=2,
+        dimnames=list(c("sp1", " sp1 "), c("s1", "s2"))
+    )
+    expect_error(
+        sanity.check.abundance(duplicate_taxa, error_to_file=FALSE),
+        "duplicate taxon names"
+    )
+
+    blank_samples <- matrix(
+        c(1, 0, 0, 1),
+        nrow=2,
+        dimnames=list(c("sp1", "sp2"), c("s1", " "))
+    )
+    expect_error(
+        sanity.check.abundance(blank_samples, error_to_file=FALSE),
+        "blank or missing sample names"
+    )
+})
+
+test_that("metadata sanity check rejects duplicate and blank sample IDs", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    duplicate_samples <- data.frame(
+        sample=c("s1", " s1 "),
+        dataset=c("d1", "d1"),
+        env=c("A", "B")
+    )
+    expect_error(
+        sanity.check.metadata(
+            duplicate_samples,
+            sample_column="sample",
+            dset_column="dataset",
+            env_column="env",
+            error_to_file=FALSE
+        ),
+        "duplicate sample IDs"
+    )
+
+    blank_samples <- data.frame(
+        sample=c("s1", ""),
+        dataset=c("d1", "d1"),
+        env=c("A", "B")
+    )
+    expect_error(
+        sanity.check.metadata(
+            blank_samples,
+            sample_column="sample",
+            dset_column="dataset",
+            env_column="env",
+            error_to_file=FALSE
+        ),
+        "blank or missing sample IDs"
+    )
+})
+
 test_that("harmonization trims sample identifiers before matching", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)
