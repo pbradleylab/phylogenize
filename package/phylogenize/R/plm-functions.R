@@ -947,12 +947,22 @@ correl.clr <- function(abd.meta,
         "Trait looks binary; are you sure you want to take correlation?") }
     corr_values <- apply(clr_mtx, 1, function(x) cor(x, trait))
     # take care of any perfect correlations before taking fisher transform
-    corr_values[corr_values == 1] <- (
-        (max(corr_values[corr_values < 1]) + 1) / 2
-    )
-    corr_values[corr_values == -1] <- (
-        (min(corr_values[corr_values > 1]) + -1) / 2
-    )
+    if (any(corr_values == 1)) {
+        below_one <- corr_values[corr_values < 1]
+        corr_values[corr_values == 1] <- if (length(below_one) > 0) {
+            (max(below_one) + 1) / 2
+        } else {
+            1 - .Machine$double.eps
+        }
+    }
+    if (any(corr_values == -1)) {
+        above_neg_one <- corr_values[corr_values > -1]
+        corr_values[corr_values == -1] <- if (length(above_neg_one) > 0) {
+            (min(above_neg_one) + -1) / 2
+        } else {
+            -1 + .Machine$double.eps
+        }
+    }
     return(atanh(corr_values))
 }
 
@@ -1274,6 +1284,15 @@ ashr.diff.abund <- function(abd.meta,
 }
 
 
+pz.log.options <- function(...) {
+    overrides <- list(...)
+    if (length(overrides) == 0) {
+        PZ_OPTIONS
+    } else {
+        do.call(settings::clone_and_merge, c(list(PZ_OPTIONS), overrides))
+    }
+}
+
 #' Throw an error and optionally log it in errmsg.txt.
 #'
 #' Some particularly relevant global options are:
@@ -1285,7 +1304,7 @@ ashr.diff.abund <- function(abd.meta,
 #' @param errtext String: error message text.
 #' @export
 pz.error <- function(errtext, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.log.options(...)
     if (opts('error_to_file')) {
         tryCatch({
           cat(
@@ -1311,7 +1330,7 @@ pz.error <- function(errtext, ...) {
 #' @param level Level of verbosity (default: 1). If above the current level of verbosity, the message will be logged to a file (if appropriate) but not printed to console.
 #' @export
 pz.message <- function(msgtext, level=1, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.log.options(...)
     v <- opts("verbosity")
     if (opts('error_to_file')) {
         tryCatch({
@@ -1336,7 +1355,7 @@ pz.message <- function(msgtext, level=1, ...) {
 #' @param errtext String: warning text.
 #' @export
 pz.warning <- function(msgtext, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.log.options(...)
     if (opts('error_to_file')) {
         tryCatch({
             cat(

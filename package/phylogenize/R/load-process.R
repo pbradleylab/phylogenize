@@ -732,6 +732,12 @@ process.16s <- function(abd.meta, ...) {
 #' @export
 harmonize.abd.meta <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
+    align.metadata.to.matrix <- function(abd.meta) {
+        metadata_order <- match(colnames(abd.meta$mtx),
+                                abd.meta$metadata[[opts('sample_column')]])
+        abd.meta$metadata <- abd.meta$metadata[metadata_order, , drop=FALSE]
+        abd.meta
+    }
     abd.meta$metadata[[opts('sample_column')]] <- trimws(
         abd.meta$metadata[[opts('sample_column')]]
     )
@@ -752,6 +758,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     abd.meta$metadata <- abd.meta$metadata[
         abd.meta$metadata[[opts('sample_column')]] %in%
             samples.present, ]
+    abd.meta <- align.metadata.to.matrix(abd.meta)
     
     if (opts('which_phenotype') %in% c("specificity",
                                        "prevalence",
@@ -832,8 +839,10 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "(need at least 2)"))
     }
     abd.meta$mtx <- abd.meta$mtx[, wcols, drop=FALSE]
+    abd.meta <- align.metadata.to.matrix(abd.meta)
     pz.message("  .....Removing all rows and columns that are completely 0")
     abd.meta$mtx <- remove.allzero.abundances(abd.meta$mtx)
+    abd.meta <- align.metadata.to.matrix(abd.meta)
     return(abd.meta)
 }
 

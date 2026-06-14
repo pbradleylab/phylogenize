@@ -170,7 +170,10 @@ make.signs <- function(results) {
 #'   \item{a}{Alpha (FPR)}
 #' @export
 calc.alpha.power <- function(pvs, null, alt, alpha = 0.05, filter = NULL) {
-    reject = which(pvs <= alpha)
+    reject <- which(pvs <= alpha)
+    if (!is.null(names(pvs))) {
+        reject <- names(reject)
+    }
     if (!is.null(filter)) {
         alt <- intersect(alt, filter)
         null <- intersect(null, filter)
