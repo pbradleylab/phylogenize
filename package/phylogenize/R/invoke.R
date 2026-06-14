@@ -299,7 +299,8 @@ get_all_associated_genes <- function(list_pheno,
                 proteins=list_pheno$pz.db$gene.presence[taxaN],
                 method=p.method,
                 poms=TRUE,
-                abd.meta=list_pheno$abd.meta
+                abd.meta=list_pheno$abd.meta,
+                ...
             )
         }
     

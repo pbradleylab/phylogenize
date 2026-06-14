@@ -1,3 +1,8 @@
+is.future.long.vector.error <- function(e) {
+    msg <- conditionMessage(e)
+    grepl("long vectors not supported yet", msg, fixed = TRUE)
+}
+
 #' Fit phylogenetic (or linear) models, or perform POMS.
 #'
 #' @param taxa Character vector giving the names of the taxa.
@@ -36,7 +41,7 @@ result.wrapper.plm <- function(
     ...
 ) {
     opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
-    core_method <- tolower(opts('core_method'))
+    core_method <- if (isTRUE(poms)) "poms" else tolower(opts('core_method'))
     lapply.across.names(taxa, function(p) {
         pz.message(paste0("  ..........Checking for type for taxa: ", p))
 	if (class(tree) == "phylo") {
@@ -109,20 +114,64 @@ result.wrapper.plm <- function(
                 perm_m <- method_parsed[1]
                 cores <- opts('ncl')
                 user_maxsize <- options(future.globals.maxSize = 2.0e9)
-                on.exit(options(user_maxsize))
-                future::plan(future::multisession, workers = cores)
+                on.exit(options(user_maxsize), add = TRUE)
+                old_plan <- future::plan()
+                on.exit(future::plan(old_plan), add = TRUE)
+                future_setup_ok <- tryCatch(
+                    {
+                        future::plan(future::multisession, workers = cores)
+                        TRUE
+                    }, error = function(e) {
+                        if (is.future.long.vector.error(e)) {
+                            pz.warning(paste0(
+                                "Future parallelization failed while ",
+                                "starting workers; retrying repermulize ",
+                                "sequentially. Original error: ",
+                                conditionMessage(e)
+                            ))
+                            future::plan(future::sequential)
+                            return(FALSE)
+                        }
+                        stop(e)
+                    }
+                )
 		pz.message("  ..........Running repermulize")
-                
+
+                run_repermulize <- function() {
+                    repermulize::repermulize_wrapper(
+                        pheno,
+                        proteins[[p]],
+                        tr,
+                        perm_method = perm_m,
+                        regression_method = regression_m,
+                        real_pheno_sd = pheno_sd)
+                }
+
 		results <- tryCatch(
 		    {
-		       repermulize::repermulize_wrapper(
-			    pheno,
-			    proteins[[p]],
-			    tr,
-			    perm_method = perm_m,
-			    regression_method = regression_m,
-			    real_pheno_sd = pheno_sd)
+		       run_repermulize()
 		    }, error = function(e) {
+                        if (future_setup_ok && is.future.long.vector.error(e)) {
+                            pz.warning(paste0(
+                                "Future parallelization failed while ",
+                                "serializing a large object; retrying ",
+                                "repermulize sequentially. Original error: ",
+                                conditionMessage(e)
+                            ))
+                            future::plan(future::sequential)
+                            return(tryCatch(
+                                run_repermulize(),
+                                error = function(e2) {
+                                    pz.message(paste0(
+                                        "Skipping protein/index ",
+                                        p,
+                                        " after sequential retry failed: ",
+                                        conditionMessage(e2)
+                                    ))
+                                    return(NULL)
+                                }
+                            ))
+                        }
 			pz.message(paste0("Skipping protein/index ", p, " due to error: ", conditionMessage(e)))
 		        return(NULL)
 		    }
@@ -131,8 +180,6 @@ result.wrapper.plm <- function(
 		if (is.null(results)) {
 		    return(NULL)
 		}
-                
-		future::plan(future::sequential)
                 return(as.data.frame(results))
             } else if (core_method == "lm") {
                 matrix.plm(
@@ -189,7 +236,7 @@ result.wrapper.plm <- function(
 #' @param poms_pseudocount Pseudocount value for POMS; default 0.5.
 #' @return Matrix of "effect-sizes" (row 1) and p-values (row 2) per gene
 #'   (columns). Here, we "fake" effect sizes by taking the log2-ratio of
-#'   num_FSNs_group1_enrich and num_FSNs_group2_enrich with a 0.5 pseudocount.
+#'   num_FSNs_group1_enrich and num_FSNs_group2_enrich with poms_pseudocount.
 #' @export
 matrix.POMS <- function(tree,
                         mtx,
@@ -209,15 +256,38 @@ matrix.POMS <- function(tree,
     cores <- opts('ncl')
     
     # Note: dataset column is ignored
-    poms_group1 <- abd.meta$metadata[[S]][abd.meta$metadata[[E]] == envir]
-    poms_group2 <- abd.meta$metadata[[S]][abd.meta$metadata[[E]] != envir]
+    poms_sample_ids <- as.character(abd.meta$metadata[[S]])
+    poms_valid_metadata <- (
+        !is.na(abd.meta$metadata[[E]]) &
+        !is.na(poms_sample_ids) &
+        poms_sample_ids %in% colnames(abd.meta$mtx)
+    )
+    poms_valid_sample_ids <- poms_sample_ids[poms_valid_metadata]
+    poms_samples <- intersect(colnames(abd.meta$mtx), poms_valid_sample_ids)
+    poms_meta <- abd.meta$metadata[
+        which(poms_valid_metadata)[match(poms_samples, poms_valid_sample_ids)],
+        ,
+        drop=FALSE
+    ]
+    poms_group1 <- poms_samples[poms_meta[[E]] == envir]
+    poms_group2 <- poms_samples[poms_meta[[E]] != envir]
+    poms_abun <- abd.meta$mtx[, poms_samples, drop=FALSE]
+    if (length(poms_group1) == 0 || length(poms_group2) == 0) {
+        pz.error(paste0(
+            "POMS requires at least one sample in both target and ",
+            "non-target environment groups"
+        ))
+    }
     
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     
-    phylotype_df <- data.frame(as.matrix(t(mtx[restrict.ff, ])))
+    phylotype_df <- data.frame(
+        as.matrix(t(mtx[restrict.ff, restrict.taxa, drop=FALSE])),
+        check.names=FALSE
+    )
     
-    if (length(unique(as.numeric(abd.meta$mtx))) <= 2) {
+    if (length(unique(as.numeric(poms_abun))) <= 2) {
         pz.error(paste0(
             "Abundance matrix has two or fewer unique values; ",
             "suggests matrix is binary (which will not work for POMS). ",
@@ -230,7 +300,7 @@ matrix.POMS <- function(tree,
     poms_output <- tryCatch({
 			    POMS::POMS_pipeline(
         abun=data.frame(
-            as.matrix(abd.meta$mtx),
+            as.matrix(poms_abun),
             check.names=FALSE),
         func=phylotype_df,
         tree=tree_nodes,
@@ -255,9 +325,8 @@ matrix.POMS <- function(tree,
     }
     poms_tbl <- tibble::as_tibble(poms_output$results, rownames="gene") %>%
         dplyr::mutate(
-              Estimate = abs(
-                           log2((num_FSNs_group1_enrich + 0.5) /
-                                (num_FSNs_group2_enrich + 0.5))),
+              Estimate = log2((num_FSNs_group1_enrich + poms_pseudocount) /
+                              (num_FSNs_group2_enrich + poms_pseudocount)),
               p.value = multinomial_p,
 	      StdErr = NA,
               df = NA) %>%
@@ -314,6 +383,12 @@ nonparallel.results.generator <- function(gene.matrix,
                         ))
         restrict.ff <- restrict.both
     }
+    if (length(restrict.ff) == 0) {
+        ans <- matrix(nr = 4, nc = 0, NA)
+        dimnames(ans) <- list(c("Estimate", "p.value", "StdErr", "df"),
+                              character(0))
+        return(ans)
+    }
     restrict.tree <- keep.tips(tree, restrict.taxa)
     if (use.for.loop) {
         ans <- matrix(nr = 4, nc = length(restrict.ff), NA)
@@ -329,7 +404,7 @@ nonparallel.results.generator <- function(gene.matrix,
                                    file = stderr())
         pheno.restrict <- pheno[restrict.taxa]
         # replaces an apply to avoid copying
-        for (fn in 1:length(restrict.ff)) {
+        for (fn in seq_along(restrict.ff)) {
             setTxtProgressBar(progress, fn)
             ans[, fn] <- method(gene.matrix[restrict.ff[fn], restrict.taxa],
                                 pheno.restrict,
@@ -537,6 +612,7 @@ matrix.plm <- function(tree,
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     if (opts('separate_process') || (cores > 1)) {
         cl <- parallel::makeCluster(cores)
+        on.exit(parallel::stopCluster(cl), add=TRUE)
         cluster.load.pkg(cl, opts('devel'), opts('devel_pkgdir'))
         force(pheno)
         force(tree)
@@ -554,9 +630,6 @@ matrix.plm <- function(tree,
                        tr=tree,
                        restrict=restrict.taxa,
                        meas_err=opts('meas_err'))
-    if (opts('separate_process') || (cores > 1)) {
-        parallel::stopCluster(cl)
-    }
     r
 }
 
@@ -947,12 +1020,22 @@ correl.clr <- function(abd.meta,
         "Trait looks binary; are you sure you want to take correlation?") }
     corr_values <- apply(clr_mtx, 1, function(x) cor(x, trait))
     # take care of any perfect correlations before taking fisher transform
-    corr_values[corr_values == 1] <- (
-        (max(corr_values[corr_values < 1]) + 1) / 2
-    )
-    corr_values[corr_values == -1] <- (
-        (min(corr_values[corr_values > 1]) + -1) / 2
-    )
+    if (any(corr_values == 1)) {
+        below_one <- corr_values[corr_values < 1]
+        corr_values[corr_values == 1] <- if (length(below_one) > 0) {
+            (max(below_one) + 1) / 2
+        } else {
+            1 - .Machine$double.eps
+        }
+    }
+    if (any(corr_values == -1)) {
+        above_neg_one <- corr_values[corr_values > -1]
+        corr_values[corr_values == -1] <- if (length(above_neg_one) > 0) {
+            (min(above_neg_one) + -1) / 2
+        } else {
+            -1 + .Machine$double.eps
+        }
+    }
     return(atanh(corr_values))
 }
 
@@ -1090,6 +1173,41 @@ ash_wrapper <- function(m, s, nw=10, ashr_df=Inf) {
             nullweight=nw,
             df=ashr_df)
 }
+
+restore.diff.abund.taxon.names <- function(sample_pheno, sample_sd, original_names) {
+  original_names <- as.character(original_names)
+  numeric_original <- original_names[
+      which(!is.na(suppressWarnings(as.numeric(original_names))))
+  ]
+  identity_original <- setdiff(original_names, numeric_original)
+  name_map <- dplyr::bind_rows(
+    tibble::tibble(
+      old_name=numeric_original,
+      new_name=paste0("X", numeric_original)
+    ),
+    tibble::tibble(
+      old_name=identity_original,
+      new_name=identity_original
+    )
+  )
+  duplicated_new <- unique(name_map$new_name[duplicated(name_map$new_name)])
+  if (length(duplicated_new) > 0) {
+      pz.error(paste0(
+          "Could not safely restore differential abundance taxon names; ",
+          "ambiguous renamed value(s): ",
+          paste(duplicated_new, collapse=", ")
+      ))
+  }
+
+  sample_psd <- dplyr::full_join(
+    tibble::enframe(sample_pheno, name = "new_name", value = "pheno"),
+    tibble::enframe(sample_sd, name = "new_name", value = "sd"),
+    by="new_name"
+  )
+
+  dplyr::left_join(sample_psd, name_map, by="new_name")
+}
+
 ### calculate differential abundance
 
 #' Main function to calculate differential abundances using either ANCOMBC2
@@ -1240,27 +1358,11 @@ ashr.diff.abund <- function(abd.meta,
   sample_sd <- sample_ashr %>%
     dplyr::select(species, PosteriorSD) %>%
     tibble::deframe()
-  # Fix automatic renaming of taxa that seem "numeric"
-  spn <- names(sample_pheno)
-  orign <- rownames(abd.meta$mtx)
-  numeric_names <- tibble::tibble(old_name =
-                                      as.character(orign[
-                                          which(!is.na(as.numeric(orign)))
-                                      ]),
-                                  new_name = paste0("X", old_name))
-  # if the names didn't change, just keep them:
-  all_names <- dplyr::bind_rows(numeric_names,
-                                tibble::tibble(old_name=orign,
-                                               new_name=orign))
-  sample_psd <- dplyr::full_join(
-    tibble::enframe(sample_pheno, name = "new_name", value = "pheno"),
-    tibble::enframe(sample_sd, name = "new_name", value = "sd"),
-    by="new_name"
+  sample_pheno_tbl <- restore.diff.abund.taxon.names(
+      sample_pheno,
+      sample_sd,
+      rownames(abd.meta$mtx)
   )
-    
-  sample_pheno_tbl <- dplyr::left_join(
-      sample_psd,
-      all_names)
   
   sample_pheno <- sample_pheno_tbl %>%
       dplyr::select(old_name, pheno) %>%
@@ -1274,6 +1376,15 @@ ashr.diff.abund <- function(abd.meta,
 }
 
 
+pz.log.options <- function(...) {
+    overrides <- list(...)
+    if (length(overrides) == 0) {
+        PZ_OPTIONS
+    } else {
+        do.call(settings::clone_and_merge, c(list(PZ_OPTIONS), overrides))
+    }
+}
+
 #' Throw an error and optionally log it in errmsg.txt.
 #'
 #' Some particularly relevant global options are:
@@ -1285,7 +1396,7 @@ ashr.diff.abund <- function(abd.meta,
 #' @param errtext String: error message text.
 #' @export
 pz.error <- function(errtext, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.log.options(...)
     if (opts('error_to_file')) {
         tryCatch({
           cat(
@@ -1311,7 +1422,7 @@ pz.error <- function(errtext, ...) {
 #' @param level Level of verbosity (default: 1). If above the current level of verbosity, the message will be logged to a file (if appropriate) but not printed to console.
 #' @export
 pz.message <- function(msgtext, level=1, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.log.options(...)
     v <- opts("verbosity")
     if (opts('error_to_file')) {
         tryCatch({
@@ -1336,7 +1447,7 @@ pz.message <- function(msgtext, level=1, ...) {
 #' @param errtext String: warning text.
 #' @export
 pz.warning <- function(msgtext, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.log.options(...)
     if (opts('error_to_file')) {
         tryCatch({
             cat(

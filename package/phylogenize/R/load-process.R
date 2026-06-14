@@ -246,19 +246,51 @@ read.abd.metadata.tabular <- function(...) {
         pz.error(paste0("file not found: ", mf))
     } else { pz.message(paste0("located metadata file: ", mf), level=2) }
     
+    pz.message("  ..........Reading metadata table")
+    metadata <- readr::read_tsv(mf, show_col_types = FALSE)
+    metadata <- check.process.metadata(metadata, ...)
+    pz.message(paste0(
+        "  ..........Metadata rows: ",
+        nrow(metadata)
+    ))
+
     pz.message("  ..........Reading abundance table")
+    abundance_header <- names(readr::read_tsv(
+        af,
+        n_max=0,
+        show_col_types=FALSE
+    ))
+    if (length(abundance_header) < 2) {
+        pz.error("Abundance table must contain a taxon column and at least one sample column")
+    }
+    metadata_samples <- trimws(as.character(metadata[[opts('sample_column')]]))
+    abundance_keep_cols <- c(
+        abundance_header[1],
+        intersect(abundance_header[-1], metadata_samples)
+    )
+    if (length(abundance_keep_cols) < 2) {
+        pz.error(paste0("No abundance table sample columns matched metadata ",
+                        "sample IDs"))
+    }
+    pz.message(paste0(
+        "  ..........Reading ",
+        length(abundance_keep_cols) - 1,
+        " abundance sample column(s) matching metadata"
+    ))
+    abundance_col_types <- do.call(
+        readr::cols,
+        c(
+            stats::setNames(list(readr::col_character()), abundance_header[1]),
+            list(.default=readr::col_double())
+        )
+    )
     abd.df <- readr::read_tsv(
         af,
-        col_types=readr::cols(.default=readr::col_character()),
+        col_select=tidyselect::all_of(abundance_keep_cols),
+        col_types=abundance_col_types,
         show_col_types=FALSE
     )
-    # convert to matrix
-    abd.values <- as.data.frame(
-        lapply(abd.df[, -1, drop=FALSE], function(x) {
-            suppressWarnings(as.numeric(x))
-        }),
-        check.names=FALSE
-    )
+    abd.values <- abd.df[, -1, drop=FALSE]
     bad.cols <- names(abd.values)[
         vapply(abd.values, function(x) any(is.na(x)), logical(1))
     ]
@@ -277,15 +309,6 @@ read.abd.metadata.tabular <- function(...) {
         ncol(abd.mtx),
         " sample(s)"
     ))
-    # can remain as tbl
-    pz.message("  ..........Reading metadata table")
-    metadata <- readr::read_tsv(mf, show_col_types = FALSE)
-    metadata <- check.process.metadata(metadata, ...)
-    pz.message(paste0(
-        "  ..........Metadata rows: ",
-        nrow(metadata)
-    ))
-    
     return(list(mtx=abd.mtx, metadata=metadata))
     
 }
@@ -606,7 +629,7 @@ change.tree.tax.level <- function(tree, taxon, tax) {
     # Make a mapping file that is at the taxonomic level selected from the tax
     # file.
     clean <- tax %>%
-        dplyr::select(cluster, taxon, phylum) %>%
+        dplyr::select(cluster, tidyselect::all_of(taxon), phylum) %>%
         dplyr::distinct()
     pz.message(head(clean), level=3)
     # Drop empty values from the taxonomic level selected if they are not 
@@ -640,21 +663,14 @@ change.tree.tax.level <- function(tree, taxon, tax) {
             pz.message(paste("Good news: Data found for taxon classification",
                              name), level=2)
         }	
-        # Generate a list of unique split names based on taxon
-        split_names <- t %>%
-            dplyr::group_split(!!(rlang::sym(taxon))) %>%
-            purrr::map(~ dplyr::pull(.x, !!(rlang::sym(taxon)))) %>%
-            unlist() %>%
-            unique()
+        tips_by_taxon <- split(t[["cluster"]], t[[taxon]])
         
-        for (j in seq_along(split_names)) {
-            tips <- tr$tip.label
-            split_tips <- t %>%
-                dplyr::filter(!!(rlang::sym(taxon)) == split_names[[j]])
-            tips <- intersect(tips, split_tips[["cluster"]])
+        for (taxon_name in names(tips_by_taxon)) {
+            tips <- intersect(tr$tip.label, tips_by_taxon[[taxon_name]])
+            if (length(tips) <= 1) next
             subtree <- ape::keep.tip(tr, tips)
             if (!is.null(subtree) && length(subtree$tip.label) > 1) {
-                tree_matrices[[split_names[j]]] <- subtree    
+                tree_matrices[[taxon_name]] <- subtree
             }
         }
     }
@@ -732,6 +748,12 @@ process.16s <- function(abd.meta, ...) {
 #' @export
 harmonize.abd.meta <- function(abd.meta, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
+    align.metadata.to.matrix <- function(abd.meta) {
+        metadata_order <- match(colnames(abd.meta$mtx),
+                                abd.meta$metadata[[opts('sample_column')]])
+        abd.meta$metadata <- abd.meta$metadata[metadata_order, , drop=FALSE]
+        abd.meta
+    }
     abd.meta$metadata[[opts('sample_column')]] <- trimws(
         abd.meta$metadata[[opts('sample_column')]]
     )
@@ -752,15 +774,12 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     abd.meta$metadata <- abd.meta$metadata[
         abd.meta$metadata[[opts('sample_column')]] %in%
             samples.present, ]
+    abd.meta <- align.metadata.to.matrix(abd.meta)
     
     if (opts('which_phenotype') %in% c("specificity",
                                        "prevalence",
                                        "abundance")) {
-        all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
-        env.number <- sapply(all.envs, function(e) {
-            sum(abd.meta$metadata[[opts('env_column')]] == e)
-        })
-        names(env.number) <- all.envs
+        env.number <- table(abd.meta$metadata[[opts('env_column')]])
         singleton.envs <- names(which(env.number == 1))
         if (length(singleton.envs) > 0) {
             pz.warning(paste0(
@@ -796,11 +815,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     }
     
     pz.message("  .....collecting all unique dsets")
-    all.dsets <- unique(abd.meta$metadata[[opts('dset_column')]])
-    dset.number <- sapply(all.dsets, function(d) {
-        sum(abd.meta$metadata[[opts('dset_column')]] == d)
-    })
-    names(dset.number) <- all.dsets
+    dset.number <- table(abd.meta$metadata[[opts('dset_column')]])
     nonsingleton.dsets <- names(which(dset.number > 1))
     pz.message(paste0(length(nonsingleton.dsets),
                       " non-singleton dataset(s) found"), level=2)
@@ -832,8 +847,10 @@ harmonize.abd.meta <- function(abd.meta, ...) {
                         "(need at least 2)"))
     }
     abd.meta$mtx <- abd.meta$mtx[, wcols, drop=FALSE]
+    abd.meta <- align.metadata.to.matrix(abd.meta)
     pz.message("  .....Removing all rows and columns that are completely 0")
     abd.meta$mtx <- remove.allzero.abundances(abd.meta$mtx)
+    abd.meta <- align.metadata.to.matrix(abd.meta)
     return(abd.meta)
 }
 
