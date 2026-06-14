@@ -108,3 +108,104 @@ test_that("above_minimum_genes keeps genes with enough present and absent tips",
     expect_equal(rownames(filtered$TaxonA), "g_keep")
     expect_equal(colnames(filtered$TaxonA), c("s1", "s2", "s3"))
 })
+
+test_that("import.pz.db rejects missing database index", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    expect_error(
+        import.pz.db(
+            data_dir=tempdir(),
+            db="missing-db",
+            error_to_file=FALSE
+        ),
+        "Database index not found"
+    )
+})
+
+test_that("import.pz.db validates database index columns", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("db-index-")
+    dir.create(tmp)
+    writeLines(c(
+        "database,genes,trees,taxonomy",
+        "test-db,genes.rds,trees.rds,taxonomy.csv"
+    ), file.path(tmp, "databases.csv"))
+
+    expect_error(
+        import.pz.db(
+            data_dir=tmp,
+            db="test-db",
+            error_to_file=FALSE
+        ),
+        "missing required column"
+    )
+})
+
+test_that("import.pz.db validates referenced database files before loading", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("db-files-")
+    dir.create(tmp)
+    writeLines(c(
+        "database,genes,trees,taxonomy,functions",
+        "test-db,genes.rds,trees.rds,taxonomy.csv,functions.csv"
+    ), file.path(tmp, "databases.csv"))
+
+    expect_error(
+        import.pz.db(
+            data_dir=tmp,
+            db="test-db",
+            error_to_file=FALSE
+        ),
+        "Database file\\(s\\) not found"
+    )
+})
+
+test_that("import.pz.db validates loaded taxonomy schema", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("db-schema-")
+    dir.create(tmp)
+    writeLines(c(
+        "database,genes,trees,taxonomy,functions",
+        "test-db,genes.rds,trees.rds,taxonomy.csv,functions.csv"
+    ), file.path(tmp, "databases.csv"))
+    saveRDS(
+        list(p1=Matrix::Matrix(
+            matrix(
+                c(1, 0),
+                nrow=1,
+                dimnames=list("gene1", c("s1", "s2"))
+            ),
+            sparse=TRUE
+        )),
+        file.path(tmp, "genes.rds")
+    )
+    saveRDS(
+        list(p1=ape::read.tree(text="(s1:1,s2:1);")),
+        file.path(tmp, "trees.rds")
+    )
+    writeLines(c(
+        "cluster,species,genus,family,order,class,phylum",
+        "s1,s1,g1,f1,o1,c1,p1",
+        "s2,s2,g1,f1,o1,c1,p1"
+    ), file.path(tmp, "taxonomy.csv"))
+    writeLines(c(
+        "node_head,accession,function",
+        "gene1,acc1,fxn1"
+    ), file.path(tmp, "functions.csv"))
+
+    expect_error(
+        import.pz.db(
+            data_dir=tmp,
+            db="test-db",
+            error_to_file=FALSE
+        ),
+        "Taxonomy file is missing required column"
+    )
+})

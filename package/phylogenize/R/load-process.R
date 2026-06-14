@@ -355,34 +355,72 @@ import.pz.db <- function(..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
     db_csv <- file.path(opts('data_dir'), "databases.csv")
     pz.message(paste0("  .....Reading database index: ", db_csv), level=2)
+    if (!(file.exists(db_csv))) {
+        pz.error(paste0("Database index not found: ", db_csv), .opts=opts)
+    }
     installed_dbs <- readr::read_delim(db_csv, show_col_types = FALSE)
+    required_db_columns <- c("database", "genes", "trees", "taxonomy",
+                             "functions")
+    missing_db_columns <- setdiff(required_db_columns, names(installed_dbs))
+    if (length(missing_db_columns) > 0) {
+        pz.error(paste0(
+            "Database index is missing required column(s): ",
+            paste(missing_db_columns, collapse=", ")
+        ), .opts=opts)
+    }
     requested_db <- tolower(opts('db'))
     pz.message(paste0("  .....Requested database: ", requested_db))
     if (!(requested_db %in% installed_dbs[["database"]])) {
         pz.error(paste0("Database not installed in ", opts('data_dir'), ": ",
-                        opts('db')))
+                        opts('db')),
+                 .opts=opts)
     }
     found_db <- dplyr::filter(installed_dbs, database==requested_db)
     if (nrow(found_db) > 1) {
-        pz.error(paste0("Duplicate data entries in db file: ", db_csv))
+        pz.error(paste0("Duplicate data entries in db file: ", db_csv),
+                 .opts=opts)
+    }
+    db_paths <- vapply(required_db_columns[-1], function(col) {
+        file.path(opts('data_dir'), found_db[[col]])
+    }, character(1))
+    missing_db_files <- db_paths[!(file.exists(db_paths))]
+    if (length(missing_db_files) > 0) {
+        pz.error(paste0(
+            "Database file(s) not found: ",
+            paste(unname(missing_db_files), collapse=", ")
+        ), .opts=opts)
     }
 
     pz.message("  .....Read in phylogenize2 gene presence file")
-    gene.presence <- readRDS(file.path(opts('data_dir'),
-                                       found_db[["genes"]]))
+    gene.presence <- readRDS(db_paths[["genes"]])
     gene.presence <- gene.presence[names(gene.presence) != ""]
+    if (!(is.list(gene.presence)) || length(gene.presence) == 0) {
+        pz.error("Gene presence database must be a non-empty named list",
+                 .opts=opts)
+    }
     pz.message(paste0(
         "  ..........Loaded ",
         length(gene.presence),
         " gene presence matrix/matrices"
     ))
     pz.message("  .....Read in phylogenize2 tree file")
-    trees <- readRDS(file.path(opts('data_dir'),
-                               found_db[["trees"]]))
+    trees <- readRDS(db_paths[["trees"]])
+    if (!(is.list(trees)) || length(trees) == 0) {
+        pz.error("Tree database must be a non-empty named list", .opts=opts)
+    }
     pz.message(paste0("  ..........Loaded ", length(trees), " tree(s)"))
     pz.message("  .....Read in phylogenize2 taxonomy file")
-    taxonomy <- readr::read_csv(file.path(opts('data_dir'),
-                                          found_db[["taxonomy"]]), show_col_types=FALSE)
+    taxonomy <- readr::read_csv(db_paths[["taxonomy"]], show_col_types=FALSE)
+    required_taxonomy_columns <- c("cluster", "species", "genus", "family",
+                                   "order", "class", "phylum", "domain")
+    missing_taxonomy_columns <- setdiff(required_taxonomy_columns,
+                                        names(taxonomy))
+    if (length(missing_taxonomy_columns) > 0) {
+        pz.error(paste0(
+            "Taxonomy file is missing required column(s): ",
+            paste(missing_taxonomy_columns, collapse=", ")
+        ), .opts=opts)
+    }
     pz.message(paste0(
         "  ..........Loaded taxonomy with ",
         nrow(taxonomy),
@@ -406,9 +444,18 @@ import.pz.db <- function(..., .opts=NULL) {
 
     pz.message("  .....Read in phylogenize2 gene functions file")
     gene.to.fxn <- readr::read_csv(
-        file.path(opts('data_dir'), found_db[["functions"]]),
+        db_paths[["functions"]],
         show_col_types = FALSE
     )
+    required_function_columns <- c("node_head", "accession", "function")
+    missing_function_columns <- setdiff(required_function_columns,
+                                        names(gene.to.fxn))
+    if (length(missing_function_columns) > 0) {
+        pz.error(paste0(
+            "Gene function file is missing required column(s): ",
+            paste(missing_function_columns, collapse=", ")
+        ), .opts=opts)
+    }
     pz.message(paste0(
         "  ..........Loaded ",
         nrow(gene.to.fxn),
