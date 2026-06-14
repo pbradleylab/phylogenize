@@ -203,7 +203,10 @@ check.process.metadata <- function(metadata, ..., .opts=NULL) {
 read.abd.metadata.biom <- function(..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
     bf <- opts('biom_file')
-    pz.message(paste0("looking for file: ", normalizePath(bf)), level=2)
+    pz.message(paste0(
+        "looking for file: ",
+        normalizePath(bf, mustWork=FALSE)
+    ), level=2)
     if (!(file.exists(bf))) {
         pz.error(paste0("file not found: ", bf))
     } else { pz.message(paste0("located biom file: ", bf), level=2) }
