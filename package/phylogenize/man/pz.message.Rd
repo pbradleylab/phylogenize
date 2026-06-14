@@ -10,7 +10,7 @@ pz.message(msgtext, ...)
 \item{errtext}{String: message text.}
 }
 \description{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
   output to an error message file?}

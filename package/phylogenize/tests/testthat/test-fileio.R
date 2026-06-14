@@ -79,6 +79,56 @@ test_that("tabular import binarizes non-abundance phenotypes", {
     expect_equal(as.numeric(abd.meta$mtx["sp2", ]), c(0, 1, 0, 1))
 })
 
+test_that("tabular import can use resolved options without global mutation", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempdir()
+    abundance_file <- file.path(tmp, "resolved-options-abundance.tsv")
+    metadata_file <- file.path(tmp, "resolved-options-metadata.tsv")
+
+    writeLines(c(
+        "taxon\ts1\ts2\ts3\ts4",
+        "sp1\t1\t0\t2\t3",
+        "sp2\t0\t4\t1\t5"
+    ), abundance_file)
+    writeLines(c(
+        "sample\tdataset\tenv",
+        "s1\td1\tA",
+        "s2\td1\tA",
+        "s3\td1\tB",
+        "s4\td1\tB"
+    ), metadata_file)
+
+    opts <- pz.resolve.options(
+        input_format="tabular",
+        abundance_file=abundance_file,
+        metadata_file=metadata_file,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        which_envir="A",
+        which_phenotype="abundance",
+        categorical=TRUE,
+        error_to_file=FALSE
+    )
+
+    pz.options(
+        abundance_file="missing-abundance.tsv",
+        metadata_file="missing-metadata.tsv",
+        sample_column="wrong_sample",
+        dset_column="wrong_dataset",
+        env_column="wrong_env"
+    )
+
+    abd.meta <- read.abd.metadata(.opts=opts)
+
+    expect_equal(rownames(abd.meta$mtx), c("sp1", "sp2"))
+    expect_equal(colnames(abd.meta$mtx), paste0("s", 1:4))
+    expect_equal(as.numeric(abd.meta$mtx["sp1", ]), c(1, 0, 2, 3))
+    expect_equal(as.character(abd.meta$metadata$sample), paste0("s", 1:4))
+})
+
 test_that("tabular import rejects nonnumeric abundance values", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)

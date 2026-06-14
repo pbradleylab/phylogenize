@@ -4,7 +4,10 @@
 \alias{run.vsearch}
 \title{Run vsearch analysis on a FASTA file of sequences.}
 \usage{
-run.vsearch(...)
+run.vsearch(..., .opts = NULL)
+}
+\arguments{
+\item{.opts}{Internal resolved options object.}
 }
 \value{
 Returns TRUE unless an error is thrown.
@@ -18,7 +21,7 @@ not"vsearch", \emph{phylogenize} will assume an old version of vsearch is
 being called that doesn't have the ability to search both strands.
 }
 \details{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{named_asv_file}{String. File name of the sequences to be read into
 vsearch.}

@@ -4,9 +4,11 @@
 \alias{process.16s}
 \title{Map denoised 16S sequence variants to MIDAS IDs using vsearch.}
 \usage{
-process.16s(abd.meta, ...)
+process.16s(abd.meta, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{mtx}{A presence/absence or abundance matrix, with row names equal to
 amplicon sequence variant DNA sequences.}
 }
@@ -20,7 +22,7 @@ variants to a file; map them using vsearch against a reference database of
 rows of the abundance matrix are now MIDAS IDs.
 }
 \details{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{vsearch_infile}{String. File name of the sequences written to disk
     and then read into vsearch.}

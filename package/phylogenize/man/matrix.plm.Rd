@@ -11,10 +11,13 @@ matrix.plm(
   method = phylolm.fx.pv,
   restrict.taxa = NULL,
   restrict.ff = NULL,
-  ...
+  ...,
+  .opts = NULL
 )
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{tree}{A tree relating taxa within a taxon.}
 
 \item{mtx}{Gene presence/absence matrix.}

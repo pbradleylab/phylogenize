@@ -5,9 +5,9 @@
 #' Read in abundance and metadata, either as one BIOM-format file or as two
 #' tab-delimited files.
 #'
-#' @details This function uses package-wide options (see \code{?pz.options}),
-#'     which can be overridden using the \code{...} argument. Some particularly
-#'     relevant options are:
+#' @details This function resolves options from \code{pz.options()} defaults
+#'     plus any overrides supplied through \code{...}. Some particularly relevant
+#'     options are:
 #'
 #' \describe{
 #'   \item{env_column}{String. Name of column in metadata file containing the
@@ -24,8 +24,8 @@
 #'     to a sparse binary presence/absence matrix (see \code{Matrix} package)
 #'     and a metadata data frame.
 #' @export
-read.abd.metadata <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+read.abd.metadata <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     colns <- c(opts('env_column'), opts('dset_column'), opts('sample_column'))
     if (length(unique(colns)) < length(colns)) {
         pz.error(
@@ -34,24 +34,24 @@ read.abd.metadata <- function(...) {
     }
     if (opts('input_format') == "tabular") {
         pz.message("  .....Reading tabular abundance and metadata files")
-        abd.meta <- read.abd.metadata.tabular(...)
+        abd.meta <- read.abd.metadata.tabular(..., .opts=opts)
     } else if (opts('input_format') == "biom") {
         pz.message("  .....Reading BIOM abundance and metadata file")
-        abd.meta <- read.abd.metadata.biom(...)
+        abd.meta <- read.abd.metadata.biom(..., .opts=opts)
     } else {
         pz.error(paste0("Invalid input format: ", opts('input_format')))
     }
     
     pz.message("  .....Checking abundance matrix")
-    sanity.check.abundance(abd.meta$mtx, ...)
+    sanity.check.abundance(abd.meta$mtx, ..., .opts=opts)
     pz.message("  .....Checking metadata")
-    sanity.check.metadata(abd.meta$metadata, ...)
+    sanity.check.metadata(abd.meta$metadata, ..., .opts=opts)
     if (opts('type_16S') == TRUE) {
         pz.message("  .....Processing 16S input")
-        abd.meta <- process.16s(abd.meta, ...)
+        abd.meta <- process.16s(abd.meta, ..., .opts=opts)
     }
     pz.message("  .....Harmonizing abundance matrix and metadata")
-    abd.meta <- harmonize.abd.meta(abd.meta, ...)
+    abd.meta <- harmonize.abd.meta(abd.meta, ..., .opts=opts)
     if ((opts('which_phenotype') != 'abundance') &&
         tolower(opts('core_method')) != "poms") {
         pz.message("Binarizing input data...", level=1)
@@ -78,10 +78,10 @@ read.abd.metadata <- function(...) {
 #' Check and process metadata
 #'
 #' \code{check.process.metadata} is used to make sure that the metadata
-#' satisfies the requirements specified by the global options and to make sure
+#' satisfies the requirements specified by the resolved options and to make sure
 #' that the metadata are of the correct type.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment
 #'     annotations.}
@@ -93,8 +93,7 @@ read.abd.metadata <- function(...) {
 #' }
 #'
 #' @param metadata A data frame of metadata with environment, dataset, and
-#'     sample columns corresponding to those in the global options (see
-#'     \?pz.options).
+#'     sample columns corresponding to the resolved options.
 #' @return A data frame of metadata, with environment and
 #'     dataset columns converted to factors, *unless* calculating correlation
 #'     in which case environment column will be cast as numeric. The environment
@@ -102,8 +101,8 @@ read.abd.metadata <- function(...) {
 #'     that it is guaranteed to appear in the output of differential abundance 
 #'     estimators.
 #' @export
-check.process.metadata <- function(metadata, ...) {
-    opts <- clone_and_merge(phylogenize:::PZ_OPTIONS, ...)
+check.process.metadata <- function(metadata, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     orig_md <- metadata
     E <- opts('env_column')
     S <- opts('sample_column')
@@ -170,9 +169,9 @@ check.process.metadata <- function(metadata, ...) {
 #' Read in taxon-by-sample matrix of abundances and metadata (sample
 #' annotations) from a single BIOM-formatted file.
 #'
-#' @details This function uses package-wide options (see \code{?pz.options}),
-#'     which can be overridden using the \code{...} argument. Some particularly
-#'     relevant options are:
+#' @details This function resolves options from \code{pz.options()} defaults
+#'     plus any overrides supplied through \code{...}. Some particularly relevant
+#'     options are:
 #'
 #' \describe{
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
@@ -181,8 +180,8 @@ check.process.metadata <- function(metadata, ...) {
 #' @return A list with components \code{mtx} (matrix of abundances) and
 #'     \code{metadata} (data frame of metadata).
 #' @keywords internal
-read.abd.metadata.biom <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+read.abd.metadata.biom <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     bf <- opts('biom_file')
     pz.message(paste0("looking for file: ", normalizePath(bf)), level=2)
     if (!(file.exists(bf))) {
@@ -202,7 +201,7 @@ read.abd.metadata.biom <- function(...) {
     if (!opts('separate_metadata')) {
         pz.message("  ..........Reading metadata from BIOM file")
         metadata <- biomformat::sample_metadata(biomf)
-        metadata <- check.process.metadata(metadata, ...)
+        metadata <- check.process.metadata(metadata, ..., .opts=opts)
         # work around different naming convention
         if (is.null(rownames(metadata))) {
             pz.error(paste0("metadata had no sample names; should not be ",
@@ -216,7 +215,7 @@ read.abd.metadata.biom <- function(...) {
         } else { pz.message(paste0("located metadata file: ", mf), level=2) }
         pz.message("  ..........Reading separate metadata file")
         metadata <- readr::read_tsv(mf, show_col_types = FALSE)
-        metadata <- check.process.metadata(metadata, ...)
+        metadata <- check.process.metadata(metadata, ..., .opts=opts)
     }
     rm(biomf); gc()
     return(list(mtx=abd.mtx, metadata=metadata))
@@ -227,7 +226,7 @@ read.abd.metadata.biom <- function(...) {
 #' Read in taxon-by-sample matrix of abundances and metadata (sample
 #' annotations) from two tab-delimited files.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #' }
@@ -235,8 +234,8 @@ read.abd.metadata.biom <- function(...) {
 #' @return A list with components \code{mtx} (matrix of abundances) and
 #'     \code{metadata} (data frame of metadata).
 #' @keywords internal
-read.abd.metadata.tabular <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+read.abd.metadata.tabular <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     af <- opts('abundance_file')
     mf <- opts('metadata_file')
     if (!(file.exists(af))) {
@@ -248,7 +247,7 @@ read.abd.metadata.tabular <- function(...) {
     
     pz.message("  ..........Reading metadata table")
     metadata <- readr::read_tsv(mf, show_col_types = FALSE)
-    metadata <- check.process.metadata(metadata, ...)
+    metadata <- check.process.metadata(metadata, ..., .opts=opts)
     pz.message(paste0(
         "  ..........Metadata rows: ",
         nrow(metadata)
@@ -317,10 +316,10 @@ read.abd.metadata.tabular <- function(...) {
 
 #' Import the data necessary for *phylogenize* analysis.
 #'
-#' \code{import.pz.db} decides based on global options which data files to
+#' \code{import.pz.db} decides based on resolved options which data files to
 #' import.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{type_16S}{Boolean. If 16S data, TRUE, otherwise shotgun data is
 #'     assumed. Default: FALSE}
@@ -332,8 +331,8 @@ read.abd.metadata.tabular <- function(...) {
 #'     analysis, with components \code{gene.presence}, \code{trees},
 #'     \code{taxonomy}, \code{g.mappings}, and \code{gene.to.fxn}.
 #' @export
-import.pz.db <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+import.pz.db <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     db_csv <- file.path(opts('data_dir'), "databases.csv")
     pz.message(paste0("  .....Reading database index: ", db_csv), level=2)
     installed_dbs <- readr::read_delim(db_csv, show_col_types = FALSE)
@@ -429,7 +428,7 @@ import.pz.db <- function(...) {
     
     # filter based on the minimum number of observations
     pz.message("  .....Filter based on the minimum number of observations")
-    gene.presence <- above_minimum_genes(gene.presence, trees)
+    gene.presence <- above_minimum_genes(gene.presence, trees, .opts=opts)
     pz.message(paste0(
         "  ..........",
         length(gene.presence),
@@ -459,8 +458,8 @@ import.pz.db <- function(...) {
 #'     metadata.
 #' @return An updated database.
 #' @export
-adjust.db <- function(pz.db, abd.meta, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     species.observed <- rownames(abd.meta$mtx)
     pz.message(paste0(
         "  .....Matching database to ",
@@ -517,7 +516,11 @@ adjust.db <- function(pz.db, abd.meta, ...) {
 	ape::keep.tip(tr, tips)
     })
     pz.message("  .....Filtering gene presence matrices to retained trees")
-    pz.db$gene.presence <- above_minimum_genes(pz.db$gene.presence, pz.db$trees)
+    pz.db$gene.presence <- above_minimum_genes(
+        pz.db$gene.presence,
+        pz.db$trees,
+        .opts=opts
+    )
     pz.db$trees <- pz.db$trees[intersect(names(pz.db$trees), names(pz.db$gene.presence))]
     pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
     pz.db$ntaxa <- length(pz.db$trees)
@@ -539,7 +542,7 @@ adjust.db <- function(pz.db, abd.meta, ...) {
 #'
 #' \code{import.pz.db} filters down the binary file for database
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{binary}{Matrix. Object that represents a phylogenize-prepared
 #'     internal database}
@@ -613,7 +616,7 @@ change.presence.tax.level <- function(binary, taxon, tax){
 #'
 #' \code{import.pz.db} filters down the binary file for database
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{tree}{List. Object that represent a phylogenize-prepared internal
 #'     database}
@@ -687,7 +690,7 @@ change.tree.tax.level <- function(tree, taxon, tax) {
 #' 16S sequences; then return a list of abundance and metadata values where the
 #' rows of the abundance matrix are now MIDAS IDs.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk
 #'     and then read into vsearch.}
@@ -697,26 +700,28 @@ change.tree.tax.level <- function(tree, taxon, tax) {
 #'   amplicon sequence variant DNA sequences.
 #' @return none
 #' @export
-process.16s <- function(abd.meta, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+process.16s <- function(abd.meta, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     if (!(all(is.dna(rownames(abd.meta$mtx))))) {
         pz.error(paste0("expected rows to be DNA sequences but found illegal ",
-                        "characters"))
+                        "characters"),
+                 .opts=opts)
     }
     if (opts('which_16s_method')=="vsearch") {
-        prepare.vsearch.input(abd.meta$mtx, ...)
-        run.vsearch(...)
-        results_16s <- get.vsearch.results(...)
+        prepare.vsearch.input(abd.meta$mtx, ..., .opts=opts)
+        run.vsearch(..., .opts=opts)
+        results_16s <- get.vsearch.results(..., .opts=opts)
     } else if (opts('which_16s_method')=="appspam") {
-        prepare.vsearch.input(abd.meta$mtx, ...)
-        run.appspam(...)
-        results_16s <- get.appspam.results(...)
+        prepare.vsearch.input(abd.meta$mtx, ..., .opts=opts)
+        run.appspam(..., .opts=opts)
+        results_16s <- get.appspam.results(..., .opts=opts)
     } else if (opts('which_16s_method')=="jplace") {
-        results_16s <- get.appspam.results(...)        
+        results_16s <- get.appspam.results(..., .opts=opts)
     } else {
-        pz.error("which_16s_method must be vsearch, appspam, or jplace")
+        pz.error("which_16s_method must be vsearch, appspam, or jplace",
+                 .opts=opts)
     }
-    summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ...)
+    summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ..., .opts=opts)
     csu <- colSums(summed.uniq)
     abd.meta$mtx <- summed.uniq[, which(csu > 0), drop=FALSE]
     # don't convert to relative abundance...
@@ -734,7 +739,7 @@ process.16s <- function(abd.meta, ...) {
 #' perform an \emph{phylogenize} analysis, after dropping any singleton datasets
 #' or environments (effects for these cannot be estimated).
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment
 #'   annotations.}
@@ -746,8 +751,8 @@ process.16s <- function(abd.meta, ...) {
 #'     package) and a metadata data frame.
 #' @return A list of the same form as \code{abd.meta}.
 #' @export
-harmonize.abd.meta <- function(abd.meta, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+harmonize.abd.meta <- function(abd.meta, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     align.metadata.to.matrix <- function(abd.meta) {
         metadata_order <- match(colnames(abd.meta$mtx),
                                 abd.meta$metadata[[opts('sample_column')]])
@@ -913,7 +918,7 @@ sanity.check.abundance <- function(abd.mtx, ...) {
 #' frame satisfies the requirements specified by the \emph{phylogenize}
 #' application.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment
 #'     annotations.}
@@ -925,8 +930,8 @@ sanity.check.abundance <- function(abd.mtx, ...) {
 #' @return Always returns TRUE, but will throw errors if the metadata does not
 #'   match specifications.
 #' @export
-sanity.check.metadata <- function(metadata, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+sanity.check.metadata <- function(metadata, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     if (!(opts('env_column') %in% colnames(metadata))) {
         pz.error(
             paste0("When looking for environment, no column found labeled ",
@@ -962,8 +967,8 @@ sanity.check.metadata <- function(metadata, ...) {
 #' @return A matrix of abundance values (double), with all-zero columns and rows
 #'     removed.
 #' @export
-remove.allzero.abundances <- function(abd.mtx, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+remove.allzero.abundances <- function(abd.mtx, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     cs <- Matrix::colSums(abd.mtx)
     nz.cols <- which(cs > 0)
     z.col.logical <- (cs == 0)

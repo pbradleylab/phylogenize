@@ -17,10 +17,13 @@ result.wrapper.plm(
   abd.meta = FALSE,
   poms = FALSE,
   pheno_sd = NULL,
-  ...
+  ...,
+  .opts = NULL
 )
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{taxa}{Character vector giving the names of the taxa.}
 
 \item{pheno}{Named numeric vector giving phenotype values per species. Can be

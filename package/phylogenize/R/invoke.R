@@ -1,16 +1,27 @@
 #' @import Matrix
 #' @importFrom ggtree %<+%
-#' @importFrom settings clone_and_merge
 NULL
 
 #--- Main ways to invoke phylogenize: ---#
+
+ensure_output_dir <- function(out_dir, .opts=NULL) {
+    if (!(dir.exists(out_dir)) &&
+        !dir.create(out_dir, recursive=TRUE, showWarnings=FALSE)) {
+        pz.error(paste0("Could not create output directory: ", out_dir),
+                 .opts=.opts)
+    }
+}
+
+ensure_parent_dir <- function(path, .opts=NULL) {
+    ensure_output_dir(dirname(path), .opts=.opts)
+}
 
 #' Run *phylogenize* start to finish, then render an interactive report on the
 #' results.
 #'
 #' @param do_cache Turn on or off Rmarkdown's caching (default: TRUE).
-#' @param reset_after Reset global options to package defaults after running?
-#'   (default: TRUE)
+#' @param reset_after Deprecated compatibility argument; options are resolved
+#'   locally.
 #' @param do_enr Generate enrichment tables? (default: TRUE)
 #' @param ... Other parameters to override defaults (see ?pz.options for a full
 #'   list).
@@ -20,41 +31,40 @@ phylogenize <- function(do_cache=TRUE,
                         do_enr=TRUE,
                         ...) {
     
-    prev.options <- pz.options()
-    do.call(pz.options, list(...))
-    poms_flag <- tolower(pz.options("core_method"))=="poms"
-    pz.options(working_dir=normalizePath(getwd()))
-    pz.options(out_dir=normalizePath(pz.options("out_dir"), mustWork=FALSE))
-    if (!(dir.exists(pz.options("out_dir"))) &&
-        !dir.create(pz.options("out_dir"), recursive=TRUE, showWarnings=FALSE)) {
-        pz.error(paste0("Could not create output directory: ",
-                        pz.options("out_dir")))
-    }
+    opts <- pz.resolve.options(...)
+    opts <- pz.resolve.options(
+        .opts=opts,
+        working_dir=normalizePath(getwd()),
+        out_dir=normalizePath(opts("out_dir"), mustWork=FALSE)
+    )
+    poms_flag <- tolower(opts("core_method"))=="poms"
+    ensure_output_dir(opts("out_dir"), .opts=opts)
     
-    pz.message("Running the core of phylogenize...")
+    pz.message("Running the core of phylogenize...", .opts=opts)
     core <- phylogenize_core(do_POMS=poms_flag,
-                             do_enr=do_enr)
+                             do_enr=do_enr,
+                             ...,
+                             .opts=opts)
     
-    if (pz.options("rds_output_file") != "") {
-        core_path <- file.path(pz.options("out_dir"), 
-                               pz.options("rds_output_file"))
-        pz.message(paste0("Saving core results to ", core_path))
+    if (opts("rds_output_file") != "") {
+        core_path <- file.path(opts("out_dir"),
+                               opts("rds_output_file"))
+        pz.message(paste0("Saving core results to ", core_path), .opts=opts)
+        ensure_parent_dir(core_path, .opts=opts)
         saveRDS(object=core, file=core_path)
     }
     
-    pz.message("Generating report...")
+    pz.message("Generating report...", .opts=opts)
     report_path <- file.path(
-        pz.options("out_dir"),
-        basename(pz.options("output_file"))
+        opts("out_dir"),
+        basename(opts("output_file"))
     )
     render_core_report(core,
-                       output_file=pz.options("output_file"),
+                       output_file=opts("output_file"),
                        do_cache=do_cache,
-                       reset_after=reset_after)
-    pz.message(paste0("Report written to ", report_path))
-    if (reset_after) {
-        do.call(pz.options, prev.options)
-    }
+                       reset_after=reset_after,
+                       .opts=opts)
+    pz.message(paste0("Report written to ", report_path), .opts=opts)
     return(core)
 }
 
@@ -63,8 +73,9 @@ phylogenize <- function(do_cache=TRUE,
 #' making all of the plots. Useful when incorporating phylogenize into a longer
 #' analysis, or when you don't want to wait for everything to render.
 #'
-#' @details Note: this function uses package-wide options (see
-#'   \code{?pz.options}), which can be overridden using the \code{...} argument.
+#' @details This function resolves options from \code{pz.options()} defaults
+#'   plus any overrides supplied through \code{...}, then passes that resolved
+#'   option object through the pipeline.
 #'
 #' @param do_enr Run enrichment analysis. Can skip to save time (default: TRUE)
 #' @param do_POMS to run POMS method. (default: FALSE)
@@ -80,17 +91,25 @@ phylogenize_core <- function(
 	do_POMS = FALSE,
         force_return_data=FALSE,
         p.method=phylogenize:::phylolm.fx.pv,
-        ...
+        ...,
+        .opts=NULL
 ) {
     dots <- list(...)
-    opts <- do.call(settings::clone_and_merge, c(list(PZ_OPTIONS), dots))
+    opts <- pz.resolve.options(..., .opts=.opts)
+    opts <- pz.resolve.options(
+        .opts=opts,
+        out_dir=normalizePath(opts("out_dir"), mustWork=FALSE)
+    )
+    ensure_output_dir(opts("out_dir"), .opts=opts)
     do_POMS <- do_POMS || (tolower(opts('core_method')) == "poms")
     if (do_POMS) {
         dots[["core_method"]] <- "poms"
+        opts <- pz.resolve.options(.opts=opts, core_method="poms")
     }
     pz.message("I. Generating phenotypes...")
     list_pheno <- do.call(data_to_phenotypes,
                           c(list(save_data = (!do_POMS || force_return_data)),
+                            list(.opts=opts),
                             dots))
     pz.message(paste0(
         "  .....Phenotypes generated for ",
@@ -102,7 +121,8 @@ phylogenize_core <- function(
     pz.message("II. Performing association tests...")
     list_signif <- do.call(get_all_associated_genes,
                             c(list(list_pheno=list_pheno,
-                                   p.method=p.method),
+                                   p.method=p.method,
+                                   .opts=opts),
                               dots))
     if (!is.null(list_signif)) {
         pz.message(paste0(
@@ -131,6 +151,7 @@ phylogenize_core <- function(
                                     list_signif[["results.matrix"]],
                                     export=TRUE,
                                     print_out=TRUE,
+                                    .opts=opts,
                                     ...)
     pz.message(paste0(
         "  .....Enrichment testing returned ",
@@ -146,8 +167,9 @@ phylogenize_core <- function(
 
 #' Take the output of `phylogenize_core` and generate a report.
 #'
-#' @details Note: this function uses package-wide options (see
-#'   \code{?pz.options}), which can be overridden using the \code{...} argument.
+#' @details This function renders from options stored in \code{core$options}
+#'   plus any overrides supplied through \code{...}; it does not mutate
+#'   \code{pz.options()} during rendering.
 #'
 #' @param core Output from `phylogenize_core()` (a named list; see
 #'   `?phylogenize_core`).
@@ -155,9 +177,9 @@ phylogenize_core <- function(
 #' @param report_input Optionally specify which notebook to knit (useful for
 #'   testing).
 #' @param do_cache Turn on or off Rmarkdown's caching. (Default: TRUE)
-#' @param reset_after Reset global options after running? (Default: TRUE)
-#' @param ... Other options to be passed to `pz.options` that will override
-#'   options in `core`.
+#' @param reset_after Deprecated compatibility argument; report options are
+#'   resolved locally.
+#' @param ... Other options to override options in `core`.
 #' @export
 render_core_report <- function(core,
                                output_file="phylogenize-report.html",
@@ -165,27 +187,26 @@ render_core_report <- function(core,
                                do_cache=FALSE,
                                reset_after=TRUE,
                                verbose=FALSE,
-                               ...) {
-    
-    prev.options <- pz.options()
+                               ...,
+                               .opts=NULL) {
     if (!("list_pheno" %in% names(core)) || !("list_signif" %in% names(core))) {
         pz.error(paste0(
 	  "`core` does not look like Phylogenize2 output; did you pass ",
 	  "a path to an RDS file instead of reading it with readRDS?"
 	))
     }
-    if ("options" %in% names(core)) {
-        do.call(pz.options, core[["options"]]())
+    base_opts <- .opts
+    if (is.null(base_opts) && "options" %in% names(core)) {
+        base_opts <- core[["options"]]
     }
-    do.call(pz.options, list(...))
-    pz.options(working_dir=normalizePath(getwd()))
-    pz.options(out_dir=normalizePath(pz.options("out_dir"), mustWork=FALSE))
-    if (!dir.exists(pz.options('out_dir')) &&
-        !dir.create(pz.options('out_dir'), recursive=TRUE, showWarnings=FALSE)) {
-        pz.error(paste0("Could not create output directory: ",
-                        pz.options("out_dir")))
-    }
-    p <- pz.options()
+    opts <- pz.resolve.options(..., .opts=base_opts)
+    opts <- pz.resolve.options(
+        .opts=opts,
+        working_dir=normalizePath(getwd()),
+        out_dir=normalizePath(opts("out_dir"), mustWork=FALSE)
+    )
+    ensure_output_dir(opts("out_dir"), .opts=opts)
+    p <- opts()
     if (verbose) {
         for (n in names(p)) {
             message(paste0(n, ": ", p[[n]]))
@@ -194,43 +215,50 @@ render_core_report <- function(core,
     file.copy(system.file("rmd",
                           report_input,
                           package="phylogenize"),
-              pz.options("out_dir"),
+              opts("out_dir"),
               overwrite=TRUE)
-    pz.message(paste0("Rendering report from ", report_input), level=1)
+    pz.message(paste0("Rendering report from ", report_input),
+               level=1,
+               .opts=opts)
     e <- environment()
-    r <- rmarkdown::render(file.path(pz.options("out_dir"),
+    r <- rmarkdown::render(file.path(opts("out_dir"),
                                      report_input),
                            output_file=basename(output_file),
-                           output_dir=pz.options("out_dir"),
+                           output_dir=opts("out_dir"),
                            output_options=list(
-                               cache.path=pz.options("out_dir"),
+                               cache.path=opts("out_dir"),
                                cache=do_cache
                            ),
-                           intermediates_dir=pz.options("out_dir"),
-                           knit_root_dir=pz.options("out_dir"),
+                           intermediates_dir=opts("out_dir"),
+                           knit_root_dir=opts("out_dir"),
                            envir = e)
-    if (reset_after) {
-        do.call(pz.options, prev.options)
-    }
     r
 }
 
 
 #' Add enrichments after the fact to a phylogenize core object.
 #' 
-#' @details Note: this function uses package-wide options (see
-#'   \code{?pz.options}), which can be overridden using the \code{...} argument.
+#' @details This helper resolves options from \code{pz.options()} defaults plus
+#'   any overrides supplied through \code{...}.
 #'
 #' @param core The named list obtained from running `phylogenize_core()`.
+#' @param ... Option overrides.
 #' @export
-augment_with_enrichments <- function(core) {
+augment_with_enrichments <- function(core, ..., .opts=NULL) {
+    base_opts <- .opts
+    if (is.null(base_opts) && "options" %in% names(core)) {
+        base_opts <- core[["options"]]
+    }
+    opts <- pz.resolve.options(..., .opts=base_opts)
     core[["enr_tbls"]] <- get_enrichment_tbls(
         core[["list_signif"]][["signif"]],
         core[["list_signif"]][["signs"]],
         core[["list_pheno"]][["pz.db"]],
         core[["list_signif"]][["results.matrix"]],
         export=TRUE,
-        print_out=TRUE)
+        print_out=TRUE,
+        ...,
+        .opts=opts)
     core
 }
 
@@ -244,10 +272,11 @@ augment_with_enrichments <- function(core) {
 #' @export
 get_all_associated_genes <- function(list_pheno,
     p.method=phylolm.fx.pv,
-    ...) {
-        pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
-        do_POMS <- (tolower(pz.options('core_method')) == "poms")
-        spec_taxa <- pz.options('only_specific_taxa')
+    ...,
+    .opts=NULL) {
+        opts <- pz.resolve.options(..., .opts=.opts)
+        do_POMS <- (tolower(opts('core_method')) == "poms")
+        spec_taxa <- opts('only_specific_taxa')
         if (!do_POMS) {
             pz.message("  A) Getting all associated genes")
             phenotype <- list_pheno$phenotype_results$phenotype
@@ -258,10 +287,10 @@ get_all_associated_genes <- function(list_pheno,
             if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
 	    pz.message("  .....Running plm on valid taxa")
             pz.message(paste0("  ..........Testing ", length(taxaN), " taxon/taxa"))
-            if (pz.options('ncl') > 1) {
+            if (opts('ncl') > 1) {
                 pz.message(paste0(
                     "  ..........Using ",
-                    pz.options('ncl'),
+                    opts('ncl'),
                     " parallel worker(s)"
                 ))
                 results <- result.wrapper.plm(taxa=taxaN,
@@ -270,16 +299,18 @@ get_all_associated_genes <- function(list_pheno,
                     clusters=list_pheno$pz.db$species[taxaN],
                     proteins=list_pheno$pz.db$gene.presence[taxaN],
                     method=p.method,
-                    ncl=pz.options('ncl'))
+                    ncl=opts('ncl'),
+                    .opts=opts)
             } else {
                 results <- mapply(nonparallel.results.generator,
                     list_pheno$pz.db$gene.presence[taxaN],
                     list_pheno$pz.db$trees[taxaN],
                     list_pheno$pz.db$species[taxaN],
                     as.list(taxaN),
-                    MoreArgs=list(pheno=phenotype,
-                        method=p.method,
-                        use.for.loop=FALSE),
+                        MoreArgs=list(pheno=phenotype,
+                            method=p.method,
+                            use.for.loop=FALSE,
+                            .opts=opts),
                         SIMPLIFY=FALSE)
             }
         } else {
@@ -300,6 +331,7 @@ get_all_associated_genes <- function(list_pheno,
                 method=p.method,
                 poms=TRUE,
                 abd.meta=list_pheno$abd.meta,
+                .opts=opts,
                 ...
             )
         }
@@ -314,7 +346,7 @@ get_all_associated_genes <- function(list_pheno,
     results <- results[!vapply(results, is.null, logical(1))]
     pz.message(paste0("  ..........Rows that remain after checking if not null: ", length(results)))
     pz.message("  B) Summarizing significant associations")
-    return(get_signif_associated_genes(list_pheno$pz.db, results))
+    return(get_signif_associated_genes(list_pheno$pz.db, results, ..., .opts=opts))
 }
 
 #' Process genes by significance threshold.
@@ -325,27 +357,28 @@ get_all_associated_genes <- function(list_pheno,
 #' @export
 get_signif_associated_genes <- function(pz.db,
                                         results,
-                                        ...) {
+                                        ...,
+                                        .opts=NULL) {
     pz.message("  ..........Processing genes by significance threshold")
-    pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.resolve.options(..., .opts=.opts)
     if (length(results) == 0) {
         pz.message("  ..........No successful repermulize results to process.")
         return(NULL)
     }
 
     pz.message("  ..........Making sigs")
-    signif <- make.sigs(results, ...)
+    signif <- make.sigs(results, ..., .opts=opts)
     pz.message("  ..........Making signs")
     signs <- make.signs(results)
     pz.message("  ..........Getting positive sigs")
-    pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
+    pos.sig <- nonequiv.pos.sig(results, min_fx=opts('min_fx'), .opts=opts)
     pz.message("  ..........Getting negative sigs")
-    neg.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'), dir=-1)
+    neg.sig <- nonequiv.pos.sig(results, min_fx=opts('min_fx'), dir=-1, .opts=opts)
     pz.message("  ..........Make results matrix")
     results.matrix <- make.results.matrix(results) %>%
         dplyr::filter(!is.na(p.value)) %>%
         dplyr::group_by(taxon) %>%
-        dplyr::mutate(q.value = qvals(p.value, ...)) %>%
+        dplyr::mutate(q.value = qvals(p.value, ..., .opts=opts)) %>%
         dplyr::arrange(taxon, q.value) %>%
         dplyr::ungroup()
     pz.message(paste0(
@@ -357,12 +390,24 @@ get_signif_associated_genes <- function(pz.db,
     phy.with.neg.sigs <- names(which(sapply(neg.sig, length) > 0))
     pz.message("  ..........Add sig descriptions")
     pos.sig.descs <- add.sig.descs(phy.with.pos.sigs, pos.sig, pz.db$gene.to.fxn)
-    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.pos.sigs, pos.sig, ...)
+    pos.sig.thresh <- threshold.pos.sigs(
+        pz.db,
+        phy.with.pos.sigs,
+        pos.sig,
+        ...,
+        .opts=opts
+    )
     pos.sig.thresh.descs <- add.sig.descs(phy.with.pos.sigs,
                                           pos.sig.thresh,
                                           pz.db$gene.to.fxn)
     neg.sig.descs <- add.sig.descs(phy.with.neg.sigs, neg.sig, pz.db$gene.to.fxn)
-    neg.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.neg.sigs, neg.sig, ...)
+    neg.sig.thresh <- threshold.pos.sigs(
+        pz.db,
+        phy.with.neg.sigs,
+        neg.sig,
+        ...,
+        .opts=opts
+    )
     neg.sig.thresh.descs <- add.sig.descs(
         phy.with.neg.sigs,
         neg.sig.thresh,
@@ -428,12 +473,14 @@ get_enrichment_tbls <- function(signif,
                                 kegg_mod_data=NULL,
                                 use_kegg_cache=TRUE,
                                 kegg_cache_file="kegg-cache.rds",
-                                ...) {
+                                ...,
+                                .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     pretty.enr.tbl <- NULL
     enr.overlap <- NULL
     kegg_cache_path <- kegg_cache_file
     if (!grepl("^(/|[A-Za-z]:[/\\\\])", kegg_cache_path)) {
-        kegg_cache_path <- file.path(pz.options("out_dir"), kegg_cache_path)
+        kegg_cache_path <- file.path(opts("out_dir"), kegg_cache_path)
     }
     if (use_kegg_cache && (is.null(kegg_pw_data) || is.null(kegg_mod_data)) &&
         file.exists(kegg_cache_path)) {
@@ -465,7 +512,7 @@ get_enrichment_tbls <- function(signif,
         pz.message(paste0("  .....Writing KEGG cache to ", kegg_cache_path), level=2)
         tryCatch({
             cache_dir <- dirname(kegg_cache_path)
-            if (!dir.exists(cache_dir)) dir.create(cache_dir, recursive=TRUE)
+            ensure_output_dir(cache_dir, .opts=opts)
             saveRDS(list(KEGG=kegg_pw_data, MKEGG=kegg_mod_data),
                     kegg_cache_path)
         }, error=function(e) {
@@ -506,7 +553,7 @@ get_enrichment_tbls <- function(signif,
                            q_value)
         if (export) {
             pz.message("  .....Writing enrichment table")
-            write.csv(file=file.path(pz.options('out_dir'),
+            write.csv(file=file.path(opts('out_dir'),
                                      "enr-table.csv"),
                       pretty.enr.tbl)
         }
@@ -537,10 +584,10 @@ get_enrichment_tbls <- function(signif,
                                  by=c("taxon", "mapped_gene"))
             if (export) {
                 pz.message("  .....Writing enrichment overlap tables")
-                write.csv(file=file.path(pz.options('out_dir'),
+                write.csv(file=file.path(opts('out_dir'),
                                          "enr-overlaps.csv"),
                           enr.overlap)
-                write.csv(file=file.path(pz.options('out_dir'),
+                write.csv(file=file.path(opts('out_dir'),
                                          "enr-overlaps-sorted.csv"),
                           dplyr::arrange(enr.overlap,
                                          taxon,

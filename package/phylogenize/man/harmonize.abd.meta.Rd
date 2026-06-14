@@ -4,9 +4,11 @@
 \alias{harmonize.abd.meta}
 \title{Check metadata and abundance matrix against one another}
 \usage{
-harmonize.abd.meta(abd.meta, ...)
+harmonize.abd.meta(abd.meta, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{abd.meta}{A list with components \code{mtx} and \code{metadata},
 corresponding to a sparse binary presence/absence matrix (see Matrix
 package) and a metadata data frame.}
@@ -21,7 +23,7 @@ perform an \emph{phylogenize} analysis, after dropping any singleton datasets
 or environments (effects for these cannot be estimated).
 }
 \details{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{env_column}{Name of metadata column containing environment
   annotations.}

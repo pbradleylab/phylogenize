@@ -10,10 +10,13 @@ make.sigs(
   method = qvals,
   exclude = NULL,
   min.fx = 0,
-  ...
+  ...,
+  .opts = NULL
 )
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{results}{List of result matrices with two rows (effect size and
 p-value) and one column per gene tested.}
 

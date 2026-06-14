@@ -35,6 +35,17 @@ test_that("qvals uses configured p.adjust methods", {
     expect_equal(phylogenize:::qvals(p, fdr_method="BY"), p.adjust(p, "BY"))
 })
 
+test_that("qvals can use resolved options without global mutation", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    p <- c(0.01, 0.02, 0.50)
+    opts <- pz.resolve.options(fdr_method="BY")
+    pz.options(fdr_method="BH")
+
+    expect_equal(phylogenize:::qvals(p, .opts=opts), p.adjust(p, "BY"))
+})
+
 test_that("calc.alpha.power compares named rejected tests to named truth sets", {
     pvs <- c(g_null=0.01, g_alt=0.02, g_miss=0.50, g_alt2=0.20)
 

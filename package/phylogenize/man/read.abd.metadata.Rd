@@ -4,7 +4,10 @@
 \alias{read.abd.metadata}
 \title{Read in abundance and metadata file(s).}
 \usage{
-read.abd.metadata(...)
+read.abd.metadata(..., .opts = NULL)
+}
+\arguments{
+\item{.opts}{Internal resolved options object.}
 }
 \value{
 A list with components \code{mtx} and \code{metadata}, corresponding
@@ -16,9 +19,9 @@ Read in abundance and metadata, either as one BIOM-format file or as two
 tab-delimited files.
 }
 \details{
-This function uses package-wide options (see \code{?pz.options}),
-    which can be overridden using the \code{...} argument. Some particularly
-    relevant options are:
+This function resolves options from \code{pz.options()} defaults
+    plus any overrides supplied through \code{...}. Some particularly relevant
+    options are:
 
 \describe{
   \item{env_column}{String. Name of column in metadata file containing the

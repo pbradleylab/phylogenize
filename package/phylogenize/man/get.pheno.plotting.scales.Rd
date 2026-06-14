@@ -4,9 +4,11 @@
 \alias{get.pheno.plotting.scales}
 \title{Get phenotype plotting scales.}
 \usage{
-get.pheno.plotting.scales(phenotype, trees, phenoP = 0, ...)
+get.pheno.plotting.scales(phenotype, trees, phenoP = 0, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{phenotype}{A named vector giving the phenotype for each taxon ID.}
 
 \item{trees}{A list of tree objects.}
@@ -20,7 +22,7 @@ A list of overall limits (\code{limits}), taxon-specific limits
     (\code{zero}).
 }
 \description{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
   or "specificity" or "correlation").}
