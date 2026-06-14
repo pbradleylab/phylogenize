@@ -440,17 +440,17 @@ import.pz.db <- function(..., .opts=NULL) {
     names(trees) <- gsub(" ", "_", names(trees))
     names(gene.presence) <- gsub(" ", "_", names(gene.presence))
     # propagate cluster values up, as higher level taxonomic names may be missing
-    taxonomy <- taxonomy %>% 
-      rowwise() %>%
-      mutate(species = ifelse(is.na(species), cluster, species)) %>%
-      mutate(genus = ifelse(is.na(genus), species, genus)) %>%
-      mutate(family = ifelse(is.na(family), genus, family)) %>%
-      mutate(order = ifelse(is.na(order), family, order)) %>%
-      mutate(class = ifelse(is.na(class), order, class)) %>%
-      mutate(phylum = ifelse(is.na(phylum), class, phylum)) %>%
-      mutate(domain = ifelse(is.na(domain), phylum, domain)) %>%
-      mutate(across(domain:genus, \(x) gsub(" ", "_", x))) %>%
-      ungroup()
+    taxonomy <- taxonomy %>%
+      mutate(
+        species = ifelse(is.na(species), cluster, species),
+        genus = ifelse(is.na(genus), species, genus),
+        family = ifelse(is.na(family), genus, family),
+        order = ifelse(is.na(order), family, order),
+        class = ifelse(is.na(class), order, class),
+        phylum = ifelse(is.na(phylum), class, phylum),
+        domain = ifelse(is.na(domain), phylum, domain)
+      ) %>%
+      mutate(across(domain:genus, \(x) gsub(" ", "_", x)))
 
     pz.message("  .....Read in phylogenize2 gene functions file")
     gene.to.fxn <- readr::read_csv(
