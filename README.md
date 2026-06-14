@@ -115,80 +115,162 @@ Congratulations! Phylogenize2 should now be installed.
 
 ### Running Phylogenize2 using the R interface
 
-The main function in Phylogenize2 is called `phylogenize`. The parameters that you are the most likely to use are as follows:
+Most users should start with the `phylogenize()` function. It runs the full workflow: reading the abundance and metadata files, calculating microbial phenotypes, testing genes for association with those phenotypes, running enrichment tests, saving an RDS object with the complete results, and rendering an HTML report.
 
-| Option | Default | Description |
-|----|----|----|
-| in_dir | "." | String. Path to input directory (i.e., where to look for input files. |
-| out_dir | "output" | String. Path to output directory. |
-| abundance_file | "test-abundance.tab" | String. Name of abundance tabular file. |
-| metadata_file | "test-metadata.tab" | String. Name of metadata tabular file. |
-| biom_file | "test.biom" | String. Name of BIOM abundance-and-metadata file, if using BIOM instead of tabular data. |
-| input_format | "tabular" | String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). |
-| ncl | 1 | Integer. Number of cores to use for parallel computation. |
-| type_16S | FALSE | Boolean. Set to true if your species names are 16S ASV sequences, instead of species IDs from your database of interest. |
-| db | "uhgp" | String. Gives the database to use. Some options are "uhgp" and "gtdb"; see above for others. |
-| env_column | "env" | String. Name of column in metadata file containing the environment annotations. |
-| dset_column | "dataset" | String. Name of column in metadata file containing the dataset annotations. |
-| sample_column | "sample_id" | Name of column in metadata file containing the sample IDs. |
-| single_dset | FALSE | Boolean. If true, will assume that all samples come from a single dataset called `"dset1"` no matter what, if anything, is in `dset_column`. |
-| diff_abund_method | "maaslin2" | String. Which tool to use to give differential abundance estimates ("Maaslin2" or "ANCOMBC2"; case insensitive). |
-| which_phenotype | "prevalence" | String. Which phenotype to calculate ("prevalence", "abundance", "specificity", or "provided"). |
-| taxon_level | "family" | String. Run analyses for each of these taxonomic units (can be "phylum", "class", "order", "family", or "genus"; "family" is recommended). |
-| which_envir | "Stool" | String. Environment in which to calculate prevalence or specificity. Must match annotations in metadata. |
+Before running, decide:
 
-Compared to some R packages, passing options to Phylogenize2 works a little differently under the hood. Instead of having its own parameters, `phylogenize` and other Phylogenize2 functions look for global options that can either be set using the function `pz.options` or overridden as extra arguments. This allows you to set parameters once and then work with the Phylogenize2 functions without retyping them, and therefore makes the code easier to read. To see the full list of parameters that can be overridden, see `?pz.options`.
+1. Which database matches your taxa, for example `human-gut`, `mouse-gut`, `marine`, or `gtdb`.
+2. Which phenotype you want to test:
+   - `prevalence`: whether taxa are present in `which_envir`.
+   - `specificity`: whether taxa are specific to `which_envir` compared with other environments.
+   - `abundance`: differential abundance across groups or along a continuous variable.
+   - `provided`: a phenotype table you calculated elsewhere.
+3. Which taxonomic level to run, usually `family` for a first pass.
+4. Which metadata columns contain sample IDs, environment/group labels, and dataset labels.
 
-Here is an example invocation:
+The abundance table should have taxa as rows and samples as columns. The first column should contain taxon IDs matching the selected database. The metadata table should have one row per sample and must include the columns named by `sample_column`, `env_column`, and `dset_column`. If all samples come from one study or batch, set `single_dset=TRUE` and you do not need a real dataset column.
 
-```         
+Compared to some R packages, passing options to Phylogenize2 works a little differently under the hood. `phylogenize()` and related functions read global options that can be set with `pz.options()` or overridden directly as extra arguments. For a one-off run, passing options directly to `phylogenize()` is usually clearest. To see every available option, run `?pz.options` in R.
+
+#### Minimal tabular run
+
+This is a good first run for shotgun data that has already been mapped to species IDs in the selected Phylogenize2 database:
+
+```r
 library(phylogenize)
-cirrhosis_family_abundance <- phylogenize(
-  output_file="cirrhosis-fam-abd.html",
-  output_rds_file="cirrhosis-fam-abd.rds",
-  out_dir=file.path("output", "cirrhosis_uhgp_abd_family"),
-  db="uhgp",
-  taxon_level="family",
-  type_16S=FALSE,
-  which_phenotype="abundance",
-  diff_abund_method="maaslin2",
-  which_envir="case",
-  abundance_file="test_data/cirr/cirrhosis-abundance.tab",
-  metadata_file="test_data/cirr/cirrhosis-metadata.tab", 
-  input_format="tabular",
-  sample_column="sampleid",
-  ncl=4)
+
+results <- phylogenize(
+  abundance_file = "data/abundance.tsv",
+  metadata_file = "data/metadata.tsv",
+  input_format = "tabular",
+  db = "human-gut",
+  taxon_level = "family",
+  which_phenotype = "prevalence",
+  which_envir = "case",
+  sample_column = "sample",
+  env_column = "status",
+  single_dset = TRUE,
+  out_dir = "output/human_gut_prevalence",
+  output_file = "phylogenize-report.html",
+  rds_output_file = "core_output.rds",
+  ncl = 4
+)
 ```
 
-This invocation will run Phylogenize2 with four cores, using Maaslin2 to get differential abundance of microbes between cases and controls, and using the UHGP human gut database. It will then output the report to `output/cirrhosis_uhgp_abd_family/cirrhosis-fam-abd.html` and will also generate a so-called RDS object under `output/cirrhosis_uhgp_abd_family/cirrhosis-fam-abd.rds` that contains the full output generated by Phylogenize2, so that you can later re-generate just the report if desired.
+This writes:
 
-You can also run just the analysis part of Phylogenize2 using the function `phylogenize_core()`, or just render a new report from an existing analysis run of Phylogenize2 using `render_core_report()`. (Note that `phylogenize_core()` does not save a RDS file of its results by default, but you can save it with `saveRDS`.) The above call would be equivalent to:
+- `output/human_gut_prevalence/phylogenize-report.html`: the interactive report.
+- `output/human_gut_prevalence/core_output.rds`: the full result object, which can be reused later.
+- `output/human_gut_prevalence/errmsg.txt`: progress messages and warnings, when file logging is enabled.
+- Enrichment CSV files such as `enr-table.csv` and `enr-overlaps.csv`, when enrichment results are available.
 
-```         
-cirrhosis_family_abundance <- phylogenize_core(
-  db="uhgp",
-  taxon_level="family",
-  type_16S=FALSE,
-  which_phenotype="abundance",
-  diff_abund_method="maaslin2",
-  which_envir="case",
-  abundance_file="test_data/cirr/cirrhosis-abundance.tab",
-  metadata_file="test_data/cirr/cirrhosis-metadata.tab", 
-  input_format="tabular",
-  sample_column="sampleid",
-  ncl=4)
-  
-saveRDS(cirrhosis_family_abundance, 
-  output_rds_file="output/cirrhosis_uhgp_abd_family/cirrhosis-fam-abd.rds")
-  
-# To load this output back into memory after writing to disk:
-# cirrhosis_family_abundance <- readRDS("output/cirrhosis_uhgp_abd_family/cirrhosis-fam-abd.rds")
+#### Differential abundance run
 
+Use `which_phenotype="abundance"` when you want gene associations with differential abundance estimates rather than simple presence/prevalence. The `which_envir` value should match the case, treatment, or focal group in your metadata:
+
+```r
+results <- phylogenize(
+  abundance_file = "data/cirrhosis-abundance.tsv",
+  metadata_file = "data/cirrhosis-metadata.tsv",
+  input_format = "tabular",
+  db = "human-gut",
+  taxon_level = "family",
+  which_phenotype = "abundance",
+  diff_abund_method = "ANCOMBC2",
+  which_envir = "case",
+  sample_column = "sampleid",
+  env_column = "disease_status",
+  dset_column = "study",
+  out_dir = "output/cirrhosis_abundance_family",
+  output_file = "cirrhosis-fam-abd.html",
+  rds_output_file = "cirrhosis-fam-abd.rds",
+  ncl = 4
+)
+```
+
+Use `diff_abund_method="Maaslin2"` instead if that method is better suited to your analysis.
+
+#### BIOM input
+
+If your abundance and sample metadata are in one BIOM file, switch `input_format` and provide `biom_file`:
+
+```r
+results <- phylogenize(
+  biom_file = "data/table-with-metadata.biom",
+  input_format = "biom",
+  db = "gtdb",
+  taxon_level = "family",
+  which_phenotype = "prevalence",
+  which_envir = "soil",
+  sample_column = "sample",
+  env_column = "habitat",
+  single_dset = TRUE,
+  out_dir = "output/biom_run"
+)
+```
+
+If the BIOM file contains only the abundance matrix and your metadata are in a separate TSV file, also set `separate_metadata=TRUE` and `metadata_file="data/metadata.tsv"`.
+
+#### Re-rendering a report
+
+For long analyses, it can be useful to separate computation from report rendering. `phylogenize_core()` runs the analysis and returns the full result object. `render_core_report()` creates a report from an existing result object.
+
+```r
+core <- phylogenize_core(
+  abundance_file = "data/abundance.tsv",
+  metadata_file = "data/metadata.tsv",
+  input_format = "tabular",
+  db = "human-gut",
+  taxon_level = "family",
+  which_phenotype = "prevalence",
+  which_envir = "case",
+  sample_column = "sample",
+  env_column = "status",
+  single_dset = TRUE,
+  ncl = 4
+)
+
+saveRDS(core, "output/human_gut_prevalence/core_output.rds")
+
+core <- readRDS("output/human_gut_prevalence/core_output.rds")
 render_core_report(
-  cirrhosis_family_abundance,
-  output_file="cirrhosis-fam-abd.html",
-  out_dir=file.path("output", "cirrhosis_uhgp_abd_family"))
+  core,
+  output_file = "phylogenize-report.html",
+  out_dir = "output/human_gut_prevalence"
+)
 ```
+
+#### Common options
+
+| Option | Typical value | Description |
+|----|----|----|
+| `abundance_file` | `"data/abundance.tsv"` | Taxon-by-sample abundance table for tabular input. |
+| `metadata_file` | `"data/metadata.tsv"` | Sample metadata table. |
+| `biom_file` | `"data/table.biom"` | BIOM file, if using `input_format="biom"`. |
+| `input_format` | `"tabular"` | Either `"tabular"` or `"biom"`. |
+| `db` | `"human-gut"` | Database to use. Choose one matching your taxon IDs. |
+| `data_dir` | package extdata directory | Directory containing `databases.csv` and database files. Set this for custom database locations. |
+| `taxon_level` | `"family"` | Taxonomic level to test: `"phylum"`, `"class"`, `"order"`, `"family"`, or `"genus"`. |
+| `which_phenotype` | `"prevalence"` | Phenotype to calculate: `"prevalence"`, `"specificity"`, `"abundance"`, or `"provided"`. |
+| `which_envir` | `"case"` | Focal environment/group. Must match a value in `env_column`. |
+| `sample_column` | `"sample"` | Metadata column containing sample IDs. |
+| `env_column` | `"status"` | Metadata column containing environment, group, or numeric phenotype values. |
+| `dset_column` | `"study"` | Metadata column containing study/batch labels. |
+| `single_dset` | `TRUE` | Use when all samples are from one dataset and no dataset column is needed. |
+| `diff_abund_method` | `"ANCOMBC2"` | Differential abundance method for `which_phenotype="abundance"`. |
+| `ncl` | `4` | Number of worker processes. Increase when running on a machine or cluster node with more cores. |
+| `out_dir` | `"output/my_run"` | Output directory. |
+| `output_file` | `"phylogenize-report.html"` | Report file name. |
+| `rds_output_file` | `"core_output.rds"` | Saved RDS result file name. Set to `""` to disable. |
+| `verbosity` | `1` | Progress-message detail. Increase to `2` or `3` for more diagnostics. |
+
+#### Troubleshooting first runs
+
+- If no samples match between metadata and the abundance matrix, check `sample_column`, abundance table column names, and whitespace in sample IDs.
+- If no taxa are retained, confirm that `db` matches the taxon IDs in your abundance table.
+- If an environment is not found, check that `which_envir` exactly matches a value in `env_column`.
+- If you have only one dataset, set `single_dset=TRUE`.
+- If report rendering is slow or memory-intensive, set `skip_graphs=TRUE` for a lighter report.
 
 ## Acknowledgements
 

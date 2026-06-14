@@ -247,13 +247,13 @@ get.top.N <- function(p,
 #' @keywords internal
 qvals <- function(x, ...) {
     opts <- clone_and_merge(PZ_OPTIONS, ...)
-    if (toupper(pz.options("fdr_method"))=="BH") { 
+    if (toupper(opts("fdr_method"))=="BH") {
         return(p.adjust(x, 'BH'))
     }
-    if (toupper(pz.options("fdr_method"))=="BY") {
+    if (toupper(opts("fdr_method"))=="BY") {
         return(p.adjust(x, 'BY'))
     }
-    if (tolower(pz.options("fdr_method"))=="qvalue") {
+    if (tolower(opts("fdr_method"))=="qvalue") {
         q <- tryCatch(qvalue::qvalue(x,
                                      fdr=T,
                                      lambda=seq(0.001, 0.95, 0.005))$qvalues,

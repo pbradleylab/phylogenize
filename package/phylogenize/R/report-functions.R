@@ -710,7 +710,70 @@ gg.cont.tree <- function(phy,
 interactive.plot <- function(tree.obj, file=NULL, name="taxon", plabel="phenotype") {
     tree <- non.interactive.plot(tree.obj, file, name, plabel)
     interactive_tree <- plotly::ggplotly(tree, tooltip = "text")
+    interactive_tree <- add.plotly.tree.branches(interactive_tree, tree)
     return(interactive_tree)
+}
+
+
+tree.branch.segments <- function(tree) {
+    tree_data <- as.data.frame(tree$data)
+    required_cols <- c("node", "parent", "x", "y")
+    if (!all(required_cols %in% names(tree_data))) {
+        return(data.frame())
+    }
+
+    tree_data <- tree_data[stats::complete.cases(tree_data[required_cols]), ]
+    parent_data <- tree_data[c("node", "x", "y")]
+    names(parent_data) <- c("parent", "parent_x", "parent_y")
+
+    edges <- merge(tree_data, parent_data, by = "parent", all = FALSE)
+    edges <- edges[edges$node != edges$parent, ]
+    if (nrow(edges) == 0) {
+        return(data.frame())
+    }
+
+    horizontal <- data.frame(
+        x = edges$parent_x,
+        xend = edges$x,
+        y = edges$y,
+        yend = edges$y
+    )
+
+    vertical_edges <- edges[edges$parent %in% edges$parent[duplicated(edges$parent)], ]
+    vertical <- do.call(rbind, lapply(split(vertical_edges, vertical_edges$parent), function(edge) {
+        data.frame(
+            x = edge$parent_x[1],
+            xend = edge$parent_x[1],
+            y = min(edge$y),
+            yend = max(edge$y)
+        )
+    }))
+
+    rbind(horizontal, vertical)
+}
+
+
+add.plotly.tree.branches <- function(interactive_tree,
+                                     tree,
+                                     branch_color = "rgba(77,77,77,1)",
+                                     branch_width = 1.25) {
+    segments <- tree.branch.segments(tree)
+    if (nrow(segments) == 0) {
+        return(interactive_tree)
+    }
+
+    plotly::add_segments(
+        interactive_tree,
+        data = segments,
+        x = ~x,
+        xend = ~xend,
+        y = ~y,
+        yend = ~yend,
+        inherit = FALSE,
+        line = list(color = branch_color, width = branch_width),
+        hoverinfo = "none",
+        showlegend = FALSE
+    )
 }
 
 
@@ -745,9 +808,10 @@ non.interactive.plot <- function(tree.obj, file=NULL, name="taxon", plabel="phen
     high_color <- tree.obj$cols["high.col"]
     
     tree <- ggtree::ggtree(ape::as.phylo(tree.obj$rphy),
-			   ladderize=TRUE) +
+                           ladderize=TRUE) +
+        ggtree::geom_tree(color = "grey35", size = 0.4) +
         ggtree::geom_point(data = valid_labels,
-                   ggplot2::aes(text = label, color = color)) +
+                           ggplot2::aes(text = label, color = color)) +
         ggtree::geom_tiplab(data = valid_labels,
                     ggplot2::aes(color = color)) +
         ggplot2::ggtitle(name) +
@@ -880,4 +944,3 @@ int.cluster.plot <- function(gene.presence,
         ggplot2::scale_shape(guide="none")
     plotly::ggplotly(tmp)
 }
-

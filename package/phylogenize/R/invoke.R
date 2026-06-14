@@ -24,8 +24,12 @@ phylogenize <- function(do_cache=TRUE,
     do.call(pz.options, list(...))
     poms_flag <- tolower(pz.options("core_method"))=="poms"
     pz.options(working_dir=normalizePath(getwd()))
-    pz.options(out_dir=normalizePath(pz.options("out_dir")))
-    if (!(dir.exists(pz.options("out_dir")))) dir.create(pz.options("out_dir"))
+    pz.options(out_dir=normalizePath(pz.options("out_dir"), mustWork=FALSE))
+    if (!(dir.exists(pz.options("out_dir"))) &&
+        !dir.create(pz.options("out_dir"), recursive=TRUE, showWarnings=FALSE)) {
+        pz.error(paste0("Could not create output directory: ",
+                        pz.options("out_dir")))
+    }
     
     pz.message("Running the core of phylogenize...")
     core <- phylogenize_core(do_POMS=poms_flag,
@@ -34,14 +38,20 @@ phylogenize <- function(do_cache=TRUE,
     if (pz.options("rds_output_file") != "") {
         core_path <- file.path(pz.options("out_dir"), 
                                pz.options("rds_output_file"))
+        pz.message(paste0("Saving core results to ", core_path))
         saveRDS(object=core, file=core_path)
     }
     
     pz.message("Generating report...")
+    report_path <- file.path(
+        pz.options("out_dir"),
+        basename(pz.options("output_file"))
+    )
     render_core_report(core,
                        output_file=pz.options("output_file"),
                        do_cache=do_cache,
                        reset_after=reset_after)
+    pz.message(paste0("Report written to ", report_path))
     if (reset_after) {
         do.call(pz.options, prev.options)
     }
@@ -72,23 +82,48 @@ phylogenize_core <- function(
         p.method=phylogenize:::phylolm.fx.pv,
         ...
 ) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
-    do_POMS <- (tolower(opts('core_method')) == "poms")
+    dots <- list(...)
+    opts <- do.call(settings::clone_and_merge, c(list(PZ_OPTIONS), dots))
+    do_POMS <- do_POMS || (tolower(opts('core_method')) == "poms")
+    if (do_POMS) {
+        dots[["core_method"]] <- "poms"
+    }
     pz.message("I. Generating phenotypes...")
-    list_pheno <- data_to_phenotypes(
-        save_data = (!do_POMS || force_return_data),
-        ...
-    )
+    list_pheno <- do.call(data_to_phenotypes,
+                          c(list(save_data = (!do_POMS || force_return_data)),
+                            dots))
+    pz.message(paste0(
+        "  .....Phenotypes generated for ",
+        length(list_pheno[["phenotype_results"]][["phenotype"]]),
+        " taxon/taxa across ",
+        list_pheno[["pz.db"]][["ntaxa"]],
+        " testable group(s)"
+    ))
     pz.message("II. Performing association tests...")
-    list_signif <- get_all_associated_genes(
-        list_pheno,
-        p.method,
-        ...)
+    list_signif <- do.call(get_all_associated_genes,
+                            c(list(list_pheno=list_pheno,
+                                   p.method=p.method),
+                              dots))
+    if (!is.null(list_signif)) {
+        pz.message(paste0(
+            "  .....Association testing returned ",
+            nrow(list_signif[["results.matrix"]]),
+            " gene-level result(s)"
+        ))
+    }
     if (!do_enr) {
         return(list(list_pheno=list_pheno,
                     list_signif=list_signif,
                     options=opts))
     }
+    if (is.null(list_signif)) {
+        pz.warning("Association testing returned no results; skipping enrichment.")
+        return(list(list_pheno=list_pheno,
+                    list_signif=list_signif,
+                    enr_tbls=NULL,
+                    options=opts))
+    }
+    #list_signif <- readRDS("list_signif.rds")
     pz.message("III. Performing enrichment tests...")
     enr_tbls <- get_enrichment_tbls(list_signif[["signif"]],
                                     list_signif[["signs"]],
@@ -97,6 +132,11 @@ phylogenize_core <- function(
                                     export=TRUE,
                                     print_out=TRUE,
                                     ...)
+    pz.message(paste0(
+        "  .....Enrichment testing returned ",
+        ifelse(is.null(enr_tbls), 0, nrow(enr_tbls)),
+        " filtered enrichment row(s)"
+    ))
     pz.message("Done!")
     return(list(list_pheno=list_pheno,
                 list_signif=list_signif,
@@ -139,9 +179,11 @@ render_core_report <- function(core,
     }
     do.call(pz.options, list(...))
     pz.options(working_dir=normalizePath(getwd()))
-    pz.options(out_dir=normalizePath(pz.options("out_dir")))
-    if (!dir.exists(pz.options('out_dir'))) {
-        dir.create(pz.options('out_dir'))
+    pz.options(out_dir=normalizePath(pz.options("out_dir"), mustWork=FALSE))
+    if (!dir.exists(pz.options('out_dir')) &&
+        !dir.create(pz.options('out_dir'), recursive=TRUE, showWarnings=FALSE)) {
+        pz.error(paste0("Could not create output directory: ",
+                        pz.options("out_dir")))
     }
     p <- pz.options()
     if (verbose) {
@@ -154,6 +196,7 @@ render_core_report <- function(core,
                           package="phylogenize"),
               pz.options("out_dir"),
               overwrite=TRUE)
+    pz.message(paste0("Rendering report from ", report_input), level=1)
     e <- environment()
     r <- rmarkdown::render(file.path(pz.options("out_dir"),
                                      report_input),
@@ -206,13 +249,21 @@ get_all_associated_genes <- function(list_pheno,
         do_POMS <- (tolower(pz.options('core_method')) == "poms")
         spec_taxa <- pz.options('only_specific_taxa')
         if (!do_POMS) {
+            pz.message("  A) Getting all associated genes")
             phenotype <- list_pheno$phenotype_results$phenotype
             taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
-            pz.message(paste0("All valid taxa: ", paste(taxaN, collapse = ", ")), level = 2)
+            pz.message(paste0("  .....All valid taxa: ", paste(taxaN, collapse = ", ")), level = 1)
             if (!is.null(spec_taxa)) { taxaN <- intersect(taxaN, spec_taxa )}
-            pz.message(paste0("Valid taxa (after filtering): ", paste(taxaN, collapse=", ")), level=1)
+            pz.message(paste0("  .....Valid taxa (after filtering): ", paste(taxaN, collapse=", ")), level=1)
             if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
+	    pz.message("  .....Running plm on valid taxa")
+            pz.message(paste0("  ..........Testing ", length(taxaN), " taxon/taxa"))
             if (pz.options('ncl') > 1) {
+                pz.message(paste0(
+                    "  ..........Using ",
+                    pz.options('ncl'),
+                    " parallel worker(s)"
+                ))
                 results <- result.wrapper.plm(taxa=taxaN,
                     pheno=phenotype,
                     tree=list_pheno$pz.db$trees[taxaN],
@@ -232,13 +283,15 @@ get_all_associated_genes <- function(list_pheno,
                         SIMPLIFY=FALSE)
             }
         } else {
+	    pz.message("  A) Getting all associated genes")
             taxaN <- names(list_pheno$pz.db$species)
-            pz.message(paste0("All valid taxa: ", paste(taxaN, collapse = ", ")), level = 2)
+            pz.message(paste0("  .....All valid taxa: ", paste(taxaN, collapse = ", ")), level = 2)
             if (!is.null(spec_taxa)) {
                 taxaN <- intersect(taxaN, spec_taxa)
             }
-            pz.message(paste0("Valid taxa: ", paste(taxaN, collapse=", ")), level=1)
+            pz.message(paste0("  .....Valid taxa: ", paste(taxaN, collapse=", ")), level=1)
             if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
+            pz.message(paste0("  ..........Running POMS for ", length(taxaN), " taxon/taxa"))
             results <- result.wrapper.plm(taxa=taxaN,
                 pheno=NULL,
                 tree=list_pheno$pz.db$trees[taxaN],
@@ -249,9 +302,17 @@ get_all_associated_genes <- function(list_pheno,
                 abd.meta=list_pheno$abd.meta
             )
         }
+    
+    pz.message(paste0("  ..........Rows that remain: ", length(results)))
+    pz.message("  ..........Trimming any results that didn't get dropped")
     # trim out any that didn't get dropped
     result_lens <- vapply(results, length, 1L)
     results <- results[names(which(na.omit(result_lens>0)))]
+
+    pz.message(paste0("  ..........Rows that remain after trimming: ", length(results)))
+    results <- results[!vapply(results, is.null, logical(1))]
+    pz.message(paste0("  ..........Rows that remain after checking if not null: ", length(results)))
+    pz.message("  B) Summarizing significant associations")
     return(get_signif_associated_genes(list_pheno$pz.db, results))
 }
 
@@ -264,34 +325,62 @@ get_all_associated_genes <- function(list_pheno,
 get_signif_associated_genes <- function(pz.db,
                                         results,
                                         ...) {
+    pz.message("  ..........Processing genes by significance threshold")
     pz.options <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    if (length(results) == 0) {
+        pz.message("  ..........No successful repermulize results to process.")
+        return(NULL)
+    }
+
+    pz.message("  ..........Making sigs")
     signif <- make.sigs(results, ...)
+    pz.message("  ..........Making signs")
     signs <- make.signs(results)
+    pz.message("  ..........Getting positive sigs")
     pos.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'))
+    pz.message("  ..........Getting negative sigs")
     neg.sig <- nonequiv.pos.sig(results, min_fx=pz.options('min_fx'), dir=-1)
+    pz.message("  ..........Make results matrix")
     results.matrix <- make.results.matrix(results) %>%
         dplyr::filter(!is.na(p.value)) %>%
         dplyr::group_by(taxon) %>%
         dplyr::mutate(q.value = qvals(p.value, ...)) %>%
         dplyr::arrange(taxon, q.value) %>%
         dplyr::ungroup()
-    phy.with.sigs <- names(which(sapply(pos.sig, length) > 0))
-    pos.sig.descs <- add.sig.descs(phy.with.sigs, pos.sig, pz.db$gene.to.fxn)
-    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig, ...)
-    pos.sig.thresh.descs <- add.sig.descs(phy.with.sigs,
+    pz.message(paste0(
+        "  ..........Results matrix contains ",
+        nrow(results.matrix),
+        " row(s)"
+    ))
+    phy.with.pos.sigs <- names(which(sapply(pos.sig, length) > 0))
+    phy.with.neg.sigs <- names(which(sapply(neg.sig, length) > 0))
+    pz.message("  ..........Add sig descriptions")
+    pos.sig.descs <- add.sig.descs(phy.with.pos.sigs, pos.sig, pz.db$gene.to.fxn)
+    pos.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.pos.sigs, pos.sig, ...)
+    pos.sig.thresh.descs <- add.sig.descs(phy.with.pos.sigs,
                                           pos.sig.thresh,
                                           pz.db$gene.to.fxn)
-        neg.sig.descs <- add.sig.descs(phy.with.sigs, neg.sig, pz.db$gene.to.fxn)
-        neg.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.sigs, neg.sig, ...)
-        neg.sig.thresh.descs <- add.sig.descs(
-            phy.with.sigs,
-            neg.sig.thresh,
-            pz.db$gene.to.fxn
-        )
+    neg.sig.descs <- add.sig.descs(phy.with.neg.sigs, neg.sig, pz.db$gene.to.fxn)
+    neg.sig.thresh <- threshold.pos.sigs(pz.db, phy.with.neg.sigs, neg.sig, ...)
+    neg.sig.thresh.descs <- add.sig.descs(
+        phy.with.neg.sigs,
+        neg.sig.thresh,
+        pz.db$gene.to.fxn
+    )
+    pz.message("  ..........Recalculate sigs")
     # recalculate, since some of these may go away
     phy.with.pos.sigs <- names(which(sapply(pos.sig.thresh, length) > 0))
     phy.with.neg.sigs <- names(which(sapply(neg.sig.thresh, length) > 0))
     phy.with.sigs <- union(phy.with.pos.sigs, phy.with.neg.sigs)
+    pz.message(paste0(
+        "  ..........Taxa with positive significant genes: ",
+        length(phy.with.pos.sigs)
+    ))
+    pz.message(paste0(
+        "  ..........Taxa with negative significant genes: ",
+        length(phy.with.neg.sigs)
+    ))
+    pz.message(paste0("  ..........Remaining results: ", length(results)))
     return(list(
         results = results, #1
         signif = signif, #2
@@ -319,6 +408,14 @@ get_signif_associated_genes <- function(pz.db,
 #' @param pz.db A database (typically obtained with \code{import.pz.db}).
 #' @param results.matrix Matrix of full results.
 #' @param export Write enrichment tables to disk? (Default: FALSE)
+#' @param kegg_pw_data Optional downloaded KEGG pathway data from
+#'   \code{clusterProfiler::download_KEGG("ko", keggType="KEGG")}.
+#' @param kegg_mod_data Optional downloaded KEGG module data from
+#'   \code{clusterProfiler::download_KEGG("ko", keggType="MKEGG")}.
+#' @param use_kegg_cache Reuse downloaded KEGG data from disk when available?
+#'   (Default: TRUE)
+#' @param kegg_cache_file File name for the KEGG cache, relative to
+#'   \code{pz.options("out_dir")} unless an absolute path is supplied.
 #' @param ... Parameters to override defaults.
 #' @export
 get_enrichment_tbls <- function(signif,
@@ -326,19 +423,71 @@ get_enrichment_tbls <- function(signif,
                                 pz.db,
                                 results.matrix,
                                 export=FALSE,
+                                kegg_pw_data=NULL,
+                                kegg_mod_data=NULL,
+                                use_kegg_cache=TRUE,
+                                kegg_cache_file="kegg-cache.rds",
                                 ...) {
     pretty.enr.tbl <- NULL
     enr.overlap <- NULL
-    kegg_pw_data <- clusterProfiler::download_KEGG("ko", keggType="KEGG")
-    kegg_mod_data <- clusterProfiler::download_KEGG("ko", keggType="MKEGG")
+    kegg_cache_path <- kegg_cache_file
+    if (!grepl("^(/|[A-Za-z]:[/\\\\])", kegg_cache_path)) {
+        kegg_cache_path <- file.path(pz.options("out_dir"), kegg_cache_path)
+    }
+    if (use_kegg_cache && (is.null(kegg_pw_data) || is.null(kegg_mod_data)) &&
+        file.exists(kegg_cache_path)) {
+        pz.message(paste0("  .....Reading KEGG cache from ", kegg_cache_path))
+        kegg_cache <- tryCatch(readRDS(kegg_cache_path),
+                               error=function(e) {
+                                   pz.warning(paste(
+                                       "Could not read KEGG cache:",
+                                       conditionMessage(e)
+                                   ))
+                                   NULL
+                               })
+        if (is.null(kegg_pw_data) && !is.null(kegg_cache[["KEGG"]])) {
+            kegg_pw_data <- kegg_cache[["KEGG"]]
+        }
+        if (is.null(kegg_mod_data) && !is.null(kegg_cache[["MKEGG"]])) {
+            kegg_mod_data <- kegg_cache[["MKEGG"]]
+        }
+    }
+    if (is.null(kegg_pw_data)) {
+        pz.message("  .....Downloading KEGG pathway annotations")
+        kegg_pw_data <- clusterProfiler::download_KEGG("ko", keggType="KEGG")
+    }
+    if (is.null(kegg_mod_data)) {
+        pz.message("  .....Downloading KEGG module annotations")
+        kegg_mod_data <- clusterProfiler::download_KEGG("ko", keggType="MKEGG")
+    }
+    if (use_kegg_cache) {
+        pz.message(paste0("  .....Writing KEGG cache to ", kegg_cache_path), level=2)
+        tryCatch({
+            cache_dir <- dirname(kegg_cache_path)
+            if (!dir.exists(cache_dir)) dir.create(cache_dir, recursive=TRUE)
+            saveRDS(list(KEGG=kegg_pw_data, MKEGG=kegg_mod_data),
+                    kegg_cache_path)
+        }, error=function(e) {
+            pz.warning(paste("Could not write KEGG cache:",
+                             conditionMessage(e)))
+        })
+    }
     enrichment.tbl <- multi.kegg.enrich(signif,
                                         signs,
                                         pz.db$gene.to.fxn,
                                         kegg_pw = kegg_pw_data,
                                         kegg_mod = kegg_mod_data)
+    pz.message(paste0(
+        "  .....Raw enrichment rows: ",
+        ifelse(is.null(enrichment.tbl), 0, nrow(enrichment.tbl))
+    ))
     if (!is.null(enrichment.tbl)) {
         enrichment.tbl <- dplyr::filter(enrichment.tbl,
                                         qvalue <= 0.25, enr.estimate > 1)
+        pz.message(paste0(
+            "  .....Filtered enrichment rows: ",
+            nrow(enrichment.tbl)
+        ))
         pretty.enr.tbl <- dplyr::select(enrichment.tbl,
                                         taxon,
                                         cutoff,
@@ -355,6 +504,7 @@ get_enrichment_tbls <- function(signif,
                            Taxon,
                            q_value)
         if (export) {
+            pz.message("  .....Writing enrichment table")
             write.csv(file=file.path(pz.options('out_dir'),
                                      "enr-table.csv"),
                       pretty.enr.tbl)
@@ -362,9 +512,13 @@ get_enrichment_tbls <- function(signif,
     }
     if (!is.null(pretty.enr.tbl)) {
         accession_to_fxn <- pz.db$gene.to.fxn %>%
-            dplyr::select(accession, `function`) %>%
+            dplyr::select(accession, gene, `function`) %>%
             dplyr::distinct()
         if (nrow(enrichment.tbl) > 0) {
+            effect_lookup <- results.matrix %>%
+                dplyr::select(taxon, gene, effect.size) %>%
+                dplyr::rename(mapped_gene=gene,
+                              effectsize=effect.size)
             enr.overlap <- dplyr::select(enrichment.tbl,
                                          taxon,
                                          cutoff,
@@ -375,22 +529,13 @@ get_enrichment_tbls <- function(signif,
                 dplyr::left_join(.,
                                  accession_to_fxn,
                                  by=c("geneID"="accession")) %>%
-                dplyr::rename(gene=geneID, description=`function`) %>%
-                dplyr::mutate(effectsize=purrr::map2_dbl(
-                    taxon,
-                    gene,
-                    ~ {
-                        tryCatch({
-                            value <- results.matrix[[.x]][1, .y]
-                            if (length(value) == 0) {
-                                return(NA_real_)
-                            }
-                            return(value)
-                        }, error = function(e) {
-                            return(NA_real_)
-                        })
-                    }))
+                dplyr::rename(gene=geneID,
+                              mapped_gene=gene,
+                              description=`function`) %>%
+                dplyr::left_join(effect_lookup,
+                                 by=c("taxon", "mapped_gene"))
             if (export) {
+                pz.message("  .....Writing enrichment overlap tables")
                 write.csv(file=file.path(pz.options('out_dir'),
                                          "enr-overlaps.csv"),
                           enr.overlap)
@@ -406,5 +551,3 @@ get_enrichment_tbls <- function(signif,
     }
     return(pretty.enr.tbl)
 }  
-
-

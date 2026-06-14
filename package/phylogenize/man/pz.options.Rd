@@ -22,14 +22,14 @@ These options are global because they affect how most of the functions in
   \item{abundance_file}{String. Name of abundance tabular file. Default: "test-abundance.tab"}
   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
   \item{data_dir}{String. Path to directory containing the data files required to perform a \emph{phylogenize} analysis. Default: empty string, but on package load, this default is set to the result of \code{system.file("extdata", package="phylogenize")}.}
-  \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message output to an error message file? Default: FALSE}
+  \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message output to an error message file? Default: TRUE}
   \item{input_format}{String. Whether to look for tabular or BIOM-formatted data ("tabular" or "biom"). Default: "tabular"}
   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
   \item{rds_output_file}{String. Name of output RDS file containing the full results of applying `phylogenize_core()`. Set to empty string to disable. Default: "core_output.rds"}
   \item{output_file}{String. Name of output file: "results.html"}
   \item{phenotype_file}{String. Name of input file for optional pre-calculated phenotype. Default: ""}
   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
-  \item{separate_metadata}{Boolean. For BIOM data, is there a separate tabular abundance table? Default: FALSE}
+  \item{separate_metadata}{Boolean. For BIOM data, is there a separate tabular metadata table? Default: FALSE}
   \item{which_16s_method}{String. Can be "vsearch" (best-hit alignment), "appspam" (perform phylogenetic placement), or "jplace" (bring-your-own .jplace file). Default: "appspam"}
   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_gtdb.frn"}
   \item{vsearch_dir}{String. Path where the binary of the aligner is found. Default: "/usr/local/bin/"}
@@ -47,10 +47,10 @@ These options are global because they affect how most of the functions in
 \describe{
   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
   \item{quantile_normalize}{Boolean. If TRUE, all phenotypes will be quantile-normalized to the normal distribution. Default: FALSE}
-  \item{db}{String. Which database to use. Can be "gtdb" or "uhgp." Default: "gtdb"}
+  \item{db}{String. Which database to use. Default: "human-gut"}
   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
   \item{env_column}{String. Name of column in metadata file containing the environment annotations. Default: "env"}
-  \item{taxon_level}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "phylum"}
+  \item{taxon_level}{String. Can either be set to 'phylum', 'class', 'order', 'family', or 'genus'. Default: "family"}
   \item{linearize}{Boolean. If TRUE, use a regular linear model instead of a phylogenetic linear model. Mostly useful for testing report generation, since the linear model is much faster but returns many more false positives. Default: FALSE}
   \item{meas_err}{Boolean. Separately estimate measurement error from phenotype variation in the phylogenetic linear model. Default: TRUE}
   \item{min_fx}{Positive double. Effects that are significantly equivalent to this effect size will be excluded from significant positive hits. If zero, the equivalence test will be skipped. Default: 0}
@@ -62,12 +62,12 @@ These options are global because they affect how most of the functions in
   \item{treemin}{Integer. A taxon must have at least this many representatives in order to be processed. Default: 10}
   \item{type_16S}{Boolean. If 16S data, TRUE, otherwise shotgun data is assumed. Default: FALSE}
   \item{vsearch_cutoff}{Float. Value between 0.95 and 1.00 giving the percent ID cutoff to use when assigning denoised sequence variants to MIDAS species using vsearch. Default: 0.985}
-  \item{which_envir}{String. Environment for which prevalence, specificity, or differential abundance scores will be the phenotype of interest. Must match annotations in metadata. Default: "Stool"}
+  \item{which_envir}{String. Environment for which prevalence, specificity, or differential abundance scores will be the phenotype of interest. Must match annotations in metadata. Default: "stool"}
   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence", "specificity", "abundance", "provided"). Default: "prevalence"}
   \item{phenotype_file}{String. If phenotype is provided, what is the path to the file? Default: "phenotype.tsv"}
   \item{categorical}{Boolean. For abundance estimates, is the environment in env_column a categorical variable (TRUE) or continuous (FALSE)? Default: TRUE}
-  \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "Maaslin2"}
-  \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "permulate-lm", "permulate-rlm", "phylolm", "lm", or "POMS" (case insensitive). Default: "permulate-lm"}
+  \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "ANCOMBC2"}
+  \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "permutrate-rlm", "permutrate-lm", "permulate-lm", "permulate-rlm", "phylolm", "lm", or "POMS" (case insensitive). Default: "permutrate-rlm"}
   \item{fdr_method}{String. Which method to correct FDR for significant results? Either "BH", "BY", or "qvalue". Default: "qvalue"}
 }
 }
@@ -92,4 +92,3 @@ These options are global because they affect how most of the functions in
   \item{separate_process}{Boolean. When displaying clustered top gene associations alongside a tree colored by phenotype, this flag indicates whether to use a separate subprocess. This allows memory used by clustering to be released back to the operating system immediately. Default: TRUE}
 }
 }
-

@@ -67,14 +67,15 @@ run.vsearch <- function(...) {
     binary = basename(opts('vsearch_dir'))
     pid = opts('vsearch_cutoff')
     vsearch_args = c("--db",
-		     file.path(opts('data_dir'),
-			       opts('vsearch_16sfile')),
-		     "--usearch_global",
-		     opts('named_asv_file'),
-		     "--strand both",
-		     "--id",
-		     pid,
-		     "--maxaccepts",
+			     file.path(opts('data_dir'),
+				       opts('vsearch_16sfile')),
+			     "--usearch_global",
+			     opts('named_asv_file'),
+			     "--strand",
+			     "both",
+			     "--id",
+			     pid,
+			     "--maxaccepts",
 		     20,
 		     "--blast6out",
 		     opts('vsearch_outfile'))
