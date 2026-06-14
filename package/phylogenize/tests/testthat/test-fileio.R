@@ -150,20 +150,23 @@ test_that("tabular import rejects nonnumeric abundance values", {
         "s4\td1\tB"
     ), metadata_file)
 
-    expect_error(
-        read.abd.metadata(
-            input_format="tabular",
-            abundance_file=abundance_file,
-            metadata_file=metadata_file,
-            sample_column="sample",
-            dset_column="dataset",
-            env_column="env",
-            which_envir="A",
-            which_phenotype="abundance",
-            categorical=TRUE,
-            error_to_file=FALSE
+    expect_warning(
+        expect_error(
+            read.abd.metadata(
+                input_format="tabular",
+                abundance_file=abundance_file,
+                metadata_file=metadata_file,
+                sample_column="sample",
+                dset_column="dataset",
+                env_column="env",
+                which_envir="A",
+                which_phenotype="abundance",
+                categorical=TRUE,
+                error_to_file=FALSE
+            ),
+            "nonnumeric value"
         ),
-        "nonnumeric value"
+        NA
     )
 })
 

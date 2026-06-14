@@ -306,11 +306,18 @@ read.abd.metadata.tabular <- function(..., .opts=NULL) {
             list(.default=readr::col_double())
         )
     )
-    abd.df <- readr::read_tsv(
-        af,
-        col_select=tidyselect::all_of(abundance_keep_cols),
-        col_types=abundance_col_types,
-        show_col_types=FALSE
+    abd.df <- withCallingHandlers(
+        readr::read_tsv(
+            af,
+            col_select=tidyselect::all_of(abundance_keep_cols),
+            col_types=abundance_col_types,
+            show_col_types=FALSE
+        ),
+        warning=function(w) {
+            if (inherits(w, "vroom_parse_issue")) {
+                invokeRestart("muffleWarning")
+            }
+        }
     )
     abd.values <- abd.df[, -1, drop=FALSE]
     bad.cols <- names(abd.values)[
