@@ -155,7 +155,12 @@ calculate_phenotypes <- function(abd.meta, pz.db, ..., .opts=NULL) {
             phenoP <- ess$phenoP
         } else if (opts("which_phenotype") == "provided") {
             pz.message("  .....Reading provided phenotype")
-            p_tbl <- readr::read_tsv(opts("phenotype_file"), show_col_types = FALSE)
+            phenotype_file <- opts("phenotype_file")
+            if (!(file.exists(phenotype_file))) {
+                pz.error(paste0("Phenotype file not found: ", phenotype_file),
+                         .opts=opts)
+            }
+            p_tbl <- readr::read_tsv(phenotype_file, show_col_types = FALSE)
             pz.message(paste0(
                 "  ..........Provided phenotype table has ",
                 nrow(p_tbl),
@@ -163,14 +168,74 @@ calculate_phenotypes <- function(abd.meta, pz.db, ..., .opts=NULL) {
                 ncol(p_tbl),
                 " column(s)"
             ))
+            if (nrow(p_tbl) == 0 || ncol(p_tbl) < 2) {
+                pz.error(paste0(
+                    "Provided phenotype table must have at least one row and ",
+                    "two columns"
+                ), .opts=opts)
+            }
+            phenotype_ids <- trimws(as.character(p_tbl[[1]]))
+            if (any(is.na(phenotype_ids)) || any(phenotype_ids == "")) {
+                pz.error("Provided phenotype table contains blank or missing taxon IDs",
+                         .opts=opts)
+            }
+            if (any(duplicated(phenotype_ids))) {
+                duplicate_ids <- unique(phenotype_ids[duplicated(phenotype_ids)])
+                pz.error(paste0(
+                    "Provided phenotype table contains duplicate taxon IDs: ",
+                    paste(duplicate_ids, collapse=", ")
+                ), .opts=opts)
+            }
             if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
-                phenotype <- tibble::deframe(p_tbl)
+                phenotype_values <- suppressWarnings(as.numeric(p_tbl[[2]]))
+                if (any(is.na(phenotype_values))) {
+                    pz.error(
+                        "Provided phenotype table contains nonnumeric phenotype values",
+                        .opts=opts)
+                }
+                if (any(!is.finite(phenotype_values))) {
+                    pz.error(
+                        "Provided phenotype table contains non-finite phenotype values",
+                        .opts=opts)
+                }
+                names(phenotype_values) <- phenotype_ids
+                phenotype <- phenotype_values
             } else { # perform shrinkage on the provided values w/ their stderrs
+                required_pheno_columns <- c("estimate", "stderr")
+                missing_pheno_columns <- setdiff(required_pheno_columns,
+                                                 names(p_tbl))
+                if (length(missing_pheno_columns) > 0) {
+                    pz.error(paste0(
+                        "Provided phenotype table is missing required column(s): ",
+                        paste(missing_pheno_columns, collapse=", ")
+                    ), .opts=opts)
+                }
                 pz.message("  ..........Running shrinkage on provided phenotype")
-                p_est <- as.numeric(p_tbl[["estimate"]])
-                p_se <- as.numeric(p_tbl[["stderr"]])
-                names(p_est) <- p_tbl[[1]]
-                names(p_se) <- p_tbl[[1]]
+                p_est <- suppressWarnings(as.numeric(p_tbl[["estimate"]]))
+                p_se <- suppressWarnings(as.numeric(p_tbl[["stderr"]]))
+                if (any(is.na(p_est))) {
+                    pz.error(
+                        "Provided phenotype table contains nonnumeric estimates",
+                        .opts=opts)
+                }
+                if (any(is.na(p_se))) {
+                    pz.error(
+                        "Provided phenotype table contains nonnumeric standard errors",
+                        .opts=opts)
+                }
+                if (any(!is.finite(p_est))) {
+                    pz.error(
+                        "Provided phenotype table contains non-finite estimates",
+                        .opts=opts)
+                }
+                if (any(!is.finite(p_se)) || any(p_se <= 0)) {
+                    pz.error(paste0(
+                        "Provided phenotype table standard errors must be ",
+                        "finite and greater than zero"
+                    ), .opts=opts)
+                }
+                names(p_est) <- phenotype_ids
+                names(p_se) <- phenotype_ids
                 ashr_res <- ash_wrapper(p_est, p_se)
                 phenotype <- ashr_res$result %>%
                     tibble::as_tibble(rownames="species") %>%
@@ -195,6 +260,9 @@ calculate_phenotypes <- function(abd.meta, pz.db, ..., .opts=NULL) {
     }
     pz.message("  .....cleaning phenotype")
     phenotype <- clean.pheno(phenotype, pz.db)
+    if (length(phenotype) == 0) {
+        pz.error("No phenotype values matched database taxa", .opts=opts)
+    }
     pz.message(paste0(
         "  ..........Cleaned phenotype retains ",
         length(phenotype),

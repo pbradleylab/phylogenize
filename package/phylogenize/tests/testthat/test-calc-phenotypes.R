@@ -1,3 +1,34 @@
+calc_phenotype_fixture <- function() {
+    list(
+        abd.meta=list(
+            mtx=Matrix::Matrix(
+                matrix(
+                    c(1, 0, 0,
+                      0, 1, 0,
+                      0, 0, 1),
+                    nrow=3,
+                    byrow=TRUE,
+                    dimnames=list(paste0("s", 1:3), paste0("sample", 1:3))
+                ),
+                sparse=TRUE
+            )
+        ),
+        pz.db=list(
+            trees=list(TaxonA=ape::read.tree(text="(s1:1,s2:1,s3:1);")),
+            gene.presence=list(
+                TaxonA=Matrix::Matrix(
+                    matrix(
+                        c(1, 1, 0),
+                        nrow=1,
+                        dimnames=list("gene1", paste0("s", 1:3))
+                    ),
+                    sparse=TRUE
+                )
+            )
+        )
+    )
+}
+
 test_that("calculate_phenotypes uses direct treemin override", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)
@@ -50,6 +81,61 @@ test_that("calculate_phenotypes uses direct treemin override", {
     )
 
     expect_equal(phenotype_results$phenotype, c(s1=1, s2=2, s3=3))
+})
+
+test_that("provided phenotype input is validated before use", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    fixture <- calc_phenotype_fixture()
+    calculate_provided <- function(phenotype_file) {
+        calculate_phenotypes(
+            fixture$abd.meta,
+            fixture$pz.db,
+            which_phenotype="provided",
+            phenotype_file=phenotype_file,
+            treemin=2,
+            error_to_file=FALSE
+        )
+    }
+
+    expect_error(
+        calculate_provided(file.path(tempdir(), "missing-phenotype.tsv")),
+        "Phenotype file not found"
+    )
+
+    duplicate_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\tphenotype",
+        "s1\t1",
+        " s1 \t2"
+    ), duplicate_file)
+    expect_error(
+        calculate_provided(duplicate_file),
+        "duplicate taxon IDs"
+    )
+
+    nonnumeric_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\tphenotype",
+        "s1\t1",
+        "s2\tbad"
+    ), nonnumeric_file)
+    expect_error(
+        calculate_provided(nonnumeric_file),
+        "nonnumeric phenotype values"
+    )
+
+    no_overlap_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\tphenotype",
+        "x1\t1",
+        "x2\t2"
+    ), no_overlap_file)
+    expect_error(
+        calculate_provided(no_overlap_file),
+        "No phenotype values matched database taxa"
+    )
 })
 
 test_that("quantile_normalize preserves prevalence phenotypes with NULL phenoP", {
