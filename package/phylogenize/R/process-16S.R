@@ -223,10 +223,10 @@ get.appspam.results <- function(...) {
         dplyr::mutate(edge_num=row_number()) %>%
         dplyr::inner_join(., pl)
     cl <- parallel::makeCluster(opts('ncl'))
+    on.exit(parallel::stopCluster(cl), add=TRUE)
     tidy_tips <- parallel::parLapply(cl, edge$V1, \(.x, tr) {
         tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
     }, tr)
-    parallel::stopCluster(cl)
     #tidy_tips <- purrr::map(edge$V1, ~ {
     #    tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
     #}, .progress=TRUE)

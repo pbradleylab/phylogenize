@@ -102,6 +102,60 @@ test_that("correl.clr returns finite values for perfect negative correlations", 
     expect_lt(observed[["taxon2"]], 0)
 })
 
+test_that("differential abundance restores numeric taxon names without duplicates", {
+    restored <- restore.diff.abund.taxon.names(
+        sample_pheno=c(X123=1.5, taxonA=-0.5),
+        sample_sd=c(X123=0.2, taxonA=0.3),
+        original_names=c("123", "taxonA")
+    )
+
+    expect_equal(restored$old_name, c("123", "taxonA"))
+    expect_equal(restored$new_name, c("X123", "taxonA"))
+    expect_equal(restored$pheno, c(1.5, -0.5))
+    expect_equal(restored$sd, c(0.2, 0.3))
+    expect_equal(nrow(restored), 2)
+})
+
+test_that("differential abundance rejects ambiguous numeric taxon remapping", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    pz.options(error_to_file=FALSE)
+
+    expect_error(
+        restore.diff.abund.taxon.names(
+            sample_pheno=c(X123=1.5),
+            sample_sd=c(X123=0.2),
+            original_names=c("123", "X123")
+        ),
+        "ambiguous renamed value"
+    )
+})
+
+test_that("nonparallel.results.generator returns empty results when all genes are filtered", {
+    gene.matrix <- matrix(
+        c(1, 1, 1,
+          0, 0, 0),
+        nrow=2,
+        byrow=TRUE,
+        dimnames=list(c("gene_present", "gene_absent"), paste0("s", 1:3))
+    )
+    tree <- ape::read.tree(text="(s1:1,s2:1,s3:1);")
+    pheno <- c(s1=0, s2=1, s3=2)
+
+    observed <- nonparallel.results.generator(
+        gene.matrix=gene.matrix,
+        tree=tree,
+        taxa=paste0("s", 1:3),
+        pheno=pheno,
+        method=function(...) stop("method should not be called"),
+        remove.low.variance=TRUE,
+        use.for.loop=TRUE
+    )
+
+    expect_equal(dim(observed), c(4L, 0L))
+    expect_equal(rownames(observed), c("Estimate", "p.value", "StdErr", "df"))
+})
+
 test_that("logit_auc_pheno indexes environments by sample ID", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)

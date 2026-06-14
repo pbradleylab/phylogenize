@@ -314,6 +314,12 @@ nonparallel.results.generator <- function(gene.matrix,
                         ))
         restrict.ff <- restrict.both
     }
+    if (length(restrict.ff) == 0) {
+        ans <- matrix(nr = 4, nc = 0, NA)
+        dimnames(ans) <- list(c("Estimate", "p.value", "StdErr", "df"),
+                              character(0))
+        return(ans)
+    }
     restrict.tree <- keep.tips(tree, restrict.taxa)
     if (use.for.loop) {
         ans <- matrix(nr = 4, nc = length(restrict.ff), NA)
@@ -329,7 +335,7 @@ nonparallel.results.generator <- function(gene.matrix,
                                    file = stderr())
         pheno.restrict <- pheno[restrict.taxa]
         # replaces an apply to avoid copying
-        for (fn in 1:length(restrict.ff)) {
+        for (fn in seq_along(restrict.ff)) {
             setTxtProgressBar(progress, fn)
             ans[, fn] <- method(gene.matrix[restrict.ff[fn], restrict.taxa],
                                 pheno.restrict,
@@ -537,6 +543,7 @@ matrix.plm <- function(tree,
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     if (opts('separate_process') || (cores > 1)) {
         cl <- parallel::makeCluster(cores)
+        on.exit(parallel::stopCluster(cl), add=TRUE)
         cluster.load.pkg(cl, opts('devel'), opts('devel_pkgdir'))
         force(pheno)
         force(tree)
@@ -554,9 +561,6 @@ matrix.plm <- function(tree,
                        tr=tree,
                        restrict=restrict.taxa,
                        meas_err=opts('meas_err'))
-    if (opts('separate_process') || (cores > 1)) {
-        parallel::stopCluster(cl)
-    }
     r
 }
 
@@ -1100,6 +1104,41 @@ ash_wrapper <- function(m, s, nw=10, ashr_df=Inf) {
             nullweight=nw,
             df=ashr_df)
 }
+
+restore.diff.abund.taxon.names <- function(sample_pheno, sample_sd, original_names) {
+  original_names <- as.character(original_names)
+  numeric_original <- original_names[
+      which(!is.na(suppressWarnings(as.numeric(original_names))))
+  ]
+  identity_original <- setdiff(original_names, numeric_original)
+  name_map <- dplyr::bind_rows(
+    tibble::tibble(
+      old_name=numeric_original,
+      new_name=paste0("X", numeric_original)
+    ),
+    tibble::tibble(
+      old_name=identity_original,
+      new_name=identity_original
+    )
+  )
+  duplicated_new <- unique(name_map$new_name[duplicated(name_map$new_name)])
+  if (length(duplicated_new) > 0) {
+      pz.error(paste0(
+          "Could not safely restore differential abundance taxon names; ",
+          "ambiguous renamed value(s): ",
+          paste(duplicated_new, collapse=", ")
+      ))
+  }
+
+  sample_psd <- dplyr::full_join(
+    tibble::enframe(sample_pheno, name = "new_name", value = "pheno"),
+    tibble::enframe(sample_sd, name = "new_name", value = "sd"),
+    by="new_name"
+  )
+
+  dplyr::left_join(sample_psd, name_map, by="new_name")
+}
+
 ### calculate differential abundance
 
 #' Main function to calculate differential abundances using either ANCOMBC2
@@ -1250,27 +1289,11 @@ ashr.diff.abund <- function(abd.meta,
   sample_sd <- sample_ashr %>%
     dplyr::select(species, PosteriorSD) %>%
     tibble::deframe()
-  # Fix automatic renaming of taxa that seem "numeric"
-  spn <- names(sample_pheno)
-  orign <- rownames(abd.meta$mtx)
-  numeric_names <- tibble::tibble(old_name =
-                                      as.character(orign[
-                                          which(!is.na(as.numeric(orign)))
-                                      ]),
-                                  new_name = paste0("X", old_name))
-  # if the names didn't change, just keep them:
-  all_names <- dplyr::bind_rows(numeric_names,
-                                tibble::tibble(old_name=orign,
-                                               new_name=orign))
-  sample_psd <- dplyr::full_join(
-    tibble::enframe(sample_pheno, name = "new_name", value = "pheno"),
-    tibble::enframe(sample_sd, name = "new_name", value = "sd"),
-    by="new_name"
+  sample_pheno_tbl <- restore.diff.abund.taxon.names(
+      sample_pheno,
+      sample_sd,
+      rownames(abd.meta$mtx)
   )
-    
-  sample_pheno_tbl <- dplyr::left_join(
-      sample_psd,
-      all_names)
   
   sample_pheno <- sample_pheno_tbl %>%
       dplyr::select(old_name, pheno) %>%

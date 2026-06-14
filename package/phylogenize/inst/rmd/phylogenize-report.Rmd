@@ -141,7 +141,7 @@ template <- c(
     "\n"
 )
 
-plots <- lapply(1:length(pheno.distros), function(nm) {
+plots <- lapply(seq_along(pheno.distros), function(nm) {
     knitr::knit_expand(text = template, nm = nm)
 })
 
