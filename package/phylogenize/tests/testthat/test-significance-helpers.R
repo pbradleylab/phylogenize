@@ -46,6 +46,31 @@ test_that("qvals can use resolved options without global mutation", {
     expect_equal(phylogenize:::qvals(p, .opts=opts), p.adjust(p, "BY"))
 })
 
+test_that("qvals validates methods and p-values", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    p <- c(g1=0.01, g2=NA, g3=0.50)
+    observed <- phylogenize:::qvals(p, fdr_method="BH", error_to_file=FALSE)
+
+    expect_equal(names(observed), names(p))
+    expect_true(is.na(observed[["g2"]]))
+    expect_equal(observed[c("g1", "g3")], p.adjust(p[c("g1", "g3")], "BH"))
+    expect_equal(phylogenize:::qvals(numeric(0), fdr_method="BH"),
+                 numeric(0))
+
+    expect_error(
+        phylogenize:::qvals(c(0.01, 0.02), fdr_method="bonferroni",
+                            error_to_file=FALSE),
+        "Invalid fdr_method"
+    )
+    expect_error(
+        phylogenize:::qvals(c(0.01, 1.2), fdr_method="BH",
+                            error_to_file=FALSE),
+        "p-values must be finite"
+    )
+})
+
 test_that("calc.alpha.power compares named rejected tests to named truth sets", {
     pvs <- c(g_null=0.01, g_alt=0.02, g_miss=0.50, g_alt2=0.20)
 

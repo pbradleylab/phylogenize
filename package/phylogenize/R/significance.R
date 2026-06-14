@@ -277,23 +277,51 @@ get.top.N <- function(p,
 #' @keywords internal
 qvals <- function(x, ..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
-    if (toupper(opts("fdr_method"))=="BH") {
-        return(p.adjust(x, 'BH'))
+    method <- tolower(opts("fdr_method"))
+    valid_methods <- c("bh", "by", "qvalue")
+    if (!(method %in% valid_methods)) {
+        pz.error(paste0(
+            "Invalid fdr_method: ",
+            opts("fdr_method"),
+            ". Expected one of: BH, BY, qvalue"
+        ), .opts=opts)
     }
-    if (toupper(opts("fdr_method"))=="BY") {
-        return(p.adjust(x, 'BY'))
+    if (length(x) == 0) {
+        return(x)
     }
-    if (tolower(opts("fdr_method"))=="qvalue") {
-        q <- tryCatch(qvalue::qvalue(x,
+    x_numeric <- suppressWarnings(as.numeric(x))
+    names(x_numeric) <- names(x)
+    nonmissing <- !is.na(x_numeric)
+    if (any(!is.finite(x_numeric[nonmissing])) ||
+        any(x_numeric[nonmissing] < 0 | x_numeric[nonmissing] > 1)) {
+        pz.error("p-values must be finite values between 0 and 1",
+                 .opts=opts)
+    }
+    q <- rep(NA_real_, length(x_numeric))
+    names(q) <- names(x_numeric)
+    if (!any(nonmissing)) {
+        return(q)
+    }
+    x_valid <- x_numeric[nonmissing]
+    if (method=="bh") {
+        q[nonmissing] <- p.adjust(x_valid, 'BH')
+        return(q)
+    }
+    if (method=="by") {
+        q[nonmissing] <- p.adjust(x_valid, 'BY')
+        return(q)
+    }
+    if (method=="qvalue") {
+        q[nonmissing] <- tryCatch(qvalue::qvalue(x_valid,
                                      fdr=T,
                                      lambda=seq(0.001, 0.95, 0.005))$qvalues,
                       error=function(e) {
                           pz.warning("Trying lambda=0...", ...)
-                          tryCatch(qvalue::qvalue(x, fdr=T, lambda=0)$qvalues,
+                          tryCatch(qvalue::qvalue(x_valid, fdr=T, lambda=0)$qvalues,
                                    error=function(e) {
                                        pz.warning(e, ...)
                                        pz.warning("Falling back to BH", ...)
-                                       p.adjust(x, 'BH')
+                                       p.adjust(x_valid, 'BH')
                                    })
                       })
         return(q)
