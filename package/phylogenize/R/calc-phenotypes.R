@@ -142,8 +142,59 @@ calculate_phenotypes <- function(abd.meta, pz.db, ..., .opts=NULL) {
         } else if (opts('which_phenotype') == "specificity") {
 	    pz.message("  .....Running specificity")
             if (opts('prior_type') == "file") {
-                prior.data <- read.table(file.path(opts('input_dir'),
-                                                   opts('prior_file')))
+                prior_file <- opts('prior_file')
+                if (prior_file == "") {
+                    pz.error("prior_file must be set when prior_type is 'file'",
+                             .opts=opts)
+                }
+                prior_path <- if (file.exists(prior_file)) {
+                    prior_file
+                } else {
+                    file.path(opts('working_dir'), prior_file)
+                }
+                if (!(file.exists(prior_path))) {
+                    pz.error(paste0("Prior file not found: ", prior_path),
+                             .opts=opts)
+                }
+                if (grepl("\\.csv$", prior_path, ignore.case=TRUE)) {
+                    prior.data <- readr::read_csv(prior_path,
+                                                  show_col_types=FALSE)
+                } else {
+                    prior.data <- readr::read_tsv(prior_path,
+                                                  show_col_types=FALSE)
+                }
+                required_prior_columns <- c("env", "prior")
+                missing_prior_columns <- setdiff(required_prior_columns,
+                                                 names(prior.data))
+                if (length(missing_prior_columns) > 0) {
+                    pz.error(paste0(
+                        "Prior file is missing required column(s): ",
+                        paste(missing_prior_columns, collapse=", ")
+                    ), .opts=opts)
+                }
+                prior_envs <- trimws(as.character(prior.data[["env"]]))
+                if (any(is.na(prior_envs)) || any(prior_envs == "")) {
+                    pz.error("Prior file contains blank or missing environments",
+                             .opts=opts)
+                }
+                if (any(duplicated(prior_envs))) {
+                    duplicate_envs <- unique(prior_envs[duplicated(prior_envs)])
+                    pz.error(paste0(
+                        "Prior file contains duplicate environments: ",
+                        paste(duplicate_envs, collapse=", ")
+                    ), .opts=opts)
+                }
+                prior_values <- suppressWarnings(as.numeric(prior.data[["prior"]]))
+                if (any(is.na(prior_values))) {
+                    pz.error("Prior file contains nonnumeric prior values",
+                             .opts=opts)
+                }
+                if (any(!is.finite(prior_values)) || any(prior_values <= 0)) {
+                    pz.error("Prior file priors must be finite and greater than zero",
+                             .opts=opts)
+                }
+                prior.data[["env"]] <- prior_envs
+                prior.data[["prior"]] <- prior_values
             } else {
                 prior.data <- NULL
             }

@@ -138,6 +138,100 @@ test_that("provided phenotype input is validated before use", {
     )
 })
 
+test_that("specificity prior files are resolved and validated", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    fixture <- calc_phenotype_fixture()
+    calculate_specificity <- function(prior_file, working_dir=tempdir()) {
+        calculate_phenotypes(
+            fixture$abd.meta,
+            fixture$pz.db,
+            which_phenotype="specificity",
+            prior_type="file",
+            prior_file=prior_file,
+            working_dir=working_dir,
+            error_to_file=FALSE
+        )
+    }
+
+    expect_error(
+        calculate_specificity("missing-prior.tsv"),
+        "Prior file not found"
+    )
+
+    tmp <- tempfile("prior-dir-")
+    dir.create(tmp)
+
+    missing_column_file <- file.path(tmp, "missing-column.tsv")
+    writeLines(c(
+        "env\tweight",
+        "A\t0.5",
+        "B\t0.5"
+    ), missing_column_file)
+    expect_error(
+        calculate_specificity("missing-column.tsv", working_dir=tmp),
+        "missing required column"
+    )
+
+    duplicate_env_file <- file.path(tmp, "duplicate-env.tsv")
+    writeLines(c(
+        "env\tprior",
+        "A\t0.5",
+        " A \t0.5"
+    ), duplicate_env_file)
+    expect_error(
+        calculate_specificity("duplicate-env.tsv", working_dir=tmp),
+        "duplicate environments"
+    )
+
+    nonnumeric_prior_file <- file.path(tmp, "nonnumeric-prior.tsv")
+    writeLines(c(
+        "env\tprior",
+        "A\t0.5",
+        "B\tbad"
+    ), nonnumeric_prior_file)
+    expect_error(
+        calculate_specificity("nonnumeric-prior.tsv", working_dir=tmp),
+        "nonnumeric prior values"
+    )
+})
+
+test_that("specificity prior files must cover retained environments", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 0, 1, 0,
+              0, 1, 0, 1),
+            nrow=2,
+            byrow=TRUE,
+            dimnames=list(c("s1", "s2"), paste0("sample", 1:4))
+        ),
+        metadata=data.frame(
+            sample=paste0("sample", 1:4),
+            dataset=rep("d1", 4),
+            env=factor(c("A", "A", "B", "B"))
+        )
+    )
+    priors <- data.frame(env="A", prior=1)
+
+    expect_error(
+        calc.ess(
+            abd.meta,
+            pdata=priors,
+            prior_type="file",
+            env_column="env",
+            dset_column="dataset",
+            sample_column="sample",
+            which_envir="A",
+            error_to_file=FALSE
+        ),
+        "does not include retained environment"
+    )
+})
+
 test_that("quantile_normalize preserves prevalence phenotypes with NULL phenoP", {
     phenotype_results <- list(
         phenotype=c(taxon1=2, taxon2=1, taxon3=3),
