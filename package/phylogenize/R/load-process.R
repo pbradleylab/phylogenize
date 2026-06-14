@@ -494,7 +494,10 @@ import.pz.db <- function(..., .opts=NULL) {
         gene.presence <- change.presence.tax.level(gene.presence,
                                                    opts('taxon_level'),
                                                    taxonomy)
-        trees <- change.tree.tax.level(trees, opts('taxon_level'), taxonomy)
+        trees <- change.tree.tax.level(trees,
+                                       opts('taxon_level'),
+                                       taxonomy,
+                                       .opts=opts)
         trees <- Filter(function(tr) length(tr$tip.label) > 1, trees)
         pz.message(paste0(
             "  ..........Taxon-level database now has ",
@@ -557,15 +560,17 @@ adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
     pct.obs <- mapply(function(x, y) x / y, tL, totalL)
     passed.pct <- nw(pct.obs >= opts('pctmin'))
     pz.message("Determining which taxa to test...", level=1)
-    for (tn in 1:length(pz.db$trees)) {
-        pz.message(paste0(names(pz.db$trees)[tn],
-                          " (pct): ", format(pct.obs[tn] * 100, digits=2),
-                          "%; (number): ", tL[tn],
-                          "; ", ifelse((pct.obs[tn] >= opts('pctmin') &&
-                                            tL[tn] >= opts('treemin')),
-                                       yes="kept",
-                                       no="dropped")
-        ), level=2)
+    if (pz.should.message(level=2, .opts=opts)) {
+        for (tn in 1:length(pz.db$trees)) {
+            pz.message(paste0(names(pz.db$trees)[tn],
+                              " (pct): ", format(pct.obs[tn] * 100, digits=2),
+                              "%; (number): ", tL[tn],
+                              "; ", ifelse((pct.obs[tn] >= opts('pctmin') &&
+                                                tL[tn] >= opts('treemin')),
+                                           yes="kept",
+                                           no="dropped")
+            ), level=2, .opts=opts)
+        }
     }
     saved.taxa <- intersect(passed.min, passed.pct)
     pz.message(paste0(
@@ -573,13 +578,16 @@ adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
         length(saved.taxa),
         " taxon/taxa passed tree-size and observation filters"
     ))
-    pz.message(
-        paste0(
-            "  Taxa selected: ",
-            paste(saved.taxa, collapse=", ")
-        ),
-        level=2
-    )
+    if (pz.should.message(level=2, .opts=opts)) {
+        pz.message(
+            paste0(
+                "  Taxa selected: ",
+                paste(saved.taxa, collapse=", ")
+            ),
+            level=2,
+            .opts=opts
+        )
+    }
     if (length(saved.taxa) == 0) {
         pz.error(paste0("All trees had less than ",
                         format(opts('pctmin') * 100, digits=2),
@@ -705,13 +713,16 @@ change.presence.tax.level <- function(binary, taxon, tax){
 #' @return list of tree objects that are ready for use at the user given
 #'   tax_level
 #' @export
-change.tree.tax.level <- function(tree, taxon, tax) {
+change.tree.tax.level <- function(tree, taxon, tax, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     # Make a mapping file that is at the taxonomic level selected from the tax
     # file.
     clean <- tax %>%
         dplyr::select(cluster, tidyselect::all_of(taxon), phylum) %>%
         dplyr::distinct()
-    pz.message(head(clean), level=3)
+    if (pz.should.message(level=3, .opts=opts)) {
+        pz.message(head(clean), level=3, .opts=opts)
+    }
     # Drop empty values from the taxonomic level selected if they are not 
     clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
     # Arrange them so that the runtime is slightly less in the lookup
@@ -735,13 +746,17 @@ change.tree.tax.level <- function(tree, taxon, tax) {
         t <- clean[[name]]
         
         if (is.null(clean[[name]])) {
-            pz.message(names(clean), level=3)
+            if (pz.should.message(level=3, .opts=opts)) {
+                pz.message(names(clean), level=3, .opts=opts)
+            }
             pz.warning(paste("Warning: No data found for taxon classification",
                              name), level=2)
             next 
         } else {
-            pz.message(paste("Good news: Data found for taxon classification",
-                             name), level=2)
+            if (pz.should.message(level=2, .opts=opts)) {
+                pz.message(paste("Good news: Data found for taxon classification",
+                                 name), level=2, .opts=opts)
+            }
         }	
         tips_by_taxon <- split(t[["cluster"]], t[[taxon]])
         

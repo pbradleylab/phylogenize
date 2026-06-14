@@ -1484,6 +1484,11 @@ pz.log.options <- function(..., .opts=NULL) {
     pz.resolve.options(..., .opts=base_opts)
 }
 
+pz.should.message <- function(level=1, ...) {
+    opts <- pz.log.options(...)
+    isTRUE(opts("error_to_file")) || level <= opts("verbosity")
+}
+
 #' Throw an error and optionally log it in errmsg.txt.
 #'
 #' Some particularly relevant options are:
