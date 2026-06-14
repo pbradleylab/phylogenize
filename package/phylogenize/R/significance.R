@@ -56,10 +56,12 @@ nonequiv.pos.sig <- function(results,
         }
         #tryCatch(
         #    {
-                tested <- na.omit(unlist(r[2, valid, drop = FALSE]))
-                if ("matrix" %in% class(tested)) {
-                    tested <- tested[1, ]
-                }
+                tested <- unlist(r[2, valid, drop = FALSE])
+                if (is.null(names(tested))) names(tested) <- valid
+                tested_names <- names(tested)
+                tested <- as.numeric(tested)
+                names(tested) <- tested_names
+                tested <- stats::na.omit(tested)
                 qv <- call_method(tested)
                 fx_sig <- nw(qv <= qcut_sig)
                 neq_sig <- valid
@@ -79,9 +81,10 @@ nonequiv.pos.sig <- function(results,
                     }
                 }
                 fx_sizes <- unlist(r[1, valid, drop=FALSE])
-                if ("matrix" %in% class(fx_sizes)) {
-                    fx_sizes <- fx_sizes[1, ]
-                }
+                if (is.null(names(fx_sizes))) names(fx_sizes) <- valid
+                fx_names <- names(fx_sizes)
+                fx_sizes <- as.numeric(fx_sizes)
+                names(fx_sizes) <- fx_names
                 which_pos <- nw((dir * fx_sizes) > 0)
                 Reduce(intersect, list(fx_sig, neq_sig, which_pos))
           #  },
@@ -177,9 +180,11 @@ make.sigs <- function(
 #' @return List (per taxon) of numeric vectors of signs of hits.
 #' @export
 make.signs <- function(results) {
-  lapply(results, function(r) {
-    sign(unlist(r[1, , drop=FALSE])) %>% na.omit
-  })
+    lapply(results, function(r) {
+        fx <- as.numeric(r[1, , drop=FALSE])
+        names(fx) <- colnames(r)
+        stats::na.omit(sign(fx))
+    })
 }
 
 #' Calculate the FPR and (1 - FNR) for results of a set of tests.
@@ -277,23 +282,56 @@ get.top.N <- function(p,
 #' @keywords internal
 qvals <- function(x, ..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
-    if (toupper(opts("fdr_method"))=="BH") {
-        return(p.adjust(x, 'BH'))
+    method <- tolower(opts("fdr_method"))
+    valid_methods <- c("bh", "by", "qvalue")
+    if (!(method %in% valid_methods)) {
+        pz.error(paste0(
+            "Invalid fdr_method: ",
+            opts("fdr_method"),
+            ". Expected one of: BH, BY, qvalue"
+        ), .opts=opts)
     }
-    if (toupper(opts("fdr_method"))=="BY") {
-        return(p.adjust(x, 'BY'))
+    if (length(x) == 0) {
+        return(x)
     }
-    if (tolower(opts("fdr_method"))=="qvalue") {
-        q <- tryCatch(qvalue::qvalue(x,
+    x_unlisted <- unlist(x)
+    x_numeric <- suppressWarnings(as.numeric(x_unlisted))
+    x_names <- names(x_unlisted)
+    if (is.null(x_names) && !is.null(dim(x)) && ncol(x) == length(x_numeric)) {
+        x_names <- colnames(x)
+    }
+    names(x_numeric) <- x_names
+    nonmissing <- !is.na(x_numeric)
+    if (any(!is.finite(x_numeric[nonmissing])) ||
+        any(x_numeric[nonmissing] < 0 | x_numeric[nonmissing] > 1)) {
+        pz.error("p-values must be finite values between 0 and 1",
+                 .opts=opts)
+    }
+    q <- rep(NA_real_, length(x_numeric))
+    names(q) <- names(x_numeric)
+    if (!any(nonmissing)) {
+        return(q)
+    }
+    x_valid <- x_numeric[nonmissing]
+    if (method=="bh") {
+        q[nonmissing] <- p.adjust(x_valid, 'BH')
+        return(q)
+    }
+    if (method=="by") {
+        q[nonmissing] <- p.adjust(x_valid, 'BY')
+        return(q)
+    }
+    if (method=="qvalue") {
+        q[nonmissing] <- tryCatch(qvalue::qvalue(x_valid,
                                      fdr=T,
                                      lambda=seq(0.001, 0.95, 0.005))$qvalues,
                       error=function(e) {
                           pz.warning("Trying lambda=0...", ...)
-                          tryCatch(qvalue::qvalue(x, fdr=T, lambda=0)$qvalues,
+                          tryCatch(qvalue::qvalue(x_valid, fdr=T, lambda=0)$qvalues,
                                    error=function(e) {
                                        pz.warning(e, ...)
                                        pz.warning("Falling back to BH", ...)
-                                       p.adjust(x, 'BH')
+                                       p.adjust(x_valid, 'BH')
                                    })
                       })
         return(q)

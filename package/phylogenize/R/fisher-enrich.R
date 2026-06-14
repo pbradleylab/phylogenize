@@ -79,7 +79,7 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
       map.bg <- Reduce(union, purrr::map(tbl.mappings$terms,
           ~Reduce(union, .$data)))
       full.table <- tidyr::crossing(taxon, cutoff, tbl.mappings) %>%
-          tidyr::unnest()
+          tidyr::unnest(cols=c(terms))
       full.table <- dplyr::mutate(full.table,
         enr=purrr::pmap(full.table, function(taxon,
             cutoff,
@@ -117,7 +117,7 @@ tbl.result.qvs <- function(results, method=qvals, ...) {
         dplyr::mutate(q.value=purrr::map(data, ~ {
             method(.x$p.value)
         })) %>%
-        tidyr::unnest()
+        tidyr::unnest(cols=c(data, q.value))
     results
 }
 
@@ -151,7 +151,7 @@ alt.multi.enrich <- function(results, mappings, dirxn=1,
                                        ~Reduce(union, .$data)))
     full.table <- tidyr::crossing(
         taxon=taxa, cutoff, tbl.mappings) %>%
-        tidyr::unnest()
+        tidyr::unnest(cols=c(terms))
     map_fxn <- purrr::pmap
     full.table <- dplyr::mutate(full.table,
                          enr=map_fxn(full.table,
@@ -205,4 +205,3 @@ indiv.enr <- function(taxon, cutoff, termset, term, data, results,
 #' @return The same vector with all p-values above 1 changed to exactly 1.
 #' @export
 pv1 <- function(x) { x[which(x > 1)] <- 1; return(x) }
-

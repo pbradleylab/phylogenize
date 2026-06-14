@@ -64,13 +64,38 @@ prepare.vsearch.input <- function(mtx, ..., .opts=NULL) {
 #' @export run.vsearch
 run.vsearch <- function(..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
-    binary = basename(opts('vsearch_dir'))
-    pid = opts('vsearch_cutoff')
+    vsearch_path <- opts('vsearch_dir')
+    if (dir.exists(vsearch_path)) {
+        vsearch_path <- file.path(vsearch_path, "vsearch")
+    }
+    if (vsearch_path == "" || !(file.exists(vsearch_path))) {
+        pz.error(paste0("vsearch executable not found: ", opts('vsearch_dir')),
+                 .opts=opts)
+    }
+    if (file.access(vsearch_path, mode=1) != 0) {
+        pz.error(paste0("vsearch executable is not runnable: ", vsearch_path),
+                 .opts=opts)
+    }
+    query_file <- opts('named_asv_file')
+    if (!(file.exists(query_file))) {
+        pz.error(paste0("16S query FASTA not found: ", query_file),
+                 .opts=opts)
+    }
+    db_file <- file.path(opts('data_dir'), opts('vsearch_16sfile'))
+    if (!(file.exists(db_file))) {
+        pz.error(paste0("16S reference FASTA not found: ", db_file),
+                 .opts=opts)
+    }
+    pid <- suppressWarnings(as.numeric(opts('vsearch_cutoff')))
+    if (is.na(pid) || pid <= 0 || pid > 1) {
+        pz.error("vsearch_cutoff must be a number greater than 0 and at most 1",
+                 .opts=opts)
+    }
+    binary = basename(vsearch_path)
     vsearch_args = c("--db",
-			     file.path(opts('data_dir'),
-				       opts('vsearch_16sfile')),
+			     db_file,
 			     "--usearch_global",
-			     opts('named_asv_file'),
+			     query_file,
 			     "--strand",
 			     "both",
 			     "--id",
@@ -82,7 +107,7 @@ run.vsearch <- function(..., .opts=NULL) {
     pz.message(paste0("Calling aligner ", binary, " with arguments: ",
                       paste(vsearch_args, sep=" ", collapse=" ")),
                .opts=opts)
-    r <- system2(opts('vsearch_dir'),
+    r <- system2(vsearch_path,
                  args = vsearch_args)
     if (r != 0) {
         pz.error(paste0("Aligner failed with error code ", r), .opts=opts)
@@ -109,15 +134,53 @@ run.vsearch <- function(..., .opts=NULL) {
 #' @export
 get.vsearch.results <- function(..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
+    vf <- opts('vsearch_outfile')
+    if (!(file.exists(vf))) {
+        pz.error(paste0("vsearch output file not found: ", vf), .opts=opts)
+    }
+    if (file.info(vf)$size == 0) {
+        pz.error(paste0("vsearch output file was empty: ", vf), .opts=opts)
+    }
     # map to MIDAS IDs using vsearch (note X1 is query name, X3 is pctid)
     assignments <- 
-        readr::read_tsv(opts('vsearch_outfile'), col_names=FALSE) %>%
-	dplyr::group_by(X1) %>%
+        readr::read_tsv(vf, col_names=FALSE, show_col_types=FALSE)
+    if (ncol(assignments) < 3) {
+        pz.error("vsearch output must contain at least 3 tab-delimited columns",
+                 .opts=opts)
+    }
+    if (nrow(assignments) == 0) {
+        pz.error(paste0("vsearch output file had no assignments: ", vf),
+                 .opts=opts)
+    }
+    pct_id <- suppressWarnings(as.numeric(assignments[[3]]))
+    if (any(is.na(pct_id))) {
+        pz.error("vsearch output contains nonnumeric percent identity values",
+                 .opts=opts)
+    }
+    assignments[[3]] <- pct_id
+    query_ok <- grepl("^Row[0-9]+$", assignments[[1]])
+    if (any(!query_ok)) {
+        pz.error(paste0(
+            "vsearch output contains invalid query ID(s): ",
+            paste(unique(assignments[[1]][!query_ok]), collapse=", ")
+        ), .opts=opts)
+    }
+    target_parts <- strsplit(assignments[[2]], ";;", fixed=TRUE)
+    target_ok <- vapply(target_parts, length, integer(1)) >= 3
+    if (any(!target_ok)) {
+        pz.error(paste0(
+            "vsearch output contains malformed target ID(s): ",
+            paste(unique(assignments[[2]][!target_ok]), collapse=", ")
+        ), .opts=opts)
+    }
+    assignments <- assignments %>%
+        dplyr::group_by(X1) %>%
         dplyr::slice_max(X3) %>%
 	dplyr::ungroup()
     row.hits <- as.numeric(gsub("Row", "", assignments[[1]]))
-    row.targets <- sapply(assignments[[2]],
-                          function(x) strsplit(x, ";;")[[1]][3])
+    row.targets <- vapply(strsplit(assignments[[2]], ";;", fixed=TRUE),
+                          function(x) x[[3]],
+                          character(1))
     return(list(hits=row.hits, targets=row.targets, assn=assignments))
 }
 

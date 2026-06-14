@@ -213,6 +213,24 @@ result.wrapper.plm <- function(
     })
 }
 
+filter.incomplete.metadata.samples <- function(metadata, mtx, required_cols) {
+    missing_cols <- setdiff(required_cols, colnames(metadata))
+    if (length(missing_cols) > 0) {
+        pz.error(paste0(
+            "metadata is missing required column(s): ",
+            paste(missing_cols, collapse=", ")
+        ))
+    }
+    complete_rows <- stats::complete.cases(metadata[, required_cols, drop=FALSE])
+    metadata <- metadata[complete_rows, , drop=FALSE]
+    metadata <- droplevels(metadata)
+    shared_samples <- intersect(rownames(metadata), colnames(mtx))
+    list(
+        metadata=metadata[shared_samples, , drop=FALSE],
+        mtx=mtx[, shared_samples, drop=FALSE]
+    )
+}
+
 #' Perform POMS modeling for a single clade.
 #'
 #' Some particularly relevant options are:
@@ -1113,6 +1131,27 @@ calc.ess <- function(abd.meta,
         stop("not implemented yet, sorry")
     } else if (ptype == "file") {
         priors <- pdata[pdata$env %in% envirs, , drop=FALSE]
+        missing_prior_envs <- setdiff(as.character(envirs),
+                                      as.character(priors$env))
+        if (length(missing_prior_envs) > 0) {
+            pz.error(paste0(
+                "Prior file does not include retained environment(s): ",
+                paste(missing_prior_envs, collapse=", ")
+            ), .opts=opts)
+        }
+        prior_sum <- sum(priors$prior)
+        if (!is.finite(prior_sum) || prior_sum <= 0) {
+            pz.error("Prior file priors must sum to a positive finite value",
+                     .opts=opts)
+        }
+        if (!isTRUE(all.equal(prior_sum, 1, tolerance=1e-6))) {
+            pz.warning(paste0(
+                "Prior values for retained environments sum to ",
+                signif(prior_sum, 4),
+                "; normalizing to sum to 1"
+            ), .opts=opts)
+            priors$prior <- priors$prior / prior_sum
+        }
     } else {
         stop(paste0("don't know how to compute priors of type ", ptype))
     }
@@ -1598,7 +1637,7 @@ above_minimum_genes <- function(gene.presence, trees, ..., .opts=NULL) {
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
     pos.sig.tbl <- tibble::enframe(pos.sig, name="taxon", value="gene") %>%
-        tidyr::unnest()
+        tidyr::unnest(cols=c(gene))
     
     column_names <- colnames(gene.to.fxn)
     na_columns <- which(is.na(column_names))

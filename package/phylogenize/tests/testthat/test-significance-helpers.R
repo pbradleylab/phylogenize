@@ -19,6 +19,27 @@ test_that("make.results.matrix converts result matrices to long rows", {
     expect_equal(as.numeric(result_tbl$p.value), c(0.01, 0.20))
 })
 
+test_that("add.sig.descs annotates genes without tidyr warnings", {
+    sigs <- list(
+        TaxonA=c("g1", "g2"),
+        TaxonB="g3"
+    )
+    gene_to_fxn <- tibble::tibble(
+        gene=c("g1", "g2", "g3"),
+        accession=c("K00001", "K00002", "K00003"),
+        `function`=c("first gene", "second gene", "third gene")
+    )
+
+    expect_warning(
+        out <- add.sig.descs(c("TaxonA", "TaxonB"), sigs, gene_to_fxn),
+        NA
+    )
+
+    expect_equal(out$taxon, c("TaxonA", "TaxonA", "TaxonB"))
+    expect_equal(out$gene, c("g1", "g2", "g3"))
+    expect_equal(out$description, gene_to_fxn$`function`)
+})
+
 test_that("qvals uses configured p.adjust methods", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)
@@ -44,6 +65,122 @@ test_that("qvals can use resolved options without global mutation", {
     pz.options(fdr_method="BH")
 
     expect_equal(phylogenize:::qvals(p, .opts=opts), p.adjust(p, "BY"))
+})
+
+test_that("qvals validates methods and p-values", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    p <- c(g1=0.01, g2=NA, g3=0.50)
+    observed <- phylogenize:::qvals(p, fdr_method="BH", error_to_file=FALSE)
+
+    expect_equal(names(observed), names(p))
+    expect_true(is.na(observed[["g2"]]))
+    expect_equal(observed[c("g1", "g3")], p.adjust(p[c("g1", "g3")], "BH"))
+    all_missing <- c(g1=NA_real_, g2=NA_real_)
+    missing_observed <- phylogenize:::qvals(all_missing, fdr_method="BH",
+                                            error_to_file=FALSE)
+    expect_equal(names(missing_observed), names(all_missing))
+    expect_true(all(is.na(missing_observed)))
+    expect_equal(phylogenize:::qvals(numeric(0), fdr_method="BH"),
+                 numeric(0))
+    matrix_p <- matrix(
+        0.01,
+        nrow=1,
+        dimnames=list("p.value", "g_matrix")
+    )
+    expect_equal(names(phylogenize:::qvals(matrix_p, fdr_method="BH")),
+                 "g_matrix")
+
+    expect_error(
+        phylogenize:::qvals(c(0.01, 0.02), fdr_method="bonferroni",
+                            error_to_file=FALSE),
+        "Invalid fdr_method"
+    )
+    expect_error(
+        phylogenize:::qvals(c(0.01, 1.2), fdr_method="BH",
+                            error_to_file=FALSE),
+        "p-values must be finite"
+    )
+})
+
+test_that("FDR method snapshots preserve q-values, names, and missingness", {
+    p <- c(
+        g_strong=0.001,
+        g_mid=0.020,
+        g_border=0.049,
+        g_null=0.200,
+        g_missing=NA_real_,
+        g_high=0.800
+    )
+    expected_bh <- c(
+        g_strong=0.00500000,
+        g_mid=0.05000000,
+        g_border=0.0816666666666667,
+        g_null=0.25000000,
+        g_missing=NA_real_,
+        g_high=0.80000000
+    )
+    expected_by <- c(
+        g_strong=0.0114166666666667,
+        g_mid=0.1141666666666667,
+        g_border=0.1864722222222222,
+        g_null=0.5708333333333333,
+        g_missing=NA_real_,
+        g_high=1.00000000
+    )
+
+    observed_bh <- phylogenize:::qvals(p, fdr_method="BH",
+                                       error_to_file=FALSE)
+    observed_by <- phylogenize:::qvals(p, fdr_method="BY",
+                                       error_to_file=FALSE)
+    expect_warning(
+        observed_qvalue <- phylogenize:::qvals(p, fdr_method="qvalue",
+                                               error_to_file=FALSE),
+        "Trying lambda=0"
+    )
+
+    expect_named(observed_bh, names(p))
+    expect_named(observed_by, names(p))
+    expect_named(observed_qvalue, names(p))
+    expect_equal(observed_bh, expected_bh, tolerance=1e-8)
+    expect_equal(observed_by, expected_by, tolerance=1e-8)
+    expect_equal(observed_qvalue, expected_bh, tolerance=1e-8)
+    expect_true(is.na(observed_bh[["g_missing"]]))
+    expect_true(is.na(observed_by[["g_missing"]]))
+    expect_true(is.na(observed_qvalue[["g_missing"]]))
+})
+
+test_that("FDR method choice changes significant hits on fixed result objects", {
+    results <- list(
+        TaxonFDR=matrix(
+            c(1.5, 1.2, -1.1, 0.8,
+              0.001, 0.020, 0.049, 0.200,
+              0.10, 0.10, 0.10, 0.10,
+              20.0, 20.0, 20.0, 20.0),
+            nrow=4,
+            byrow=TRUE,
+            dimnames=list(
+                c("Estimate", "p.value", "StdErr", "df"),
+                c("g_strong", "g_mid", "g_border", "g_null")
+            )
+        )
+    )
+    cuts <- c(strong=0.05)
+    opts_bh <- pz.resolve.options(fdr_method="BH", error_to_file=FALSE)
+    opts_by <- pz.resolve.options(fdr_method="BY", error_to_file=FALSE)
+
+    sigs_bh <- make.sigs(results, cuts=cuts, min.fx=0, .opts=opts_bh)
+    sigs_by <- make.sigs(results, cuts=cuts, min.fx=0, .opts=opts_by)
+    signs <- make.signs(results)
+
+    expect_named(signs$TaxonFDR,
+                 c("g_strong", "g_mid", "g_border", "g_null"))
+    expect_equal(sigs_bh$TaxonFDR$strong, c("g_strong", "g_mid"))
+    expect_equal(sigs_by$TaxonFDR$strong, "g_strong")
+    expect_equal(make.pos.sig(sigs_bh, signs)$TaxonFDR,
+                 c("g_strong", "g_mid"))
+    expect_equal(make.pos.sig(sigs_by, signs)$TaxonFDR, "g_strong")
 })
 
 test_that("calc.alpha.power compares named rejected tests to named truth sets", {

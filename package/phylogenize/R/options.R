@@ -177,6 +177,27 @@ pz.resolve.options <- function(..., .opts=NULL) {
     do.call(settings::clone_and_merge, c(list(.opts), dots))
 }
 
+read.internal.database.index <- function(db_csv) {
+    db <- utils::read.csv(
+        db_csv,
+        check.names=FALSE,
+        stringsAsFactors=FALSE,
+        na.strings=c("", "NA"),
+        fill=TRUE
+    )
+    required <- "database"
+    if (!(required %in% colnames(db))) {
+        pz.error(sprintf(
+            "databases.csv is missing required column: %s",
+            required
+        ))
+    }
+    if (any(is.na(db$database) | trimws(db$database) == "")) {
+        pz.error("databases.csv contains blank database names")
+    }
+    db
+}
+
 #' Set data directory to internal
 #'
 #' @param fail Boolean. If TRUE, set_data_internal will not attempt to download
@@ -200,7 +221,7 @@ set_data_internal <- function(fail=FALSE, startup=FALSE) {
             M(sprintf("Note: databases.csv was not found under directory '%s'. You will need to manually set the directory later with the option 'data_dir=<PATH>'.", phd))
         } else {
             success <- TRUE
-            db <- readr::read_delim(dd)
+            db <- read.internal.database.index(dd)
             M(sprintf("Databases listed:\n\t - %s", paste0(db[["database"]], collapse="\n\t - ")))
         }
     #}
@@ -233,7 +254,7 @@ check_data_found <- function(fail=FALSE, startup=FALSE) {
             ))
         } else {
             success <- TRUE
-            db <- readr::read_delim(dd)
+            db <- read.internal.database.index(dd)
             M(sprintf(
                 "Databases listed:\n\t - %s",
                 paste0(db[["database"]], collapse = "\n\t - ")

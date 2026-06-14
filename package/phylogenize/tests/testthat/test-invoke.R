@@ -56,14 +56,188 @@ test_that("phylogenize_core skips enrichment when associations return NULL", {
         .package="phylogenize"
     )
 
-    core <- phylogenize_core(
-        do_enr=TRUE,
-        error_to_file=FALSE
+    expect_warning(
+        core <- phylogenize_core(
+            do_enr=TRUE,
+            error_to_file=FALSE
+        ),
+        "Association testing returned no results"
     )
 
     expect_null(core$list_signif)
     expect_null(core$enr_tbls)
     expect_false(seen$enrichment_called)
+})
+
+test_that("phylogenize_core returns a stable result object shape", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    set.seed(20240618)
+    tips <- paste0("sp", seq_len(30))
+    phenotype <- seq(-1.5, 1.5, length.out=length(tips))
+    names(phenotype) <- tips
+    high_phenotype <- phenotype >= stats::median(phenotype)
+    gene_presence <- matrix(
+        c(as.integer(high_phenotype), as.integer(!high_phenotype)),
+        nrow=2,
+        byrow=TRUE,
+        dimnames=list(c("g_pos", "g_neg"), tips)
+    )
+    pz_db <- list(
+        ntaxa=1,
+        species=list(TestTaxon=tips),
+        trees=list(TestTaxon=ape::rtree(length(tips), tip.label=tips)),
+        gene.presence=list(TestTaxon=gene_presence),
+        gene.to.fxn=tibble::tibble(
+            gene=rownames(gene_presence),
+            accession=c("K00001", "K00002"),
+            `function`=c("positive fixture gene", "negative fixture gene")
+        )
+    )
+    out_dir <- file.path(tempdir(), "phylogenize-core-shape-test")
+
+    testthat::local_mocked_bindings(
+        data_to_phenotypes=function(save_data=FALSE, ...) {
+            list(
+                phenotype_results=list(phenotype=phenotype),
+                pz.db=pz_db
+            )
+        },
+        get_enrichment_tbls=function(...) {
+            tibble::tibble(
+                taxon="TestTaxon",
+                term="mock_term",
+                enr.qval=0.01,
+                enr.pval=0.001
+            )
+        },
+        .package="phylogenize"
+    )
+
+    core <- phylogenize_core(
+        do_enr=TRUE,
+        p.method=lm.fx.pv,
+        core_method="lm",
+        min_fx=0,
+        minimum=3,
+        out_dir=out_dir,
+        error_to_file=FALSE,
+        verbosity=0
+    )
+
+    expect_named(core, c("list_pheno", "list_signif", "enr_tbls", "options"))
+    expect_named(core$list_pheno, c("phenotype_results", "pz.db"))
+    expect_equal(names(core$list_pheno$phenotype_results$phenotype), tips)
+    expect_equal(core$list_pheno$pz.db$ntaxa, 1)
+    expect_named(core$list_signif, c(
+        "results", "signif", "signs", "pos.sig", "results.matrix",
+        "phy.with.sigs", "pos.sig.descs", "pos.sig.thresh",
+        "pos.sig.thresh.descs", "neg.sig", "neg.sig.descs",
+        "neg.sig.thresh", "neg.sig.thresh.descs", "phy.with.pos.sigs",
+        "phy.with.neg.sigs"
+    ))
+    expect_named(core$list_signif$results, "TestTaxon")
+    expect_equal(rownames(core$list_signif$results$TestTaxon),
+                 c("Estimate", "p.value", "StdErr", "df"))
+    expect_equal(colnames(core$list_signif$results$TestTaxon),
+                 c("g_pos", "g_neg"))
+    expect_equal(nrow(core$list_signif$results.matrix), 2)
+    expect_equal(
+        names(core$list_signif$results.matrix),
+        c("taxon", "gene", "effect.size", "p.value", "std.err", "df",
+          "q.value")
+    )
+    expect_setequal(core$list_signif$results.matrix$gene, c("g_pos", "g_neg"))
+    expect_equal(core$list_signif$phy.with.pos.sigs, "TestTaxon")
+    expect_equal(core$list_signif$phy.with.neg.sigs, "TestTaxon")
+    expect_s3_class(core$enr_tbls, "tbl_df")
+    expect_equal(nrow(core$enr_tbls), 1)
+    expect_equal(core$options("out_dir"),
+                 normalizePath(out_dir, mustWork=FALSE))
+    expect_equal(core$options("core_method"), "lm")
+})
+
+test_that("phylogenize_core preserves deterministic golden association results", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    set.seed(20240619)
+    tips <- paste0("sp", seq_len(30))
+    phenotype <- seq(-1.5, 1.5, length.out=length(tips))
+    names(phenotype) <- tips
+    high_phenotype <- phenotype >= stats::median(phenotype)
+    gene_presence <- matrix(
+        c(as.integer(high_phenotype), as.integer(!high_phenotype)),
+        nrow=2,
+        byrow=TRUE,
+        dimnames=list(c("g_pos", "g_neg"), tips)
+    )
+    pz_db <- list(
+        ntaxa=1,
+        species=list(TestTaxon=tips),
+        trees=list(TestTaxon=ape::rtree(length(tips), tip.label=tips)),
+        gene.presence=list(TestTaxon=gene_presence),
+        gene.to.fxn=tibble::tibble(
+            gene=rownames(gene_presence),
+            accession=c("K00001", "K00002"),
+            `function`=c("positive fixture gene", "negative fixture gene")
+        )
+    )
+
+    testthat::local_mocked_bindings(
+        data_to_phenotypes=function(save_data=FALSE, ...) {
+            list(
+                phenotype_results=list(phenotype=phenotype),
+                pz.db=pz_db
+            )
+        },
+        .package="phylogenize"
+    )
+
+    core <- phylogenize_core(
+        do_enr=FALSE,
+        p.method=lm.fx.pv,
+        core_method="lm",
+        min_fx=0,
+        minimum=3,
+        out_dir=tempdir(),
+        error_to_file=FALSE,
+        verbosity=0
+    )
+    results_matrix <- core$list_signif$results.matrix
+
+    expect_equal(results_matrix$taxon, c("TestTaxon", "TestTaxon"))
+    expect_equal(results_matrix$gene, c("g_pos", "g_neg"))
+    expect_equal(
+        unname(results_matrix$effect.size),
+        c(1.55172413793103, -1.55172413793103),
+        tolerance=1e-12
+    )
+    expect_equal(
+        unname(results_matrix$p.value),
+        rep(6.065437457762578e-10, 2),
+        tolerance=1e-15
+    )
+    expect_equal(
+        unname(results_matrix$std.err),
+        rep(0.168930327088495, 2),
+        tolerance=1e-12
+    )
+    expect_equal(unname(results_matrix$df), c(28, 28))
+    expect_equal(
+        unname(results_matrix$q.value),
+        rep(6.065437457762578e-10, 2),
+        tolerance=1e-15
+    )
+    expect_equal(core$list_signif$signif$TestTaxon$strong,
+                 c("g_pos", "g_neg"))
+    expect_equal(core$list_signif$pos.sig$TestTaxon, "g_pos")
+    expect_equal(core$list_signif$neg.sig$TestTaxon, "g_neg")
+    expect_equal(core$list_signif$pos.sig.thresh$TestTaxon, "g_pos")
+    expect_equal(core$list_signif$neg.sig.thresh$TestTaxon, "g_neg")
+    expect_equal(core$list_signif$phy.with.pos.sigs, "TestTaxon")
+    expect_equal(core$list_signif$phy.with.neg.sigs, "TestTaxon")
 })
 
 test_that("phylogenize_core creates configured output directory", {

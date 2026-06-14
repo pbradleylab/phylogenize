@@ -212,11 +212,21 @@ render_core_report <- function(core,
             message(paste0(n, ": ", p[[n]]))
         }
     }
-    file.copy(system.file("rmd",
-                          report_input,
-                          package="phylogenize"),
-              opts("out_dir"),
-              overwrite=TRUE)
+    report_template <- system.file("rmd",
+                                   report_input,
+                                   package="phylogenize")
+    if (report_template == "" || !(file.exists(report_template))) {
+        pz.error(paste0("Report template not found: ", report_input),
+                 .opts=opts)
+    }
+    copied_template <- file.copy(report_template,
+                                 opts("out_dir"),
+                                 overwrite=TRUE)
+    if (!isTRUE(copied_template)) {
+        pz.error(paste0("Could not copy report template to output directory: ",
+                        opts("out_dir")),
+                 .opts=opts)
+    }
     pz.message(paste0("Rendering report from ", report_input),
                level=1,
                .opts=opts)

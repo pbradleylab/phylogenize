@@ -131,6 +131,10 @@ check.process.metadata <- function(metadata, ..., .opts=NULL) {
     if (opts('categorical')) {   # i.e., env not continuous
         env_factor <- factor(metadata[[E]])
         env_levels <- levels(env_factor)
+        if (any(is.na(env_factor))) {
+            pz.error(paste0("environment column contains missing values: ", E),
+                     .opts=opts)
+        }
         
         if (!(envir %in% env_levels)) {
             pz.error(paste0("environment ", envir, " not found in metadata"))
@@ -138,21 +142,37 @@ check.process.metadata <- function(metadata, ..., .opts=NULL) {
         env_factor <- forcats::fct_relevel(env_factor, envir, after=Inf)
         metadata[[E]] <- env_factor
     } else {
-        metadata[[E]] <- as.numeric(metadata[[E]])
-        if (all(is.na(metadata[[E]]))) {
+        env_original <- metadata[[E]]
+        env_numeric <- suppressWarnings(as.numeric(env_original))
+        converted_to_na <- is.na(env_numeric) & !is.na(env_original)
+        if (any(converted_to_na)) {
+            pz.error(paste0(
+                "Environment column contains nonnumeric value(s): ",
+                paste(unique(env_original[converted_to_na]), collapse=", ")
+            ), .opts=opts)
+        }
+        if (any(is.na(env_numeric))) {
+            pz.error(paste0("environment column contains missing values: ", E),
+                     .opts=opts)
+        }
+        if (length(env_numeric) == 0) {
             pz.error(
                 paste0("Environment failed conversion to numeric; is this ",
-                       "supposed to be a categorical variable?"))
+                       "supposed to be a categorical variable?"),
+                .opts=opts)
         }
+        metadata[[E]] <- env_numeric
     }
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
     
     # One more sanity check before we return
     if (converted_rownames) orig_md <- tibble::as_tibble(orig_md, rownames=S)
     compare_md <- dplyr::full_join(orig_md[c(S, E)], metadata[c(S, E)], by=S)
-    wrong_rows <- compare_md[
-        compare_md[[paste0(E, ".x")]] != compare_md[[paste0(E, ".y")]],
-    ]
+    env_before <- compare_md[[paste0(E, ".x")]]
+    env_after <- compare_md[[paste0(E, ".y")]]
+    wrong_env <- (is.na(env_before) != is.na(env_after)) |
+        (!is.na(env_before) & !is.na(env_after) & env_before != env_after)
+    wrong_rows <- compare_md[wrong_env, ]
     if (nrow(wrong_rows) > 0) {
         print(wrong_rows)
         pz.error(
@@ -183,7 +203,10 @@ check.process.metadata <- function(metadata, ..., .opts=NULL) {
 read.abd.metadata.biom <- function(..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
     bf <- opts('biom_file')
-    pz.message(paste0("looking for file: ", normalizePath(bf)), level=2)
+    pz.message(paste0(
+        "looking for file: ",
+        normalizePath(bf, mustWork=FALSE)
+    ), level=2)
     if (!(file.exists(bf))) {
         pz.error(paste0("file not found: ", bf))
     } else { pz.message(paste0("located biom file: ", bf), level=2) }
@@ -283,11 +306,18 @@ read.abd.metadata.tabular <- function(..., .opts=NULL) {
             list(.default=readr::col_double())
         )
     )
-    abd.df <- readr::read_tsv(
-        af,
-        col_select=tidyselect::all_of(abundance_keep_cols),
-        col_types=abundance_col_types,
-        show_col_types=FALSE
+    abd.df <- withCallingHandlers(
+        readr::read_tsv(
+            af,
+            col_select=tidyselect::all_of(abundance_keep_cols),
+            col_types=abundance_col_types,
+            show_col_types=FALSE
+        ),
+        warning=function(w) {
+            if (inherits(w, "vroom_parse_issue")) {
+                invokeRestart("muffleWarning")
+            }
+        }
     )
     abd.values <- abd.df[, -1, drop=FALSE]
     bad.cols <- names(abd.values)[
@@ -335,34 +365,72 @@ import.pz.db <- function(..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
     db_csv <- file.path(opts('data_dir'), "databases.csv")
     pz.message(paste0("  .....Reading database index: ", db_csv), level=2)
+    if (!(file.exists(db_csv))) {
+        pz.error(paste0("Database index not found: ", db_csv), .opts=opts)
+    }
     installed_dbs <- readr::read_delim(db_csv, show_col_types = FALSE)
+    required_db_columns <- c("database", "genes", "trees", "taxonomy",
+                             "functions")
+    missing_db_columns <- setdiff(required_db_columns, names(installed_dbs))
+    if (length(missing_db_columns) > 0) {
+        pz.error(paste0(
+            "Database index is missing required column(s): ",
+            paste(missing_db_columns, collapse=", ")
+        ), .opts=opts)
+    }
     requested_db <- tolower(opts('db'))
     pz.message(paste0("  .....Requested database: ", requested_db))
     if (!(requested_db %in% installed_dbs[["database"]])) {
         pz.error(paste0("Database not installed in ", opts('data_dir'), ": ",
-                        opts('db')))
+                        opts('db')),
+                 .opts=opts)
     }
     found_db <- dplyr::filter(installed_dbs, database==requested_db)
     if (nrow(found_db) > 1) {
-        pz.error(paste0("Duplicate data entries in db file: ", db_csv))
+        pz.error(paste0("Duplicate data entries in db file: ", db_csv),
+                 .opts=opts)
+    }
+    db_paths <- vapply(required_db_columns[-1], function(col) {
+        file.path(opts('data_dir'), found_db[[col]])
+    }, character(1))
+    missing_db_files <- db_paths[!(file.exists(db_paths))]
+    if (length(missing_db_files) > 0) {
+        pz.error(paste0(
+            "Database file(s) not found: ",
+            paste(unname(missing_db_files), collapse=", ")
+        ), .opts=opts)
     }
 
     pz.message("  .....Read in phylogenize2 gene presence file")
-    gene.presence <- readRDS(file.path(opts('data_dir'),
-                                       found_db[["genes"]]))
+    gene.presence <- readRDS(db_paths[["genes"]])
     gene.presence <- gene.presence[names(gene.presence) != ""]
+    if (!(is.list(gene.presence)) || length(gene.presence) == 0) {
+        pz.error("Gene presence database must be a non-empty named list",
+                 .opts=opts)
+    }
     pz.message(paste0(
         "  ..........Loaded ",
         length(gene.presence),
         " gene presence matrix/matrices"
     ))
     pz.message("  .....Read in phylogenize2 tree file")
-    trees <- readRDS(file.path(opts('data_dir'),
-                               found_db[["trees"]]))
+    trees <- readRDS(db_paths[["trees"]])
+    if (!(is.list(trees)) || length(trees) == 0) {
+        pz.error("Tree database must be a non-empty named list", .opts=opts)
+    }
     pz.message(paste0("  ..........Loaded ", length(trees), " tree(s)"))
     pz.message("  .....Read in phylogenize2 taxonomy file")
-    taxonomy <- readr::read_csv(file.path(opts('data_dir'),
-                                          found_db[["taxonomy"]]), show_col_types=FALSE)
+    taxonomy <- readr::read_csv(db_paths[["taxonomy"]], show_col_types=FALSE)
+    required_taxonomy_columns <- c("cluster", "species", "genus", "family",
+                                   "order", "class", "phylum", "domain")
+    missing_taxonomy_columns <- setdiff(required_taxonomy_columns,
+                                        names(taxonomy))
+    if (length(missing_taxonomy_columns) > 0) {
+        pz.error(paste0(
+            "Taxonomy file is missing required column(s): ",
+            paste(missing_taxonomy_columns, collapse=", ")
+        ), .opts=opts)
+    }
     pz.message(paste0(
         "  ..........Loaded taxonomy with ",
         nrow(taxonomy),
@@ -386,9 +454,18 @@ import.pz.db <- function(..., .opts=NULL) {
 
     pz.message("  .....Read in phylogenize2 gene functions file")
     gene.to.fxn <- readr::read_csv(
-        file.path(opts('data_dir'), found_db[["functions"]]),
+        db_paths[["functions"]],
         show_col_types = FALSE
     )
+    required_function_columns <- c("node_head", "accession", "function")
+    missing_function_columns <- setdiff(required_function_columns,
+                                        names(gene.to.fxn))
+    if (length(missing_function_columns) > 0) {
+        pz.error(paste0(
+            "Gene function file is missing required column(s): ",
+            paste(missing_function_columns, collapse=", ")
+        ), .opts=opts)
+    }
     pz.message(paste0(
         "  ..........Loaded ",
         nrow(gene.to.fxn),
@@ -908,6 +985,28 @@ sanity.check.abundance <- function(abd.mtx, ...) {
     if (is.null(colnames(abd.mtx))) {
         pz.error("Abundance matrix is lacking column (sample) names")
     }
+    taxon_ids <- trimws(rownames(abd.mtx))
+    sample_ids <- trimws(colnames(abd.mtx))
+    if (any(is.na(taxon_ids)) || any(taxon_ids == "")) {
+        pz.error("Abundance matrix contains blank or missing taxon names")
+    }
+    if (any(is.na(sample_ids)) || any(sample_ids == "")) {
+        pz.error("Abundance matrix contains blank or missing sample names")
+    }
+    if (any(duplicated(taxon_ids))) {
+        duplicate_taxa <- unique(taxon_ids[duplicated(taxon_ids)])
+        pz.error(paste0(
+            "Abundance matrix contains duplicate taxon names: ",
+            paste(duplicate_taxa, collapse=", ")
+        ))
+    }
+    if (any(duplicated(sample_ids))) {
+        duplicate_samples <- unique(sample_ids[duplicated(sample_ids)])
+        pz.error(paste0(
+            "Abundance matrix contains duplicate sample names: ",
+            paste(duplicate_samples, collapse=", ")
+        ))
+    }
     return(TRUE)
 }
 
@@ -952,6 +1051,17 @@ sanity.check.metadata <- function(metadata, ..., .opts=NULL) {
     }
     if (nrow(metadata) < 2) {
         pz.error("Fewer than two rows found in metadata")
+    }
+    sample_ids <- trimws(as.character(metadata[[opts('sample_column')]]))
+    if (any(is.na(sample_ids)) || any(sample_ids == "")) {
+        pz.error("Metadata contains blank or missing sample IDs")
+    }
+    if (any(duplicated(sample_ids))) {
+        duplicate_samples <- unique(sample_ids[duplicated(sample_ids)])
+        pz.error(paste0(
+            "Metadata contains duplicate sample IDs: ",
+            paste(duplicate_samples, collapse=", ")
+        ))
     }
     return(TRUE)
 }
@@ -1014,24 +1124,71 @@ remove.allzero.abundances <- function(abd.mtx, ..., .opts=NULL) {
 #'   be unzipped) or a .csv file (which will be copied).
 #' @param force Boolean; overwrite existing files? (Default: FALSE)
 #' @export
-install_data <- function(path, force=FALSE) {
+install_data <- function(path, force=FALSE,
+                         .extd_path=system.file("extdata/",
+                                                package="phylogenize")) {
+    if (!is.character(path) || length(path) != 1 ||
+        is.na(path) || trimws(path) == "") {
+        pz.error("path must be a single non-empty file path")
+    }
+    if (!file.exists(path)) {
+        pz.error(paste0("Data archive not found: ", path))
+    }
+    if (!dir.exists(.extd_path)) {
+        pz.error(paste0(
+            "phylogenize extdata directory not found: ",
+            .extd_path
+        ))
+    }
+    if (file.access(.extd_path, mode=2) != 0) {
+        pz.error(paste0(
+            "phylogenize extdata directory is not writable: ",
+            .extd_path
+        ))
+    }
     fn <- basename(path)
-    extd_path <- system.file("extdata/", package="phylogenize")
-    if (stringr::str_ends(basename(path), "\\.csv")) {
-        if (!file.exists(file.path(extd_path, fn)) || force) {
-            print(paste0(
-                "Copying ",
-                path,
-                " to ",
-                system.file("", package="phylogenize")))
-            file.copy(path, extd_path, overwrite = force)
+    ext <- tolower(tools::file_ext(path))
+    if (ext == "csv") {
+        dest <- file.path(.extd_path, fn)
+        if (file.exists(dest) && !force) {
+            pz.error(paste0(
+                "Destination file already exists; use force=TRUE to overwrite: ",
+                dest
+            ))
         }
-    } else {
-        print(paste0(
+        pz.message(paste0(
+            "Copying ",
+            path,
+            " to ",
+            .extd_path
+        ))
+        ok <- file.copy(path, .extd_path, overwrite=force)
+        if (!isTRUE(ok)) {
+            pz.error(paste0("Could not copy data file to: ", dest))
+        }
+        return(invisible(dest))
+    }
+    if (ext == "zip") {
+        pz.message(paste0(
             "Unzipping ",
             path,
             " to ",
-            system.file("", package="phylogenize")))
-        unzip(path, overwrite = force, exdir = extd_path)
+            .extd_path
+        ))
+        out <- tryCatch(
+            unzip(path, overwrite=force, exdir=.extd_path),
+            error=function(e) {
+                pz.error(paste0("Could not unzip data archive: ", e$message))
+            }
+        )
+        if (length(out) == 0) {
+            pz.error("Zip archive did not install any files")
+        }
+        return(invisible(out))
     }
+    pz.error(paste0(
+        "Unsupported data file extension: .",
+        ext,
+        ". Expected .csv or .zip"
+    ))
 }

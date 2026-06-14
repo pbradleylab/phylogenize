@@ -50,3 +50,20 @@ test_that("render_core_report renders a minimal partial-result report", {
 
     expect_true(file.exists(output))
 })
+
+test_that("render_core_report rejects missing report templates", {
+    core <- list(
+        list_pheno=list(),
+        list_signif=NULL
+    )
+
+    expect_error(
+        render_core_report(
+            core,
+            report_input="missing-report-template.Rmd",
+            out_dir=tempdir(),
+            error_to_file=FALSE
+        ),
+        "Report template not found"
+    )
+})
