@@ -128,6 +128,31 @@ test_that("run.vsearch validates executable and input files", {
         ),
         "query FASTA not found"
     )
+
+    expect_error(
+        run.vsearch(
+            vsearch_dir=fake_vsearch,
+            data_dir=tmp,
+            vsearch_16sfile="missing-db.fna",
+            named_asv_file=query_file,
+            vsearch_outfile=file.path(tmp, "hits.tsv"),
+            error_to_file=FALSE
+        ),
+        "reference FASTA not found"
+    )
+
+    expect_error(
+        run.vsearch(
+            vsearch_dir=fake_vsearch,
+            data_dir=tmp,
+            vsearch_16sfile="db.fna",
+            named_asv_file=query_file,
+            vsearch_cutoff=1.5,
+            vsearch_outfile=file.path(tmp, "hits.tsv"),
+            error_to_file=FALSE
+        ),
+        "vsearch_cutoff must be"
+    )
 })
 
 test_that("get.vsearch.results rejects malformed vsearch output", {

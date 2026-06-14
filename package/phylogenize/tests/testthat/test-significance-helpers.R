@@ -56,6 +56,11 @@ test_that("qvals validates methods and p-values", {
     expect_equal(names(observed), names(p))
     expect_true(is.na(observed[["g2"]]))
     expect_equal(observed[c("g1", "g3")], p.adjust(p[c("g1", "g3")], "BH"))
+    all_missing <- c(g1=NA_real_, g2=NA_real_)
+    missing_observed <- phylogenize:::qvals(all_missing, fdr_method="BH",
+                                            error_to_file=FALSE)
+    expect_equal(names(missing_observed), names(all_missing))
+    expect_true(all(is.na(missing_observed)))
     expect_equal(phylogenize:::qvals(numeric(0), fdr_method="BH"),
                  numeric(0))
     matrix_p <- matrix(

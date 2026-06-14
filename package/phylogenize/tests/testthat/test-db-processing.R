@@ -209,3 +209,48 @@ test_that("import.pz.db validates loaded taxonomy schema", {
         "Taxonomy file is missing required column"
     )
 })
+
+test_that("import.pz.db validates loaded gene function schema", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("db-function-schema-")
+    dir.create(tmp)
+    writeLines(c(
+        "database,genes,trees,taxonomy,functions",
+        "test-db,genes.rds,trees.rds,taxonomy.csv,functions.csv"
+    ), file.path(tmp, "databases.csv"))
+    saveRDS(
+        list(p1=Matrix::Matrix(
+            matrix(
+                c(1, 0),
+                nrow=1,
+                dimnames=list("gene1", c("s1", "s2"))
+            ),
+            sparse=TRUE
+        )),
+        file.path(tmp, "genes.rds")
+    )
+    saveRDS(
+        list(p1=ape::read.tree(text="(s1:1,s2:1);")),
+        file.path(tmp, "trees.rds")
+    )
+    writeLines(c(
+        "cluster,species,genus,family,order,class,phylum,domain",
+        "s1,s1,g1,f1,o1,c1,p1,d1",
+        "s2,s2,g1,f1,o1,c1,p1,d1"
+    ), file.path(tmp, "taxonomy.csv"))
+    writeLines(c(
+        "node_head,accession,description",
+        "gene1,acc1,fxn1"
+    ), file.path(tmp, "functions.csv"))
+
+    expect_error(
+        import.pz.db(
+            data_dir=tmp,
+            db="test-db",
+            error_to_file=FALSE
+        ),
+        "Gene function file is missing required column"
+    )
+})

@@ -138,6 +138,56 @@ test_that("provided phenotype input is validated before use", {
     )
 })
 
+test_that("provided phenotype shrinkage input is validated before use", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    fixture <- calc_phenotype_fixture()
+    calculate_provided <- function(phenotype_file) {
+        calculate_phenotypes(
+            fixture$abd.meta,
+            fixture$pz.db,
+            which_phenotype="provided",
+            phenotype_file=phenotype_file,
+            treemin=2,
+            error_to_file=FALSE
+        )
+    }
+
+    missing_stderr_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\testimate\tnote",
+        "s1\t1\tok",
+        "s2\t2\tok"
+    ), missing_stderr_file)
+    expect_error(
+        calculate_provided(missing_stderr_file),
+        "missing required column"
+    )
+
+    bad_estimate_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\testimate\tstderr",
+        "s1\tbad\t0.2",
+        "s2\t2\t0.3"
+    ), bad_estimate_file)
+    expect_error(
+        calculate_provided(bad_estimate_file),
+        "nonnumeric estimates"
+    )
+
+    bad_stderr_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\testimate\tstderr",
+        "s1\t1\t0",
+        "s2\t2\t-0.3"
+    ), bad_stderr_file)
+    expect_error(
+        calculate_provided(bad_stderr_file),
+        "standard errors must be"
+    )
+})
+
 test_that("specificity prior files are resolved and validated", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)
