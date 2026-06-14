@@ -56,10 +56,12 @@ nonequiv.pos.sig <- function(results,
         }
         #tryCatch(
         #    {
-                tested <- na.omit(unlist(r[2, valid, drop = FALSE]))
-                if ("matrix" %in% class(tested)) {
-                    tested <- tested[1, ]
-                }
+                tested <- unlist(r[2, valid, drop = FALSE])
+                if (is.null(names(tested))) names(tested) <- valid
+                tested_names <- names(tested)
+                tested <- as.numeric(tested)
+                names(tested) <- tested_names
+                tested <- stats::na.omit(tested)
                 qv <- call_method(tested)
                 fx_sig <- nw(qv <= qcut_sig)
                 neq_sig <- valid
@@ -79,9 +81,10 @@ nonequiv.pos.sig <- function(results,
                     }
                 }
                 fx_sizes <- unlist(r[1, valid, drop=FALSE])
-                if ("matrix" %in% class(fx_sizes)) {
-                    fx_sizes <- fx_sizes[1, ]
-                }
+                if (is.null(names(fx_sizes))) names(fx_sizes) <- valid
+                fx_names <- names(fx_sizes)
+                fx_sizes <- as.numeric(fx_sizes)
+                names(fx_sizes) <- fx_names
                 which_pos <- nw((dir * fx_sizes) > 0)
                 Reduce(intersect, list(fx_sig, neq_sig, which_pos))
           #  },
@@ -289,8 +292,13 @@ qvals <- function(x, ..., .opts=NULL) {
     if (length(x) == 0) {
         return(x)
     }
-    x_numeric <- suppressWarnings(as.numeric(x))
-    names(x_numeric) <- names(x)
+    x_unlisted <- unlist(x)
+    x_numeric <- suppressWarnings(as.numeric(x_unlisted))
+    x_names <- names(x_unlisted)
+    if (is.null(x_names) && !is.null(dim(x)) && ncol(x) == length(x_numeric)) {
+        x_names <- colnames(x)
+    }
+    names(x_numeric) <- x_names
     nonmissing <- !is.na(x_numeric)
     if (any(!is.finite(x_numeric[nonmissing])) ||
         any(x_numeric[nonmissing] < 0 | x_numeric[nonmissing] > 1)) {

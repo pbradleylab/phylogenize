@@ -58,6 +58,13 @@ test_that("qvals validates methods and p-values", {
     expect_equal(observed[c("g1", "g3")], p.adjust(p[c("g1", "g3")], "BH"))
     expect_equal(phylogenize:::qvals(numeric(0), fdr_method="BH"),
                  numeric(0))
+    matrix_p <- matrix(
+        0.01,
+        nrow=1,
+        dimnames=list("p.value", "g_matrix")
+    )
+    expect_equal(names(phylogenize:::qvals(matrix_p, fdr_method="BH")),
+                 "g_matrix")
 
     expect_error(
         phylogenize:::qvals(c(0.01, 0.02), fdr_method="bonferroni",
