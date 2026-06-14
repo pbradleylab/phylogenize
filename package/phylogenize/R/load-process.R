@@ -1124,24 +1124,71 @@ remove.allzero.abundances <- function(abd.mtx, ..., .opts=NULL) {
 #'   be unzipped) or a .csv file (which will be copied).
 #' @param force Boolean; overwrite existing files? (Default: FALSE)
 #' @export
-install_data <- function(path, force=FALSE) {
+install_data <- function(path, force=FALSE,
+                         .extd_path=system.file("extdata/",
+                                                package="phylogenize")) {
+    if (!is.character(path) || length(path) != 1 ||
+        is.na(path) || trimws(path) == "") {
+        pz.error("path must be a single non-empty file path")
+    }
+    if (!file.exists(path)) {
+        pz.error(paste0("Data archive not found: ", path))
+    }
+    if (!dir.exists(.extd_path)) {
+        pz.error(paste0(
+            "phylogenize extdata directory not found: ",
+            .extd_path
+        ))
+    }
+    if (file.access(.extd_path, mode=2) != 0) {
+        pz.error(paste0(
+            "phylogenize extdata directory is not writable: ",
+            .extd_path
+        ))
+    }
     fn <- basename(path)
-    extd_path <- system.file("extdata/", package="phylogenize")
-    if (stringr::str_ends(basename(path), "\\.csv")) {
-        if (!file.exists(file.path(extd_path, fn)) || force) {
-            print(paste0(
-                "Copying ",
-                path,
-                " to ",
-                system.file("", package="phylogenize")))
-            file.copy(path, extd_path, overwrite = force)
+    ext <- tolower(tools::file_ext(path))
+    if (ext == "csv") {
+        dest <- file.path(.extd_path, fn)
+        if (file.exists(dest) && !force) {
+            pz.error(paste0(
+                "Destination file already exists; use force=TRUE to overwrite: ",
+                dest
+            ))
         }
-    } else {
-        print(paste0(
+        pz.message(paste0(
+            "Copying ",
+            path,
+            " to ",
+            .extd_path
+        ))
+        ok <- file.copy(path, .extd_path, overwrite=force)
+        if (!isTRUE(ok)) {
+            pz.error(paste0("Could not copy data file to: ", dest))
+        }
+        return(invisible(dest))
+    }
+    if (ext == "zip") {
+        pz.message(paste0(
             "Unzipping ",
             path,
             " to ",
-            system.file("", package="phylogenize")))
-        unzip(path, overwrite = force, exdir = extd_path)
+            .extd_path
+        ))
+        out <- tryCatch(
+            unzip(path, overwrite=force, exdir=.extd_path),
+            error=function(e) {
+                pz.error(paste0("Could not unzip data archive: ", e$message))
+            }
+        )
+        if (length(out) == 0) {
+            pz.error("Zip archive did not install any files")
+        }
+        return(invisible(out))
     }
+    pz.error(paste0(
+        "Unsupported data file extension: .",
+        ext,
+        ". Expected .csv or .zip"
+    ))
 }
