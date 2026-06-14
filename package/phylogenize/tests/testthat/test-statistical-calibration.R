@@ -106,3 +106,59 @@ test_that("association statistics are invariant to tree and matrix ordering", {
         ignore_attr=TRUE
     )
 })
+
+test_that("known synthetic signals rank above null genes", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    set.seed(20240616)
+
+    n_taxa <- 80
+    n_null <- 30
+    taxa <- paste0("taxon", seq_len(n_taxa))
+    latent <- seq(-2, 2, length.out=n_taxa)
+    phenotype <- latent + stats::rnorm(n_taxa, sd=0.25)
+    names(phenotype) <- taxa
+    high_phenotype <- phenotype >= stats::median(phenotype)
+    null_rows <- replicate(
+        n_null,
+        sample(rep(c(0, 1), each=n_taxa / 2)),
+        simplify=FALSE
+    )
+    gene_presence <- rbind(
+        causal_positive=as.integer(high_phenotype),
+        causal_negative=as.integer(!high_phenotype),
+        do.call(rbind, null_rows)
+    )
+    rownames(gene_presence)[-(1:2)] <- paste0("null", seq_len(n_null))
+    colnames(gene_presence) <- taxa
+    tree <- ape::rtree(n_taxa, tip.label=taxa)
+    opts <- pz.resolve.options(
+        core_method="lm",
+        separate_process=FALSE,
+        meas_err=FALSE,
+        fdr_method="BH",
+        error_to_file=FALSE
+    )
+
+    result <- matrix.plm(
+        tree,
+        gene_presence,
+        phenotype,
+        method=lm.fx.pv,
+        restrict.taxa=taxa,
+        restrict.ff=rownames(gene_presence),
+        .opts=opts
+    )
+    p_values <- result["p.value", ]
+    q_values <- phylogenize:::qvals(p_values, .opts=opts)
+    effects <- result["Estimate", ]
+    causal_genes <- c("causal_positive", "causal_negative")
+    null_genes <- paste0("null", seq_len(n_null))
+
+    expect_setequal(names(sort(p_values))[1:2], causal_genes)
+    expect_gt(effects[["causal_positive"]], 0)
+    expect_lt(effects[["causal_negative"]], 0)
+    expect_true(all(q_values[causal_genes] < 0.05))
+    expect_equal(sum(q_values[null_genes] < 0.05), 0)
+    expect_lt(max(q_values[causal_genes]), min(q_values[null_genes]))
+})
