@@ -282,6 +282,129 @@ test_that("specificity prior files must cover retained environments", {
     )
 })
 
+test_that("prevalence phenotype uses additive smoothing with fixed values", {
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 0, 1,
+              0, 0, 0,
+              1, 1, 1),
+            nrow=3,
+            byrow=TRUE,
+            dimnames=list(
+                c("taxon_present_two", "taxon_absent", "taxon_present_all"),
+                paste0("s", 1:3)
+            )
+        ),
+        metadata=data.frame(
+            sample=paste0("s", 1:3),
+            dataset=rep("d1", 3),
+            env=factor(rep("A", 3))
+        )
+    )
+
+    observed <- prev.addw(
+        abd.meta,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        which_envir="A",
+        error_to_file=FALSE
+    )
+    expected <- c(
+        taxon_present_two=logit(3 / 5),
+        taxon_absent=logit(1 / 5),
+        taxon_present_all=logit(4 / 5)
+    )
+
+    expect_equal(observed, expected, tolerance=1e-12)
+})
+
+test_that("specificity phenotype shrinkage has stable numeric values", {
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 1, 0, 0,
+              0, 0, 1, 1,
+              1, 0, 1, 0),
+            nrow=3,
+            byrow=TRUE,
+            dimnames=list(
+                c("A_specific", "B_specific", "mixed"),
+                paste0("s", 1:4)
+            )
+        ),
+        metadata=data.frame(
+            sample=paste0("s", 1:4),
+            dataset=rep("d1", 4),
+            env=factor(c("A", "A", "B", "B"))
+        )
+    )
+
+    observed <- suppressWarnings(calc.ess(
+        abd.meta,
+        b.optim=1,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        which_envir="A",
+        prior_type="uninformative",
+        error_to_file=FALSE
+    ))
+
+    expect_equal(unname(observed$phenoP), logit(0.5), tolerance=1e-12)
+    expect_equal(
+        observed$ess,
+        c(A_specific=0.6931484, B_specific=0, mixed=0),
+        tolerance=1e-6
+    )
+    expect_equal(
+        observed$regularized["x.init", ],
+        c(A_specific=0.75, B_specific=0.25, mixed=0.5),
+        tolerance=1e-12
+    )
+    expect_equal(
+        observed$regularized["pT", ],
+        c(A_specific=0.5, B_specific=0.5, mixed=0.5),
+        tolerance=1e-12
+    )
+})
+
+test_that("CLR correlation phenotype has stable numeric values", {
+    trait <- c(-1, 0, 1, 2)
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 2, 4, 8,
+              8, 4, 2, 1,
+              3, 3, 3, 3),
+            nrow=3,
+            byrow=TRUE,
+            dimnames=list(
+                c("increasing", "decreasing", "flat"),
+                paste0("s", 1:4)
+            )
+        ),
+        metadata=data.frame(
+            sample=paste0("s", 1:4),
+            dataset=rep("d1", 4),
+            env=trait
+        )
+    )
+
+    observed <- correl.clr(
+        abd.meta,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        error_to_file=FALSE
+    )
+    expected <- c(
+        increasing=4.776264,
+        decreasing=-4.776264,
+        flat=0
+    )
+
+    expect_equal(observed, expected, tolerance=1e-6)
+})
+
 test_that("quantile_normalize preserves prevalence phenotypes with NULL phenoP", {
     phenotype_results <- list(
         phenotype=c(taxon1=2, taxon2=1, taxon3=3),
