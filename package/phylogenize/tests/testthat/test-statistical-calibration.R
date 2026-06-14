@@ -162,3 +162,68 @@ test_that("known synthetic signals rank above null genes", {
     expect_equal(sum(q_values[null_genes] < 0.05), 0)
     expect_lt(max(q_values[causal_genes]), min(q_values[null_genes]))
 })
+
+test_that("deterministic association methods agree on core signal invariants", {
+    testthat::skip_if_not_installed("phylolm")
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    set.seed(20240617)
+
+    n_taxa <- 60
+    n_null <- 8
+    taxa <- paste0("taxon", seq_len(n_taxa))
+    latent <- seq(-2, 2, length.out=n_taxa)
+    phenotype <- latent + stats::rnorm(n_taxa, sd=0.2)
+    names(phenotype) <- taxa
+    high_phenotype <- phenotype >= stats::median(phenotype)
+    null_rows <- replicate(
+        n_null,
+        sample(rep(c(0, 1), each=n_taxa / 2)),
+        simplify=FALSE
+    )
+    gene_presence <- rbind(
+        causal_positive=as.integer(high_phenotype),
+        do.call(rbind, null_rows)
+    )
+    rownames(gene_presence)[-1] <- paste0("null", seq_len(n_null))
+    colnames(gene_presence) <- taxa
+    tree <- ape::rtree(n_taxa, tip.label=taxa)
+    opts <- pz.resolve.options(
+        separate_process=FALSE,
+        meas_err=FALSE,
+        error_to_file=FALSE
+    )
+    methods <- list(
+        lm=lm.fx.pv,
+        phylolm=phylolm.fx.pv
+    )
+
+    results <- lapply(methods, function(method) {
+        matrix.plm(
+            tree,
+            gene_presence,
+            phenotype,
+            method=method,
+            restrict.taxa=taxa,
+            restrict.ff=rownames(gene_presence),
+            .opts=opts
+        )
+    })
+
+    expect_equal(lapply(results, rownames), stats::setNames(
+        rep(list(c("Estimate", "p.value", "StdErr", "df")),
+            length(results)),
+        names(results)
+    ))
+    expect_equal(lapply(results, colnames), stats::setNames(
+        rep(list(rownames(gene_presence)), length(results)),
+        names(results)
+    ))
+    for (method_name in names(results)) {
+        result <- results[[method_name]]
+        expect_true(all(is.finite(result[, "causal_positive"])))
+        expect_gt(result["Estimate", "causal_positive"], 0)
+        expect_lt(result["p.value", "causal_positive"], 0.05)
+        expect_equal(names(sort(result["p.value", ]))[1], "causal_positive")
+    }
+})
