@@ -284,13 +284,15 @@ test_that("harmonization keeps metadata aligned to retained abundance columns", 
         )
     )
 
-    harmonized <- harmonize.abd.meta(
-        abd.meta,
-        sample_column="sample",
-        dset_column="dataset",
-        env_column="env",
-        which_phenotype="abundance",
-        error_to_file=FALSE
+    harmonized <- suppressWarnings(
+        harmonize.abd.meta(
+            abd.meta,
+            sample_column="sample",
+            dset_column="dataset",
+            env_column="env",
+            which_phenotype="abundance",
+            error_to_file=FALSE
+        )
     )
 
     expect_equal(harmonized$metadata$sample, colnames(harmonized$mtx))

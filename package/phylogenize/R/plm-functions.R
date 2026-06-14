@@ -213,6 +213,24 @@ result.wrapper.plm <- function(
     })
 }
 
+filter.incomplete.metadata.samples <- function(metadata, mtx, required_cols) {
+    missing_cols <- setdiff(required_cols, colnames(metadata))
+    if (length(missing_cols) > 0) {
+        pz.error(paste0(
+            "metadata is missing required column(s): ",
+            paste(missing_cols, collapse=", ")
+        ))
+    }
+    complete_rows <- stats::complete.cases(metadata[, required_cols, drop=FALSE])
+    metadata <- metadata[complete_rows, , drop=FALSE]
+    metadata <- droplevels(metadata)
+    shared_samples <- intersect(rownames(metadata), colnames(mtx))
+    list(
+        metadata=metadata[shared_samples, , drop=FALSE],
+        mtx=mtx[, shared_samples, drop=FALSE]
+    )
+}
+
 #' Perform POMS modeling for a single clade.
 #'
 #' Some particularly relevant options are:

@@ -56,9 +56,12 @@ test_that("phylogenize_core skips enrichment when associations return NULL", {
         .package="phylogenize"
     )
 
-    core <- phylogenize_core(
-        do_enr=TRUE,
-        error_to_file=FALSE
+    expect_warning(
+        core <- phylogenize_core(
+            do_enr=TRUE,
+            error_to_file=FALSE
+        ),
+        "Association testing returned no results"
     )
 
     expect_null(core$list_signif)
