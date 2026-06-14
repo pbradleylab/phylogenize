@@ -26,3 +26,43 @@ test_that("filter.incomplete.metadata.samples drops incomplete metadata rows and
     expect_equal(levels(filtered$metadata$env), c("case", "control"))
     expect_equal(levels(filtered$metadata$dataset), "d1")
 })
+
+test_that("matrix.plm serial loop matches previous row-wise apply behavior", {
+    set.seed(42)
+    taxa <- paste0("taxon", seq_len(8))
+    genes <- paste0("gene", seq_len(12))
+    tree <- ape::rtree(length(taxa), tip.label=taxa)
+    pheno <- stats::rnorm(length(taxa))
+    names(pheno) <- taxa
+    gene_matrix <- matrix(
+        stats::rbinom(length(genes) * length(taxa), 1, 0.4),
+        nrow=length(genes),
+        dimnames=list(genes, taxa)
+    )
+    opts <- pz.resolve.options(
+        ncl=1,
+        separate_process=FALSE,
+        meas_err=FALSE,
+        error_to_file=FALSE
+    )
+    old_result <- apply(
+        gene_matrix[genes, taxa, drop=FALSE],
+        1,
+        lm.fx.pv,
+        p=pheno,
+        tr=tree,
+        restrict=taxa,
+        meas_err=opts("meas_err")
+    )
+    new_result <- matrix.plm(
+        tree,
+        gene_matrix,
+        pheno,
+        method=lm.fx.pv,
+        restrict.taxa=taxa,
+        restrict.ff=genes,
+        .opts=opts
+    )
+
+    expect_identical(new_result, old_result)
+})

@@ -647,14 +647,40 @@ matrix.plm <- function(tree,
     } else {
         cl <- NULL
     }
-    r <- maybeParApply(mtx[restrict.ff, restrict.taxa, drop=FALSE],
-                       1,
-                       method,
-                       cl,
-                       p=pheno,
-                       tr=tree,
-                       restrict=restrict.taxa,
-                       meas_err=opts('meas_err'))
+    gene.mtx <- mtx[restrict.ff, restrict.taxa, drop=FALSE]
+    if (!is.null(cl)) {
+        r <- maybeParApply(gene.mtx,
+                           1,
+                           method,
+                           cl,
+                           p=pheno,
+                           tr=tree,
+                           restrict=restrict.taxa,
+                           meas_err=opts('meas_err'))
+    } else {
+        r <- matrix(nr=0, nc=0)
+        if (nrow(gene.mtx) > 0) {
+            first <- method(gene.mtx[1, ],
+                            p=pheno,
+                            tr=tree,
+                            restrict=restrict.taxa,
+                            meas_err=opts('meas_err'))
+            r <- matrix(NA_real_,
+                        nrow=length(first),
+                        ncol=nrow(gene.mtx),
+                        dimnames=list(names(first), rownames(gene.mtx)))
+            r[, 1] <- first
+            if (nrow(gene.mtx) > 1) {
+                for (i in 2:nrow(gene.mtx)) {
+                    r[, i] <- method(gene.mtx[i, ],
+                                     p=pheno,
+                                     tr=tree,
+                                     restrict=restrict.taxa,
+                                     meas_err=opts('meas_err'))
+                }
+            }
+        }
+    }
     r
 }
 
