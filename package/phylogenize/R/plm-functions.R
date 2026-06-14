@@ -1619,7 +1619,7 @@ above_minimum_genes <- function(gene.presence, trees, ..., .opts=NULL) {
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
     pos.sig.tbl <- tibble::enframe(pos.sig, name="taxon", value="gene") %>%
-        tidyr::unnest()
+        tidyr::unnest(cols=c(gene))
     
     column_names <- colnames(gene.to.fxn)
     na_columns <- which(is.na(column_names))

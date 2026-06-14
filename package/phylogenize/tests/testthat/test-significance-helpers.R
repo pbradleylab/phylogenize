@@ -19,6 +19,27 @@ test_that("make.results.matrix converts result matrices to long rows", {
     expect_equal(as.numeric(result_tbl$p.value), c(0.01, 0.20))
 })
 
+test_that("add.sig.descs annotates genes without tidyr warnings", {
+    sigs <- list(
+        TaxonA=c("g1", "g2"),
+        TaxonB="g3"
+    )
+    gene_to_fxn <- tibble::tibble(
+        gene=c("g1", "g2", "g3"),
+        accession=c("K00001", "K00002", "K00003"),
+        `function`=c("first gene", "second gene", "third gene")
+    )
+
+    expect_warning(
+        out <- add.sig.descs(c("TaxonA", "TaxonB"), sigs, gene_to_fxn),
+        NA
+    )
+
+    expect_equal(out$taxon, c("TaxonA", "TaxonA", "TaxonB"))
+    expect_equal(out$gene, c("g1", "g2", "g3"))
+    expect_equal(out$description, gene_to_fxn$`function`)
+})
+
 test_that("qvals uses configured p.adjust methods", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)
