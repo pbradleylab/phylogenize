@@ -233,6 +233,53 @@ test_that("harmonization keeps metadata aligned to retained abundance columns", 
     expect_false("s5" %in% harmonized$metadata$sample)
 })
 
+test_that("continuous metadata rejects partially nonnumeric environment values", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    metadata <- data.frame(
+        sample=c("s1", "s2", "s3"),
+        dataset=c("d1", "d1", "d1"),
+        env=c("1.2", "bad", "3.4")
+    )
+
+    expect_error(
+        check.process.metadata(
+            metadata,
+            sample_column="sample",
+            dset_column="dataset",
+            env_column="env",
+            categorical=FALSE,
+            error_to_file=FALSE
+        ),
+        "nonnumeric value"
+    )
+})
+
+test_that("metadata rejects missing environment values", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    metadata <- data.frame(
+        sample=c("s1", "s2", "s3"),
+        dataset=c("d1", "d1", "d1"),
+        env=c("A", NA, "B")
+    )
+
+    expect_error(
+        check.process.metadata(
+            metadata,
+            sample_column="sample",
+            dset_column="dataset",
+            env_column="env",
+            which_envir="A",
+            categorical=TRUE,
+            error_to_file=FALSE
+        ),
+        "missing values"
+    )
+})
+
 test_that("BIOM import test documents optional external dependency", {
     skip("BIOM round-trip helper still depends on obsolete biom_dir/external biom tooling.")
 })

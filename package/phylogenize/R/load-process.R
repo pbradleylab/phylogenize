@@ -131,6 +131,10 @@ check.process.metadata <- function(metadata, ..., .opts=NULL) {
     if (opts('categorical')) {   # i.e., env not continuous
         env_factor <- factor(metadata[[E]])
         env_levels <- levels(env_factor)
+        if (any(is.na(env_factor))) {
+            pz.error(paste0("environment column contains missing values: ", E),
+                     .opts=opts)
+        }
         
         if (!(envir %in% env_levels)) {
             pz.error(paste0("environment ", envir, " not found in metadata"))
@@ -138,21 +142,37 @@ check.process.metadata <- function(metadata, ..., .opts=NULL) {
         env_factor <- forcats::fct_relevel(env_factor, envir, after=Inf)
         metadata[[E]] <- env_factor
     } else {
-        metadata[[E]] <- as.numeric(metadata[[E]])
-        if (all(is.na(metadata[[E]]))) {
+        env_original <- metadata[[E]]
+        env_numeric <- suppressWarnings(as.numeric(env_original))
+        converted_to_na <- is.na(env_numeric) & !is.na(env_original)
+        if (any(converted_to_na)) {
+            pz.error(paste0(
+                "Environment column contains nonnumeric value(s): ",
+                paste(unique(env_original[converted_to_na]), collapse=", ")
+            ), .opts=opts)
+        }
+        if (any(is.na(env_numeric))) {
+            pz.error(paste0("environment column contains missing values: ", E),
+                     .opts=opts)
+        }
+        if (length(env_numeric) == 0) {
             pz.error(
                 paste0("Environment failed conversion to numeric; is this ",
-                       "supposed to be a categorical variable?"))
+                       "supposed to be a categorical variable?"),
+                .opts=opts)
         }
+        metadata[[E]] <- env_numeric
     }
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
     
     # One more sanity check before we return
     if (converted_rownames) orig_md <- tibble::as_tibble(orig_md, rownames=S)
     compare_md <- dplyr::full_join(orig_md[c(S, E)], metadata[c(S, E)], by=S)
-    wrong_rows <- compare_md[
-        compare_md[[paste0(E, ".x")]] != compare_md[[paste0(E, ".y")]],
-    ]
+    env_before <- compare_md[[paste0(E, ".x")]]
+    env_after <- compare_md[[paste0(E, ".y")]]
+    wrong_env <- (is.na(env_before) != is.na(env_after)) |
+        (!is.na(env_before) & !is.na(env_after) & env_before != env_after)
+    wrong_rows <- compare_md[wrong_env, ]
     if (nrow(wrong_rows) > 0) {
         print(wrong_rows)
         pz.error(
