@@ -172,10 +172,10 @@ test_that("FDR method choice changes significant hits on fixed result objects", 
 
     sigs_bh <- make.sigs(results, cuts=cuts, min.fx=0, .opts=opts_bh)
     sigs_by <- make.sigs(results, cuts=cuts, min.fx=0, .opts=opts_by)
-    signs <- list(
-        TaxonFDR=c(g_strong=1, g_mid=1, g_border=-1, g_null=1)
-    )
+    signs <- make.signs(results)
 
+    expect_named(signs$TaxonFDR,
+                 c("g_strong", "g_mid", "g_border", "g_null"))
     expect_equal(sigs_bh$TaxonFDR$strong, c("g_strong", "g_mid"))
     expect_equal(sigs_by$TaxonFDR$strong, "g_strong")
     expect_equal(make.pos.sig(sigs_bh, signs)$TaxonFDR,

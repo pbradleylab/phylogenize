@@ -180,9 +180,11 @@ make.sigs <- function(
 #' @return List (per taxon) of numeric vectors of signs of hits.
 #' @export
 make.signs <- function(results) {
-  lapply(results, function(r) {
-    sign(unlist(r[1, , drop=FALSE])) %>% na.omit
-  })
+    lapply(results, function(r) {
+        fx <- as.numeric(r[1, , drop=FALSE])
+        names(fx) <- colnames(r)
+        stats::na.omit(sign(fx))
+    })
 }
 
 #' Calculate the FPR and (1 - FNR) for results of a set of tests.
