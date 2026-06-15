@@ -26,6 +26,24 @@ test_that("legacy enrichment helpers unnest without tidyr warnings", {
     ))
 })
 
+test_that("enrichment mapping preparation is shared and stable", {
+    mappings <- list(
+        pathway=tibble::tibble(
+            gene=c("g1", "g3", "g4"),
+            term=c("term-a", "term-b", "term-a")
+        )
+    )
+
+    prepared <- phylogenize:::prepare.enrichment.mappings(mappings)
+
+    expect_named(prepared, c("tbl.mappings", "map.bg"))
+    expect_named(prepared$tbl.mappings, c("termset", "terms"))
+    expect_equal(prepared$tbl.mappings$termset, "pathway")
+    expect_equal(prepared$tbl.mappings$terms[[1]]$term,
+                 c("term-a", "term-b"))
+    expect_equal(prepared$map.bg, c("g1", "g4", "g3"))
+})
+
 test_that("tbl.result.qvs unnests result rows without tidyr warnings", {
     results <- tibble::tibble(
         taxon=c("TaxonA", "TaxonA", "TaxonB"),

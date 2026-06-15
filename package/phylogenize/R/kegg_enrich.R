@@ -79,6 +79,16 @@ enrich_downloaded_KEGG <- function(KOs, background, qCut, downloaded, ...) {
     )
 }
 
+format.kegg.enrichment.result <- function(enrichment_results, cutoff, taxon) {
+    enrichment_results <- Filter(Negate(is.null), enrichment_results)
+    if (length(enrichment_results) == 0) {
+        return(NULL)
+    }
+    dplyr::bind_rows(lapply(enrichment_results, function(enr) enr@result)) %>%
+        tibble::as_tibble() %>%
+        dplyr::mutate(cutoff=cutoff, taxon=taxon)
+}
+
 #' Wraps a single enrichment call to clusterProfiler.
 #'
 #' @param sc String vector of significant genes.
@@ -126,24 +136,5 @@ kegg.enrich.single <- function(sc, sn, p2k, cn="test_cutoff",
                                           kegg_mod_data)
     }
 
-    if (is.null(pwy_enr) && is.null(mod_enr)) {
-	return(NULL)
-    } else if (!is.null(pwy_enr) && !is.null(mod_enr)) {
-	total_enr_tbl <- dplyr::bind_rows(pwy_enr@result, mod_enr@result) %>% 
-		tibble::as_tibble() %>% 
-		dplyr::mutate(cutoff = cn, taxon = tg)
-	return(total_enr_tbl)
-    } else if (!is.null(pwy_enr)) {
-	total_enr_tbl <- pwy_enr@result %>% 
-		tibble::as_tibble() %>% 
-		dplyr::mutate(cutoff = cn, taxon = tg)
-	return(total_enr_tbl)
-    } else if (!is.null(mod_enr)) {
-	total_enr_tbl <- mod_enr@result %>% 
-		tibble::as_tibble() %>% 
-		dplyr::mutate(cutoff = cn, taxon = tg) 
-	return(total_enr_tbl)
-    } else { 
-	    pz.error(paste0("Internal dataframe is malformed for kegg.enrich.single. ",
-			    "Please file a bug report."))}
+    format.kegg.enrichment.result(list(pwy_enr, mod_enr), cn, tg)
 }
