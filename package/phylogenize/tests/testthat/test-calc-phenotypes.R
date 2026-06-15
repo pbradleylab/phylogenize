@@ -319,6 +319,74 @@ test_that("prevalence phenotype uses additive smoothing with fixed values", {
     expect_equal(observed, expected, tolerance=1e-12)
 })
 
+test_that("prevalence adds below-LOD taxa before database adjustment", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    abd.meta <- list(
+        mtx=Matrix::Matrix(
+            matrix(
+                c(1, 0,
+                  0, 1),
+                nrow=2,
+                byrow=TRUE,
+                dimnames=list(c("s1", "s2"), c("sample1", "sample2"))
+            ),
+            sparse=TRUE
+        ),
+        metadata=data.frame(
+            sample=c("sample1", "sample2"),
+            dataset=rep("d1", 2),
+            env=factor(rep("A", 2))
+        )
+    )
+    pz.db <- list(
+        trees=list(TaxonA=ape::read.tree(text="((s1:1,s2:1):1,s3:1);")),
+        gene.presence=list(
+            TaxonA=Matrix::Matrix(
+                matrix(
+                    c(1, 0, 1),
+                    nrow=1,
+                    dimnames=list("gene1", c("s1", "s2", "s3"))
+                ),
+                sparse=TRUE
+            )
+        )
+    )
+
+    testthat::local_mocked_bindings(
+        read.abd.metadata=function(...) abd.meta,
+        import.pz.db=function(...) pz.db,
+        .package="phylogenize"
+    )
+
+    observed <- data_to_phenotypes(
+        save_data=TRUE,
+        which_phenotype="prevalence",
+        assume_below_LOD=TRUE,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        which_envir="A",
+        treemin=3,
+        pctmin=0,
+        minimum=1,
+        gene_min_frac=0.5,
+        error_to_file=FALSE,
+        verbosity=0
+    )
+
+    expect_true("s3" %in% rownames(observed$abd.meta$mtx))
+    expect_equal(as.numeric(observed$abd.meta$mtx["s3", ]), c(0, 0))
+    expect_equal(observed$pz.db$trees$TaxonA$tip.label,
+                 c("s1", "s2", "s3"))
+    expect_equal(
+        unname(observed$phenotype_results$phenotype["s3"]),
+        logit(1 / 4),
+        tolerance=1e-12
+    )
+})
+
 test_that("specificity phenotype shrinkage has stable numeric values", {
     abd.meta <- list(
         mtx=matrix(

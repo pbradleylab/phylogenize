@@ -35,6 +35,13 @@ data_to_phenotypes <- function(save_data=FALSE, ..., .opts=NULL) {
         " gene presence matrix/matrices"
     ))
     pz.message("  C) Read in trees, gene presence/absence, taxonomy")
+    add_below_lod_before_adjust <- isTRUE(opts('assume_below_LOD')) &&
+        opts('which_phenotype') == "prevalence"
+    if (add_below_lod_before_adjust) {
+        pz.message("  .....Adding unobserved taxa as below limit of detection")
+        abd.meta <- add.below.LOD(pz.db, abd.meta, ..., .opts=opts)
+        sanity.check.abundance(abd.meta$mtx, ...)
+    }
     # Figure out how many trees to retain
     pz.db <- adjust.db(pz.db,
                        abd.meta,
@@ -46,7 +53,7 @@ data_to_phenotypes <- function(save_data=FALSE, ..., .opts=NULL) {
         pz.db$ntaxa,
         " testable taxon/taxa"
     ))
-    if (opts('assume_below_LOD')) {
+    if (opts('assume_below_LOD') && !add_below_lod_before_adjust) {
         pz.message("  .....Adding unobserved taxa as below limit of detection")
         abd.meta <- add.below.LOD(pz.db, abd.meta, ..., .opts=opts)
         sanity.check.abundance(abd.meta$mtx, ...)
