@@ -22,6 +22,28 @@ test_that("make.results.matrix converts result matrices to long rows", {
     expect_equal(as.numeric(result_tbl$p.value), c(0.01, 0.20))
 })
 
+test_that("make.results.matrix flattens repermulize-style result data frames", {
+    results <- list(
+        TaxonA=data.frame(
+            g1=I(list(1.5, 0.01, NA_real_, NA_real_)),
+            g2=I(list(-2.0, 0.20, NA_real_, NA_real_)),
+            row.names=c("Estimate", "p.value", "StdErr", "df"),
+            check.names=FALSE
+        )
+    )
+
+    result_tbl <- make.results.matrix(results)
+
+    expect_s3_class(result_tbl, "tbl_df")
+    expect_false(any(vapply(result_tbl, is.list, logical(1))))
+    expect_equal(result_tbl$taxon, c("TaxonA", "TaxonA"))
+    expect_equal(result_tbl$gene, c("g1", "g2"))
+    expect_equal(unname(result_tbl$effect.size), c(1.5, -2.0))
+    expect_equal(unname(result_tbl$p.value), c(0.01, 0.20))
+    expect_equal(unname(result_tbl$std.err), c(NA_real_, NA_real_))
+    expect_equal(unname(result_tbl$df), c(NA_real_, NA_real_))
+})
+
 test_that("add.sig.descs annotates genes without tidyr warnings", {
     sigs <- list(
         TaxonA=c("g1", "g2"),

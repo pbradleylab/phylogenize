@@ -355,6 +355,12 @@ make.results.matrix <- function(results) {
     std_errs <- numeric(n_rows)
     dfs <- numeric(n_rows)
 
+    result_row <- function(result, row) {
+        unname(as.numeric(unlist(result[row, , drop=FALSE],
+                                 recursive=TRUE,
+                                 use.names=FALSE)))
+    }
+
     row_start <- 1L
     for (rn in result_names) {
         n_gene <- ncol(results[[rn]])
@@ -363,10 +369,10 @@ make.results.matrix <- function(results) {
         }
         rows <- row_start:(row_start + n_gene - 1L)
         genes[rows] <- colnames(results[[rn]])
-        effect_sizes[rows] <- unname(results[[rn]][1, ])
-        p_values[rows] <- unname(results[[rn]][2, ])
-        std_errs[rows] <- unname(results[[rn]][3, ])
-        dfs[rows] <- unname(results[[rn]][4, ])
+        effect_sizes[rows] <- result_row(results[[rn]], 1)
+        p_values[rows] <- result_row(results[[rn]], 2)
+        std_errs[rows] <- result_row(results[[rn]], 3)
+        dfs[rows] <- result_row(results[[rn]], 4)
         row_start <- row_start + n_gene
     }
 
