@@ -36,7 +36,11 @@ data_to_phenotypes <- function(save_data=FALSE, ..., .opts=NULL) {
     ))
     pz.message("  C) Read in trees, gene presence/absence, taxonomy")
     # Figure out how many trees to retain
-    pz.db <- adjust.db(pz.db, abd.meta, ..., .opts=opts)
+    pz.db <- adjust.db(pz.db,
+                       abd.meta,
+                       ...,
+                       .opts=opts,
+                       .import_filtered=TRUE)
     pz.message(paste0(
         "  .....Database adjusted to ",
         pz.db$ntaxa,

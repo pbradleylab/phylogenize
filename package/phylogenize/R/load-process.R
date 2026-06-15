@@ -538,7 +538,8 @@ import.pz.db <- function(..., .opts=NULL) {
 #'     metadata.
 #' @return An updated database.
 #' @export
-adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
+adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL,
+                      .import_filtered=FALSE) {
     opts <- pz.resolve.options(..., .opts=.opts)
     species.observed <- rownames(abd.meta$mtx)
     pz.message(paste0(
@@ -601,11 +602,29 @@ adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
 	ape::keep.tip(tr, tips)
     })
     pz.message("  .....Filtering gene presence matrices to retained trees")
-    pz.db$gene.presence <- above_minimum_genes(
-        pz.db$gene.presence,
-        pz.db$trees,
-        .opts=opts
-    )
+    filter_trees <- pz.db$trees
+    retained_gene_presence <- list()
+    if (isTRUE(.import_filtered)) {
+        already_filtered <- vapply(names(filter_trees), function(tx) {
+            identical(filter_trees[[tx]]$tip.label,
+                      colnames(pz.db$gene.presence[[tx]]))
+        }, logical(1))
+        retained_gene_presence <- pz.db$gene.presence[names(which(already_filtered))]
+        filter_trees <- filter_trees[names(which(!already_filtered))]
+    }
+    filtered_gene_presence <- if (length(filter_trees) > 0) {
+        above_minimum_genes(
+            pz.db$gene.presence[names(filter_trees)],
+            filter_trees,
+            .opts=opts
+        )
+    } else {
+        list()
+    }
+    pz.db$gene.presence <- c(retained_gene_presence, filtered_gene_presence)
+    pz.db$gene.presence <- pz.db$gene.presence[
+        intersect(names(pz.db$trees), names(pz.db$gene.presence))
+    ]
     pz.db$trees <- pz.db$trees[intersect(names(pz.db$trees), names(pz.db$gene.presence))]
     pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
     pz.db$ntaxa <- length(pz.db$trees)
