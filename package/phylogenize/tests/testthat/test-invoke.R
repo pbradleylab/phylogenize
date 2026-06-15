@@ -290,6 +290,64 @@ test_that("serial association honors core_method instead of p.method", {
     expect_equal(observed$neg.sig$TestTaxon, "g_neg")
 })
 
+test_that("association testing receives phenotype uncertainty", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tips <- paste0("sp", seq_len(4))
+    phenotype <- stats::setNames(c(0, 1, 2, 3), tips)
+    pheno_sd <- stats::setNames(c(0.1, 0.2, 0.3, 0.4), tips)
+    list_pheno <- list(
+        phenotype_results=list(
+            phenotype=phenotype,
+            pheno_sd=pheno_sd
+        ),
+        pz.db=list(
+            ntaxa=1,
+            species=list(TestTaxon=tips),
+            trees=list(TestTaxon=ape::read.tree(text="((sp1:1,sp2:1):1,(sp3:1,sp4:1):1);")),
+            gene.presence=list(
+                TestTaxon=matrix(
+                    c(0, 1, 0, 1),
+                    nrow=1,
+                    dimnames=list("g1", tips)
+                )
+            ),
+            gene.to.fxn=tibble::tibble(
+                gene="g1",
+                accession="K00001",
+                `function`="fixture gene"
+            )
+        )
+    )
+    seen <- new.env(parent=emptyenv())
+
+    testthat::local_mocked_bindings(
+        result.wrapper.plm=function(..., pheno_sd=NULL) {
+            seen$pheno_sd <- pheno_sd
+            list(TestTaxon=matrix(
+                c(1, 0.01, 0.1, 2),
+                nrow=4,
+                dimnames=list(c("Estimate", "p.value", "StdErr", "df"),
+                              "g1")
+            ))
+        },
+        .package="phylogenize"
+    )
+
+    get_all_associated_genes(
+        list_pheno,
+        core_method="permutrate-lm",
+        ncl=1,
+        min_fx=0,
+        minimum=1,
+        error_to_file=FALSE,
+        verbosity=0
+    )
+
+    expect_equal(seen$pheno_sd, pheno_sd)
+})
+
 test_that("phylogenize_core creates configured output directory", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)
