@@ -290,7 +290,6 @@ get_all_associated_genes <- function(list_pheno,
         if (!do_POMS) {
             pz.message("  A) Getting all associated genes")
             phenotype <- list_pheno$phenotype_results$phenotype
-            pheno_sd <- list_pheno$phenotype_results$pheno_sd
             taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
             if (pz.should.message(level=1, .opts=opts)) {
                 pz.message(paste0("  .....All valid taxa: ",
@@ -326,7 +325,6 @@ get_all_associated_genes <- function(list_pheno,
                 clusters=list_pheno$pz.db$species[taxaN],
                 proteins=list_pheno$pz.db$gene.presence[taxaN],
                 method=p.method,
-                pheno_sd=pheno_sd,
                 .opts=assoc_opts)
         } else {
 	    pz.message("  A) Getting all associated genes")
