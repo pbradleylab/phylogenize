@@ -440,17 +440,17 @@ import.pz.db <- function(..., .opts=NULL) {
     names(trees) <- gsub(" ", "_", names(trees))
     names(gene.presence) <- gsub(" ", "_", names(gene.presence))
     # propagate cluster values up, as higher level taxonomic names may be missing
-    taxonomy <- taxonomy %>% 
-      rowwise() %>%
-      mutate(species = ifelse(is.na(species), cluster, species)) %>%
-      mutate(genus = ifelse(is.na(genus), species, genus)) %>%
-      mutate(family = ifelse(is.na(family), genus, family)) %>%
-      mutate(order = ifelse(is.na(order), family, order)) %>%
-      mutate(class = ifelse(is.na(class), order, class)) %>%
-      mutate(phylum = ifelse(is.na(phylum), class, phylum)) %>%
-      mutate(domain = ifelse(is.na(domain), phylum, domain)) %>%
-      mutate(across(domain:genus, \(x) gsub(" ", "_", x))) %>%
-      ungroup()
+    taxonomy <- taxonomy %>%
+      mutate(
+        species = ifelse(is.na(species), cluster, species),
+        genus = ifelse(is.na(genus), species, genus),
+        family = ifelse(is.na(family), genus, family),
+        order = ifelse(is.na(order), family, order),
+        class = ifelse(is.na(class), order, class),
+        phylum = ifelse(is.na(phylum), class, phylum),
+        domain = ifelse(is.na(domain), phylum, domain)
+      ) %>%
+      mutate(across(domain:genus, \(x) gsub(" ", "_", x)))
 
     pz.message("  .....Read in phylogenize2 gene functions file")
     gene.to.fxn <- readr::read_csv(
@@ -494,7 +494,10 @@ import.pz.db <- function(..., .opts=NULL) {
         gene.presence <- change.presence.tax.level(gene.presence,
                                                    opts('taxon_level'),
                                                    taxonomy)
-        trees <- change.tree.tax.level(trees, opts('taxon_level'), taxonomy)
+        trees <- change.tree.tax.level(trees,
+                                       opts('taxon_level'),
+                                       taxonomy,
+                                       .opts=opts)
         trees <- Filter(function(tr) length(tr$tip.label) > 1, trees)
         pz.message(paste0(
             "  ..........Taxon-level database now has ",
@@ -535,7 +538,8 @@ import.pz.db <- function(..., .opts=NULL) {
 #'     metadata.
 #' @return An updated database.
 #' @export
-adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
+adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL,
+                      .import_filtered=FALSE) {
     opts <- pz.resolve.options(..., .opts=.opts)
     species.observed <- rownames(abd.meta$mtx)
     pz.message(paste0(
@@ -544,9 +548,8 @@ adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
         " observed taxon/taxa"
     ))
     
-    species.per.tree <- lapply(pz.db$trees, function(tr) {
-        intersect(tr$tip.label, species.observed)
-    })
+    species.per.tree <- lapply(pz.db$trees, shared.tree.tips,
+                               observed=species.observed)
     tL <- vapply(species.per.tree, length, 1L)
     if (all(tL < opts('treemin'))) {
         pz.error(paste0("Too few species found. Was the right database used? ",
@@ -557,15 +560,17 @@ adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
     pct.obs <- mapply(function(x, y) x / y, tL, totalL)
     passed.pct <- nw(pct.obs >= opts('pctmin'))
     pz.message("Determining which taxa to test...", level=1)
-    for (tn in 1:length(pz.db$trees)) {
-        pz.message(paste0(names(pz.db$trees)[tn],
-                          " (pct): ", format(pct.obs[tn] * 100, digits=2),
-                          "%; (number): ", tL[tn],
-                          "; ", ifelse((pct.obs[tn] >= opts('pctmin') &&
-                                            tL[tn] >= opts('treemin')),
-                                       yes="kept",
-                                       no="dropped")
-        ), level=2)
+    if (pz.should.message(level=2, .opts=opts)) {
+        for (tn in 1:length(pz.db$trees)) {
+            pz.message(paste0(names(pz.db$trees)[tn],
+                              " (pct): ", format(pct.obs[tn] * 100, digits=2),
+                              "%; (number): ", tL[tn],
+                              "; ", ifelse((pct.obs[tn] >= opts('pctmin') &&
+                                                tL[tn] >= opts('treemin')),
+                                           yes="kept",
+                                           no="dropped")
+            ), level=2, .opts=opts)
+        }
     }
     saved.taxa <- intersect(passed.min, passed.pct)
     pz.message(paste0(
@@ -573,13 +578,16 @@ adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
         length(saved.taxa),
         " taxon/taxa passed tree-size and observation filters"
     ))
-    pz.message(
-        paste0(
-            "  Taxa selected: ",
-            paste(saved.taxa, collapse=", ")
-        ),
-        level=2
-    )
+    if (pz.should.message(level=2, .opts=opts)) {
+        pz.message(
+            paste0(
+                "  Taxa selected: ",
+                paste(saved.taxa, collapse=", ")
+            ),
+            level=2,
+            .opts=opts
+        )
+    }
     if (length(saved.taxa) == 0) {
         pz.error(paste0("All trees had less than ",
                         format(opts('pctmin') * 100, digits=2),
@@ -589,15 +597,33 @@ adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL) {
                         "mapped to entries in the database."))
     }
     pz.db$trees <- lapply(pz.db$trees[saved.taxa], function(tr) {
-	tips <- intersect(tr$tip.label, species.observed)
+	tips <- shared.tree.tips(tr, species.observed)
 	ape::keep.tip(tr, tips)
     })
     pz.message("  .....Filtering gene presence matrices to retained trees")
-    pz.db$gene.presence <- above_minimum_genes(
-        pz.db$gene.presence,
-        pz.db$trees,
-        .opts=opts
-    )
+    filter_trees <- pz.db$trees
+    retained_gene_presence <- list()
+    if (isTRUE(.import_filtered)) {
+        already_filtered <- vapply(names(filter_trees), function(tx) {
+            identical(filter_trees[[tx]]$tip.label,
+                      colnames(pz.db$gene.presence[[tx]]))
+        }, logical(1))
+        retained_gene_presence <- pz.db$gene.presence[names(which(already_filtered))]
+        filter_trees <- filter_trees[names(which(!already_filtered))]
+    }
+    filtered_gene_presence <- if (length(filter_trees) > 0) {
+        above_minimum_genes(
+            pz.db$gene.presence[names(filter_trees)],
+            filter_trees,
+            .opts=opts
+        )
+    } else {
+        list()
+    }
+    pz.db$gene.presence <- c(retained_gene_presence, filtered_gene_presence)
+    pz.db$gene.presence <- pz.db$gene.presence[
+        intersect(names(pz.db$trees), names(pz.db$gene.presence))
+    ]
     pz.db$trees <- pz.db$trees[intersect(names(pz.db$trees), names(pz.db$gene.presence))]
     pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
     pz.db$ntaxa <- length(pz.db$trees)
@@ -663,13 +689,7 @@ change.presence.tax.level <- function(binary, taxon, tax){
             next
         }
         
-        # make a named list in one step
-        named_tax_list <- t %>%
-            dplyr::select(-phylum) %>%
-            dplyr::group_by(!!taxon) %>%
-            tidyr::nest() %>%
-            tibble::deframe() %>%
-            purrr::map(~ dplyr::pull(.x, cluster))
+        named_tax_list <- split(t[["cluster"]], t[[rlang::as_string(taxon)]])
         
         columns <- colnames(binary[[name]])
         
@@ -705,13 +725,16 @@ change.presence.tax.level <- function(binary, taxon, tax){
 #' @return list of tree objects that are ready for use at the user given
 #'   tax_level
 #' @export
-change.tree.tax.level <- function(tree, taxon, tax) {
+change.tree.tax.level <- function(tree, taxon, tax, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     # Make a mapping file that is at the taxonomic level selected from the tax
     # file.
     clean <- tax %>%
         dplyr::select(cluster, tidyselect::all_of(taxon), phylum) %>%
         dplyr::distinct()
-    pz.message(head(clean), level=3)
+    if (pz.should.message(level=3, .opts=opts)) {
+        pz.message(head(clean), level=3, .opts=opts)
+    }
     # Drop empty values from the taxonomic level selected if they are not 
     clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
     # Arrange them so that the runtime is slightly less in the lookup
@@ -735,18 +758,22 @@ change.tree.tax.level <- function(tree, taxon, tax) {
         t <- clean[[name]]
         
         if (is.null(clean[[name]])) {
-            pz.message(names(clean), level=3)
+            if (pz.should.message(level=3, .opts=opts)) {
+                pz.message(names(clean), level=3, .opts=opts)
+            }
             pz.warning(paste("Warning: No data found for taxon classification",
                              name), level=2)
             next 
         } else {
-            pz.message(paste("Good news: Data found for taxon classification",
-                             name), level=2)
+            if (pz.should.message(level=2, .opts=opts)) {
+                pz.message(paste("Good news: Data found for taxon classification",
+                                 name), level=2, .opts=opts)
+            }
         }	
         tips_by_taxon <- split(t[["cluster"]], t[[taxon]])
         
         for (taxon_name in names(tips_by_taxon)) {
-            tips <- intersect(tr$tip.label, tips_by_taxon[[taxon_name]])
+            tips <- shared.tree.tips(tr, tips_by_taxon[[taxon_name]])
             if (length(tips) <= 1) next
             subtree <- ape::keep.tip(tr, tips)
             if (!is.null(subtree) && length(subtree$tip.label) > 1) {

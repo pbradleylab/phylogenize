@@ -647,14 +647,44 @@ matrix.plm <- function(tree,
     } else {
         cl <- NULL
     }
-    r <- maybeParApply(mtx[restrict.ff, restrict.taxa, drop=FALSE],
-                       1,
-                       method,
-                       cl,
-                       p=pheno,
-                       tr=tree,
-                       restrict=restrict.taxa,
-                       meas_err=opts('meas_err'))
+    gene.mtx <- mtx[restrict.ff, restrict.taxa, drop=FALSE]
+    builtin_model <- identical(method, phylolm.fx.pv) ||
+        identical(method, lm.fx.pv)
+    model.pheno <- if (builtin_model) pheno[restrict.taxa] else pheno
+    model.restrict <- if (builtin_model) NULL else restrict.taxa
+    if (!is.null(cl)) {
+        r <- maybeParApply(gene.mtx,
+                           1,
+                           method,
+                           cl,
+                           p=model.pheno,
+                           tr=tree,
+                           restrict=model.restrict,
+                           meas_err=opts('meas_err'))
+    } else {
+        r <- matrix(nr=0, nc=0)
+        if (nrow(gene.mtx) > 0) {
+            first <- method(gene.mtx[1, ],
+                            p=model.pheno,
+                            tr=tree,
+                            restrict=model.restrict,
+                            meas_err=opts('meas_err'))
+            r <- matrix(NA_real_,
+                        nrow=length(first),
+                        ncol=nrow(gene.mtx),
+                        dimnames=list(names(first), rownames(gene.mtx)))
+            r[, 1] <- first
+            if (nrow(gene.mtx) > 1) {
+                for (i in 2:nrow(gene.mtx)) {
+                    r[, i] <- method(gene.mtx[i, ],
+                                     p=model.pheno,
+                                     tr=tree,
+                                     restrict=model.restrict,
+                                     meas_err=opts('meas_err'))
+                }
+            }
+        }
+    }
     r
 }
 
@@ -1458,6 +1488,11 @@ pz.log.options <- function(..., .opts=NULL) {
     pz.resolve.options(..., .opts=base_opts)
 }
 
+pz.should.message <- function(level=1, ...) {
+    opts <- pz.log.options(...)
+    isTRUE(opts("error_to_file")) || level <= opts("verbosity")
+}
+
 #' Throw an error and optionally log it in errmsg.txt.
 #'
 #' Some particularly relevant options are:
@@ -1533,22 +1568,6 @@ pz.warning <- function(msgtext, ...) {
     warning(msgtext)
 }
 
-#' Convert results into a long (vs. wide) format.
-#'
-#' @param results Output of result.wrapper.plm.
-#' @return A single data frame with entries from \code{results}.
-#' @export
-make.results.matrix <- function(results) {
-    Reduce(dplyr::bind_rows, lapply(names(results), function(rn) {
-        tibble::tibble(taxon = rn,
-                       gene = results[[rn]] %>% colnames,
-                       effect.size = results[[rn]][1,],
-                       p.value = results[[rn]][2,],
-                       std.err = results[[rn]][3,],
-                       df = results[[rn]][4,])
-    }))
-}
-
 #' Filter out genes that are almost always present or absent.
 #'
 #' Some particularly relevant options are:
@@ -1569,7 +1588,7 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ..., .opts=NULL) {
            pos.sig[phy.with.sigs],
            pz.db$gene.presence[phy.with.sigs],
            FUN = function(tr, x, y) {
-               i <- na.omit(intersect(tr$tip.label, colnames(y)))
+               i <- na.omit(shared.tree.tips(tr, colnames(y)))
                if (length(i) == 0) { return(character(0)) }
                if (length(x) == 0) { return(character(0)) }
                y2 <- y[x, i, drop=FALSE]
@@ -1604,13 +1623,14 @@ above_minimum_genes <- function(gene.presence, trees, ..., .opts=NULL) {
     Min <- opts('minimum')
     GMF <- opts('gene_min_frac')
     taxa <- names(trees)
+    shared_cols <- stats::setNames(lapply(taxa, function(tx) {
+        na.omit(shared.tree.tips(trees[[tx]], colnames(gene.presence[[tx]])))
+    }), taxa)
     # keep track of which taxa should be dropped entirely
     to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)
     for (tx in taxa) {
         pz.message(paste0("Processing taxon ", tx), level=2)
-        tips <- trees[[tx]]$tip.label
-        colns <- colnames(gene.presence[[tx]])
-        i <- na.omit(intersect(tips, colns))
+        i <- shared_cols[[tx]]
         if (length(i) > 0) {
           mtx <- gene.presence[[tx]][, i, drop=FALSE]
 	  Max <- ncol(mtx) - Min
@@ -1636,8 +1656,15 @@ above_minimum_genes <- function(gene.presence, trees, ..., .opts=NULL) {
 #' @return A single data frame of all significant results plus descriptions.
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
-    pos.sig.tbl <- tibble::enframe(pos.sig, name="taxon", value="gene") %>%
-        tidyr::unnest(cols=c(gene))
+    sig_lengths <- lengths(pos.sig)
+    sig_genes <- unlist(pos.sig, use.names=FALSE)
+    if (is.null(sig_genes)) {
+        sig_genes <- character(0)
+    }
+    pos.sig.tbl <- tibble::tibble(
+        taxon=rep(names(pos.sig), sig_lengths),
+        gene=sig_genes
+    )
     
     column_names <- colnames(gene.to.fxn)
     na_columns <- which(is.na(column_names))

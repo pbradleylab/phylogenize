@@ -291,9 +291,19 @@ get_all_associated_genes <- function(list_pheno,
             pz.message("  A) Getting all associated genes")
             phenotype <- list_pheno$phenotype_results$phenotype
             taxaN <- names(which(pheno_nonzero_var(phenotype, list_pheno$pz.db$species)))
-            pz.message(paste0("  .....All valid taxa: ", paste(taxaN, collapse = ", ")), level = 1)
+            if (pz.should.message(level=1, .opts=opts)) {
+                pz.message(paste0("  .....All valid taxa: ",
+                                  paste(taxaN, collapse = ", ")),
+                           level = 1,
+                           .opts=opts)
+            }
             if (!is.null(spec_taxa)) { taxaN <- intersect(taxaN, spec_taxa )}
-            pz.message(paste0("  .....Valid taxa (after filtering): ", paste(taxaN, collapse=", ")), level=1)
+            if (pz.should.message(level=1, .opts=opts)) {
+                pz.message(paste0("  .....Valid taxa (after filtering): ",
+                                  paste(taxaN, collapse=", ")),
+                           level=1,
+                           .opts=opts)
+            }
             if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
 	    pz.message("  .....Running plm on valid taxa")
             pz.message(paste0("  ..........Testing ", length(taxaN), " taxon/taxa"))
@@ -326,11 +336,21 @@ get_all_associated_genes <- function(list_pheno,
         } else {
 	    pz.message("  A) Getting all associated genes")
             taxaN <- names(list_pheno$pz.db$species)
-            pz.message(paste0("  .....All valid taxa: ", paste(taxaN, collapse = ", ")), level = 2)
+            if (pz.should.message(level=2, .opts=opts)) {
+                pz.message(paste0("  .....All valid taxa: ",
+                                  paste(taxaN, collapse = ", ")),
+                           level = 2,
+                           .opts=opts)
+            }
             if (!is.null(spec_taxa)) {
                 taxaN <- intersect(taxaN, spec_taxa)
             }
-            pz.message(paste0("  .....Valid taxa: ", paste(taxaN, collapse=", ")), level=1)
+            if (pz.should.message(level=1, .opts=opts)) {
+                pz.message(paste0("  .....Valid taxa: ",
+                                  paste(taxaN, collapse=", ")),
+                           level=1,
+                           .opts=opts)
+            }
             if (length(taxaN) == 0) pz.error("Error: no taxa found. If you provided any, check that they are spelled correctly")
             pz.message(paste0("  ..........Running POMS for ", length(taxaN), " taxon/taxa"))
             results <- result.wrapper.plm(taxa=taxaN,

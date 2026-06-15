@@ -31,3 +31,18 @@ test_that("logging helpers infer local resolved options", {
     expect_true(any(grepl("local message", readLines(local_log))))
     expect_true(any(grepl("local warning", readLines(local_log))))
 })
+
+test_that("message guard preserves file logging semantics", {
+    no_output <- pz.resolve.options(
+        error_to_file=FALSE,
+        verbosity=0
+    )
+    file_output <- pz.resolve.options(
+        error_to_file=TRUE,
+        verbosity=0
+    )
+
+    expect_false(pz.should.message(level=1, .opts=no_output))
+    expect_true(pz.should.message(level=1, .opts=file_output))
+    expect_true(pz.should.message(level=0, .opts=no_output))
+})

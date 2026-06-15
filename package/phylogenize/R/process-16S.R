@@ -36,6 +36,26 @@ prepare.vsearch.input <- function(mtx, ..., .opts=NULL) {
     return(TRUE)
 }
 
+run.external.tool <- function(command,
+                              args,
+                              error_label,
+                              ...,
+                              .opts=NULL,
+                              message_label=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    if (!is.null(message_label)) {
+        pz.message(paste0("Calling ", message_label, " with arguments: ",
+                          paste(args, sep=" ", collapse=" ")),
+                   .opts=opts)
+    }
+    r <- system2(command, args=args)
+    if (r != 0) {
+        pz.error(paste0(error_label, " failed with error code ", r),
+                 .opts=opts)
+    }
+    TRUE
+}
+
 #' Run vsearch analysis on a FASTA file of sequences.
 #'
 #' \code{run.vsearch} runs, by default, the optimal sequence aligner vsearch
@@ -91,8 +111,8 @@ run.vsearch <- function(..., .opts=NULL) {
         pz.error("vsearch_cutoff must be a number greater than 0 and at most 1",
                  .opts=opts)
     }
-    binary = basename(vsearch_path)
-    vsearch_args = c("--db",
+    binary <- basename(vsearch_path)
+    vsearch_args <- c("--db",
 			     db_file,
 			     "--usearch_global",
 			     query_file,
@@ -104,15 +124,11 @@ run.vsearch <- function(..., .opts=NULL) {
 		     20,
 		     "--blast6out",
 		     opts('vsearch_outfile'))
-    pz.message(paste0("Calling aligner ", binary, " with arguments: ",
-                      paste(vsearch_args, sep=" ", collapse=" ")),
-               .opts=opts)
-    r <- system2(vsearch_path,
-                 args = vsearch_args)
-    if (r != 0) {
-        pz.error(paste0("Aligner failed with error code ", r), .opts=opts)
-    }
-    return(TRUE)
+    run.external.tool(vsearch_path,
+                      vsearch_args,
+                      error_label="Aligner",
+                      message_label=paste("aligner", binary),
+                      .opts=opts)
 }
 
 #' Read in results from vsearch.
@@ -222,12 +238,8 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
     rt <- vs_tbl_f$targets
     subset.abd <- mtx[rh, , drop=FALSE]
     urt <- unique(rt)
-    summed.uniq <- t(sapply(urt, function(r) {
-        w <- which(rt == r)
-        apply(subset.abd[w, , drop=FALSE], 2, sum)
-    }))
-    rownames(summed.uniq) <- urt
-    summed.uniq
+    summed.uniq <- rowsum(as.matrix(subset.abd), group=rt, reorder=FALSE)
+    summed.uniq[urt, , drop=FALSE]
 }
 
 
@@ -247,9 +259,7 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
 #' @export run.appspam
 run.appspam <- function(..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
-    r <- system2(
-        opts('appspam_path'), 
-        args = c(
+    appspam_args <- c(
             "-s", 
             opts('aln_path_16s'),
             "-t",
@@ -260,12 +270,11 @@ run.appspam <- function(..., .opts=NULL) {
             opts('ncl'),
             "-o",
             opts('jplace_file') # in setup should check if exists
-        )
     )
-    if (r != 0) {
-        pz.error(paste0("AppSpam failed with error code ", r), .opts=opts)
-    }
-    return(TRUE)
+    run.external.tool(opts('appspam_path'),
+                      appspam_args,
+                      error_label="AppSpam",
+                      .opts=opts)
 }
 
 #' Read in results from AppSpam

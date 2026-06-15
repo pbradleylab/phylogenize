@@ -47,6 +47,17 @@ do.fisher <- function(list1, list2, background, alt="two.sided") {
     f
 }
 
+prepare.enrichment.mappings <- function(mappings) {
+    tbl.mappings <- tibble::enframe(purrr::map(mappings,
+        ~dplyr::group_by_at(., colnames(.)[2]) %>%
+          tidyr::nest() %>% dplyr::rename(term=1) %>%
+          dplyr::mutate(data=purrr::map(data, unlist)))) %>%
+          dplyr::rename(termset=name, terms=value)
+    map.bg <- Reduce(union, purrr::map(tbl.mappings$terms,
+                                       ~Reduce(union, .$data)))
+    list(tbl.mappings=tbl.mappings, map.bg=map.bg)
+}
+
 
 
 #' Given lists of significant genes (at different thresholds), effect sizes, and
@@ -69,38 +80,34 @@ multi.enrich <- function(sigs, signs, mappings, dirxn=1) {
     pz.warning("No significance cutoffs found")
     return(c())
   }
-  tbl.mappings <- tibble::enframe(purrr::map(mappings,
-      ~dplyr::group_by_at(., colnames(.)[2]) %>%
-        tidyr::nest() %>% dplyr::rename(term=1) %>%
-        dplyr::mutate(data=purrr::map(data, unlist)))) %>%
-        dplyr::rename(termset=name, terms=value)
-     taxon <- names(sigs)
-      cutoff <- names(sigs[[1]])
-      map.bg <- Reduce(union, purrr::map(tbl.mappings$terms,
-          ~Reduce(union, .$data)))
-      full.table <- tidyr::crossing(taxon, cutoff, tbl.mappings) %>%
-          tidyr::unnest(cols=c(terms))
-      full.table <- dplyr::mutate(full.table,
-        enr=purrr::pmap(full.table, function(taxon,
-            cutoff,
-            termset,
-            term,
-            data) {
-          s <- intersect(sigs[[taxon]][[cutoff]],
-            nw(signs[[taxon]] == d))
-          g <- names(which(!is.na(signs[[taxon]])))
-          do.fisher(data,
-            s,
-            intersect(map.bg, g))
-          }))
-      full.table <- dplyr::mutate(full.table,
-        enr.pval=purrr::map_dbl(enr, ~.$p.value),
-        enr.estimate=purrr::map_dbl(enr, ~.$estimate),
-        enr.overlap=purrr::map(enr, ~.$overlap))
-      full.table <- full.table %>%
-        dplyr::group_by(taxon, cutoff, termset) %>%
-        dplyr::mutate(enr.qval=qvals(pv1(enr.pval))) %>%
-        dplyr::ungroup()
+  prepared_mappings <- prepare.enrichment.mappings(mappings)
+  tbl.mappings <- prepared_mappings$tbl.mappings
+  map.bg <- prepared_mappings$map.bg
+  taxon <- names(sigs)
+  cutoff <- names(sigs[[1]])
+  full.table <- tidyr::crossing(taxon, cutoff, tbl.mappings) %>%
+      tidyr::unnest(cols=c(terms))
+  full.table <- dplyr::mutate(full.table,
+    enr=purrr::pmap(full.table, function(taxon,
+        cutoff,
+        termset,
+        term,
+        data) {
+      s <- intersect(sigs[[taxon]][[cutoff]],
+        nw(signs[[taxon]] == d))
+      g <- names(which(!is.na(signs[[taxon]])))
+      do.fisher(data,
+        s,
+        intersect(map.bg, g))
+      }))
+  full.table <- dplyr::mutate(full.table,
+    enr.pval=purrr::map_dbl(enr, ~.$p.value),
+    enr.estimate=purrr::map_dbl(enr, ~.$estimate),
+    enr.overlap=purrr::map(enr, ~.$overlap))
+  full.table <- full.table %>%
+    dplyr::group_by(taxon, cutoff, termset) %>%
+    dplyr::mutate(enr.qval=qvals(pv1(enr.pval))) %>%
+    dplyr::ungroup()
 }
 
 #' Get q-values for results in tbl format.
@@ -139,16 +146,11 @@ alt.multi.enrich <- function(results, mappings, dirxn=1,
         pz.warning("Didn't find significant hits, signs, or mappings")
         return(c())
     }
-    tbl.mappings <- tibble::enframe(
-        purrr::map(mappings, ~group_by_at(., colnames(.)[2]) %>%
-                       tidyr::nest() %>%
-                       dplyr::rename(term=1) %>%
-                       dplyr::mutate(data=purrr::map(data, unlist)))) %>%
-        dplyr::rename(termset=name, terms=value)
+    prepared_mappings <- prepare.enrichment.mappings(mappings)
+    tbl.mappings <- prepared_mappings$tbl.mappings
+    map.bg <- prepared_mappings$map.bg
     taxa <- unique(results$taxon)
     cutoff <- names(qcuts)
-    map.bg <- Reduce(union, purrr::map(tbl.mappings$terms,
-                                       ~Reduce(union, .$data)))
     full.table <- tidyr::crossing(
         taxon=taxa, cutoff, tbl.mappings) %>%
         tidyr::unnest(cols=c(terms))

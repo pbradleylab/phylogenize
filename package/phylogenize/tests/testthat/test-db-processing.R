@@ -109,6 +109,113 @@ test_that("above_minimum_genes keeps genes with enough present and absent tips",
     expect_equal(colnames(filtered$TaxonA), c("s1", "s2", "s3"))
 })
 
+test_that("above_minimum_genes preserves shared tip order", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    pz.options(minimum=1, gene_min_frac=0.5, verbosity=0, error_to_file=FALSE)
+
+    gene.presence <- list(
+        TaxonA=Matrix::Matrix(
+            matrix(
+                c(1, 0, 1, 1,
+                  1, 1, 1, 0,
+                  0, 0, 0, 1),
+                nrow=3,
+                byrow=TRUE,
+                dimnames=list(c("g_keep", "g_all", "g_none"),
+                              c("s1", "s2", "s3", "s_extra"))
+            ),
+            sparse=TRUE
+        )
+    )
+    trees <- list(TaxonA=list(tip.label=c("s3", "s1", "s2", "s_missing")))
+
+    filtered <- above_minimum_genes(gene.presence, trees)
+
+    expect_equal(names(filtered), "TaxonA")
+    expect_equal(rownames(filtered$TaxonA), "g_keep")
+    expect_equal(colnames(filtered$TaxonA), c("s3", "s1", "s2"))
+    expect_equal(as.numeric(filtered$TaxonA["g_keep", ]), c(1, 1, 0))
+})
+
+test_that("adjust.db import-filtered path preserves available taxa and genes", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    opts <- pz.resolve.options(
+        minimum=1,
+        gene_min_frac=0.5,
+        treemin=2,
+        pctmin=0,
+        verbosity=0,
+        error_to_file=FALSE
+    )
+
+    gene.presence <- list(
+        TaxonA=Matrix::Matrix(
+            matrix(
+                c(1, 0, 1,
+                  1, 1, 1,
+                  0, 0, 0),
+                nrow=3,
+                byrow=TRUE,
+                dimnames=list(c("g_keep_a", "g_all_a", "g_none_a"),
+                              c("a1", "a2", "a3"))
+            ),
+            sparse=TRUE
+        ),
+        TaxonB=Matrix::Matrix(
+            matrix(
+                c(1, 0, 1, 0,
+                  1, 1, 1, 0,
+                  1, 1, 1, 1),
+                nrow=3,
+                byrow=TRUE,
+                dimnames=list(c("g_keep_b", "g_subset_b", "g_all_b"),
+                              c("b1", "b2", "b3", "b4"))
+            ),
+            sparse=TRUE
+        )
+    )
+    trees <- list(
+        TaxonA=ape::read.tree(text="((a1:1,a2:1):1,a3:1);"),
+        TaxonB=ape::read.tree(text="((b1:1,b2:1):1,(b3:1,b4:1):1);")
+    )
+    imported_gene_presence <- above_minimum_genes(gene.presence,
+                                                  trees,
+                                                  .opts=opts)
+    imported_db <- list(
+        gene.presence=imported_gene_presence,
+        trees=trees[names(imported_gene_presence)]
+    )
+    abd.meta <- list(
+        mtx=Matrix::Matrix(
+            matrix(
+                1,
+                nrow=6,
+                ncol=1,
+                dimnames=list(c("a1", "a2", "a3", "b1", "b2", "b3"), "s1")
+            ),
+            sparse=TRUE
+        )
+    )
+
+    fully_filtered <- adjust.db(unserialize(serialize(imported_db, NULL)),
+                                abd.meta,
+                                .opts=opts)
+    incrementally_filtered <- adjust.db(unserialize(serialize(imported_db, NULL)),
+                                        abd.meta,
+                                        .opts=opts,
+                                        .import_filtered=TRUE)
+
+    expect_identical(incrementally_filtered, fully_filtered)
+    expect_equal(names(incrementally_filtered$gene.presence),
+                 c("TaxonA", "TaxonB"))
+    expect_equal(rownames(incrementally_filtered$gene.presence$TaxonA),
+                 "g_keep_a")
+    expect_equal(rownames(incrementally_filtered$gene.presence$TaxonB),
+                 "g_keep_b")
+})
+
 test_that("import.pz.db rejects missing database index", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)

@@ -19,3 +19,14 @@ test_that("fix.tree leaves non-tree inputs unchanged", {
     expect_null(fix.tree(NULL))
     expect_equal(fix.tree("not a tree"), "not a tree")
 })
+
+test_that("shared tree/name helpers preserve input order", {
+    tr <- ape::read.tree(text="((s1:1,s2:1):1,s3:1);")
+    observed <- c("s3", "s1", "s_missing")
+    phenotype <- c(s3=3, s2=2, s1=1, s_extra=4)
+
+    expect_equal(phylogenize:::shared.tree.tips(tr, observed),
+                 c("s1", "s3"))
+    expect_equal(phylogenize:::shared.named.values(phenotype, tr$tip.label),
+                 c(s3=3, s2=2, s1=1))
+})
