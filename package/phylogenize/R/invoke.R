@@ -313,26 +313,19 @@ get_all_associated_genes <- function(list_pheno,
                     opts('ncl'),
                     " parallel worker(s)"
                 ))
-                results <- result.wrapper.plm(taxa=taxaN,
-                    pheno=phenotype,
-                    tree=list_pheno$pz.db$trees[taxaN],
-                    clusters=list_pheno$pz.db$species[taxaN],
-                    proteins=list_pheno$pz.db$gene.presence[taxaN],
-                    method=p.method,
-                    ncl=opts('ncl'),
-                    .opts=opts)
-            } else {
-                results <- mapply(nonparallel.results.generator,
-                    list_pheno$pz.db$gene.presence[taxaN],
-                    list_pheno$pz.db$trees[taxaN],
-                    list_pheno$pz.db$species[taxaN],
-                    as.list(taxaN),
-                        MoreArgs=list(pheno=phenotype,
-                            method=p.method,
-                            use.for.loop=FALSE,
-                            .opts=opts),
-                        SIMPLIFY=FALSE)
             }
+            assoc_opts <- opts
+            if (opts('ncl') <= 1) {
+                assoc_opts <- pz.resolve.options(.opts=opts,
+                                                 separate_process=FALSE)
+            }
+            results <- result.wrapper.plm(taxa=taxaN,
+                pheno=phenotype,
+                tree=list_pheno$pz.db$trees[taxaN],
+                clusters=list_pheno$pz.db$species[taxaN],
+                proteins=list_pheno$pz.db$gene.presence[taxaN],
+                method=p.method,
+                .opts=assoc_opts)
         } else {
 	    pz.message("  A) Getting all associated genes")
             taxaN <- names(list_pheno$pz.db$species)

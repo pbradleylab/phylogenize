@@ -240,6 +240,56 @@ test_that("phylogenize_core preserves deterministic golden association results",
     expect_equal(core$list_signif$phy.with.neg.sigs, "TestTaxon")
 })
 
+test_that("serial association honors core_method instead of p.method", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    set.seed(20240620)
+    tips <- paste0("sp", seq_len(30))
+    phenotype <- seq(-1.5, 1.5, length.out=length(tips))
+    names(phenotype) <- tips
+    high_phenotype <- phenotype >= stats::median(phenotype)
+    gene_presence <- matrix(
+        c(as.integer(high_phenotype), as.integer(!high_phenotype)),
+        nrow=2,
+        byrow=TRUE,
+        dimnames=list(c("g_pos", "g_neg"), tips)
+    )
+    list_pheno <- list(
+        phenotype_results=list(phenotype=phenotype),
+        pz.db=list(
+            ntaxa=1,
+            species=list(TestTaxon=tips),
+            trees=list(TestTaxon=ape::rtree(length(tips), tip.label=tips)),
+            gene.presence=list(TestTaxon=gene_presence),
+            gene.to.fxn=tibble::tibble(
+                gene=rownames(gene_presence),
+                accession=c("K00001", "K00002"),
+                `function`=c("positive fixture gene", "negative fixture gene")
+            )
+        )
+    )
+    failing_method <- function(...) {
+        stop("p.method should not be used when core_method selects lm")
+    }
+
+    observed <- get_all_associated_genes(
+        list_pheno,
+        p.method=failing_method,
+        core_method="lm",
+        ncl=1,
+        min_fx=0,
+        minimum=3,
+        error_to_file=FALSE,
+        verbosity=0
+    )
+
+    expect_named(observed$results, "TestTaxon")
+    expect_equal(colnames(observed$results$TestTaxon), c("g_pos", "g_neg"))
+    expect_equal(observed$pos.sig$TestTaxon, "g_pos")
+    expect_equal(observed$neg.sig$TestTaxon, "g_neg")
+})
+
 test_that("phylogenize_core creates configured output directory", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)
