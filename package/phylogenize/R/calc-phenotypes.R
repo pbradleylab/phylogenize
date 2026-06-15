@@ -376,7 +376,7 @@ clean.pheno <- function(phenotype, pz.db) {
     tips <- Reduce(union, lapply(pz.db$trees, function(x) x$tip.label))
     cols <- Reduce(union, lapply(pz.db$gene.presence, colnames))
     valid.names <- intersect(tips, cols)
-    phenotype[intersect(unlist(names(phenotype)), unlist(valid.names))]
+    shared.named.values(phenotype, valid.names)
 }
 
 
@@ -390,10 +390,10 @@ clean.pheno <- function(phenotype, pz.db) {
 #' @export
 retain.observed.taxa <- function(trees, phenotype, phenoP, mapped.observed) {
     trees <- lapply(trees, function(tr) {
-        keep.tips(tr, intersect(tr$tip.label, mapped.observed))
+        keep.tips(tr, shared.tree.tips(tr, mapped.observed))
     })
     n.not.prior <- sapply(trees, function(tr) {
-        sum(phenotype[intersect(names(phenotype), tr$tip.label)] != phenoP)
+        sum(shared.named.values(phenotype, tr$tip.label) != phenoP)
     })
     if (all(n.not.prior == 0)) {
         pz.error(

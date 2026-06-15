@@ -1588,7 +1588,7 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ..., .opts=NULL) {
            pos.sig[phy.with.sigs],
            pz.db$gene.presence[phy.with.sigs],
            FUN = function(tr, x, y) {
-               i <- na.omit(intersect(tr$tip.label, colnames(y)))
+               i <- na.omit(shared.tree.tips(tr, colnames(y)))
                if (length(i) == 0) { return(character(0)) }
                if (length(x) == 0) { return(character(0)) }
                y2 <- y[x, i, drop=FALSE]
@@ -1624,8 +1624,7 @@ above_minimum_genes <- function(gene.presence, trees, ..., .opts=NULL) {
     GMF <- opts('gene_min_frac')
     taxa <- names(trees)
     shared_cols <- stats::setNames(lapply(taxa, function(tx) {
-        na.omit(intersect(trees[[tx]]$tip.label,
-                          colnames(gene.presence[[tx]])))
+        na.omit(shared.tree.tips(trees[[tx]], colnames(gene.presence[[tx]])))
     }), taxa)
     # keep track of which taxa should be dropped entirely
     to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)

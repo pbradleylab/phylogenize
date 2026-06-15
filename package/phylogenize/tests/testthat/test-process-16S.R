@@ -42,6 +42,56 @@ test_that("run.vsearch passes strand option as separate arguments", {
     expect_true(file.exists(hits_file))
 })
 
+test_that("run.appspam uses shared external command runner", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("appspam-")
+    dir.create(tmp)
+    capture_file <- file.path(tmp, "appspam-args.txt")
+    fake_appspam <- file.path(tmp, "appspam")
+    writeLines(c(
+        "#!/bin/sh",
+        sprintf("printf '%%s\\n' \"$@\" > %s", shQuote(capture_file)),
+        "exit 0"
+    ), fake_appspam)
+    Sys.chmod(fake_appspam, mode="0755")
+
+    expect_true(run.appspam(
+        appspam_path=fake_appspam,
+        aln_path_16s=file.path(tmp, "aln.fna"),
+        tree_path_16s=file.path(tmp, "tree.nwk"),
+        named_asv_file=file.path(tmp, "input.fna"),
+        jplace_file=file.path(tmp, "out.jplace"),
+        ncl=3,
+        error_to_file=FALSE
+    ))
+
+    expect_equal(
+        readLines(capture_file),
+        c("-s", file.path(tmp, "aln.fna"),
+          "-t", file.path(tmp, "tree.nwk"),
+          "-q", file.path(tmp, "input.fna"),
+          "--threads", "3",
+          "-o", file.path(tmp, "out.jplace"))
+    )
+
+    writeLines(c("#!/bin/sh", "exit 7"), fake_appspam)
+    Sys.chmod(fake_appspam, mode="0755")
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=file.path(tmp, "aln.fna"),
+            tree_path_16s=file.path(tmp, "tree.nwk"),
+            named_asv_file=file.path(tmp, "input.fna"),
+            jplace_file=file.path(tmp, "out.jplace"),
+            ncl=3,
+            error_to_file=FALSE
+        ),
+        "AppSpam failed with error code 7"
+    )
+})
+
 test_that("16S helpers can use resolved options without global mutation", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)

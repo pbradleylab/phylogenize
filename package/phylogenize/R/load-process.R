@@ -548,9 +548,8 @@ adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL,
         " observed taxon/taxa"
     ))
     
-    species.per.tree <- lapply(pz.db$trees, function(tr) {
-        intersect(tr$tip.label, species.observed)
-    })
+    species.per.tree <- lapply(pz.db$trees, shared.tree.tips,
+                               observed=species.observed)
     tL <- vapply(species.per.tree, length, 1L)
     if (all(tL < opts('treemin'))) {
         pz.error(paste0("Too few species found. Was the right database used? ",
@@ -598,7 +597,7 @@ adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL,
                         "mapped to entries in the database."))
     }
     pz.db$trees <- lapply(pz.db$trees[saved.taxa], function(tr) {
-	tips <- intersect(tr$tip.label, species.observed)
+	tips <- shared.tree.tips(tr, species.observed)
 	ape::keep.tip(tr, tips)
     })
     pz.message("  .....Filtering gene presence matrices to retained trees")
@@ -774,7 +773,7 @@ change.tree.tax.level <- function(tree, taxon, tax, ..., .opts=NULL) {
         tips_by_taxon <- split(t[["cluster"]], t[[taxon]])
         
         for (taxon_name in names(tips_by_taxon)) {
-            tips <- intersect(tr$tip.label, tips_by_taxon[[taxon_name]])
+            tips <- shared.tree.tips(tr, tips_by_taxon[[taxon_name]])
             if (length(tips) <= 1) next
             subtree <- ape::keep.tip(tr, tips)
             if (!is.null(subtree) && length(subtree$tip.label) > 1) {

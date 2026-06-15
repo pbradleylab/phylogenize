@@ -67,7 +67,7 @@ get.pheno.plotting.scales.prevalence <- function(phenotype,
     opts <- pz.resolve.options(..., .opts=.opts)
     phenoLimits <- quantile(unique(phenotype), c(0.2, 0.8))
     phenoLimitsTaxon <- lapply(trees, function(tr) {      
-        phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>%
+        phi <- shared.named.values(phenotype, tr$tip.label) %>%
             na.omit
 	if (length(unique(phi)) > 1) {
 		quantile(unique(phi), c(0.2, 0.8))
@@ -113,7 +113,7 @@ get.pheno.plotting.scales.specificity <- function(phenotype,
     phenoLimits <- c(phenoP - 1 * sd(phenotype),
                      phenoP + 1 * sd(phenotype))
     phenoLimitsTaxon <- lapply(trees, function(tr) {
-        phi <- phenotype[intersect(names(phenotype), tr$tip.label)] %>%
+        phi <- shared.named.values(phenotype, tr$tip.label) %>%
             na.omit %>%
             unique
         c(phenoP - (1 * sd(phi)), phenoP + (1 * sd(phi)))

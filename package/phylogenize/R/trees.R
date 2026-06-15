@@ -43,6 +43,14 @@ keep.tips <- function(tree, keep) {
   ape::drop.tip(tree, setdiff(tree$tip.label, keep))
 }
 
+shared.tree.tips <- function(tree, observed) {
+    intersect(tree$tip.label, observed)
+}
+
+shared.named.values <- function(x, valid) {
+    x[intersect(names(x), valid)]
+}
+
 #' Get tip-to-root distance.
 #'
 #' \code{tipToRoot} returns all tip-to-root distances.
