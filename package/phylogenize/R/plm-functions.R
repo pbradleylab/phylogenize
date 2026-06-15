@@ -648,22 +648,26 @@ matrix.plm <- function(tree,
         cl <- NULL
     }
     gene.mtx <- mtx[restrict.ff, restrict.taxa, drop=FALSE]
+    builtin_model <- identical(method, phylolm.fx.pv) ||
+        identical(method, lm.fx.pv)
+    model.pheno <- if (builtin_model) pheno[restrict.taxa] else pheno
+    model.restrict <- if (builtin_model) NULL else restrict.taxa
     if (!is.null(cl)) {
         r <- maybeParApply(gene.mtx,
                            1,
                            method,
                            cl,
-                           p=pheno,
+                           p=model.pheno,
                            tr=tree,
-                           restrict=restrict.taxa,
+                           restrict=model.restrict,
                            meas_err=opts('meas_err'))
     } else {
         r <- matrix(nr=0, nc=0)
         if (nrow(gene.mtx) > 0) {
             first <- method(gene.mtx[1, ],
-                            p=pheno,
+                            p=model.pheno,
                             tr=tree,
-                            restrict=restrict.taxa,
+                            restrict=model.restrict,
                             meas_err=opts('meas_err'))
             r <- matrix(NA_real_,
                         nrow=length(first),
@@ -673,9 +677,9 @@ matrix.plm <- function(tree,
             if (nrow(gene.mtx) > 1) {
                 for (i in 2:nrow(gene.mtx)) {
                     r[, i] <- method(gene.mtx[i, ],
-                                     p=pheno,
+                                     p=model.pheno,
                                      tr=tree,
-                                     restrict=restrict.taxa,
+                                     restrict=model.restrict,
                                      meas_err=opts('meas_err'))
                 }
             }
