@@ -690,13 +690,7 @@ change.presence.tax.level <- function(binary, taxon, tax){
             next
         }
         
-        # make a named list in one step
-        named_tax_list <- t %>%
-            dplyr::select(-phylum) %>%
-            dplyr::group_by(!!taxon) %>%
-            tidyr::nest() %>%
-            tibble::deframe() %>%
-            purrr::map(~ dplyr::pull(.x, cluster))
+        named_tax_list <- split(t[["cluster"]], t[[rlang::as_string(taxon)]])
         
         columns <- colnames(binary[[name]])
         
