@@ -477,6 +477,39 @@ get_signif_associated_genes <- function(pz.db,
 }
 
 
+# Collapse one cell that may contain a scalar or nested vector.
+collapse_enrichment_cell <- function(x, sep=";") {
+    x <- unlist(x, recursive=TRUE, use.names=FALSE)
+    if (length(x) == 0 || all(is.na(x))) {
+        return(NA_character_)
+    }
+    paste(x, collapse=sep)
+}
+
+normalize_enrichment_gene_ids <- function(enrichment.tbl) {
+    if ("geneID" %in% names(enrichment.tbl) && is.list(enrichment.tbl$geneID)) {
+        enrichment.tbl$geneID <- vapply(enrichment.tbl$geneID,
+                                        collapse_enrichment_cell,
+                                        character(1),
+                                        sep="/")
+    }
+    enrichment.tbl
+}
+
+flatten_csv_list_cols <- function(tbl, sep=";") {
+    tbl[] <- lapply(tbl, function(col) {
+        if (is.list(col)) {
+            vapply(col,
+                   collapse_enrichment_cell,
+                   character(1),
+                   sep=sep)
+        } else {
+            col
+        }
+    })
+    tbl
+}
+
 #' Get enrichment tables.
 #'
 #' @param signif Significant genes.
@@ -560,6 +593,7 @@ get_enrichment_tbls <- function(signif,
         ifelse(is.null(enrichment.tbl), 0, nrow(enrichment.tbl))
     ))
     if (!is.null(enrichment.tbl)) {
+        enrichment.tbl <- normalize_enrichment_gene_ids(enrichment.tbl)
         enrichment.tbl <- dplyr::filter(enrichment.tbl,
                                         qvalue <= 0.25, enr.estimate > 1)
         pz.message(paste0(
@@ -585,7 +619,7 @@ get_enrichment_tbls <- function(signif,
             pz.message("  .....Writing enrichment table")
             write.csv(file=file.path(opts('out_dir'),
                                      "enr-table.csv"),
-                      pretty.enr.tbl)
+                      flatten_csv_list_cols(pretty.enr.tbl))
         }
     }
     if (!is.null(pretty.enr.tbl)) {
@@ -614,6 +648,7 @@ get_enrichment_tbls <- function(signif,
                                  by=c("taxon", "mapped_gene"))
             if (export) {
                 pz.message("  .....Writing enrichment overlap tables")
+                enr.overlap <- flatten_csv_list_cols(enr.overlap)
                 write.csv(file=file.path(opts('out_dir'),
                                          "enr-overlaps.csv"),
                           enr.overlap)

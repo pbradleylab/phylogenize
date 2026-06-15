@@ -27,6 +27,38 @@ test_that("filter.incomplete.metadata.samples drops incomplete metadata rows and
     expect_equal(levels(filtered$metadata$dataset), "d1")
 })
 
+test_that("ANCOMBC2 environment result columns use configured env column", {
+    ancom_results_tbl <- tibble::tibble(
+        taxon="taxon1",
+        lfc_treatmenttest=1,
+        se_treatmenttest=0.1
+    )
+
+    observed <- phylogenize:::ancombc2_env_result_stem(
+        ancom_results_tbl,
+        env_column="treatment",
+        envir="test"
+    )
+
+    expect_equal(observed, "treatmenttest")
+})
+
+test_that("ANCOMBC2 environment result columns keep legacy env fallback", {
+    ancom_results_tbl <- tibble::tibble(
+        taxon="taxon1",
+        lfc_envtest=1,
+        se_envtest=0.1
+    )
+
+    observed <- phylogenize:::ancombc2_env_result_stem(
+        ancom_results_tbl,
+        env_column="treatment",
+        envir="test"
+    )
+
+    expect_equal(observed, "envtest")
+})
+
 test_that("matrix.plm serial loop matches previous row-wise apply behavior", {
     set.seed(42)
     taxa <- paste0("taxon", seq_len(8))

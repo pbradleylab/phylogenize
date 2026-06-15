@@ -1253,6 +1253,30 @@ ash_wrapper <- function(m, s, nw=10, ashr_df=Inf) {
             df=ashr_df)
 }
 
+ancombc2_env_result_stem <- function(ancom_results_tbl, env_column, envir) {
+    candidates <- unique(c(
+        paste0(env_column, envir),
+        make.names(paste0(env_column, envir)),
+        paste0("env", envir)
+    ))
+    complete <- candidates[
+        paste0("lfc_", candidates) %in% colnames(ancom_results_tbl) &
+            paste0("se_", candidates) %in% colnames(ancom_results_tbl)
+    ]
+    if (length(complete) > 0) {
+        return(complete[[1]])
+    }
+    pz.error(paste0(
+        "Could not find ANCOMBC2 result columns for env_column='",
+        env_column,
+        "' and which_envir='",
+        envir,
+        "'. Expected lfc/se columns for one of: ",
+        paste(candidates, collapse=", "),
+        "."
+    ))
+}
+
 restore.diff.abund.taxon.names <- function(sample_pheno, sample_sd, original_names) {
   original_names <- as.character(original_names)
   numeric_original <- original_names[
@@ -1357,11 +1381,18 @@ ashr.diff.abund <- function(abd.meta,
       pz.error(
           "For abundance there must be at least two different environments")
     }
+    required_metadata_cols <- E
+    if (D %in% colnames(named_metadata) &&
+        length(levels(named_metadata[[D]])) >= 2) {
+        required_metadata_cols <- c(required_metadata_cols, D)
+    }
     named_metadata <- named_metadata %>%
-	    filter(!is.na(E) | !is.na(D))
+        dplyr::filter(dplyr::if_all(dplyr::all_of(required_metadata_cols),
+                                    ~ !is.na(.x)))
+    ancom_mtx <- abd.meta$mtx[, rownames(named_metadata), drop=FALSE]
     pz.message("  ..........Running TreeSummarizedExperiment function...") 
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
-      assays=S4Vectors::SimpleList(counts=abd.meta$mtx),
+      assays=S4Vectors::SimpleList(counts=ancom_mtx),
       colData=S4Vectors::DataFrame(named_metadata))
     
     ancom_results <- ANCOMBC::ancombc2(ancom_tse,
@@ -1369,7 +1400,7 @@ ashr.diff.abund <- function(abd.meta,
                               fix_formula=ancom_formula,
                               n_cl=opts('ncl'))
     ancom_results_tbl <- ancom_results$res %>% tibble::tibble()
-    envir_stem <- paste0("env", envir)
+    envir_stem <- ancombc2_env_result_stem(ancom_results_tbl, E, envir)
     lfc_col <- paste0("lfc_", envir_stem)
     se_col <- paste0("se_", envir_stem)
     for (ctest in c(lfc_col, se_col)) {

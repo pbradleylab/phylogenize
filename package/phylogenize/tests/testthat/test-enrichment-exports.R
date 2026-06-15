@@ -57,3 +57,59 @@ test_that("enrichment overlap exports include effect sizes", {
     expect_false(all(is.na(overlap$effectsize)))
     expect_equal(overlap$effectsize, 1.5)
 })
+
+test_that("enrichment overlap exports flatten list columns", {
+    out_dir <- file.path(tempdir(), "phylogenize-enrichment-list-export-test")
+    dir.create(out_dir, showWarnings=FALSE, recursive=TRUE)
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    pz.options(out_dir=out_dir, error_to_file=FALSE)
+
+    testthat::local_mocked_bindings(
+        multi.kegg.enrich=function(...) {
+            tibble::tibble(
+                taxon="TaxonA",
+                cutoff="weak",
+                ID="ko00001",
+                Description="Mock pathway",
+                qvalue=0.01,
+                enr.estimate=2,
+                geneID=list(c("K00001", "K00002"))
+            )
+        },
+        .package="phylogenize"
+    )
+
+    pz.db <- list(
+        gene.to.fxn=tibble::tibble(
+            gene=c("gene_1", "gene_2"),
+            accession=c("K00001", "K00002"),
+            `function`=list(c("Mock gene", "Alt name"), "Second gene")
+        )
+    )
+    results.matrix <- tibble::tibble(
+        taxon=c("TaxonA", "TaxonA"),
+        gene=c("gene_1", "gene_2"),
+        effect.size=c(1.5, 2.5),
+        p.value=c(0.001, 0.002)
+    )
+    signif <- list(TaxonA=list(strong="gene_1", med="gene_1", weak="gene_1"))
+    signs <- list(TaxonA=c(gene_1=1))
+
+    expect_no_error(get_enrichment_tbls(
+        signif,
+        signs,
+        pz.db,
+        results.matrix,
+        export=TRUE,
+        kegg_pw_data=list(),
+        kegg_mod_data=list(),
+        use_kegg_cache=FALSE
+    ))
+
+    overlap <- read.csv(file.path(out_dir, "enr-overlaps.csv"),
+                        check.names=FALSE)
+    expect_equal(overlap$gene, c("K00001", "K00002"))
+    expect_equal(overlap$description[1], "Mock gene;Alt name")
+    expect_equal(overlap$effectsize, c(1.5, 2.5))
+})
