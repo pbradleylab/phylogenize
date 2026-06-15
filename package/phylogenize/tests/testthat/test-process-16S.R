@@ -91,6 +91,45 @@ test_that("16S helpers can use resolved options without global mutation", {
     expect_equal(pz.options("min_frac_16s"), 1)
 })
 
+test_that("sum.nonunique.vsearch aggregates duplicate hits in target order", {
+    opts <- pz.resolve.options(
+        min_frac_16s=0.5,
+        error_to_file=FALSE
+    )
+    mtx <- Matrix::Matrix(
+        matrix(
+            c(1, 2, 3,
+              4, 5, 6,
+              7, 8, 9,
+              10, 11, 12),
+            nrow=4,
+            byrow=TRUE,
+            dimnames=list(paste0("asv", 1:4), paste0("sample", 1:3))
+        ),
+        sparse=TRUE
+    )
+    vsearch <- list(
+        hits=c(1, 1, 2, 3, 3, 4),
+        targets=c("target_b", "target_b", "target_a",
+                  "target_c", "target_d", "target_a")
+    )
+
+    summed <- sum.nonunique.vsearch(vsearch, mtx, .opts=opts)
+
+    expect_equal(rownames(summed), c("target_b", "target_a",
+                                     "target_c", "target_d"))
+    expect_equal(
+        as.matrix(summed),
+        rbind(
+            target_b=c(1, 2, 3),
+            target_a=c(14, 16, 18),
+            target_c=c(7, 8, 9),
+            target_d=c(7, 8, 9)
+        ),
+        ignore_attr="dimnames"
+    )
+})
+
 test_that("run.vsearch validates executable and input files", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)

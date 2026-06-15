@@ -222,12 +222,8 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
     rt <- vs_tbl_f$targets
     subset.abd <- mtx[rh, , drop=FALSE]
     urt <- unique(rt)
-    summed.uniq <- t(sapply(urt, function(r) {
-        w <- which(rt == r)
-        apply(subset.abd[w, , drop=FALSE], 2, sum)
-    }))
-    rownames(summed.uniq) <- urt
-    summed.uniq
+    summed.uniq <- rowsum(as.matrix(subset.abd), group=rt, reorder=FALSE)
+    summed.uniq[urt, , drop=FALSE]
 }
 
 
