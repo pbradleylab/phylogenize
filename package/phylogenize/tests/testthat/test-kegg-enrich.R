@@ -49,3 +49,77 @@ test_that("KEGG enrichment formatting handles null and non-null results", {
     expect_equal(one$taxon, "TaxonB")
     expect_null(none)
 })
+
+test_that("KEGG background is restricted to tested genes", {
+    pid_to_ko <- tibble::tibble(
+        gene=c("g1", "g2", "g3", "untested"),
+        accession=c("K00001", "K00002", "K00003", "K99999")
+    )
+    signs <- c(g1=1, g2=-1, g3=NA)
+
+    observed <- phylogenize:::tested.kegg.background(signs, pid_to_ko)
+
+    expect_equal(observed, c("K00001", "K00002"))
+})
+
+test_that("KEGG enrichment passes taxon-specific tested backgrounds", {
+    if (!methods::isClass("MockKeggEnrichResult")) {
+        methods::setClass("MockKeggEnrichResult",
+                          slots=c(result="data.frame"))
+    }
+    seen <- new.env(parent=emptyenv())
+    seen$backgrounds <- list()
+
+    testthat::local_mocked_bindings(
+        enrich_downloaded_KEGG=function(KOs, background, qCut, downloaded, ...) {
+            seen$backgrounds[[length(seen$backgrounds) + 1L]] <- background
+            methods::new(
+                "MockKeggEnrichResult",
+                result=data.frame(
+                    ID="ko00001",
+                    Description="Mock pathway",
+                    GeneRatio="1/1",
+                    BgRatio=paste0("1/", length(background)),
+                    pvalue=0.01,
+                    p.adjust=0.01,
+                    qvalue=0.01,
+                    geneID=paste(KOs, collapse="/"),
+                    stringsAsFactors=FALSE
+                )
+            )
+        },
+        .package="phylogenize"
+    )
+
+    sigs <- list(
+        TaxonA=list(strong="g1"),
+        TaxonB=list(strong="g3")
+    )
+    signs <- list(
+        TaxonA=c(g1=1, g2=-1),
+        TaxonB=c(g3=1, g4=-1)
+    )
+    pid_to_ko <- tibble::tibble(
+        gene=c("g1", "g2", "g3", "g4", "global_only"),
+        accession=c("K00001", "K00002", "K00003", "K00004", "K99999")
+    )
+
+    out <- multi.kegg.enrich(
+        sigs,
+        signs,
+        pid_to_ko,
+        kegg_pw=list(),
+        kegg_mod=list()
+    )
+
+    expect_s3_class(out, "tbl_df")
+    expect_equal(
+        seen$backgrounds,
+        list(
+            c("K00001", "K00002"),
+            c("K00001", "K00002"),
+            c("K00003", "K00004"),
+            c("K00003", "K00004")
+        )
+    )
+})
