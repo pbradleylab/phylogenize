@@ -5,9 +5,11 @@
 \title{Wrapper to generate a low-memory, fast-running dummy database. Make sure
 \code{Matrix} is loaded.}
 \usage{
-generate.test.pzdb(nt = 75, ng = 50, fp = 0.1, minN = 2, ...)
+generate.test.pzdb(nt = 75, ng = 50, fp = 0.1, minN = 2, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{nt}{Number of species to sample per taxon.}
 
 \item{ng}{Number of genes to sample per taxon.}

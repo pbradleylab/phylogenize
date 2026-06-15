@@ -11,10 +11,14 @@ nonequiv.pos.sig(
   qcut_eq = 0.05,
   min_fx = 0.25,
   exclude = NULL,
-  dir = 1
+  dir = 1,
+  ...,
+  .opts = NULL
 )
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{results}{List of result matrices (4 x N).}
 
 \item{method}{Method for performing multiple test adjustment.}

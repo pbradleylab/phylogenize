@@ -32,7 +32,7 @@ This function adds fancy SVG highlight labels to ggtree objects and then
 plots them. If there's an error, it will fall back to a regular plot.
 }
 \details{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{which_phenotype}{String. Which phenotype to calculate ("prevalence"
   or "specificity").}

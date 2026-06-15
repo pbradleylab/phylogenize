@@ -408,8 +408,9 @@ write.test.tabular <- function(abd.meta,
                                abdfile="tests/data/test-abundance.tab",
                                metafile="tests/data/test-metadata.tab",
                                prep=TRUE,
-                               ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                               ...,
+                               .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     af <- opts('abundance_file')
     mf <- opts('metadata_file')
     if (prep) abd.meta$mtx <- prep.mtx.for.write(abd.meta$mtx)
@@ -449,12 +450,11 @@ prep.mtx.for.write <- function(mtx, initial.octo=FALSE) {
 
 #' Write and then read in tabular data.
 #'
-#' Some global options that may be helpful include:
+#' Some options that may be helpful include:
 #' \describe{
-#'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file (in this
-#'   case, to write to disk).}
-#'   \item{biom_dir}{String. Path to BIOM command-line executables. These are
-#'   necessary to write the BIOM file and add the metadata.}
+#'   \item{biom_file}{String. Name of BIOM abundance file to write to disk.}
+#'   \item{metadata_file}{String. Name of separate metadata file to write when
+#'   \code{separate_metadata=TRUE}.}
 #' }
 #'
 #' @param abd.meta List containing a matrix of abundance values, \code{mtx}, and
@@ -464,39 +464,41 @@ prep.mtx.for.write <- function(mtx, initial.octo=FALSE) {
 #' @keywords internal
 write.test.biom <- function(abd.meta,
                             overwrite=FALSE,
-                            ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
-    cn <- colnames(abd.meta$metadata)
-    colnames(abd.meta$metadata)[which(cn==opts('sample_column'))] <- "#SampleID"
-    abd.meta$mtx <- prep.mtx.for.write(abd.meta$mtx, initial.octo=TRUE)
-    td <- tempdir()
-    af <- file.path(td, "tests/data/test-abundance.tab")
-    mf <- file.path(td, "tests/data/test-metadata.tab")
-    tmp.bf <- tempfile("test-", fileext=".biom")
+                            ...,
+                            .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     bf <- opts('biom_file')
-    if (overwrite) file.remove(tmp.bf)
-    if (overwrite) file.remove(bf)
-    write.test.tabular(abd.meta,
-                       in_dir=tempdir(),
-                       abdfile="tests/data/test-abundance.tab",
-                       metafile="tests/data/test-metadata.tab",
-                       prep=FALSE)
-    system2(file.path(opts('biom_dir'), "biom"),
-            args = c("convert",
-                     "-i",
-                     af,
-                     "-o",
-                     tmp.bf,
-                     "--table-type=\"OTU table\"",
-                     "--to-hdf5"))
-    system2(file.path(opts('biom_dir'), "biom"),
-            args = c("add-metadata",
-                     "-i",
-                     tmp.bf,
-                     "-o",
-                     bf,
-                     "--sample-metadata-fp",
-                     mf))
+    if (is.null(bf) || is.na(bf) || bf == "") {
+        pz.error("biom_file must be provided to write a BIOM test fixture")
+    }
+    if (file.exists(bf) && !overwrite) {
+        pz.error(paste0("BIOM file already exists: ", bf))
+    }
+    out_dir <- dirname(bf)
+    if (!dir.exists(out_dir)) {
+        dir.create(out_dir, recursive=TRUE)
+    }
+
+    biom <- biomformat::make_biom(
+        as.matrix(abd.meta$mtx),
+        matrix_element_type="float"
+    )
+    biomformat::write_biom(biom, bf)
+
+    if (opts('separate_metadata')) {
+        mf <- opts('metadata_file')
+        if (is.null(mf) || is.na(mf) || mf == "") {
+            pz.error(
+                "metadata_file must be provided when separate_metadata=TRUE"
+            )
+        }
+        write.table(abd.meta$metadata,
+                    mf,
+                    sep='\t',
+                    row.names=FALSE,
+                    quote=FALSE)
+    }
+    invisible(bf)
 }
 
 
@@ -504,7 +506,7 @@ write.test.biom <- function(abd.meta,
 
 #' Simulate amplicon sequence variants (ASVs) from a database of 16S sequences.
 #'
-#' Some global options that may be helpful include:
+#' Some options that may be helpful include:
 #' \describe{
 #'   \item{data_dir}{String. Path to directory containing the data files
 #'   required to perform a \emph{phylogenize} analysis. Here, this is where the
@@ -524,8 +526,9 @@ write.test.biom <- function(abd.meta,
 #' @keywords internal
 random.species.from.file <- function(n.species,
                                      tag.length=100,
-                                     ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                                     ...,
+                                     .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     species.list <- seqinr::read.fasta(
                                 file.path(opts('data_dir'),
                                           opts('vsearch_16sfile')),
@@ -565,10 +568,12 @@ random.species.from.file <- function(n.species,
 #'   \item{n}{Names of the MIDAS species to which the rows of \code{mtx} "should"
 #'     map.}
 #' @keywords internal
-make.simulated.denoised.data <- function(mtx, tag.length=100, ...) {
+make.simulated.denoised.data <- function(mtx, tag.length=100, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     species <- rownames(mtx)
     rs <- random.species.from.file(n.species=length(species),
                                    tag.length=tag.length,
+                                   .opts=opts,
                                    ...)
     rownames(mtx) <- rs$seqs
     names(rs$seqs) <- species
@@ -635,9 +640,9 @@ dummy.trees <- function(trees, n=50) {
 #' @param fp Fraction of most-variable genes to sample.
 #' @param minN Only keep species with at least this many genes.
 #' @keywords internal
-generate.test.pzdb <- function(nt=75, ng=50, fp=0.1, minN=2, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
-    pz.db <- import.pz.db(...)
+generate.test.pzdb <- function(nt=75, ng=50, fp=0.1, minN=2, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    pz.db <- import.pz.db(..., .opts=opts)
     dtr <- dummy.trees(pz.db$trees, nt)
     for (n in names(pz.db$gene.presence)) {
         d <- dtr[[n]]$tip.label

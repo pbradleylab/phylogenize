@@ -4,7 +4,10 @@
 \alias{read.abd.metadata.tabular}
 \title{Read abundance matrix and metadata (tabular)}
 \usage{
-read.abd.metadata.tabular(...)
+read.abd.metadata.tabular(..., .opts = NULL)
+}
+\arguments{
+\item{.opts}{Internal resolved options object.}
 }
 \value{
 A list with components \code{mtx} (matrix of abundances) and
@@ -15,7 +18,7 @@ Read in taxon-by-sample matrix of abundances and metadata (sample
 annotations) from two tab-delimited files.
 }
 \details{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{dset_column}{Name of metadata column containing dataset annotations.}
 }

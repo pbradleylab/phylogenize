@@ -6,7 +6,7 @@
 #' \code{prepare.vsearch.input} outputs a FASTA file of the sequences in the
 #' input 16S data for analysis using vsearch or vsearch.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{named_asv_file}{String. File name of the sequences written to disk
 #'   and then read into vsearch/vsearch.}
@@ -15,16 +15,16 @@
 #' @param mtx A presence/absence or abundance matrix, with row names equal to
 #'   amplicon sequence variant DNA sequences.
 #' @export
-prepare.vsearch.input <- function(mtx, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
-    binary = basename(opts('vsearch_dir'))
+prepare.vsearch.input <- function(mtx, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     check.dna <- is.dna(rownames(mtx))
     if (!(all(check.dna))) {
         pz.error(paste0(
             "Rownames in 16S data must correspond to the actual sequences of ", 
             "denoised amplicon sequence variants, but some rownames contained ",
             "invalid characters ",
-            "(e.g. ", rownames(mtx)[which(!check.dna)[1]], ")."))
+            "(e.g. ", rownames(mtx)[which(!check.dna)[1]], ")."),
+            .opts=opts)
     }
     asvnames = paste0("Row", (1:nrow(mtx)))
     asvs = rownames(mtx)
@@ -36,6 +36,26 @@ prepare.vsearch.input <- function(mtx, ...) {
     return(TRUE)
 }
 
+run.external.tool <- function(command,
+                              args,
+                              error_label,
+                              ...,
+                              .opts=NULL,
+                              message_label=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    if (!is.null(message_label)) {
+        pz.message(paste0("Calling ", message_label, " with arguments: ",
+                          paste(args, sep=" ", collapse=" ")),
+                   .opts=opts)
+    }
+    r <- system2(command, args=args)
+    if (r != 0) {
+        pz.error(paste0(error_label, " failed with error code ", r),
+                 .opts=opts)
+    }
+    TRUE
+}
+
 #' Run vsearch analysis on a FASTA file of sequences.
 #'
 #' \code{run.vsearch} runs, by default, the optimal sequence aligner vsearch
@@ -45,7 +65,7 @@ prepare.vsearch.input <- function(mtx, ...) {
 #' not"vsearch", \emph{phylogenize} will assume an old version of vsearch is
 #' being called that doesn't have the ability to search both strands.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{named_asv_file}{String. File name of the sequences to be read into
 #' vsearch.}
@@ -62,15 +82,40 @@ prepare.vsearch.input <- function(mtx, ...) {
 #'
 #' @return Returns TRUE unless an error is thrown.
 #' @export run.vsearch
-run.vsearch <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
-    binary = basename(opts('vsearch_dir'))
-    pid = opts('vsearch_cutoff')
-    vsearch_args = c("--db",
-			     file.path(opts('data_dir'),
-				       opts('vsearch_16sfile')),
+run.vsearch <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    vsearch_path <- opts('vsearch_dir')
+    if (dir.exists(vsearch_path)) {
+        vsearch_path <- file.path(vsearch_path, "vsearch")
+    }
+    if (vsearch_path == "" || !(file.exists(vsearch_path))) {
+        pz.error(paste0("vsearch executable not found: ", opts('vsearch_dir')),
+                 .opts=opts)
+    }
+    if (file.access(vsearch_path, mode=1) != 0) {
+        pz.error(paste0("vsearch executable is not runnable: ", vsearch_path),
+                 .opts=opts)
+    }
+    query_file <- opts('named_asv_file')
+    if (!(file.exists(query_file))) {
+        pz.error(paste0("16S query FASTA not found: ", query_file),
+                 .opts=opts)
+    }
+    db_file <- file.path(opts('data_dir'), opts('vsearch_16sfile'))
+    if (!(file.exists(db_file))) {
+        pz.error(paste0("16S reference FASTA not found: ", db_file),
+                 .opts=opts)
+    }
+    pid <- suppressWarnings(as.numeric(opts('vsearch_cutoff')))
+    if (is.na(pid) || pid <= 0 || pid > 1) {
+        pz.error("vsearch_cutoff must be a number greater than 0 and at most 1",
+                 .opts=opts)
+    }
+    binary <- basename(vsearch_path)
+    vsearch_args <- c("--db",
+			     db_file,
 			     "--usearch_global",
-			     opts('named_asv_file'),
+			     query_file,
 			     "--strand",
 			     "both",
 			     "--id",
@@ -79,14 +124,11 @@ run.vsearch <- function(...) {
 		     20,
 		     "--blast6out",
 		     opts('vsearch_outfile'))
-    pz.message(paste0("Calling aligner ", binary, " with arguments: ",
-                      paste(vsearch_args, sep=" ", collapse=" ")))
-    r <- system2(opts('vsearch_dir'),
-                 args = vsearch_args)
-    if (r != 0) {
-        pz.error(paste0("Aligner failed with error code ", r))
-    }
-    return(TRUE)
+    run.external.tool(vsearch_path,
+                      vsearch_args,
+                      error_label="Aligner",
+                      message_label=paste("aligner", binary),
+                      .opts=opts)
 }
 
 #' Read in results from vsearch.
@@ -97,7 +139,7 @@ run.vsearch <- function(...) {
 #' species_or_genus_ID;;MIDAS_ID". Only MIDAS_ID is used so the contents of
 #' "gene" and "species_or_genus_ID" can be arbitrary.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{vsearch_outfile}{String. File name where vsearch writes output
 #'   which is then read back into \emph{phylogenize}.}
@@ -106,17 +148,55 @@ run.vsearch <- function(...) {
 #' @return List containing a vector of hits, a vector of MIDAS ID targets, and a
 #'     data frame of the assignments as they came out of vsearch.
 #' @export
-get.vsearch.results <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+get.vsearch.results <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    vf <- opts('vsearch_outfile')
+    if (!(file.exists(vf))) {
+        pz.error(paste0("vsearch output file not found: ", vf), .opts=opts)
+    }
+    if (file.info(vf)$size == 0) {
+        pz.error(paste0("vsearch output file was empty: ", vf), .opts=opts)
+    }
     # map to MIDAS IDs using vsearch (note X1 is query name, X3 is pctid)
     assignments <- 
-        readr::read_tsv(opts('vsearch_outfile'), col_names=FALSE) %>%
-	dplyr::group_by(X1) %>%
+        readr::read_tsv(vf, col_names=FALSE, show_col_types=FALSE)
+    if (ncol(assignments) < 3) {
+        pz.error("vsearch output must contain at least 3 tab-delimited columns",
+                 .opts=opts)
+    }
+    if (nrow(assignments) == 0) {
+        pz.error(paste0("vsearch output file had no assignments: ", vf),
+                 .opts=opts)
+    }
+    pct_id <- suppressWarnings(as.numeric(assignments[[3]]))
+    if (any(is.na(pct_id))) {
+        pz.error("vsearch output contains nonnumeric percent identity values",
+                 .opts=opts)
+    }
+    assignments[[3]] <- pct_id
+    query_ok <- grepl("^Row[0-9]+$", assignments[[1]])
+    if (any(!query_ok)) {
+        pz.error(paste0(
+            "vsearch output contains invalid query ID(s): ",
+            paste(unique(assignments[[1]][!query_ok]), collapse=", ")
+        ), .opts=opts)
+    }
+    target_parts <- strsplit(assignments[[2]], ";;", fixed=TRUE)
+    target_ok <- vapply(target_parts, length, integer(1)) >= 3
+    if (any(!target_ok)) {
+        pz.error(paste0(
+            "vsearch output contains malformed target ID(s): ",
+            paste(unique(assignments[[2]][!target_ok]), collapse=", ")
+        ), .opts=opts)
+    }
+    assignments <- assignments %>%
+        dplyr::group_by(X1) %>%
         dplyr::slice_max(X3) %>%
 	dplyr::ungroup()
     row.hits <- as.numeric(gsub("Row", "", assignments[[1]]))
-    row.targets <- sapply(assignments[[2]],
-                          function(x) strsplit(x, ";;")[[1]][3])
+    row.targets <- vapply(strsplit(assignments[[2]], ";;", fixed=TRUE),
+                          function(x) x[[3]],
+                          character(1))
     return(list(hits=row.hits, targets=row.targets, assn=assignments))
 }
 
@@ -127,7 +207,7 @@ get.vsearch.results <- function(...) {
 #' (i.e. that couldn't confidently be assigned to a MIDAS species),
 #' then sums any rows that mapped to the same MIDAS ID.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{min_frac_16s}{Numeric. Should be between 0.5 and 1. Only keep ASVs
 #'   where at least this fraction of assignments are to the same species. 
@@ -145,8 +225,8 @@ get.vsearch.results <- function(...) {
 #'     amplicon sequence variant DNA sequences.
 #' @return A new matrix with MIDAS IDs as rows.
 #' @export sum.nonunique.vsearch
-sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     min_frac <- opts("min_frac_16s")
     vs_tbl <- tibble::tibble(hits=vsearch$hits, targets=vsearch$targets) %>% 
 	    dplyr::group_by(hits) %>%
@@ -158,19 +238,15 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
     rt <- vs_tbl_f$targets
     subset.abd <- mtx[rh, , drop=FALSE]
     urt <- unique(rt)
-    summed.uniq <- t(sapply(urt, function(r) {
-        w <- which(rt == r)
-        apply(subset.abd[w, , drop=FALSE], 2, sum)
-    }))
-    rownames(summed.uniq) <- urt
-    summed.uniq
+    summed.uniq <- rowsum(as.matrix(subset.abd), group=rt, reorder=FALSE)
+    summed.uniq[urt, , drop=FALSE]
 }
 
 
 
 #' Run AppSpam analysis on a FASTA file of sequences.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{appspam_path}{String. Path to appspam binary.}
 #'   \item{aln_path_16s}{String. Path to file containing aligned 16S sequences.}
@@ -180,12 +256,10 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ...) {
 #' }
 #'
 #' @return Returns TRUE unless an error is thrown.
-#' @export run.vsearch
-run.appspam <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
-    r <- system2(
-        opts('appspam_path'), 
-        args = c(
+#' @export run.appspam
+run.appspam <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    appspam_args <- c(
             "-s", 
             opts('aln_path_16s'),
             "-t",
@@ -196,25 +270,24 @@ run.appspam <- function(...) {
             opts('ncl'),
             "-o",
             opts('jplace_file') # in setup should check if exists
-        )
     )
-    if (r != 0) {
-        pz.error(paste0("AppSpam failed with error code ", r))
-    }
-    return(TRUE)
+    run.external.tool(opts('appspam_path'),
+                      appspam_args,
+                      error_label="AppSpam",
+                      .opts=opts)
 }
 
 #' Read in results from AppSpam
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{jplace_file}{String. Path giving where to store input .jplace file.}
 #' }
 #' @return List containing a vector of hits, a vector of MIDAS ID targets, and a
 #'     data frame of the assignments as they came out of AppSpam 
 #' @export
-get.appspam.results <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+get.appspam.results <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     # map to MIDAS IDs using vsearch
     placements <- treeio::read.jplace(opts('jplace_file'))
     tr <- treeio::get.tree(placements)

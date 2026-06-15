@@ -4,12 +4,13 @@
 \alias{check.process.metadata}
 \title{Check and process metadata}
 \usage{
-check.process.metadata(metadata, ...)
+check.process.metadata(metadata, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{metadata}{A data frame of metadata with environment, dataset, and
-sample columns corresponding to those in the global options (see
-\?pz.options).}
+sample columns corresponding to the resolved options.}
 }
 \value{
 A data frame of metadata, with environment and
@@ -21,11 +22,11 @@ A data frame of metadata, with environment and
 }
 \description{
 \code{check.process.metadata} is used to make sure that the metadata
-satisfies the requirements specified by the global options and to make sure
+satisfies the requirements specified by the resolved options and to make sure
 that the metadata are of the correct type.
 }
 \details{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{env_column}{Name of metadata column containing environment
     annotations.}

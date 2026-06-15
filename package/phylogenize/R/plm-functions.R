@@ -1,3 +1,8 @@
+is.future.long.vector.error <- function(e) {
+    msg <- conditionMessage(e)
+    grepl("long vectors not supported yet", msg, fixed = TRUE)
+}
+
 #' Fit phylogenetic (or linear) models, or perform POMS.
 #'
 #' @param taxa Character vector giving the names of the taxa.
@@ -33,10 +38,11 @@ result.wrapper.plm <- function(
     abd.meta = FALSE,
     poms = FALSE,
     pheno_sd = NULL,
-    ...
+    ...,
+    .opts=NULL
 ) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
-    core_method <- tolower(opts('core_method'))
+    opts <- pz.resolve.options(..., .opts=.opts)
+    core_method <- if (isTRUE(poms)) "poms" else tolower(opts('core_method'))
     lapply.across.names(taxa, function(p) {
         pz.message(paste0("  ..........Checking for type for taxa: ", p))
 	if (class(tree) == "phylo") {
@@ -88,6 +94,7 @@ result.wrapper.plm <- function(
                     abd.meta,
                     restrict.taxa = valid,
                     restrict.ff = restrict.figfams,
+                    .opts = opts,
                     ...
                 )
             } else if (
@@ -109,20 +116,64 @@ result.wrapper.plm <- function(
                 perm_m <- method_parsed[1]
                 cores <- opts('ncl')
                 user_maxsize <- options(future.globals.maxSize = 2.0e9)
-                on.exit(options(user_maxsize))
-                future::plan(future::multisession, workers = cores)
+                on.exit(options(user_maxsize), add = TRUE)
+                old_plan <- future::plan()
+                on.exit(future::plan(old_plan), add = TRUE)
+                future_setup_ok <- tryCatch(
+                    {
+                        future::plan(future::multisession, workers = cores)
+                        TRUE
+                    }, error = function(e) {
+                        if (is.future.long.vector.error(e)) {
+                            pz.warning(paste0(
+                                "Future parallelization failed while ",
+                                "starting workers; retrying repermulize ",
+                                "sequentially. Original error: ",
+                                conditionMessage(e)
+                            ))
+                            future::plan(future::sequential)
+                            return(FALSE)
+                        }
+                        stop(e)
+                    }
+                )
 		pz.message("  ..........Running repermulize")
-                
+
+                run_repermulize <- function() {
+                    repermulize::repermulize_wrapper(
+                        pheno,
+                        proteins[[p]],
+                        tr,
+                        perm_method = perm_m,
+                        regression_method = regression_m,
+                        real_pheno_sd = pheno_sd)
+                }
+
 		results <- tryCatch(
 		    {
-		       repermulize::repermulize_wrapper(
-			    pheno,
-			    proteins[[p]],
-			    tr,
-			    perm_method = perm_m,
-			    regression_method = regression_m,
-			    real_pheno_sd = pheno_sd)
+		       run_repermulize()
 		    }, error = function(e) {
+                        if (future_setup_ok && is.future.long.vector.error(e)) {
+                            pz.warning(paste0(
+                                "Future parallelization failed while ",
+                                "serializing a large object; retrying ",
+                                "repermulize sequentially. Original error: ",
+                                conditionMessage(e)
+                            ))
+                            future::plan(future::sequential)
+                            return(tryCatch(
+                                run_repermulize(),
+                                error = function(e2) {
+                                    pz.message(paste0(
+                                        "Skipping protein/index ",
+                                        p,
+                                        " after sequential retry failed: ",
+                                        conditionMessage(e2)
+                                    ))
+                                    return(NULL)
+                                }
+                            ))
+                        }
 			pz.message(paste0("Skipping protein/index ", p, " due to error: ", conditionMessage(e)))
 		        return(NULL)
 		    }
@@ -131,8 +182,6 @@ result.wrapper.plm <- function(
 		if (is.null(results)) {
 		    return(NULL)
 		}
-                
-		future::plan(future::sequential)
                 return(as.data.frame(results))
             } else if (core_method == "lm") {
                 matrix.plm(
@@ -142,6 +191,7 @@ result.wrapper.plm <- function(
                     method = lm.fx.pv,
                     restrict.taxa = valid,
                     restrict.ff = restrict.figfams,
+                    .opts = opts,
                     ...
                 )
             } else {
@@ -153,6 +203,7 @@ result.wrapper.plm <- function(
                     method = phylolm.fx.pv,
                     restrict.taxa = valid,
                     restrict.ff = restrict.figfams,
+                    .opts = opts,
                     ...
                 )
             }
@@ -162,9 +213,27 @@ result.wrapper.plm <- function(
     })
 }
 
+filter.incomplete.metadata.samples <- function(metadata, mtx, required_cols) {
+    missing_cols <- setdiff(required_cols, colnames(metadata))
+    if (length(missing_cols) > 0) {
+        pz.error(paste0(
+            "metadata is missing required column(s): ",
+            paste(missing_cols, collapse=", ")
+        ))
+    }
+    complete_rows <- stats::complete.cases(metadata[, required_cols, drop=FALSE])
+    metadata <- metadata[complete_rows, , drop=FALSE]
+    metadata <- droplevels(metadata)
+    shared_samples <- intersect(rownames(metadata), colnames(mtx))
+    list(
+        metadata=metadata[shared_samples, , drop=FALSE],
+        mtx=mtx[, shared_samples, drop=FALSE]
+    )
+}
+
 #' Perform POMS modeling for a single clade.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{ncl}{Integer. Number of cores to use for parallel computation.
 #'   Default: 1}
@@ -189,7 +258,7 @@ result.wrapper.plm <- function(
 #' @param poms_pseudocount Pseudocount value for POMS; default 0.5.
 #' @return Matrix of "effect-sizes" (row 1) and p-values (row 2) per gene
 #'   (columns). Here, we "fake" effect sizes by taking the log2-ratio of
-#'   num_FSNs_group1_enrich and num_FSNs_group2_enrich with a 0.5 pseudocount.
+#'   num_FSNs_group1_enrich and num_FSNs_group2_enrich with poms_pseudocount.
 #' @export
 matrix.POMS <- function(tree,
                         mtx,
@@ -199,25 +268,49 @@ matrix.POMS <- function(tree,
                         poms_min_tips=2,
                         poms_min_func=2,
                         poms_pseudocount=0.5,
-                        ...) {
+                        ...,
+                        .opts=NULL) {
     message("POMS")
     
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+    opts <- pz.resolve.options(..., .opts=.opts)
     E <- opts('env_column')
     S <- opts('sample_column')
     envir <- opts('which_envir')
     cores <- opts('ncl')
     
     # Note: dataset column is ignored
-    poms_group1 <- abd.meta$metadata[[S]][abd.meta$metadata[[E]] == envir]
-    poms_group2 <- abd.meta$metadata[[S]][abd.meta$metadata[[E]] != envir]
+    poms_sample_ids <- as.character(abd.meta$metadata[[S]])
+    poms_valid_metadata <- (
+        !is.na(abd.meta$metadata[[E]]) &
+        !is.na(poms_sample_ids) &
+        poms_sample_ids %in% colnames(abd.meta$mtx)
+    )
+    poms_valid_sample_ids <- poms_sample_ids[poms_valid_metadata]
+    poms_samples <- intersect(colnames(abd.meta$mtx), poms_valid_sample_ids)
+    poms_meta <- abd.meta$metadata[
+        which(poms_valid_metadata)[match(poms_samples, poms_valid_sample_ids)],
+        ,
+        drop=FALSE
+    ]
+    poms_group1 <- poms_samples[poms_meta[[E]] == envir]
+    poms_group2 <- poms_samples[poms_meta[[E]] != envir]
+    poms_abun <- abd.meta$mtx[, poms_samples, drop=FALSE]
+    if (length(poms_group1) == 0 || length(poms_group2) == 0) {
+        pz.error(paste0(
+            "POMS requires at least one sample in both target and ",
+            "non-target environment groups"
+        ))
+    }
     
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
     
-    phylotype_df <- data.frame(as.matrix(t(mtx[restrict.ff, ])))
+    phylotype_df <- data.frame(
+        as.matrix(t(mtx[restrict.ff, restrict.taxa, drop=FALSE])),
+        check.names=FALSE
+    )
     
-    if (length(unique(as.numeric(abd.meta$mtx))) <= 2) {
+    if (length(unique(as.numeric(poms_abun))) <= 2) {
         pz.error(paste0(
             "Abundance matrix has two or fewer unique values; ",
             "suggests matrix is binary (which will not work for POMS). ",
@@ -230,7 +323,7 @@ matrix.POMS <- function(tree,
     poms_output <- tryCatch({
 			    POMS::POMS_pipeline(
         abun=data.frame(
-            as.matrix(abd.meta$mtx),
+            as.matrix(poms_abun),
             check.names=FALSE),
         func=phylotype_df,
         tree=tree_nodes,
@@ -255,9 +348,8 @@ matrix.POMS <- function(tree,
     }
     poms_tbl <- tibble::as_tibble(poms_output$results, rownames="gene") %>%
         dplyr::mutate(
-              Estimate = abs(
-                           log2((num_FSNs_group1_enrich + 0.5) /
-                                (num_FSNs_group2_enrich + 0.5))),
+              Estimate = log2((num_FSNs_group1_enrich + poms_pseudocount) /
+                              (num_FSNs_group2_enrich + poms_pseudocount)),
               p.value = multinomial_p,
 	      StdErr = NA,
               df = NA) %>%
@@ -293,8 +385,9 @@ nonparallel.results.generator <- function(gene.matrix,
                                          restrict.ff=NULL,
                                          remove.low.variance=TRUE,
                                          use.for.loop=TRUE,
-                                         ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                                         ...,
+                                         .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     message(taxon.name)
     restrict.taxa <- Reduce(intersect, list(colnames(gene.matrix),
                                             tree$tip.label,
@@ -536,8 +629,9 @@ matrix.plm <- function(tree,
                        method=phylolm.fx.pv,
                        restrict.taxa=NULL,
                        restrict.ff=NULL,
-                       ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                       ...,
+                       .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     cores <- opts('ncl')
     if (is.null(restrict.taxa)) restrict.taxa <- colnames(mtx)
     if (is.null(restrict.ff)) restrict.ff <- rownames(mtx)
@@ -553,14 +647,44 @@ matrix.plm <- function(tree,
     } else {
         cl <- NULL
     }
-    r <- maybeParApply(mtx[restrict.ff, restrict.taxa, drop=FALSE],
-                       1,
-                       method,
-                       cl,
-                       p=pheno,
-                       tr=tree,
-                       restrict=restrict.taxa,
-                       meas_err=opts('meas_err'))
+    gene.mtx <- mtx[restrict.ff, restrict.taxa, drop=FALSE]
+    builtin_model <- identical(method, phylolm.fx.pv) ||
+        identical(method, lm.fx.pv)
+    model.pheno <- if (builtin_model) pheno[restrict.taxa] else pheno
+    model.restrict <- if (builtin_model) NULL else restrict.taxa
+    if (!is.null(cl)) {
+        r <- maybeParApply(gene.mtx,
+                           1,
+                           method,
+                           cl,
+                           p=model.pheno,
+                           tr=tree,
+                           restrict=model.restrict,
+                           meas_err=opts('meas_err'))
+    } else {
+        r <- matrix(nr=0, nc=0)
+        if (nrow(gene.mtx) > 0) {
+            first <- method(gene.mtx[1, ],
+                            p=model.pheno,
+                            tr=tree,
+                            restrict=model.restrict,
+                            meas_err=opts('meas_err'))
+            r <- matrix(NA_real_,
+                        nrow=length(first),
+                        ncol=nrow(gene.mtx),
+                        dimnames=list(names(first), rownames(gene.mtx)))
+            r[, 1] <- first
+            if (nrow(gene.mtx) > 1) {
+                for (i in 2:nrow(gene.mtx)) {
+                    r[, i] <- method(gene.mtx[i, ],
+                                     p=model.pheno,
+                                     tr=tree,
+                                     restrict=model.restrict,
+                                     meas_err=opts('meas_err'))
+                }
+            }
+        }
+    }
     r
 }
 
@@ -855,7 +979,7 @@ b.scorer <- function(s, a) {
 
 #' Main function to calculate taxon prevalences with additive smoothing.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{String. Name of column in metadata file containing the
 #'   environment annotations.}
@@ -869,8 +993,9 @@ b.scorer <- function(s, a) {
 #' @return An additively-smoothed estimate of taxon prevalences.
 #' @export
 prev.addw <- function(abd.meta,
-                      ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                      ...,
+                      .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     envir <- opts('which_envir')
     E <- opts('env_column')
     D <- opts('dset_column')
@@ -910,7 +1035,7 @@ prev.addw <- function(abd.meta,
 #' Main function to calculate taxon-to-phenotype correlations, using
 #' clr-transformed abundances.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{String. Name of column in metadata file containing (in
 #'   this case) the correlation variable.}
@@ -924,8 +1049,9 @@ prev.addw <- function(abd.meta,
 #' @return An estimate of taxon abundance correlations with a phenotype.
 #' @export
 correl.clr <- function(abd.meta,
-                      ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                       ...,
+                       .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     R <- opts('env_column')
     S <- opts('sample_column')
     D <- opts('dset_column')
@@ -978,7 +1104,7 @@ clr <- function(mtx, pc = 0.5) {
 
 #' Main function to calculate environmental specificity scores.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{String. Name of column in metadata file containing the
 #'   environment annotations.}
@@ -1006,8 +1132,9 @@ clr <- function(mtx, pc = 0.5) {
 calc.ess <- function(abd.meta,
                      pdata = NULL,
                      b.optim = NULL,
-                     ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                     ...,
+                     .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     E <- opts('env_column')
     D <- opts('dset_column')
     S <- opts('sample_column')
@@ -1034,6 +1161,27 @@ calc.ess <- function(abd.meta,
         stop("not implemented yet, sorry")
     } else if (ptype == "file") {
         priors <- pdata[pdata$env %in% envirs, , drop=FALSE]
+        missing_prior_envs <- setdiff(as.character(envirs),
+                                      as.character(priors$env))
+        if (length(missing_prior_envs) > 0) {
+            pz.error(paste0(
+                "Prior file does not include retained environment(s): ",
+                paste(missing_prior_envs, collapse=", ")
+            ), .opts=opts)
+        }
+        prior_sum <- sum(priors$prior)
+        if (!is.finite(prior_sum) || prior_sum <= 0) {
+            pz.error("Prior file priors must sum to a positive finite value",
+                     .opts=opts)
+        }
+        if (!isTRUE(all.equal(prior_sum, 1, tolerance=1e-6))) {
+            pz.warning(paste0(
+                "Prior values for retained environments sum to ",
+                signif(prior_sum, 4),
+                "; normalizing to sum to 1"
+            ), .opts=opts)
+            priors$prior <- priors$prior / prior_sum
+        }
     } else {
         stop(paste0("don't know how to compute priors of type ", ptype))
     }
@@ -1105,6 +1253,30 @@ ash_wrapper <- function(m, s, nw=10, ashr_df=Inf) {
             df=ashr_df)
 }
 
+ancombc2_env_result_stem <- function(ancom_results_tbl, env_column, envir) {
+    candidates <- unique(c(
+        paste0(env_column, envir),
+        make.names(paste0(env_column, envir)),
+        paste0("env", envir)
+    ))
+    complete <- candidates[
+        paste0("lfc_", candidates) %in% colnames(ancom_results_tbl) &
+            paste0("se_", candidates) %in% colnames(ancom_results_tbl)
+    ]
+    if (length(complete) > 0) {
+        return(complete[[1]])
+    }
+    pz.error(paste0(
+        "Could not find ANCOMBC2 result columns for env_column='",
+        env_column,
+        "' and which_envir='",
+        envir,
+        "'. Expected lfc/se columns for one of: ",
+        paste(candidates, collapse=", "),
+        "."
+    ))
+}
+
 restore.diff.abund.taxon.names <- function(sample_pheno, sample_sd, original_names) {
   original_names <- as.character(original_names)
   numeric_original <- original_names[
@@ -1145,7 +1317,7 @@ restore.diff.abund.taxon.names <- function(sample_pheno, sample_sd, original_nam
 #' or MaAsLin2, then smooth the results with adaptive shrinkage. Note that the
 #' packages for ANCOMBC2 or MaAsLin2 must already be installed.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{String. Name of column in metadata file containing the
 #'   environment annotations.}
@@ -1160,8 +1332,9 @@ restore.diff.abund.taxon.names <- function(sample_pheno, sample_sd, original_nam
 #' @return A vector giving shrunken estimates of differential abundance.
 #' @export
 ashr.diff.abund <- function(abd.meta,
-                            ...) {
-  opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+                            ...,
+                            .opts=NULL) {
+  opts <- pz.resolve.options(..., .opts=.opts)
   if (opts("error_to_file")) {
     sink_for_externals <- file.path(opts('out_dir'), opts('error_file'))
     sink(sink_for_externals)
@@ -1208,11 +1381,18 @@ ashr.diff.abund <- function(abd.meta,
       pz.error(
           "For abundance there must be at least two different environments")
     }
+    required_metadata_cols <- E
+    if (D %in% colnames(named_metadata) &&
+        length(levels(named_metadata[[D]])) >= 2) {
+        required_metadata_cols <- c(required_metadata_cols, D)
+    }
     named_metadata <- named_metadata %>%
-	    filter(!is.na(E) | !is.na(D))
+        dplyr::filter(dplyr::if_all(dplyr::all_of(required_metadata_cols),
+                                    ~ !is.na(.x)))
+    ancom_mtx <- abd.meta$mtx[, rownames(named_metadata), drop=FALSE]
     pz.message("  ..........Running TreeSummarizedExperiment function...") 
     ancom_tse <- TreeSummarizedExperiment::TreeSummarizedExperiment(
-      assays=S4Vectors::SimpleList(counts=abd.meta$mtx),
+      assays=S4Vectors::SimpleList(counts=ancom_mtx),
       colData=S4Vectors::DataFrame(named_metadata))
     
     ancom_results <- ANCOMBC::ancombc2(ancom_tse,
@@ -1220,7 +1400,7 @@ ashr.diff.abund <- function(abd.meta,
                               fix_formula=ancom_formula,
                               n_cl=opts('ncl'))
     ancom_results_tbl <- ancom_results$res %>% tibble::tibble()
-    envir_stem <- paste0("env", envir)
+    envir_stem <- ancombc2_env_result_stem(ancom_results_tbl, E, envir)
     lfc_col <- paste0("lfc_", envir_stem)
     se_col <- paste0("se_", envir_stem)
     for (ctest in c(lfc_col, se_col)) {
@@ -1307,18 +1487,46 @@ ashr.diff.abund <- function(abd.meta,
 }
 
 
-pz.log.options <- function(...) {
-    overrides <- list(...)
-    if (length(overrides) == 0) {
-        PZ_OPTIONS
-    } else {
-        do.call(settings::clone_and_merge, c(list(PZ_OPTIONS), overrides))
+pz.is.resolved.options <- function(x) {
+    if (!is.function(x)) {
+        return(FALSE)
     }
+    vals <- tryCatch(x(), error=function(e) NULL)
+    is.list(vals) &&
+        all(c("out_dir", "error_to_file", "verbosity") %in% names(vals))
+}
+
+pz.infer.options <- function() {
+    frames <- sys.frames()
+    for (i in rev(seq_along(frames))) {
+        frame <- frames[[i]]
+        if (!exists("opts", envir=frame, inherits=FALSE)) {
+            next
+        }
+        candidate <- get("opts", envir=frame, inherits=FALSE)
+        if (pz.is.resolved.options(candidate)) {
+            return(candidate)
+        }
+    }
+    NULL
+}
+
+pz.log.options <- function(..., .opts=NULL) {
+    base_opts <- .opts
+    if (is.null(base_opts)) {
+        base_opts <- pz.infer.options()
+    }
+    pz.resolve.options(..., .opts=base_opts)
+}
+
+pz.should.message <- function(level=1, ...) {
+    opts <- pz.log.options(...)
+    isTRUE(opts("error_to_file")) || level <= opts("verbosity")
 }
 
 #' Throw an error and optionally log it in errmsg.txt.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
 #'   output to an error message file?}
@@ -1342,7 +1550,7 @@ pz.error <- function(errtext, ...) {
 
 #' Report a message and optionally log it in errmsg.txt.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
 #'   output to an error message file?}
@@ -1369,7 +1577,7 @@ pz.message <- function(msgtext, level=1, ...) {
 
 #' Report a warning and optionally log it in errmsg.txt.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{error_to_file}{Boolean. Should pz.error, pz.warning, and pz.message
 #'   output to an error message file?}
@@ -1391,25 +1599,9 @@ pz.warning <- function(msgtext, ...) {
     warning(msgtext)
 }
 
-#' Convert results into a long (vs. wide) format.
-#'
-#' @param results Output of result.wrapper.plm.
-#' @return A single data frame with entries from \code{results}.
-#' @export
-make.results.matrix <- function(results) {
-    Reduce(dplyr::bind_rows, lapply(names(results), function(rn) {
-        tibble::tibble(taxon = rn,
-                       gene = results[[rn]] %>% colnames,
-                       effect.size = results[[rn]][1,],
-                       p.value = results[[rn]][2,],
-                       std.err = results[[rn]][3,],
-                       df = results[[rn]][4,])
-    }))
-}
-
 #' Filter out genes that are almost always present or absent.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{minimum}{Integer. A particular gene must be observed, and also
 #'   absent, at least this many times to be reported as a significant positive
@@ -1420,14 +1612,14 @@ make.results.matrix <- function(results) {
 #'     results.
 #' @return A single data frame with entries from \code{results}.
 #' @export
-threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     Min <- opts('minimum')
     mapply(pz.db$trees[phy.with.sigs],
            pos.sig[phy.with.sigs],
            pz.db$gene.presence[phy.with.sigs],
            FUN = function(tr, x, y) {
-               i <- na.omit(intersect(tr$tip.label, colnames(y)))
+               i <- na.omit(shared.tree.tips(tr, colnames(y)))
                if (length(i) == 0) { return(character(0)) }
                if (length(x) == 0) { return(character(0)) }
                y2 <- y[x, i, drop=FALSE]
@@ -1442,7 +1634,7 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 #' regressions. Also screen out genes that are only observed at a low frequency
 #' (if working with continuous pangenomes).
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{minimum}{Integer. A particular gene must be observed, and also
 #'   absent, at least this many times to be reported as a significant positive
@@ -1457,18 +1649,19 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ...) {
 #' @return A revised `gene.presence` list. Note that some taxa may be dropped
 #'   from the list (if they had zero genes left after filtering).
 #' @export
-above_minimum_genes <- function(gene.presence, trees, ...) {
-    opts <- settings::clone_and_merge(PZ_OPTIONS, ...)
+above_minimum_genes <- function(gene.presence, trees, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     Min <- opts('minimum')
     GMF <- opts('gene_min_frac')
     taxa <- names(trees)
+    shared_cols <- stats::setNames(lapply(taxa, function(tx) {
+        na.omit(shared.tree.tips(trees[[tx]], colnames(gene.presence[[tx]])))
+    }), taxa)
     # keep track of which taxa should be dropped entirely
     to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)
     for (tx in taxa) {
         pz.message(paste0("Processing taxon ", tx), level=2)
-        tips <- trees[[tx]]$tip.label
-        colns <- colnames(gene.presence[[tx]])
-        i <- na.omit(intersect(tips, colns))
+        i <- shared_cols[[tx]]
         if (length(i) > 0) {
           mtx <- gene.presence[[tx]][, i, drop=FALSE]
 	  Max <- ncol(mtx) - Min
@@ -1494,8 +1687,15 @@ above_minimum_genes <- function(gene.presence, trees, ...) {
 #' @return A single data frame of all significant results plus descriptions.
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
-    pos.sig.tbl <- tibble::enframe(pos.sig, name="taxon", value="gene") %>%
-        tidyr::unnest()
+    sig_lengths <- lengths(pos.sig)
+    sig_genes <- unlist(pos.sig, use.names=FALSE)
+    if (is.null(sig_genes)) {
+        sig_genes <- character(0)
+    }
+    pos.sig.tbl <- tibble::tibble(
+        taxon=rep(names(pos.sig), sig_lengths),
+        gene=sig_genes
+    )
     
     column_names <- colnames(gene.to.fxn)
     na_columns <- which(is.na(column_names))

@@ -31,7 +31,21 @@ nonequiv.pos.sig <- function(results,
                              qcut_eq=0.05,
                              min_fx=0.25,
                              exclude=NULL,
-                             dir=1) {
+                             dir=1,
+                             ...,
+                             .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    call_method <- function(vals) {
+        tryCatch(
+            method(vals, .opts=opts),
+            error=function(e) {
+                if (grepl("unused argument.*\\.opts", conditionMessage(e))) {
+                    return(method(vals))
+                }
+                stop(e)
+            }
+        )
+    }
     dir <- sign(dir)
     if (dir==0) { stop("dir must not be zero") }
     if (is.null(exclude)) exclude <- lapply(results, function(.) NULL)
@@ -42,11 +56,13 @@ nonequiv.pos.sig <- function(results,
         }
         #tryCatch(
         #    {
-                tested <- na.omit(unlist(r[2, valid, drop = FALSE]))
-                if ("matrix" %in% class(tested)) {
-                    tested <- tested[1, ]
-                }
-                qv <- method(tested)
+                tested <- unlist(r[2, valid, drop = FALSE])
+                if (is.null(names(tested))) names(tested) <- valid
+                tested_names <- names(tested)
+                tested <- as.numeric(tested)
+                names(tested) <- tested_names
+                tested <- stats::na.omit(tested)
+                qv <- call_method(tested)
                 fx_sig <- nw(qv <= qcut_sig)
                 neq_sig <- valid
                 if (min_fx > 0) {
@@ -56,7 +72,7 @@ nonequiv.pos.sig <- function(results,
                             2,
                             function(x) equiv_test(x[1], x[3], x[4], min_fx)
                         )
-                        neq_qv <- method(neq)
+                        neq_qv <- call_method(neq)
                         neq_sig <- nw(neq_qv > qcut_eq)
                     } else {
                         pz.warning(
@@ -65,9 +81,10 @@ nonequiv.pos.sig <- function(results,
                     }
                 }
                 fx_sizes <- unlist(r[1, valid, drop=FALSE])
-                if ("matrix" %in% class(fx_sizes)) {
-                    fx_sizes <- fx_sizes[1, ]
-                }
+                if (is.null(names(fx_sizes))) names(fx_sizes) <- valid
+                fx_names <- names(fx_sizes)
+                fx_sizes <- as.numeric(fx_sizes)
+                names(fx_sizes) <- fx_names
                 which_pos <- nw((dir * fx_sizes) > 0)
                 Reduce(intersect, list(fx_sig, neq_sig, which_pos))
           #  },
@@ -113,8 +130,21 @@ make.sigs <- function(
     method = qvals,
     exclude = NULL,
     min.fx = 0,
-    ...
+    ...,
+    .opts=NULL
 ) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    call_method <- function(vals) {
+        tryCatch(
+            method(vals, ..., .opts=opts),
+            error=function(e) {
+                if (grepl("unused argument.*\\.opts", conditionMessage(e))) {
+                    return(method(vals, ...))
+                }
+                stop(e)
+            }
+        )
+    }
     sig_fxn <- function(x, cut) {
         if (!is.null(exclude)) {
             valid <- setdiff(colnames(results[[x]]), exclude[[x]])
@@ -134,7 +164,7 @@ make.sigs <- function(
                 setNames(valid)
         )
         tryCatch(
-            intersect(nw(method(all_tested, ...) <= cut), above.min),
+            intersect(nw(call_method(all_tested) <= cut), above.min),
             error = function(e) character(0)
         )
     }
@@ -150,9 +180,11 @@ make.sigs <- function(
 #' @return List (per taxon) of numeric vectors of signs of hits.
 #' @export
 make.signs <- function(results) {
-  lapply(results, function(r) {
-    sign(unlist(r[1, , drop=FALSE])) %>% na.omit
-  })
+    lapply(results, function(r) {
+        fx <- as.numeric(r[1, , drop=FALSE])
+        names(fx) <- colnames(r)
+        stats::na.omit(sign(fx))
+    })
 }
 
 #' Calculate the FPR and (1 - FNR) for results of a set of tests.
@@ -248,25 +280,58 @@ get.top.N <- function(p,
 #'   (which can be "BH", "BY", or "qvalue).
 #' @return A vector of q-values.
 #' @keywords internal
-qvals <- function(x, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
-    if (toupper(opts("fdr_method"))=="BH") {
-        return(p.adjust(x, 'BH'))
+qvals <- function(x, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    method <- tolower(opts("fdr_method"))
+    valid_methods <- c("bh", "by", "qvalue")
+    if (!(method %in% valid_methods)) {
+        pz.error(paste0(
+            "Invalid fdr_method: ",
+            opts("fdr_method"),
+            ". Expected one of: BH, BY, qvalue"
+        ), .opts=opts)
     }
-    if (toupper(opts("fdr_method"))=="BY") {
-        return(p.adjust(x, 'BY'))
+    if (length(x) == 0) {
+        return(x)
     }
-    if (tolower(opts("fdr_method"))=="qvalue") {
-        q <- tryCatch(qvalue::qvalue(x,
+    x_unlisted <- unlist(x)
+    x_numeric <- suppressWarnings(as.numeric(x_unlisted))
+    x_names <- names(x_unlisted)
+    if (is.null(x_names) && !is.null(dim(x)) && ncol(x) == length(x_numeric)) {
+        x_names <- colnames(x)
+    }
+    names(x_numeric) <- x_names
+    nonmissing <- !is.na(x_numeric)
+    if (any(!is.finite(x_numeric[nonmissing])) ||
+        any(x_numeric[nonmissing] < 0 | x_numeric[nonmissing] > 1)) {
+        pz.error("p-values must be finite values between 0 and 1",
+                 .opts=opts)
+    }
+    q <- rep(NA_real_, length(x_numeric))
+    names(q) <- names(x_numeric)
+    if (!any(nonmissing)) {
+        return(q)
+    }
+    x_valid <- x_numeric[nonmissing]
+    if (method=="bh") {
+        q[nonmissing] <- p.adjust(x_valid, 'BH')
+        return(q)
+    }
+    if (method=="by") {
+        q[nonmissing] <- p.adjust(x_valid, 'BY')
+        return(q)
+    }
+    if (method=="qvalue") {
+        q[nonmissing] <- tryCatch(qvalue::qvalue(x_valid,
                                      fdr=T,
                                      lambda=seq(0.001, 0.95, 0.005))$qvalues,
                       error=function(e) {
                           pz.warning("Trying lambda=0...", ...)
-                          tryCatch(qvalue::qvalue(x, fdr=T, lambda=0)$qvalues,
+                          tryCatch(qvalue::qvalue(x_valid, fdr=T, lambda=0)$qvalues,
                                    error=function(e) {
                                        pz.warning(e, ...)
                                        pz.warning("Falling back to BH", ...)
-                                       p.adjust(x, 'BH')
+                                       p.adjust(x_valid, 'BH')
                                    })
                       })
         return(q)
@@ -280,13 +345,48 @@ qvals <- function(x, ...) {
 #' @return A single data frame with entries from \code{results}.
 #' @export
 make.results.matrix <- function(results) {
-    Reduce(dplyr::bind_rows, lapply(names(results), function(rn) {
-        tibble::tibble(taxon = rn,
-                       gene = colnames(results[[rn]]),
-                       effect.size = unlist(results[[rn]][1,]),
-                       p.value = unlist(results[[rn]][2,]),
-                       std.err = unlist(results[[rn]][3,]),
-                       df = unlist(results[[rn]][4,])
-                    )
-    }))
+    result_names <- names(results)
+    n_genes <- vapply(results, ncol, integer(1))
+    n_rows <- sum(n_genes)
+
+    genes <- character(n_rows)
+    effect_sizes <- numeric(n_rows)
+    p_values <- numeric(n_rows)
+    std_errs <- numeric(n_rows)
+    dfs <- numeric(n_rows)
+
+    result_row <- function(result, row) {
+        unname(as.numeric(unlist(result[row, , drop=FALSE],
+                                 recursive=TRUE,
+                                 use.names=FALSE)))
+    }
+
+    row_start <- 1L
+    for (rn in result_names) {
+        n_gene <- ncol(results[[rn]])
+        if (n_gene == 0) {
+            next
+        }
+        rows <- row_start:(row_start + n_gene - 1L)
+        genes[rows] <- colnames(results[[rn]])
+        effect_sizes[rows] <- result_row(results[[rn]], 1)
+        p_values[rows] <- result_row(results[[rn]], 2)
+        std_errs[rows] <- result_row(results[[rn]], 3)
+        dfs[rows] <- result_row(results[[rn]], 4)
+        row_start <- row_start + n_gene
+    }
+
+    names(effect_sizes) <- genes
+    names(p_values) <- genes
+    names(std_errs) <- genes
+    names(dfs) <- genes
+
+    tibble::tibble(
+        taxon=rep(result_names, n_genes),
+        gene=genes,
+        effect.size=effect_sizes,
+        p.value=p_values,
+        std.err=std_errs,
+        df=dfs
+    )
 }

@@ -27,7 +27,6 @@ default_params <- list(
     output_file="results.html",
     out_dir="./",
     pctmin = 0.025,
-    phenotype_file = "",
     prior_type = "uninformative",
     prior_file = "",
     prev_color_high = 'orange2',
@@ -73,10 +72,12 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 
 #' Set and get options for phylogenize.
 #'
-#' Function to set and get global options for the \emph{phylogenize} package.
+#' Function to set and get default options for the \emph{phylogenize} package.
 #'
-#' These options are global because they affect how most of the functions in
-#' \emph{phylogenize} work. Descriptions of these options follow.
+#' These package-level defaults are used when a phylogenize call does not
+#' provide an explicit override. Core workflows resolve the defaults and any
+#' overrides once, then pass that resolved option object through the call chain.
+#' Descriptions of these options follow.
 #'
 #' @section File input/output and paths:
 #' \describe{
@@ -90,7 +91,6 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{metadata_file}{String. Name of metadata tabular file. Default: "test-metadata.tab"}
 #'   \item{rds_output_file}{String. Name of output RDS file containing the full results of applying `phylogenize_core()`. Set to empty string to disable. Default: "core_output.rds"}
 #'   \item{output_file}{String. Name of output file: "results.html"}
-#'   \item{phenotype_file}{String. Name of input file for optional pre-calculated phenotype. Default: ""}
 #'   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
 #'   \item{separate_metadata}{Boolean. For BIOM data, is there a separate tabular metadata table? Default: FALSE}
 #'   \item{which_16s_method}{String. Can be "vsearch" (best-hit alignment), "appspam" (perform phylogenetic placement), or "jplace" (bring-your-own .jplace file). Default: "appspam"}
@@ -129,7 +129,7 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{categorical}{Boolean. For abundance estimates, is the environment in env_column a categorical variable (TRUE) or continuous (FALSE)? Default: TRUE}
 #'   \item{diff_abund_method}{String. Which method to use to calculate differential abundance. Either "ANCOMBC2" or "Maaslin2" (case insensitive). Default: "ANCOMBC2"}
 #'   \item{core_method}{String. Which method to use to associate genes with phenotypes. Either "permutrate-rlm", "permutrate-lm", "permulate-lm", "permulate-rlm", "phylolm", "lm", or "POMS" (case insensitive). Default: "permutrate-rlm"}
-#'   \item{fdr_method}{String. Which method to correct FDR for significant results? Either "BH", "BY", or "qvalue". Default: "qvalue"}
+#'   \item{fdr_method}{String. Which method to correct FDR for significant results? Either "BH", "BY", or "qvalue". Default: "BH"}
 #' }
 #'
 #' @section Graphing:
@@ -157,6 +157,47 @@ pz.options <- function(...) {
     PZ_OPTIONS(...)
 }
 
+#' Resolve options for one phylogenize call.
+#'
+#' Internal helper used to pass a single resolved option object through a call
+#' chain instead of repeatedly reading package-level defaults.
+#'
+#' @param ... Option overrides.
+#' @param .opts Existing resolved options object. When supplied, overrides in
+#'   \code{...} are merged into this object.
+#' @noRd
+pz.resolve.options <- function(..., .opts=NULL) {
+    dots <- list(...)
+    if (is.null(.opts)) {
+        return(do.call(settings::clone_and_merge, c(list(PZ_OPTIONS), dots)))
+    }
+    if (length(dots) == 0) {
+        return(.opts)
+    }
+    do.call(settings::clone_and_merge, c(list(.opts), dots))
+}
+
+read.internal.database.index <- function(db_csv) {
+    db <- utils::read.csv(
+        db_csv,
+        check.names=FALSE,
+        stringsAsFactors=FALSE,
+        na.strings=c("", "NA"),
+        fill=TRUE
+    )
+    required <- "database"
+    if (!(required %in% colnames(db))) {
+        pz.error(sprintf(
+            "databases.csv is missing required column: %s",
+            required
+        ))
+    }
+    if (any(is.na(db$database) | trimws(db$database) == "")) {
+        pz.error("databases.csv contains blank database names")
+    }
+    db
+}
+
 #' Set data directory to internal
 #'
 #' @param fail Boolean. If TRUE, set_data_internal will not attempt to download
@@ -180,7 +221,7 @@ set_data_internal <- function(fail=FALSE, startup=FALSE) {
             M(sprintf("Note: databases.csv was not found under directory '%s'. You will need to manually set the directory later with the option 'data_dir=<PATH>'.", phd))
         } else {
             success <- TRUE
-            db <- readr::read_delim(dd)
+            db <- read.internal.database.index(dd)
             M(sprintf("Databases listed:\n\t - %s", paste0(db[["database"]], collapse="\n\t - ")))
         }
     #}
@@ -213,7 +254,7 @@ check_data_found <- function(fail=FALSE, startup=FALSE) {
             ))
         } else {
             success <- TRUE
-            db <- readr::read_delim(dd)
+            db <- read.internal.database.index(dd)
             M(sprintf(
                 "Databases listed:\n\t - %s",
                 paste0(db[["database"]], collapse = "\n\t - ")

@@ -4,9 +4,11 @@
 \alias{random.species.from.file}
 \title{Simulate amplicon sequence variants (ASVs) from a database of 16S sequences.}
 \usage{
-random.species.from.file(n.species, tag.length = 100, ...)
+random.species.from.file(n.species, tag.length = 100, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{n.species}{Positive integer: how many ASVs to simulate?}
 
 \item{tag.length}{Positive integer: how long should the ASVs be?}
@@ -20,7 +22,7 @@ A list:
     of the species that species $i$ was mapped to.}
 }
 \description{
-Some global options that may be helpful include:
+Some options that may be helpful include:
 \describe{
   \item{data_dir}{String. Path to directory containing the data files
   required to perform a \emph{phylogenize} analysis. Here, this is where the

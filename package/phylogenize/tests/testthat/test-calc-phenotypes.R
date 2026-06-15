@@ -1,3 +1,34 @@
+calc_phenotype_fixture <- function() {
+    list(
+        abd.meta=list(
+            mtx=Matrix::Matrix(
+                matrix(
+                    c(1, 0, 0,
+                      0, 1, 0,
+                      0, 0, 1),
+                    nrow=3,
+                    byrow=TRUE,
+                    dimnames=list(paste0("s", 1:3), paste0("sample", 1:3))
+                ),
+                sparse=TRUE
+            )
+        ),
+        pz.db=list(
+            trees=list(TaxonA=ape::read.tree(text="(s1:1,s2:1,s3:1);")),
+            gene.presence=list(
+                TaxonA=Matrix::Matrix(
+                    matrix(
+                        c(1, 1, 0),
+                        nrow=1,
+                        dimnames=list("gene1", paste0("s", 1:3))
+                    ),
+                    sparse=TRUE
+                )
+            )
+        )
+    )
+}
+
 test_that("calculate_phenotypes uses direct treemin override", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)
@@ -50,6 +81,396 @@ test_that("calculate_phenotypes uses direct treemin override", {
     )
 
     expect_equal(phenotype_results$phenotype, c(s1=1, s2=2, s3=3))
+})
+
+test_that("provided phenotype input is validated before use", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    fixture <- calc_phenotype_fixture()
+    calculate_provided <- function(phenotype_file) {
+        calculate_phenotypes(
+            fixture$abd.meta,
+            fixture$pz.db,
+            which_phenotype="provided",
+            phenotype_file=phenotype_file,
+            treemin=2,
+            error_to_file=FALSE
+        )
+    }
+
+    expect_error(
+        calculate_provided(file.path(tempdir(), "missing-phenotype.tsv")),
+        "Phenotype file not found"
+    )
+
+    duplicate_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\tphenotype",
+        "s1\t1",
+        " s1 \t2"
+    ), duplicate_file)
+    expect_error(
+        calculate_provided(duplicate_file),
+        "duplicate taxon IDs"
+    )
+
+    nonnumeric_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\tphenotype",
+        "s1\t1",
+        "s2\tbad"
+    ), nonnumeric_file)
+    expect_error(
+        calculate_provided(nonnumeric_file),
+        "nonnumeric phenotype values"
+    )
+
+    no_overlap_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\tphenotype",
+        "x1\t1",
+        "x2\t2"
+    ), no_overlap_file)
+    expect_error(
+        calculate_provided(no_overlap_file),
+        "No phenotype values matched database taxa"
+    )
+})
+
+test_that("provided phenotype shrinkage input is validated before use", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    fixture <- calc_phenotype_fixture()
+    calculate_provided <- function(phenotype_file) {
+        calculate_phenotypes(
+            fixture$abd.meta,
+            fixture$pz.db,
+            which_phenotype="provided",
+            phenotype_file=phenotype_file,
+            treemin=2,
+            error_to_file=FALSE
+        )
+    }
+
+    missing_stderr_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\testimate\tnote",
+        "s1\t1\tok",
+        "s2\t2\tok"
+    ), missing_stderr_file)
+    expect_error(
+        calculate_provided(missing_stderr_file),
+        "missing required column"
+    )
+
+    bad_estimate_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\testimate\tstderr",
+        "s1\tbad\t0.2",
+        "s2\t2\t0.3"
+    ), bad_estimate_file)
+    expect_error(
+        calculate_provided(bad_estimate_file),
+        "nonnumeric estimates"
+    )
+
+    bad_stderr_file <- tempfile(fileext=".tsv")
+    writeLines(c(
+        "species\testimate\tstderr",
+        "s1\t1\t0",
+        "s2\t2\t-0.3"
+    ), bad_stderr_file)
+    expect_error(
+        calculate_provided(bad_stderr_file),
+        "standard errors must be"
+    )
+})
+
+test_that("specificity prior files are resolved and validated", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    fixture <- calc_phenotype_fixture()
+    calculate_specificity <- function(prior_file, working_dir=tempdir()) {
+        calculate_phenotypes(
+            fixture$abd.meta,
+            fixture$pz.db,
+            which_phenotype="specificity",
+            prior_type="file",
+            prior_file=prior_file,
+            working_dir=working_dir,
+            error_to_file=FALSE
+        )
+    }
+
+    expect_error(
+        calculate_specificity("missing-prior.tsv"),
+        "Prior file not found"
+    )
+
+    tmp <- tempfile("prior-dir-")
+    dir.create(tmp)
+
+    missing_column_file <- file.path(tmp, "missing-column.tsv")
+    writeLines(c(
+        "env\tweight",
+        "A\t0.5",
+        "B\t0.5"
+    ), missing_column_file)
+    expect_error(
+        calculate_specificity("missing-column.tsv", working_dir=tmp),
+        "missing required column"
+    )
+
+    duplicate_env_file <- file.path(tmp, "duplicate-env.tsv")
+    writeLines(c(
+        "env\tprior",
+        "A\t0.5",
+        " A \t0.5"
+    ), duplicate_env_file)
+    expect_error(
+        calculate_specificity("duplicate-env.tsv", working_dir=tmp),
+        "duplicate environments"
+    )
+
+    nonnumeric_prior_file <- file.path(tmp, "nonnumeric-prior.tsv")
+    writeLines(c(
+        "env\tprior",
+        "A\t0.5",
+        "B\tbad"
+    ), nonnumeric_prior_file)
+    expect_error(
+        calculate_specificity("nonnumeric-prior.tsv", working_dir=tmp),
+        "nonnumeric prior values"
+    )
+})
+
+test_that("specificity prior files must cover retained environments", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 0, 1, 0,
+              0, 1, 0, 1),
+            nrow=2,
+            byrow=TRUE,
+            dimnames=list(c("s1", "s2"), paste0("sample", 1:4))
+        ),
+        metadata=data.frame(
+            sample=paste0("sample", 1:4),
+            dataset=rep("d1", 4),
+            env=factor(c("A", "A", "B", "B"))
+        )
+    )
+    priors <- data.frame(env="A", prior=1)
+
+    expect_error(
+        calc.ess(
+            abd.meta,
+            pdata=priors,
+            prior_type="file",
+            env_column="env",
+            dset_column="dataset",
+            sample_column="sample",
+            which_envir="A",
+            error_to_file=FALSE
+        ),
+        "does not include retained environment"
+    )
+})
+
+test_that("prevalence phenotype uses additive smoothing with fixed values", {
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 0, 1,
+              0, 0, 0,
+              1, 1, 1),
+            nrow=3,
+            byrow=TRUE,
+            dimnames=list(
+                c("taxon_present_two", "taxon_absent", "taxon_present_all"),
+                paste0("s", 1:3)
+            )
+        ),
+        metadata=data.frame(
+            sample=paste0("s", 1:3),
+            dataset=rep("d1", 3),
+            env=factor(rep("A", 3))
+        )
+    )
+
+    observed <- prev.addw(
+        abd.meta,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        which_envir="A",
+        error_to_file=FALSE
+    )
+    expected <- c(
+        taxon_present_two=logit(3 / 5),
+        taxon_absent=logit(1 / 5),
+        taxon_present_all=logit(4 / 5)
+    )
+
+    expect_equal(observed, expected, tolerance=1e-12)
+})
+
+test_that("prevalence adds below-LOD taxa before database adjustment", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    abd.meta <- list(
+        mtx=Matrix::Matrix(
+            matrix(
+                c(1, 0,
+                  0, 1),
+                nrow=2,
+                byrow=TRUE,
+                dimnames=list(c("s1", "s2"), c("sample1", "sample2"))
+            ),
+            sparse=TRUE
+        ),
+        metadata=data.frame(
+            sample=c("sample1", "sample2"),
+            dataset=rep("d1", 2),
+            env=factor(rep("A", 2))
+        )
+    )
+    pz.db <- list(
+        trees=list(TaxonA=ape::read.tree(text="((s1:1,s2:1):1,s3:1);")),
+        gene.presence=list(
+            TaxonA=Matrix::Matrix(
+                matrix(
+                    c(1, 0, 1),
+                    nrow=1,
+                    dimnames=list("gene1", c("s1", "s2", "s3"))
+                ),
+                sparse=TRUE
+            )
+        )
+    )
+
+    testthat::local_mocked_bindings(
+        read.abd.metadata=function(...) abd.meta,
+        import.pz.db=function(...) pz.db,
+        .package="phylogenize"
+    )
+
+    observed <- data_to_phenotypes(
+        save_data=TRUE,
+        which_phenotype="prevalence",
+        assume_below_LOD=TRUE,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        which_envir="A",
+        treemin=3,
+        pctmin=0,
+        minimum=1,
+        gene_min_frac=0.5,
+        error_to_file=FALSE,
+        verbosity=0
+    )
+
+    expect_true("s3" %in% rownames(observed$abd.meta$mtx))
+    expect_equal(as.numeric(observed$abd.meta$mtx["s3", ]), c(0, 0))
+    expect_equal(observed$pz.db$trees$TaxonA$tip.label,
+                 c("s1", "s2", "s3"))
+    expect_equal(
+        unname(observed$phenotype_results$phenotype["s3"]),
+        logit(1 / 4),
+        tolerance=1e-12
+    )
+})
+
+test_that("specificity phenotype shrinkage has stable numeric values", {
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 1, 0, 0,
+              0, 0, 1, 1,
+              1, 0, 1, 0),
+            nrow=3,
+            byrow=TRUE,
+            dimnames=list(
+                c("A_specific", "B_specific", "mixed"),
+                paste0("s", 1:4)
+            )
+        ),
+        metadata=data.frame(
+            sample=paste0("s", 1:4),
+            dataset=rep("d1", 4),
+            env=factor(c("A", "A", "B", "B"))
+        )
+    )
+
+    observed <- suppressWarnings(calc.ess(
+        abd.meta,
+        b.optim=1,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        which_envir="A",
+        prior_type="uninformative",
+        error_to_file=FALSE
+    ))
+
+    expect_equal(unname(observed$phenoP), logit(0.5), tolerance=1e-12)
+    expect_equal(
+        observed$ess,
+        c(A_specific=0.6931484, B_specific=0, mixed=0),
+        tolerance=1e-6
+    )
+    expect_equal(
+        observed$regularized["x.init", ],
+        c(A_specific=0.75, B_specific=0.25, mixed=0.5),
+        tolerance=1e-12
+    )
+    expect_equal(
+        observed$regularized["pT", ],
+        c(A_specific=0.5, B_specific=0.5, mixed=0.5),
+        tolerance=1e-12
+    )
+})
+
+test_that("CLR correlation phenotype has stable numeric values", {
+    trait <- c(-1, 0, 1, 2)
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 2, 4, 8,
+              8, 4, 2, 1,
+              3, 3, 3, 3),
+            nrow=3,
+            byrow=TRUE,
+            dimnames=list(
+                c("increasing", "decreasing", "flat"),
+                paste0("s", 1:4)
+            )
+        ),
+        metadata=data.frame(
+            sample=paste0("s", 1:4),
+            dataset=rep("d1", 4),
+            env=trait
+        )
+    )
+
+    observed <- correl.clr(
+        abd.meta,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        error_to_file=FALSE
+    )
+    expected <- c(
+        increasing=4.776264,
+        decreasing=-4.776264,
+        flat=0
+    )
+
+    expect_equal(observed, expected, tolerance=1e-6)
 })
 
 test_that("quantile_normalize preserves prevalence phenotypes with NULL phenoP", {

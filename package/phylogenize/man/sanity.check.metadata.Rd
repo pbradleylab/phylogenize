@@ -4,9 +4,11 @@
 \alias{sanity.check.metadata}
 \title{Check that dataset, environment, and sample columns all present}
 \usage{
-sanity.check.metadata(metadata, ...)
+sanity.check.metadata(metadata, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{metadata}{A data frame giving sample annotations.}
 }
 \value{
@@ -19,7 +21,7 @@ frame satisfies the requirements specified by the \emph{phylogenize}
 application.
 }
 \details{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{env_column}{Name of metadata column containing environment
     annotations.}

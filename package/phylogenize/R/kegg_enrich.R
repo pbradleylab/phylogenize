@@ -26,10 +26,10 @@ multi.kegg.enrich <- function(sigs, signs, pid_to_ko, dirxn=1,
   }
   tax_groups <- names(sigs)
   cutoffs <- names(sigs[[1]])
-  background <- unique(pid_to_ko[["accession"]])
   enrichment_tbls <- purrr::pmap(
       list(s=sigs, sn=signs, tg=tax_groups),
       function(s, sn, tg) {
+          background <- tested.kegg.background(sn, pid_to_ko)
           all_cutoffs <- purrr::map2(s, names(s), function(sc, cn) {
               kegg.enrich.single(sc, sn, pid_to_ko, cn, d, tg,
                                  background=background,
@@ -59,6 +59,12 @@ multi.kegg.enrich <- function(sigs, signs, pid_to_ko, dirxn=1,
   return(out)
 }
 
+tested.kegg.background <- function(sn, pid_to_ko) {
+    tested_genes <- names(sn)[!is.na(sn)]
+    unique(dplyr::filter(pid_to_ko,
+                         gene %in% tested_genes)[["accession"]])
+}
+
 #' Convenience function to perform a clusterProfiler enrichment on downloaded KEGG pathway/module data.
 #'
 #' @param KOs KOs in significant set
@@ -77,6 +83,16 @@ enrich_downloaded_KEGG <- function(KOs, background, qCut, downloaded, ...) {
         TERM2NAME = downloaded$KEGGPATHID2NAME,
         ...
     )
+}
+
+format.kegg.enrichment.result <- function(enrichment_results, cutoff, taxon) {
+    enrichment_results <- Filter(Negate(is.null), enrichment_results)
+    if (length(enrichment_results) == 0) {
+        return(NULL)
+    }
+    dplyr::bind_rows(lapply(enrichment_results, function(enr) enr@result)) %>%
+        tibble::as_tibble() %>%
+        dplyr::mutate(cutoff=cutoff, taxon=taxon)
 }
 
 #' Wraps a single enrichment call to clusterProfiler.
@@ -98,7 +114,9 @@ kegg.enrich.single <- function(sc, sn, p2k, cn="test_cutoff",
                                kegg_mod_data=NULL) {
     genes <- intersect(sc, nw(sn == d))
     if (is.null(background)) { background <- unique(p2k[["accession"]]) }
-    KOs <- unique(dplyr::filter(p2k, gene %in% genes)[["accession"]])
+    KOs <- intersect(unique(dplyr::filter(p2k,
+                                          gene %in% genes)[["accession"]]),
+                     background)
     if (length(KOs) == 0) {
         return(NULL)
     }
@@ -126,24 +144,5 @@ kegg.enrich.single <- function(sc, sn, p2k, cn="test_cutoff",
                                           kegg_mod_data)
     }
 
-    if (is.null(pwy_enr) && is.null(mod_enr)) {
-	return(NULL)
-    } else if (!is.null(pwy_enr) && !is.null(mod_enr)) {
-	total_enr_tbl <- dplyr::bind_rows(pwy_enr@result, mod_enr@result) %>% 
-		tibble::as_tibble() %>% 
-		dplyr::mutate(cutoff = cn, taxon = tg)
-	return(total_enr_tbl)
-    } else if (!is.null(pwy_enr)) {
-	total_enr_tbl <- pwy_enr@result %>% 
-		tibble::as_tibble() %>% 
-		dplyr::mutate(cutoff = cn, taxon = tg)
-	return(total_enr_tbl)
-    } else if (!is.null(mod_enr)) {
-	total_enr_tbl <- mod_enr@result %>% 
-		tibble::as_tibble() %>% 
-		dplyr::mutate(cutoff = cn, taxon = tg) 
-	return(total_enr_tbl)
-    } else { 
-	    pz.error(paste0("Internal dataframe is malformed for kegg.enrich.single. ",
-			    "Please file a bug report."))}
+    format.kegg.enrichment.result(list(pwy_enr, mod_enr), cn, tg)
 }

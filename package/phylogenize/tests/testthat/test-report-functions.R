@@ -7,7 +7,7 @@ test_that("non.interactive.plot adds an explicit visible branch layer", {
         lims=c(0, 2)
     )
 
-    p <- non.interactive.plot(tree.obj)
+    p <- suppressWarnings(non.interactive.plot(tree.obj))
     layer_colors <- vapply(p$layers, function(layer) {
         color <- layer$aes_params[["colour"]]
         if (is.null(color)) color <- layer$aes_params[["color"]]

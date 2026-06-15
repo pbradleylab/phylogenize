@@ -5,9 +5,9 @@
 #' Read in abundance and metadata, either as one BIOM-format file or as two
 #' tab-delimited files.
 #'
-#' @details This function uses package-wide options (see \code{?pz.options}),
-#'     which can be overridden using the \code{...} argument. Some particularly
-#'     relevant options are:
+#' @details This function resolves options from \code{pz.options()} defaults
+#'     plus any overrides supplied through \code{...}. Some particularly relevant
+#'     options are:
 #'
 #' \describe{
 #'   \item{env_column}{String. Name of column in metadata file containing the
@@ -24,8 +24,8 @@
 #'     to a sparse binary presence/absence matrix (see \code{Matrix} package)
 #'     and a metadata data frame.
 #' @export
-read.abd.metadata <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+read.abd.metadata <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     colns <- c(opts('env_column'), opts('dset_column'), opts('sample_column'))
     if (length(unique(colns)) < length(colns)) {
         pz.error(
@@ -34,24 +34,24 @@ read.abd.metadata <- function(...) {
     }
     if (opts('input_format') == "tabular") {
         pz.message("  .....Reading tabular abundance and metadata files")
-        abd.meta <- read.abd.metadata.tabular(...)
+        abd.meta <- read.abd.metadata.tabular(..., .opts=opts)
     } else if (opts('input_format') == "biom") {
         pz.message("  .....Reading BIOM abundance and metadata file")
-        abd.meta <- read.abd.metadata.biom(...)
+        abd.meta <- read.abd.metadata.biom(..., .opts=opts)
     } else {
         pz.error(paste0("Invalid input format: ", opts('input_format')))
     }
     
     pz.message("  .....Checking abundance matrix")
-    sanity.check.abundance(abd.meta$mtx, ...)
+    sanity.check.abundance(abd.meta$mtx, ..., .opts=opts)
     pz.message("  .....Checking metadata")
-    sanity.check.metadata(abd.meta$metadata, ...)
+    sanity.check.metadata(abd.meta$metadata, ..., .opts=opts)
     if (opts('type_16S') == TRUE) {
         pz.message("  .....Processing 16S input")
-        abd.meta <- process.16s(abd.meta, ...)
+        abd.meta <- process.16s(abd.meta, ..., .opts=opts)
     }
     pz.message("  .....Harmonizing abundance matrix and metadata")
-    abd.meta <- harmonize.abd.meta(abd.meta, ...)
+    abd.meta <- harmonize.abd.meta(abd.meta, ..., .opts=opts)
     if ((opts('which_phenotype') != 'abundance') &&
         tolower(opts('core_method')) != "poms") {
         pz.message("Binarizing input data...", level=1)
@@ -78,10 +78,10 @@ read.abd.metadata <- function(...) {
 #' Check and process metadata
 #'
 #' \code{check.process.metadata} is used to make sure that the metadata
-#' satisfies the requirements specified by the global options and to make sure
+#' satisfies the requirements specified by the resolved options and to make sure
 #' that the metadata are of the correct type.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment
 #'     annotations.}
@@ -93,8 +93,7 @@ read.abd.metadata <- function(...) {
 #' }
 #'
 #' @param metadata A data frame of metadata with environment, dataset, and
-#'     sample columns corresponding to those in the global options (see
-#'     \?pz.options).
+#'     sample columns corresponding to the resolved options.
 #' @return A data frame of metadata, with environment and
 #'     dataset columns converted to factors, *unless* calculating correlation
 #'     in which case environment column will be cast as numeric. The environment
@@ -102,8 +101,8 @@ read.abd.metadata <- function(...) {
 #'     that it is guaranteed to appear in the output of differential abundance 
 #'     estimators.
 #' @export
-check.process.metadata <- function(metadata, ...) {
-    opts <- clone_and_merge(phylogenize:::PZ_OPTIONS, ...)
+check.process.metadata <- function(metadata, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     orig_md <- metadata
     E <- opts('env_column')
     S <- opts('sample_column')
@@ -132,6 +131,10 @@ check.process.metadata <- function(metadata, ...) {
     if (opts('categorical')) {   # i.e., env not continuous
         env_factor <- factor(metadata[[E]])
         env_levels <- levels(env_factor)
+        if (any(is.na(env_factor))) {
+            pz.error(paste0("environment column contains missing values: ", E),
+                     .opts=opts)
+        }
         
         if (!(envir %in% env_levels)) {
             pz.error(paste0("environment ", envir, " not found in metadata"))
@@ -139,21 +142,37 @@ check.process.metadata <- function(metadata, ...) {
         env_factor <- forcats::fct_relevel(env_factor, envir, after=Inf)
         metadata[[E]] <- env_factor
     } else {
-        metadata[[E]] <- as.numeric(metadata[[E]])
-        if (all(is.na(metadata[[E]]))) {
+        env_original <- metadata[[E]]
+        env_numeric <- suppressWarnings(as.numeric(env_original))
+        converted_to_na <- is.na(env_numeric) & !is.na(env_original)
+        if (any(converted_to_na)) {
+            pz.error(paste0(
+                "Environment column contains nonnumeric value(s): ",
+                paste(unique(env_original[converted_to_na]), collapse=", ")
+            ), .opts=opts)
+        }
+        if (any(is.na(env_numeric))) {
+            pz.error(paste0("environment column contains missing values: ", E),
+                     .opts=opts)
+        }
+        if (length(env_numeric) == 0) {
             pz.error(
                 paste0("Environment failed conversion to numeric; is this ",
-                       "supposed to be a categorical variable?"))
+                       "supposed to be a categorical variable?"),
+                .opts=opts)
         }
+        metadata[[E]] <- env_numeric
     }
     metadata[[opts('dset_column')]] <- as.factor(metadata[[opts('dset_column')]])
     
     # One more sanity check before we return
     if (converted_rownames) orig_md <- tibble::as_tibble(orig_md, rownames=S)
     compare_md <- dplyr::full_join(orig_md[c(S, E)], metadata[c(S, E)], by=S)
-    wrong_rows <- compare_md[
-        compare_md[[paste0(E, ".x")]] != compare_md[[paste0(E, ".y")]],
-    ]
+    env_before <- compare_md[[paste0(E, ".x")]]
+    env_after <- compare_md[[paste0(E, ".y")]]
+    wrong_env <- (is.na(env_before) != is.na(env_after)) |
+        (!is.na(env_before) & !is.na(env_after) & env_before != env_after)
+    wrong_rows <- compare_md[wrong_env, ]
     if (nrow(wrong_rows) > 0) {
         print(wrong_rows)
         pz.error(
@@ -170,9 +189,9 @@ check.process.metadata <- function(metadata, ...) {
 #' Read in taxon-by-sample matrix of abundances and metadata (sample
 #' annotations) from a single BIOM-formatted file.
 #'
-#' @details This function uses package-wide options (see \code{?pz.options}),
-#'     which can be overridden using the \code{...} argument. Some particularly
-#'     relevant options are:
+#' @details This function resolves options from \code{pz.options()} defaults
+#'     plus any overrides supplied through \code{...}. Some particularly relevant
+#'     options are:
 #'
 #' \describe{
 #'   \item{biom_file}{String. Name of BIOM abundance-and-metadata file. Default: "test.biom"}
@@ -181,10 +200,13 @@ check.process.metadata <- function(metadata, ...) {
 #' @return A list with components \code{mtx} (matrix of abundances) and
 #'     \code{metadata} (data frame of metadata).
 #' @keywords internal
-read.abd.metadata.biom <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+read.abd.metadata.biom <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     bf <- opts('biom_file')
-    pz.message(paste0("looking for file: ", normalizePath(bf)), level=2)
+    pz.message(paste0(
+        "looking for file: ",
+        normalizePath(bf, mustWork=FALSE)
+    ), level=2)
     if (!(file.exists(bf))) {
         pz.error(paste0("file not found: ", bf))
     } else { pz.message(paste0("located biom file: ", bf), level=2) }
@@ -202,7 +224,7 @@ read.abd.metadata.biom <- function(...) {
     if (!opts('separate_metadata')) {
         pz.message("  ..........Reading metadata from BIOM file")
         metadata <- biomformat::sample_metadata(biomf)
-        metadata <- check.process.metadata(metadata, ...)
+        metadata <- check.process.metadata(metadata, ..., .opts=opts)
         # work around different naming convention
         if (is.null(rownames(metadata))) {
             pz.error(paste0("metadata had no sample names; should not be ",
@@ -216,7 +238,7 @@ read.abd.metadata.biom <- function(...) {
         } else { pz.message(paste0("located metadata file: ", mf), level=2) }
         pz.message("  ..........Reading separate metadata file")
         metadata <- readr::read_tsv(mf, show_col_types = FALSE)
-        metadata <- check.process.metadata(metadata, ...)
+        metadata <- check.process.metadata(metadata, ..., .opts=opts)
     }
     rm(biomf); gc()
     return(list(mtx=abd.mtx, metadata=metadata))
@@ -227,7 +249,7 @@ read.abd.metadata.biom <- function(...) {
 #' Read in taxon-by-sample matrix of abundances and metadata (sample
 #' annotations) from two tab-delimited files.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{dset_column}{Name of metadata column containing dataset annotations.}
 #' }
@@ -235,8 +257,8 @@ read.abd.metadata.biom <- function(...) {
 #' @return A list with components \code{mtx} (matrix of abundances) and
 #'     \code{metadata} (data frame of metadata).
 #' @keywords internal
-read.abd.metadata.tabular <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+read.abd.metadata.tabular <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     af <- opts('abundance_file')
     mf <- opts('metadata_file')
     if (!(file.exists(af))) {
@@ -246,19 +268,58 @@ read.abd.metadata.tabular <- function(...) {
         pz.error(paste0("file not found: ", mf))
     } else { pz.message(paste0("located metadata file: ", mf), level=2) }
     
+    pz.message("  ..........Reading metadata table")
+    metadata <- readr::read_tsv(mf, show_col_types = FALSE)
+    metadata <- check.process.metadata(metadata, ..., .opts=opts)
+    pz.message(paste0(
+        "  ..........Metadata rows: ",
+        nrow(metadata)
+    ))
+
     pz.message("  ..........Reading abundance table")
-    abd.df <- readr::read_tsv(
+    abundance_header <- names(readr::read_tsv(
         af,
-        col_types=readr::cols(.default=readr::col_character()),
+        n_max=0,
         show_col_types=FALSE
+    ))
+    if (length(abundance_header) < 2) {
+        pz.error("Abundance table must contain a taxon column and at least one sample column")
+    }
+    metadata_samples <- trimws(as.character(metadata[[opts('sample_column')]]))
+    abundance_keep_cols <- c(
+        abundance_header[1],
+        intersect(abundance_header[-1], metadata_samples)
     )
-    # convert to matrix
-    abd.values <- as.data.frame(
-        lapply(abd.df[, -1, drop=FALSE], function(x) {
-            suppressWarnings(as.numeric(x))
-        }),
-        check.names=FALSE
+    if (length(abundance_keep_cols) < 2) {
+        pz.error(paste0("No abundance table sample columns matched metadata ",
+                        "sample IDs"))
+    }
+    pz.message(paste0(
+        "  ..........Reading ",
+        length(abundance_keep_cols) - 1,
+        " abundance sample column(s) matching metadata"
+    ))
+    abundance_col_types <- do.call(
+        readr::cols,
+        c(
+            stats::setNames(list(readr::col_character()), abundance_header[1]),
+            list(.default=readr::col_double())
+        )
     )
+    abd.df <- withCallingHandlers(
+        readr::read_tsv(
+            af,
+            col_select=tidyselect::all_of(abundance_keep_cols),
+            col_types=abundance_col_types,
+            show_col_types=FALSE
+        ),
+        warning=function(w) {
+            if (inherits(w, "vroom_parse_issue")) {
+                invokeRestart("muffleWarning")
+            }
+        }
+    )
+    abd.values <- abd.df[, -1, drop=FALSE]
     bad.cols <- names(abd.values)[
         vapply(abd.values, function(x) any(is.na(x)), logical(1))
     ]
@@ -277,15 +338,6 @@ read.abd.metadata.tabular <- function(...) {
         ncol(abd.mtx),
         " sample(s)"
     ))
-    # can remain as tbl
-    pz.message("  ..........Reading metadata table")
-    metadata <- readr::read_tsv(mf, show_col_types = FALSE)
-    metadata <- check.process.metadata(metadata, ...)
-    pz.message(paste0(
-        "  ..........Metadata rows: ",
-        nrow(metadata)
-    ))
-    
     return(list(mtx=abd.mtx, metadata=metadata))
     
 }
@@ -294,10 +346,10 @@ read.abd.metadata.tabular <- function(...) {
 
 #' Import the data necessary for *phylogenize* analysis.
 #'
-#' \code{import.pz.db} decides based on global options which data files to
+#' \code{import.pz.db} decides based on resolved options which data files to
 #' import.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{type_16S}{Boolean. If 16S data, TRUE, otherwise shotgun data is
 #'     assumed. Default: FALSE}
@@ -309,38 +361,76 @@ read.abd.metadata.tabular <- function(...) {
 #'     analysis, with components \code{gene.presence}, \code{trees},
 #'     \code{taxonomy}, \code{g.mappings}, and \code{gene.to.fxn}.
 #' @export
-import.pz.db <- function(...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+import.pz.db <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     db_csv <- file.path(opts('data_dir'), "databases.csv")
     pz.message(paste0("  .....Reading database index: ", db_csv), level=2)
+    if (!(file.exists(db_csv))) {
+        pz.error(paste0("Database index not found: ", db_csv), .opts=opts)
+    }
     installed_dbs <- readr::read_delim(db_csv, show_col_types = FALSE)
+    required_db_columns <- c("database", "genes", "trees", "taxonomy",
+                             "functions")
+    missing_db_columns <- setdiff(required_db_columns, names(installed_dbs))
+    if (length(missing_db_columns) > 0) {
+        pz.error(paste0(
+            "Database index is missing required column(s): ",
+            paste(missing_db_columns, collapse=", ")
+        ), .opts=opts)
+    }
     requested_db <- tolower(opts('db'))
     pz.message(paste0("  .....Requested database: ", requested_db))
     if (!(requested_db %in% installed_dbs[["database"]])) {
         pz.error(paste0("Database not installed in ", opts('data_dir'), ": ",
-                        opts('db')))
+                        opts('db')),
+                 .opts=opts)
     }
     found_db <- dplyr::filter(installed_dbs, database==requested_db)
     if (nrow(found_db) > 1) {
-        pz.error(paste0("Duplicate data entries in db file: ", db_csv))
+        pz.error(paste0("Duplicate data entries in db file: ", db_csv),
+                 .opts=opts)
+    }
+    db_paths <- vapply(required_db_columns[-1], function(col) {
+        file.path(opts('data_dir'), found_db[[col]])
+    }, character(1))
+    missing_db_files <- db_paths[!(file.exists(db_paths))]
+    if (length(missing_db_files) > 0) {
+        pz.error(paste0(
+            "Database file(s) not found: ",
+            paste(unname(missing_db_files), collapse=", ")
+        ), .opts=opts)
     }
 
     pz.message("  .....Read in phylogenize2 gene presence file")
-    gene.presence <- readRDS(file.path(opts('data_dir'),
-                                       found_db[["genes"]]))
+    gene.presence <- readRDS(db_paths[["genes"]])
     gene.presence <- gene.presence[names(gene.presence) != ""]
+    if (!(is.list(gene.presence)) || length(gene.presence) == 0) {
+        pz.error("Gene presence database must be a non-empty named list",
+                 .opts=opts)
+    }
     pz.message(paste0(
         "  ..........Loaded ",
         length(gene.presence),
         " gene presence matrix/matrices"
     ))
     pz.message("  .....Read in phylogenize2 tree file")
-    trees <- readRDS(file.path(opts('data_dir'),
-                               found_db[["trees"]]))
+    trees <- readRDS(db_paths[["trees"]])
+    if (!(is.list(trees)) || length(trees) == 0) {
+        pz.error("Tree database must be a non-empty named list", .opts=opts)
+    }
     pz.message(paste0("  ..........Loaded ", length(trees), " tree(s)"))
     pz.message("  .....Read in phylogenize2 taxonomy file")
-    taxonomy <- readr::read_csv(file.path(opts('data_dir'),
-                                          found_db[["taxonomy"]]), show_col_types=FALSE)
+    taxonomy <- readr::read_csv(db_paths[["taxonomy"]], show_col_types=FALSE)
+    required_taxonomy_columns <- c("cluster", "species", "genus", "family",
+                                   "order", "class", "phylum", "domain")
+    missing_taxonomy_columns <- setdiff(required_taxonomy_columns,
+                                        names(taxonomy))
+    if (length(missing_taxonomy_columns) > 0) {
+        pz.error(paste0(
+            "Taxonomy file is missing required column(s): ",
+            paste(missing_taxonomy_columns, collapse=", ")
+        ), .opts=opts)
+    }
     pz.message(paste0(
         "  ..........Loaded taxonomy with ",
         nrow(taxonomy),
@@ -350,23 +440,32 @@ import.pz.db <- function(...) {
     names(trees) <- gsub(" ", "_", names(trees))
     names(gene.presence) <- gsub(" ", "_", names(gene.presence))
     # propagate cluster values up, as higher level taxonomic names may be missing
-    taxonomy <- taxonomy %>% 
-      rowwise() %>%
-      mutate(species = ifelse(is.na(species), cluster, species)) %>%
-      mutate(genus = ifelse(is.na(genus), species, genus)) %>%
-      mutate(family = ifelse(is.na(family), genus, family)) %>%
-      mutate(order = ifelse(is.na(order), family, order)) %>%
-      mutate(class = ifelse(is.na(class), order, class)) %>%
-      mutate(phylum = ifelse(is.na(phylum), class, phylum)) %>%
-      mutate(domain = ifelse(is.na(domain), phylum, domain)) %>%
-      mutate(across(domain:genus, \(x) gsub(" ", "_", x))) %>%
-      ungroup()
+    taxonomy <- taxonomy %>%
+      mutate(
+        species = ifelse(is.na(species), cluster, species),
+        genus = ifelse(is.na(genus), species, genus),
+        family = ifelse(is.na(family), genus, family),
+        order = ifelse(is.na(order), family, order),
+        class = ifelse(is.na(class), order, class),
+        phylum = ifelse(is.na(phylum), class, phylum),
+        domain = ifelse(is.na(domain), phylum, domain)
+      ) %>%
+      mutate(across(domain:genus, \(x) gsub(" ", "_", x)))
 
     pz.message("  .....Read in phylogenize2 gene functions file")
     gene.to.fxn <- readr::read_csv(
-        file.path(opts('data_dir'), found_db[["functions"]]),
+        db_paths[["functions"]],
         show_col_types = FALSE
     )
+    required_function_columns <- c("node_head", "accession", "function")
+    missing_function_columns <- setdiff(required_function_columns,
+                                        names(gene.to.fxn))
+    if (length(missing_function_columns) > 0) {
+        pz.error(paste0(
+            "Gene function file is missing required column(s): ",
+            paste(missing_function_columns, collapse=", ")
+        ), .opts=opts)
+    }
     pz.message(paste0(
         "  ..........Loaded ",
         nrow(gene.to.fxn),
@@ -395,7 +494,10 @@ import.pz.db <- function(...) {
         gene.presence <- change.presence.tax.level(gene.presence,
                                                    opts('taxon_level'),
                                                    taxonomy)
-        trees <- change.tree.tax.level(trees, opts('taxon_level'), taxonomy)
+        trees <- change.tree.tax.level(trees,
+                                       opts('taxon_level'),
+                                       taxonomy,
+                                       .opts=opts)
         trees <- Filter(function(tr) length(tr$tip.label) > 1, trees)
         pz.message(paste0(
             "  ..........Taxon-level database now has ",
@@ -406,7 +508,7 @@ import.pz.db <- function(...) {
     
     # filter based on the minimum number of observations
     pz.message("  .....Filter based on the minimum number of observations")
-    gene.presence <- above_minimum_genes(gene.presence, trees)
+    gene.presence <- above_minimum_genes(gene.presence, trees, .opts=opts)
     pz.message(paste0(
         "  ..........",
         length(gene.presence),
@@ -436,8 +538,9 @@ import.pz.db <- function(...) {
 #'     metadata.
 #' @return An updated database.
 #' @export
-adjust.db <- function(pz.db, abd.meta, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+adjust.db <- function(pz.db, abd.meta, ..., .opts=NULL,
+                      .import_filtered=FALSE) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     species.observed <- rownames(abd.meta$mtx)
     pz.message(paste0(
         "  .....Matching database to ",
@@ -445,9 +548,8 @@ adjust.db <- function(pz.db, abd.meta, ...) {
         " observed taxon/taxa"
     ))
     
-    species.per.tree <- lapply(pz.db$trees, function(tr) {
-        intersect(tr$tip.label, species.observed)
-    })
+    species.per.tree <- lapply(pz.db$trees, shared.tree.tips,
+                               observed=species.observed)
     tL <- vapply(species.per.tree, length, 1L)
     if (all(tL < opts('treemin'))) {
         pz.error(paste0("Too few species found. Was the right database used? ",
@@ -458,15 +560,17 @@ adjust.db <- function(pz.db, abd.meta, ...) {
     pct.obs <- mapply(function(x, y) x / y, tL, totalL)
     passed.pct <- nw(pct.obs >= opts('pctmin'))
     pz.message("Determining which taxa to test...", level=1)
-    for (tn in 1:length(pz.db$trees)) {
-        pz.message(paste0(names(pz.db$trees)[tn],
-                          " (pct): ", format(pct.obs[tn] * 100, digits=2),
-                          "%; (number): ", tL[tn],
-                          "; ", ifelse((pct.obs[tn] >= opts('pctmin') &&
-                                            tL[tn] >= opts('treemin')),
-                                       yes="kept",
-                                       no="dropped")
-        ), level=2)
+    if (pz.should.message(level=2, .opts=opts)) {
+        for (tn in 1:length(pz.db$trees)) {
+            pz.message(paste0(names(pz.db$trees)[tn],
+                              " (pct): ", format(pct.obs[tn] * 100, digits=2),
+                              "%; (number): ", tL[tn],
+                              "; ", ifelse((pct.obs[tn] >= opts('pctmin') &&
+                                                tL[tn] >= opts('treemin')),
+                                           yes="kept",
+                                           no="dropped")
+            ), level=2, .opts=opts)
+        }
     }
     saved.taxa <- intersect(passed.min, passed.pct)
     pz.message(paste0(
@@ -474,13 +578,16 @@ adjust.db <- function(pz.db, abd.meta, ...) {
         length(saved.taxa),
         " taxon/taxa passed tree-size and observation filters"
     ))
-    pz.message(
-        paste0(
-            "  Taxa selected: ",
-            paste(saved.taxa, collapse=", ")
-        ),
-        level=2
-    )
+    if (pz.should.message(level=2, .opts=opts)) {
+        pz.message(
+            paste0(
+                "  Taxa selected: ",
+                paste(saved.taxa, collapse=", ")
+            ),
+            level=2,
+            .opts=opts
+        )
+    }
     if (length(saved.taxa) == 0) {
         pz.error(paste0("All trees had less than ",
                         format(opts('pctmin') * 100, digits=2),
@@ -490,11 +597,33 @@ adjust.db <- function(pz.db, abd.meta, ...) {
                         "mapped to entries in the database."))
     }
     pz.db$trees <- lapply(pz.db$trees[saved.taxa], function(tr) {
-	tips <- intersect(tr$tip.label, species.observed)
+	tips <- shared.tree.tips(tr, species.observed)
 	ape::keep.tip(tr, tips)
     })
     pz.message("  .....Filtering gene presence matrices to retained trees")
-    pz.db$gene.presence <- above_minimum_genes(pz.db$gene.presence, pz.db$trees)
+    filter_trees <- pz.db$trees
+    retained_gene_presence <- list()
+    if (isTRUE(.import_filtered)) {
+        already_filtered <- vapply(names(filter_trees), function(tx) {
+            identical(filter_trees[[tx]]$tip.label,
+                      colnames(pz.db$gene.presence[[tx]]))
+        }, logical(1))
+        retained_gene_presence <- pz.db$gene.presence[names(which(already_filtered))]
+        filter_trees <- filter_trees[names(which(!already_filtered))]
+    }
+    filtered_gene_presence <- if (length(filter_trees) > 0) {
+        above_minimum_genes(
+            pz.db$gene.presence[names(filter_trees)],
+            filter_trees,
+            .opts=opts
+        )
+    } else {
+        list()
+    }
+    pz.db$gene.presence <- c(retained_gene_presence, filtered_gene_presence)
+    pz.db$gene.presence <- pz.db$gene.presence[
+        intersect(names(pz.db$trees), names(pz.db$gene.presence))
+    ]
     pz.db$trees <- pz.db$trees[intersect(names(pz.db$trees), names(pz.db$gene.presence))]
     pz.db$species <- lapply(pz.db$trees, function(x) x$tip.label)
     pz.db$ntaxa <- length(pz.db$trees)
@@ -516,7 +645,7 @@ adjust.db <- function(pz.db, abd.meta, ...) {
 #'
 #' \code{import.pz.db} filters down the binary file for database
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{binary}{Matrix. Object that represents a phylogenize-prepared
 #'     internal database}
@@ -560,13 +689,7 @@ change.presence.tax.level <- function(binary, taxon, tax){
             next
         }
         
-        # make a named list in one step
-        named_tax_list <- t %>%
-            dplyr::select(-phylum) %>%
-            dplyr::group_by(!!taxon) %>%
-            tidyr::nest() %>%
-            tibble::deframe() %>%
-            purrr::map(~ dplyr::pull(.x, cluster))
+        named_tax_list <- split(t[["cluster"]], t[[rlang::as_string(taxon)]])
         
         columns <- colnames(binary[[name]])
         
@@ -590,7 +713,7 @@ change.presence.tax.level <- function(binary, taxon, tax){
 #'
 #' \code{import.pz.db} filters down the binary file for database
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{tree}{List. Object that represent a phylogenize-prepared internal
 #'     database}
@@ -602,13 +725,16 @@ change.presence.tax.level <- function(binary, taxon, tax){
 #' @return list of tree objects that are ready for use at the user given
 #'   tax_level
 #' @export
-change.tree.tax.level <- function(tree, taxon, tax) {
+change.tree.tax.level <- function(tree, taxon, tax, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     # Make a mapping file that is at the taxonomic level selected from the tax
     # file.
     clean <- tax %>%
-        dplyr::select(cluster, taxon, phylum) %>%
+        dplyr::select(cluster, tidyselect::all_of(taxon), phylum) %>%
         dplyr::distinct()
-    pz.message(head(clean), level=3)
+    if (pz.should.message(level=3, .opts=opts)) {
+        pz.message(head(clean), level=3, .opts=opts)
+    }
     # Drop empty values from the taxonomic level selected if they are not 
     clean <- clean[!(is.na(clean[[taxon]]) | clean[[taxon]] == ""), ]
     # Arrange them so that the runtime is slightly less in the lookup
@@ -632,29 +758,26 @@ change.tree.tax.level <- function(tree, taxon, tax) {
         t <- clean[[name]]
         
         if (is.null(clean[[name]])) {
-            pz.message(names(clean), level=3)
+            if (pz.should.message(level=3, .opts=opts)) {
+                pz.message(names(clean), level=3, .opts=opts)
+            }
             pz.warning(paste("Warning: No data found for taxon classification",
                              name), level=2)
             next 
         } else {
-            pz.message(paste("Good news: Data found for taxon classification",
-                             name), level=2)
+            if (pz.should.message(level=2, .opts=opts)) {
+                pz.message(paste("Good news: Data found for taxon classification",
+                                 name), level=2, .opts=opts)
+            }
         }	
-        # Generate a list of unique split names based on taxon
-        split_names <- t %>%
-            dplyr::group_split(!!(rlang::sym(taxon))) %>%
-            purrr::map(~ dplyr::pull(.x, !!(rlang::sym(taxon)))) %>%
-            unlist() %>%
-            unique()
+        tips_by_taxon <- split(t[["cluster"]], t[[taxon]])
         
-        for (j in seq_along(split_names)) {
-            tips <- tr$tip.label
-            split_tips <- t %>%
-                dplyr::filter(!!(rlang::sym(taxon)) == split_names[[j]])
-            tips <- intersect(tips, split_tips[["cluster"]])
+        for (taxon_name in names(tips_by_taxon)) {
+            tips <- shared.tree.tips(tr, tips_by_taxon[[taxon_name]])
+            if (length(tips) <= 1) next
             subtree <- ape::keep.tip(tr, tips)
             if (!is.null(subtree) && length(subtree$tip.label) > 1) {
-                tree_matrices[[split_names[j]]] <- subtree    
+                tree_matrices[[taxon_name]] <- subtree
             }
         }
     }
@@ -671,7 +794,7 @@ change.tree.tax.level <- function(tree, taxon, tax) {
 #' 16S sequences; then return a list of abundance and metadata values where the
 #' rows of the abundance matrix are now MIDAS IDs.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{vsearch_infile}{String. File name of the sequences written to disk
 #'     and then read into vsearch.}
@@ -681,26 +804,28 @@ change.tree.tax.level <- function(tree, taxon, tax) {
 #'   amplicon sequence variant DNA sequences.
 #' @return none
 #' @export
-process.16s <- function(abd.meta, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+process.16s <- function(abd.meta, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     if (!(all(is.dna(rownames(abd.meta$mtx))))) {
         pz.error(paste0("expected rows to be DNA sequences but found illegal ",
-                        "characters"))
+                        "characters"),
+                 .opts=opts)
     }
     if (opts('which_16s_method')=="vsearch") {
-        prepare.vsearch.input(abd.meta$mtx, ...)
-        run.vsearch(...)
-        results_16s <- get.vsearch.results(...)
+        prepare.vsearch.input(abd.meta$mtx, ..., .opts=opts)
+        run.vsearch(..., .opts=opts)
+        results_16s <- get.vsearch.results(..., .opts=opts)
     } else if (opts('which_16s_method')=="appspam") {
-        prepare.vsearch.input(abd.meta$mtx, ...)
-        run.appspam(...)
-        results_16s <- get.appspam.results(...)
+        prepare.vsearch.input(abd.meta$mtx, ..., .opts=opts)
+        run.appspam(..., .opts=opts)
+        results_16s <- get.appspam.results(..., .opts=opts)
     } else if (opts('which_16s_method')=="jplace") {
-        results_16s <- get.appspam.results(...)        
+        results_16s <- get.appspam.results(..., .opts=opts)
     } else {
-        pz.error("which_16s_method must be vsearch, appspam, or jplace")
+        pz.error("which_16s_method must be vsearch, appspam, or jplace",
+                 .opts=opts)
     }
-    summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ...)
+    summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ..., .opts=opts)
     csu <- colSums(summed.uniq)
     abd.meta$mtx <- summed.uniq[, which(csu > 0), drop=FALSE]
     # don't convert to relative abundance...
@@ -718,7 +843,7 @@ process.16s <- function(abd.meta, ...) {
 #' perform an \emph{phylogenize} analysis, after dropping any singleton datasets
 #' or environments (effects for these cannot be estimated).
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment
 #'   annotations.}
@@ -730,8 +855,8 @@ process.16s <- function(abd.meta, ...) {
 #'     package) and a metadata data frame.
 #' @return A list of the same form as \code{abd.meta}.
 #' @export
-harmonize.abd.meta <- function(abd.meta, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+harmonize.abd.meta <- function(abd.meta, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     align.metadata.to.matrix <- function(abd.meta) {
         metadata_order <- match(colnames(abd.meta$mtx),
                                 abd.meta$metadata[[opts('sample_column')]])
@@ -763,11 +888,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     if (opts('which_phenotype') %in% c("specificity",
                                        "prevalence",
                                        "abundance")) {
-        all.envs <- unique(abd.meta$metadata[[opts('env_column')]])
-        env.number <- sapply(all.envs, function(e) {
-            sum(abd.meta$metadata[[opts('env_column')]] == e)
-        })
-        names(env.number) <- all.envs
+        env.number <- table(abd.meta$metadata[[opts('env_column')]])
         singleton.envs <- names(which(env.number == 1))
         if (length(singleton.envs) > 0) {
             pz.warning(paste0(
@@ -803,11 +924,7 @@ harmonize.abd.meta <- function(abd.meta, ...) {
     }
     
     pz.message("  .....collecting all unique dsets")
-    all.dsets <- unique(abd.meta$metadata[[opts('dset_column')]])
-    dset.number <- sapply(all.dsets, function(d) {
-        sum(abd.meta$metadata[[opts('dset_column')]] == d)
-    })
-    names(dset.number) <- all.dsets
+    dset.number <- table(abd.meta$metadata[[opts('dset_column')]])
     nonsingleton.dsets <- names(which(dset.number > 1))
     pz.message(paste0(length(nonsingleton.dsets),
                       " non-singleton dataset(s) found"), level=2)
@@ -895,6 +1012,28 @@ sanity.check.abundance <- function(abd.mtx, ...) {
     if (is.null(colnames(abd.mtx))) {
         pz.error("Abundance matrix is lacking column (sample) names")
     }
+    taxon_ids <- trimws(rownames(abd.mtx))
+    sample_ids <- trimws(colnames(abd.mtx))
+    if (any(is.na(taxon_ids)) || any(taxon_ids == "")) {
+        pz.error("Abundance matrix contains blank or missing taxon names")
+    }
+    if (any(is.na(sample_ids)) || any(sample_ids == "")) {
+        pz.error("Abundance matrix contains blank or missing sample names")
+    }
+    if (any(duplicated(taxon_ids))) {
+        duplicate_taxa <- unique(taxon_ids[duplicated(taxon_ids)])
+        pz.error(paste0(
+            "Abundance matrix contains duplicate taxon names: ",
+            paste(duplicate_taxa, collapse=", ")
+        ))
+    }
+    if (any(duplicated(sample_ids))) {
+        duplicate_samples <- unique(sample_ids[duplicated(sample_ids)])
+        pz.error(paste0(
+            "Abundance matrix contains duplicate sample names: ",
+            paste(duplicate_samples, collapse=", ")
+        ))
+    }
     return(TRUE)
 }
 
@@ -905,7 +1044,7 @@ sanity.check.abundance <- function(abd.mtx, ...) {
 #' frame satisfies the requirements specified by the \emph{phylogenize}
 #' application.
 #'
-#' Some particularly relevant global options are:
+#' Some particularly relevant options are:
 #' \describe{
 #'   \item{env_column}{Name of metadata column containing environment
 #'     annotations.}
@@ -917,8 +1056,8 @@ sanity.check.abundance <- function(abd.mtx, ...) {
 #' @return Always returns TRUE, but will throw errors if the metadata does not
 #'   match specifications.
 #' @export
-sanity.check.metadata <- function(metadata, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+sanity.check.metadata <- function(metadata, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     if (!(opts('env_column') %in% colnames(metadata))) {
         pz.error(
             paste0("When looking for environment, no column found labeled ",
@@ -940,6 +1079,17 @@ sanity.check.metadata <- function(metadata, ...) {
     if (nrow(metadata) < 2) {
         pz.error("Fewer than two rows found in metadata")
     }
+    sample_ids <- trimws(as.character(metadata[[opts('sample_column')]]))
+    if (any(is.na(sample_ids)) || any(sample_ids == "")) {
+        pz.error("Metadata contains blank or missing sample IDs")
+    }
+    if (any(duplicated(sample_ids))) {
+        duplicate_samples <- unique(sample_ids[duplicated(sample_ids)])
+        pz.error(paste0(
+            "Metadata contains duplicate sample IDs: ",
+            paste(duplicate_samples, collapse=", ")
+        ))
+    }
     return(TRUE)
 }
 
@@ -954,8 +1104,8 @@ sanity.check.metadata <- function(metadata, ...) {
 #' @return A matrix of abundance values (double), with all-zero columns and rows
 #'     removed.
 #' @export
-remove.allzero.abundances <- function(abd.mtx, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+remove.allzero.abundances <- function(abd.mtx, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     cs <- Matrix::colSums(abd.mtx)
     nz.cols <- which(cs > 0)
     z.col.logical <- (cs == 0)
@@ -1001,24 +1151,71 @@ remove.allzero.abundances <- function(abd.mtx, ...) {
 #'   be unzipped) or a .csv file (which will be copied).
 #' @param force Boolean; overwrite existing files? (Default: FALSE)
 #' @export
-install_data <- function(path, force=FALSE) {
+install_data <- function(path, force=FALSE,
+                         .extd_path=system.file("extdata/",
+                                                package="phylogenize")) {
+    if (!is.character(path) || length(path) != 1 ||
+        is.na(path) || trimws(path) == "") {
+        pz.error("path must be a single non-empty file path")
+    }
+    if (!file.exists(path)) {
+        pz.error(paste0("Data archive not found: ", path))
+    }
+    if (!dir.exists(.extd_path)) {
+        pz.error(paste0(
+            "phylogenize extdata directory not found: ",
+            .extd_path
+        ))
+    }
+    if (file.access(.extd_path, mode=2) != 0) {
+        pz.error(paste0(
+            "phylogenize extdata directory is not writable: ",
+            .extd_path
+        ))
+    }
     fn <- basename(path)
-    extd_path <- system.file("extdata/", package="phylogenize")
-    if (stringr::str_ends(basename(path), "\\.csv")) {
-        if (!file.exists(file.path(extd_path, fn)) || force) {
-            print(paste0(
-                "Copying ",
-                path,
-                " to ",
-                system.file("", package="phylogenize")))
-            file.copy(path, extd_path, overwrite = force)
+    ext <- tolower(tools::file_ext(path))
+    if (ext == "csv") {
+        dest <- file.path(.extd_path, fn)
+        if (file.exists(dest) && !force) {
+            pz.error(paste0(
+                "Destination file already exists; use force=TRUE to overwrite: ",
+                dest
+            ))
         }
-    } else {
-        print(paste0(
+        pz.message(paste0(
+            "Copying ",
+            path,
+            " to ",
+            .extd_path
+        ))
+        ok <- file.copy(path, .extd_path, overwrite=force)
+        if (!isTRUE(ok)) {
+            pz.error(paste0("Could not copy data file to: ", dest))
+        }
+        return(invisible(dest))
+    }
+    if (ext == "zip") {
+        pz.message(paste0(
             "Unzipping ",
             path,
             " to ",
-            system.file("", package="phylogenize")))
-        unzip(path, overwrite = force, exdir = extd_path)
+            .extd_path
+        ))
+        out <- tryCatch(
+            unzip(path, overwrite=force, exdir=.extd_path),
+            error=function(e) {
+                pz.error(paste0("Could not unzip data archive: ", e$message))
+            }
+        )
+        if (length(out) == 0) {
+            pz.error("Zip archive did not install any files")
+        }
+        return(invisible(out))
     }
+    pz.error(paste0(
+        "Unsupported data file extension: .",
+        ext,
+        ". Expected .csv or .zip"
+    ))
 }

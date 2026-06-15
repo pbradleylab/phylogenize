@@ -9,14 +9,26 @@
 #'     maximum node height.
 #' @keywords internal
 fix.tree <- function(phy, len=1e-6) {
-  if (!is.null(phy) && inherits(phy, "phylo")) {
-      phy <- ape::multi2di(phy)
-      if (any(phy$edge.length == 0)) {
-          max_height <- max(castor::get_all_distances_to_root(phy))
-          phy$edge.length[phy$edge.length == 0] <- max_height * len
-      }
-  }
-  phy
+    if (!is.null(phy) && inherits(phy, "phylo")) {
+        phy <- ape::multi2di(phy)
+        if (is.null(phy$edge.length)) {
+            phy$edge.length <- rep(1, nrow(phy$edge))
+        }
+        valid_lengths <- phy$edge.length[
+            is.finite(phy$edge.length) & phy$edge.length > 0
+        ]
+        if (length(valid_lengths) > 0) {
+            replacement_length <- min(valid_lengths) * len
+        } else {
+            replacement_length <- len
+        }
+        if (!is.finite(replacement_length) || replacement_length <= 0) {
+            replacement_length <- len
+        }
+        bad_lengths <- !is.finite(phy$edge.length) | phy$edge.length <= 0
+        phy$edge.length[bad_lengths] <- replacement_length
+    }
+    phy
 }
 
 #' Keep some tips on a tree.
@@ -29,6 +41,14 @@ fix.tree <- function(phy, len=1e-6) {
 #' @export keep.tips
 keep.tips <- function(tree, keep) {
   ape::drop.tip(tree, setdiff(tree$tip.label, keep))
+}
+
+shared.tree.tips <- function(tree, observed) {
+    intersect(tree$tip.label, observed)
+}
+
+shared.named.values <- function(x, valid) {
+    x[intersect(names(x), valid)]
 }
 
 #' Get tip-to-root distance.

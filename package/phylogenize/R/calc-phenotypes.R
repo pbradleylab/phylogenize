@@ -7,11 +7,11 @@
 #'   memory. Must set to TRUE if running POMS.
 #' @param ... Parameters to override defaults.
 #' @export
-data_to_phenotypes <- function(save_data=FALSE, ...) {
-    pz.options <- clone_and_merge(PZ_OPTIONS, ...)
+data_to_phenotypes <- function(save_data=FALSE, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     pz.message("  A) Reading data, metadata, and databases...")
     # Read in user-supplied data and metadata
-    abd.meta <- read.abd.metadata(...)
+    abd.meta <- read.abd.metadata(..., .opts=opts)
     pz.message(paste0(
         "  .....Input abundance matrix has ",
         nrow(abd.meta$mtx),
@@ -26,7 +26,7 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
     ), level=2)
     pz.message("  B) Read in user-supplied data and metadata")
     # Read in trees, gene presence/absence, taxonomy
-    pz.db <- import.pz.db(...)
+    pz.db <- import.pz.db(..., .opts=opts)
     pz.message(paste0(
         "  .....Database loaded with ",
         length(pz.db$trees),
@@ -35,25 +35,36 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
         " gene presence matrix/matrices"
     ))
     pz.message("  C) Read in trees, gene presence/absence, taxonomy")
+    add_below_lod_before_adjust <- isTRUE(opts('assume_below_LOD')) &&
+        opts('which_phenotype') == "prevalence"
+    if (add_below_lod_before_adjust) {
+        pz.message("  .....Adding unobserved taxa as below limit of detection")
+        abd.meta <- add.below.LOD(pz.db, abd.meta, ..., .opts=opts)
+        sanity.check.abundance(abd.meta$mtx, ...)
+    }
     # Figure out how many trees to retain
-    pz.db <- adjust.db(pz.db, abd.meta, ...)
+    pz.db <- adjust.db(pz.db,
+                       abd.meta,
+                       ...,
+                       .opts=opts,
+                       .import_filtered=TRUE)
     pz.message(paste0(
         "  .....Database adjusted to ",
         pz.db$ntaxa,
         " testable taxon/taxa"
     ))
-    if (pz.options('assume_below_LOD')) {
+    if (opts('assume_below_LOD') && !add_below_lod_before_adjust) {
         pz.message("  .....Adding unobserved taxa as below limit of detection")
-        abd.meta <- add.below.LOD(pz.db, abd.meta, ...)
+        abd.meta <- add.below.LOD(pz.db, abd.meta, ..., .opts=opts)
         sanity.check.abundance(abd.meta$mtx, ...)
     }
     pz.message("  D) Calculating phenotypes...")
-    phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ...)
-    if (pz.options('quantile_normalize')) {
+    phenotype_results <- calculate_phenotypes(abd.meta, pz.db, ..., .opts=opts)
+    if (opts('quantile_normalize')) {
 	    pz.message("  .....Quantile-normalizing phenotype")
 	    phenotype_results <- quantile_normalize(phenotype_results)
     } 
-    if (pz.options('which_phenotype') %in% c("specificity", "abundance")) {
+    if (opts('which_phenotype') %in% c("specificity", "abundance")) {
         # only retain observed taxa
         pz.message("  .....Retaining observed taxa in trees")
         pz.db$trees <- retain.observed.taxa(pz.db$trees,
@@ -68,7 +79,7 @@ data_to_phenotypes <- function(save_data=FALSE, ...) {
             " observed testable taxon/taxa"
         ))
     }
-    if (tolower(pz.options('core_method')) == "poms") {
+    if (tolower(opts('core_method')) == "poms") {
         pz.message("Saving abundance data to run POMS...", 2)
         save_data <- TRUE
     }
@@ -120,8 +131,8 @@ quant_norm <- function(x) {
 #'     metadata (from read.abd.metadata or data_to_phenotypes).
 #' @param ... Parameters to override defaults.
 #' @export
-calculate_phenotypes <- function(abd.meta, pz.db, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+calculate_phenotypes <- function(abd.meta, pz.db, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     pz.message("  .....Collecting mapped observations greater than 0")
     mapped.observed <- names(which(Matrix::rowSums(abd.meta$mtx) > 0))
     pz.message(paste0(
@@ -132,29 +143,86 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
     if (tolower(opts('core_method')) == "poms") {
         pz.warning(paste0("Generating an approximate phenotype just for ",
                           "plotting POMS output (logit-AUC)..."))
-        phenotype <- logit_auc_pheno(abd.meta, ...)
+        phenotype <- logit_auc_pheno(abd.meta, ..., .opts=opts)
         phenoP <- 0
     } else {
         if (opts('which_phenotype') == "prevalence") {
             pz.message("  .....Running prevalence")
-            phenotype <- prev.addw(abd.meta, ...)
+            phenotype <- prev.addw(abd.meta, ..., .opts=opts)
             phenoP <- NULL
         } else if (opts('which_phenotype') == "specificity") {
 	    pz.message("  .....Running specificity")
             if (opts('prior_type') == "file") {
-                prior.data <- read.table(file.path(opts('input_dir'),
-                                                   opts('prior_file')))
+                prior_file <- opts('prior_file')
+                if (prior_file == "") {
+                    pz.error("prior_file must be set when prior_type is 'file'",
+                             .opts=opts)
+                }
+                prior_path <- if (file.exists(prior_file)) {
+                    prior_file
+                } else {
+                    file.path(opts('working_dir'), prior_file)
+                }
+                if (!(file.exists(prior_path))) {
+                    pz.error(paste0("Prior file not found: ", prior_path),
+                             .opts=opts)
+                }
+                if (grepl("\\.csv$", prior_path, ignore.case=TRUE)) {
+                    prior.data <- readr::read_csv(prior_path,
+                                                  show_col_types=FALSE)
+                } else {
+                    prior.data <- readr::read_tsv(prior_path,
+                                                  show_col_types=FALSE)
+                }
+                required_prior_columns <- c("env", "prior")
+                missing_prior_columns <- setdiff(required_prior_columns,
+                                                 names(prior.data))
+                if (length(missing_prior_columns) > 0) {
+                    pz.error(paste0(
+                        "Prior file is missing required column(s): ",
+                        paste(missing_prior_columns, collapse=", ")
+                    ), .opts=opts)
+                }
+                prior_envs <- trimws(as.character(prior.data[["env"]]))
+                if (any(is.na(prior_envs)) || any(prior_envs == "")) {
+                    pz.error("Prior file contains blank or missing environments",
+                             .opts=opts)
+                }
+                if (any(duplicated(prior_envs))) {
+                    duplicate_envs <- unique(prior_envs[duplicated(prior_envs)])
+                    pz.error(paste0(
+                        "Prior file contains duplicate environments: ",
+                        paste(duplicate_envs, collapse=", ")
+                    ), .opts=opts)
+                }
+                prior_values <- suppressWarnings(as.numeric(prior.data[["prior"]]))
+                if (any(is.na(prior_values))) {
+                    pz.error("Prior file contains nonnumeric prior values",
+                             .opts=opts)
+                }
+                if (any(!is.finite(prior_values)) || any(prior_values <= 0)) {
+                    pz.error("Prior file priors must be finite and greater than zero",
+                             .opts=opts)
+                }
+                prior.data[["env"]] <- prior_envs
+                prior.data[["prior"]] <- prior_values
             } else {
                 prior.data <- NULL
             }
             ess <- calc.ess(abd.meta,
                             prior.data,
-                            ...)
+                            ...,
+                            .opts=opts)
             phenotype <- ess$ess
             phenoP <- ess$phenoP
         } else if (opts("which_phenotype") == "provided") {
             pz.message("  .....Reading provided phenotype")
-            p_tbl <- readr::read_tsv(opts("phenotype_file"), show_col_types = FALSE)
+            phenotype_file <- opts("phenotype_file")
+            if (!(file.exists(phenotype_file))) {
+                pz.error(paste0("Phenotype file not found: ", phenotype_file),
+                         .opts=opts)
+            }
+            p_tbl <- readr::read_tsv(phenotype_file, show_col_types = FALSE)
             pz.message(paste0(
                 "  ..........Provided phenotype table has ",
                 nrow(p_tbl),
@@ -162,14 +230,74 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
                 ncol(p_tbl),
                 " column(s)"
             ))
+            if (nrow(p_tbl) == 0 || ncol(p_tbl) < 2) {
+                pz.error(paste0(
+                    "Provided phenotype table must have at least one row and ",
+                    "two columns"
+                ), .opts=opts)
+            }
+            phenotype_ids <- trimws(as.character(p_tbl[[1]]))
+            if (any(is.na(phenotype_ids)) || any(phenotype_ids == "")) {
+                pz.error("Provided phenotype table contains blank or missing taxon IDs",
+                         .opts=opts)
+            }
+            if (any(duplicated(phenotype_ids))) {
+                duplicate_ids <- unique(phenotype_ids[duplicated(phenotype_ids)])
+                pz.error(paste0(
+                    "Provided phenotype table contains duplicate taxon IDs: ",
+                    paste(duplicate_ids, collapse=", ")
+                ), .opts=opts)
+            }
             if (ncol(p_tbl) == 2) { # assume we only have species IDs and values
-                phenotype <- tibble::deframe(p_tbl)
+                phenotype_values <- suppressWarnings(as.numeric(p_tbl[[2]]))
+                if (any(is.na(phenotype_values))) {
+                    pz.error(
+                        "Provided phenotype table contains nonnumeric phenotype values",
+                        .opts=opts)
+                }
+                if (any(!is.finite(phenotype_values))) {
+                    pz.error(
+                        "Provided phenotype table contains non-finite phenotype values",
+                        .opts=opts)
+                }
+                names(phenotype_values) <- phenotype_ids
+                phenotype <- phenotype_values
             } else { # perform shrinkage on the provided values w/ their stderrs
+                required_pheno_columns <- c("estimate", "stderr")
+                missing_pheno_columns <- setdiff(required_pheno_columns,
+                                                 names(p_tbl))
+                if (length(missing_pheno_columns) > 0) {
+                    pz.error(paste0(
+                        "Provided phenotype table is missing required column(s): ",
+                        paste(missing_pheno_columns, collapse=", ")
+                    ), .opts=opts)
+                }
                 pz.message("  ..........Running shrinkage on provided phenotype")
-                p_est <- as.numeric(p_tbl[["estimate"]])
-                p_se <- as.numeric(p_tbl[["stderr"]])
-                names(p_est) <- p_tbl[[1]]
-                names(p_se) <- p_tbl[[1]]
+                p_est <- suppressWarnings(as.numeric(p_tbl[["estimate"]]))
+                p_se <- suppressWarnings(as.numeric(p_tbl[["stderr"]]))
+                if (any(is.na(p_est))) {
+                    pz.error(
+                        "Provided phenotype table contains nonnumeric estimates",
+                        .opts=opts)
+                }
+                if (any(is.na(p_se))) {
+                    pz.error(
+                        "Provided phenotype table contains nonnumeric standard errors",
+                        .opts=opts)
+                }
+                if (any(!is.finite(p_est))) {
+                    pz.error(
+                        "Provided phenotype table contains non-finite estimates",
+                        .opts=opts)
+                }
+                if (any(!is.finite(p_se)) || any(p_se <= 0)) {
+                    pz.error(paste0(
+                        "Provided phenotype table standard errors must be ",
+                        "finite and greater than zero"
+                    ), .opts=opts)
+                }
+                names(p_est) <- phenotype_ids
+                names(p_se) <- phenotype_ids
                 ashr_res <- ash_wrapper(p_est, p_se)
                 phenotype <- ashr_res$result %>%
                     tibble::as_tibble(rownames="species") %>%
@@ -183,7 +311,7 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
             phenoP <- 0
         } else if (opts("which_phenotype") == "abundance") {
             pz.message("  .....Running abundance")
-            pheno_list <- ashr.diff.abund(abd.meta, ...)
+            pheno_list <- ashr.diff.abund(abd.meta, ..., .opts=opts)
             phenotype <- pheno_list$pheno
             pheno_sd <- pheno_list$sd
             phenoP <- 0
@@ -194,6 +322,9 @@ calculate_phenotypes <- function(abd.meta, pz.db, ...) {
     }
     pz.message("  .....cleaning phenotype")
     phenotype <- clean.pheno(phenotype, pz.db)
+    if (length(phenotype) == 0) {
+        pz.error("No phenotype values matched database taxa", .opts=opts)
+    }
     pz.message(paste0(
         "  ..........Cleaned phenotype retains ",
         length(phenotype),
@@ -252,7 +383,7 @@ clean.pheno <- function(phenotype, pz.db) {
     tips <- Reduce(union, lapply(pz.db$trees, function(x) x$tip.label))
     cols <- Reduce(union, lapply(pz.db$gene.presence, colnames))
     valid.names <- intersect(tips, cols)
-    phenotype[intersect(unlist(names(phenotype)), unlist(valid.names))]
+    shared.named.values(phenotype, valid.names)
 }
 
 
@@ -266,10 +397,10 @@ clean.pheno <- function(phenotype, pz.db) {
 #' @export
 retain.observed.taxa <- function(trees, phenotype, phenoP, mapped.observed) {
     trees <- lapply(trees, function(tr) {
-        keep.tips(tr, intersect(tr$tip.label, mapped.observed))
+        keep.tips(tr, shared.tree.tips(tr, mapped.observed))
     })
     n.not.prior <- sapply(trees, function(tr) {
-        sum(phenotype[intersect(names(phenotype), tr$tip.label)] != phenoP)
+        sum(shared.named.values(phenotype, tr$tip.label) != phenoP)
     })
     if (all(n.not.prior == 0)) {
         pz.error(
@@ -291,8 +422,8 @@ retain.observed.taxa <- function(trees, phenotype, phenoP, mapped.observed) {
 #'     metadata.
 #' @return An updated version of \code{abd.meta}.
 #' @export
-add.below.LOD <- function(pz.db, abd.meta, ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+add.below.LOD <- function(pz.db, abd.meta, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     species.observed <- rownames(abd.meta$mtx)
     all.possible.taxa <- Reduce(union,
                                 lapply(pz.db$gene.presence, colnames))
@@ -324,8 +455,9 @@ add.below.LOD <- function(pz.db, abd.meta, ...) {
 #' @return An updated version of \code{abd.meta}.
 #' @export
 logit_auc_pheno <- function(abd.meta,
-                            ...) {
-    opts <- clone_and_merge(PZ_OPTIONS, ...)
+                            ...,
+                            .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
     E <- opts('env_column')
     D <- opts('dset_column')
     S <- opts('sample_column')

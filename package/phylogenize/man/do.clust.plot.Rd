@@ -5,9 +5,11 @@
 \title{Make a hybrid tree-heatmap plot showing the taxon distribution of significant
 hits.}
 \usage{
-\method{do}{clust.plot}(gene.presence, sig.genes, tree, plotted.tree, taxon, verbose = FALSE, ...)
+\method{do}{clust.plot}(gene.presence, sig.genes, tree, plotted.tree, taxon, verbose = FALSE, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{gene.presence}{Gene presence/absence matrix.}
 
 \item{sig.genes}{Character vector of the significant genes.}

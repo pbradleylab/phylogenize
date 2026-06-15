@@ -5,9 +5,11 @@
 \title{Wrapper function to simulate data "denoised" by an algorithm like DADA2 or
 Deblur.}
 \usage{
-make.simulated.denoised.data(mtx, tag.length = 100, ...)
+make.simulated.denoised.data(mtx, tag.length = 100, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{mtx}{An input abundance matrix.}
 
 \item{tag.length}{Positive integer: how long should amplicon sequence

@@ -4,16 +4,18 @@
 \alias{prev.addw}
 \title{Main function to calculate taxon prevalences with additive smoothing.}
 \usage{
-prev.addw(abd.meta, ...)
+prev.addw(abd.meta, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{abd.meta}{A list giving an abundance matrix and metadata.}
 }
 \value{
 An additively-smoothed estimate of taxon prevalences.
 }
 \description{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{env_column}{String. Name of column in metadata file containing the
   environment annotations.}

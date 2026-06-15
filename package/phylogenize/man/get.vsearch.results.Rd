@@ -4,7 +4,10 @@
 \alias{get.vsearch.results}
 \title{Read in results from vsearch.}
 \usage{
-get.vsearch.results(...)
+get.vsearch.results(..., .opts = NULL)
+}
+\arguments{
+\item{.opts}{Internal resolved options object.}
 }
 \value{
 List containing a vector of hits, a vector of MIDAS ID targets, and a
@@ -18,7 +21,7 @@ species_or_genus_ID;;MIDAS_ID". Only MIDAS_ID is used so the contents of
 "gene" and "species_or_genus_ID" can be arbitrary.
 }
 \details{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{vsearch_outfile}{String. File name where vsearch writes output
   which is then read back into \emph{phylogenize}.}

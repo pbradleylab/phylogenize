@@ -4,9 +4,11 @@
 \alias{threshold.pos.sigs}
 \title{Filter out genes that are almost always present or absent.}
 \usage{
-threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig, ...)
+threshold.pos.sigs(pz.db, phy.with.sigs, pos.sig, ..., .opts = NULL)
 }
 \arguments{
+\item{.opts}{Internal resolved options object.}
+
 \item{pz.db}{A database for use with *phylogenize* analyses.}
 
 \item{phy.with.sigs}{A vector of strings giving which taxa had significant
@@ -16,7 +18,7 @@ results.}
 A single data frame with entries from \code{results}.
 }
 \description{
-Some particularly relevant global options are:
+Some particularly relevant options are:
 \describe{
   \item{minimum}{Integer. A particular gene must be observed, and also
   absent, at least this many times to be reported as a significant positive
