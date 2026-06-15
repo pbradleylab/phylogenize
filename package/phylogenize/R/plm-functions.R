@@ -1623,13 +1623,15 @@ above_minimum_genes <- function(gene.presence, trees, ..., .opts=NULL) {
     Min <- opts('minimum')
     GMF <- opts('gene_min_frac')
     taxa <- names(trees)
+    shared_cols <- stats::setNames(lapply(taxa, function(tx) {
+        na.omit(intersect(trees[[tx]]$tip.label,
+                          colnames(gene.presence[[tx]])))
+    }), taxa)
     # keep track of which taxa should be dropped entirely
     to_remove <- rep(FALSE, length(taxa)) %>% setNames(taxa)
     for (tx in taxa) {
         pz.message(paste0("Processing taxon ", tx), level=2)
-        tips <- trees[[tx]]$tip.label
-        colns <- colnames(gene.presence[[tx]])
-        i <- na.omit(intersect(tips, colns))
+        i <- shared_cols[[tx]]
         if (length(i) > 0) {
           mtx <- gene.presence[[tx]][, i, drop=FALSE]
 	  Max <- ncol(mtx) - Min
@@ -1655,8 +1657,15 @@ above_minimum_genes <- function(gene.presence, trees, ..., .opts=NULL) {
 #' @return A single data frame of all significant results plus descriptions.
 #' @export
 add.sig.descs <- function(phy.with.sigs, pos.sig, gene.to.fxn) {
-    pos.sig.tbl <- tibble::enframe(pos.sig, name="taxon", value="gene") %>%
-        tidyr::unnest(cols=c(gene))
+    sig_lengths <- lengths(pos.sig)
+    sig_genes <- unlist(pos.sig, use.names=FALSE)
+    if (is.null(sig_genes)) {
+        sig_genes <- character(0)
+    }
+    pos.sig.tbl <- tibble::tibble(
+        taxon=rep(names(pos.sig), sig_lengths),
+        gene=sig_genes
+    )
     
     column_names <- colnames(gene.to.fxn)
     na_columns <- which(is.na(column_names))

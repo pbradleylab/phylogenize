@@ -109,6 +109,35 @@ test_that("above_minimum_genes keeps genes with enough present and absent tips",
     expect_equal(colnames(filtered$TaxonA), c("s1", "s2", "s3"))
 })
 
+test_that("above_minimum_genes preserves shared tip order", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    pz.options(minimum=1, gene_min_frac=0.5, verbosity=0, error_to_file=FALSE)
+
+    gene.presence <- list(
+        TaxonA=Matrix::Matrix(
+            matrix(
+                c(1, 0, 1, 1,
+                  1, 1, 1, 0,
+                  0, 0, 0, 1),
+                nrow=3,
+                byrow=TRUE,
+                dimnames=list(c("g_keep", "g_all", "g_none"),
+                              c("s1", "s2", "s3", "s_extra"))
+            ),
+            sparse=TRUE
+        )
+    )
+    trees <- list(TaxonA=list(tip.label=c("s3", "s1", "s2", "s_missing")))
+
+    filtered <- above_minimum_genes(gene.presence, trees)
+
+    expect_equal(names(filtered), "TaxonA")
+    expect_equal(rownames(filtered$TaxonA), "g_keep")
+    expect_equal(colnames(filtered$TaxonA), c("s3", "s1", "s2"))
+    expect_equal(as.numeric(filtered$TaxonA["g_keep", ]), c(1, 1, 0))
+})
+
 test_that("adjust.db import-filtered path preserves available taxa and genes", {
     old_opts <- pz.options()
     on.exit(do.call(pz.options, old_opts), add=TRUE)

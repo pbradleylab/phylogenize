@@ -25,7 +25,8 @@ test_that("make.results.matrix converts result matrices to long rows", {
 test_that("add.sig.descs annotates genes without tidyr warnings", {
     sigs <- list(
         TaxonA=c("g1", "g2"),
-        TaxonB="g3"
+        TaxonB="g3",
+        TaxonC=character(0)
     )
     gene_to_fxn <- tibble::tibble(
         gene=c("g1", "g2", "g3"),
@@ -41,6 +42,25 @@ test_that("add.sig.descs annotates genes without tidyr warnings", {
     expect_equal(out$taxon, c("TaxonA", "TaxonA", "TaxonB"))
     expect_equal(out$gene, c("g1", "g2", "g3"))
     expect_equal(out$description, gene_to_fxn$`function`)
+})
+
+test_that("add.sig.descs handles taxa without significant genes", {
+    sigs <- list(
+        TaxonA=character(0),
+        TaxonB=character(0)
+    )
+    gene_to_fxn <- tibble::tibble(
+        gene=c("g1", "g2"),
+        accession=c("K00001", "K00002"),
+        `function`=c("first gene", "second gene")
+    )
+
+    out <- add.sig.descs(character(0), sigs, gene_to_fxn)
+
+    expect_s3_class(out, "tbl_df")
+    expect_equal(nrow(out), 0)
+    expect_equal(names(out),
+                 c("taxon", "gene", "accession", "description"))
 })
 
 test_that("qvals uses configured p.adjust methods", {
