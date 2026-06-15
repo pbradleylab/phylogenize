@@ -13,6 +13,9 @@ test_that("make.results.matrix converts result matrices to long rows", {
 
     result_tbl <- make.results.matrix(results)
 
+    expect_s3_class(result_tbl, "tbl_df")
+    expect_equal(names(result_tbl),
+                 c("taxon", "gene", "effect.size", "p.value", "std.err", "df"))
     expect_equal(result_tbl$taxon, c("TaxonA", "TaxonA"))
     expect_equal(result_tbl$gene, c("g1", "g2"))
     expect_equal(as.numeric(result_tbl$effect.size), c(1.5, -2.0))
