@@ -1568,52 +1568,6 @@ pz.warning <- function(msgtext, ...) {
     warning(msgtext)
 }
 
-#' Convert results into a long (vs. wide) format.
-#'
-#' @param results Output of result.wrapper.plm.
-#' @return A single data frame with entries from \code{results}.
-#' @export
-make.results.matrix <- function(results) {
-    result_names <- names(results)
-    n_genes <- vapply(results, ncol, integer(1))
-    n_rows <- sum(n_genes)
-
-    genes <- character(n_rows)
-    effect_sizes <- numeric(n_rows)
-    p_values <- numeric(n_rows)
-    std_errs <- numeric(n_rows)
-    dfs <- numeric(n_rows)
-
-    row_start <- 1L
-    for (rn in result_names) {
-        n_gene <- ncol(results[[rn]])
-        if (n_gene == 0) {
-            next
-        }
-        rows <- row_start:(row_start + n_gene - 1L)
-        genes[rows] <- colnames(results[[rn]])
-        effect_sizes[rows] <- unname(results[[rn]][1, ])
-        p_values[rows] <- unname(results[[rn]][2, ])
-        std_errs[rows] <- unname(results[[rn]][3, ])
-        dfs[rows] <- unname(results[[rn]][4, ])
-        row_start <- row_start + n_gene
-    }
-
-    names(effect_sizes) <- genes
-    names(p_values) <- genes
-    names(std_errs) <- genes
-    names(dfs) <- genes
-
-    tibble::tibble(
-        taxon=rep(result_names, n_genes),
-        gene=genes,
-        effect.size=effect_sizes,
-        p.value=p_values,
-        std.err=std_errs,
-        df=dfs
-    )
-}
-
 #' Filter out genes that are almost always present or absent.
 #'
 #' Some particularly relevant options are:
