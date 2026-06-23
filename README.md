@@ -91,6 +91,25 @@ Databases can be downloaded manually and decompressed from our Zenodo pages in t
 ### Making Your Own Database
 We recommend using MGnify's v3.0.0 pipeline [here](https://github.com/EBI-Metagenomics/genomes-catalogue-pipeline/releases/tag/v3.0.0) for processing raw files into workable databases. If the files follow standard MGnify format, then they will work in our custom workflow. After you have run their pipeline - a custom database can be generated using our snakemake workflow [here](https://github.com/pbradleylab/phylogenize-db-prep). 
 
+If you generate your own database files, Phylogenize2 needs a `databases.csv` file in the same directory as those files. This file is an index: each row describes one available database, and each column points Phylogenize2 to one file needed for that database. The `database` value is the name users pass to `db`, and the file path values are interpreted relative to `data_dir`.
+
+The required columns are:
+
+| Column | Contents |
+|--------|----------|
+| `database` | Short database name, for example `human-gut` or `my-custom-db`. This must match the `db` option. |
+| `genes` | RDS file containing the gene presence/absence database. |
+| `trees` | RDS file containing the phylogenetic trees. |
+| `taxonomy` | CSV file containing taxonomy annotations. It must include `cluster`, `species`, `genus`, `family`, `order`, `class`, and `phylum` columns. |
+| `functions` | RDS file containing gene-to-function annotations. |
+
+A minimal `databases.csv` for one custom database would look like:
+
+```csv
+database,genes,trees,taxonomy,functions
+my-custom-db,my-custom-genes.rds,my-custom-trees.rds,my-custom-taxonomy.csv,my-custom-functions.rds
+```
+
 ## Preparing your data
 
 If you are using shotgun metagenomes, you will need to first quantify species abundances. The species definitions and names must match the database you plan to use. We recommend using Kraken2 with Bracken, as there are Kraken2 databases for every MGnify database. (Make sure that the version numbers match!) For example:
