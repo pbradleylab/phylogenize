@@ -11,7 +11,7 @@ params:
   source_dir: "."
   out_dir: "."
   in_dir: "."
-  assume_below_LOD: TRUE
+  assume_below_LOD: FALSE
   skip_graphs: FALSE
   use_rmd_params: TRUE
   error_to_file: TRUE

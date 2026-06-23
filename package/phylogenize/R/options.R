@@ -8,7 +8,7 @@ default_params <- list(
     error_to_file = TRUE,
     error_file = "errmsg.txt",
     abundance_file = "",
-    assume_below_LOD = TRUE,
+    assume_below_LOD = FALSE,
     biom_file = "",
     db = "human-gut",
     working_dir = '.',
@@ -106,7 +106,7 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'
 #' @section Computing phenotypes and results:
 #' \describe{
-#'   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
+#'   \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: FALSE}
 #'   \item{quantile_normalize}{Boolean. If TRUE, all phenotypes will be quantile-normalized to the normal distribution. Default: FALSE}
 #'   \item{db}{String. Which database to use. Default: "human-gut"}
 #'   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}

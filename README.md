@@ -258,7 +258,7 @@ render_core_report(
 | `env_column` | `"status"` | Metadata column containing environment, group, or numeric phenotype values. |
 | `dset_column` | `"study"` | Metadata column containing study/batch labels. |
 | `single_dset` | `TRUE` | Use when all samples are from one dataset and no dataset column is needed. |
-| `assume_below_LOD` | `TRUE` | For prevalence, treat taxa absent from the abundance table as zero-prevalence instead of dropping them. This can retain more taxa/genes and make association testing much slower; set to `FALSE` when nondetection should be treated as unknown. |
+| `assume_below_LOD` | `FALSE` | For prevalence, set to `TRUE` to treat taxa absent from the abundance table as zero-prevalence instead of dropping them. This can retain more taxa/genes and make association testing much slower; keep `FALSE` when nondetection should be treated as unknown. |
 | `quantile_normalize` | `FALSE` | Quantile-normalize the calculated phenotype before association testing. |
 | `phenotype_file` | `"phenotype.tsv"` | Input phenotype table when `which_phenotype="provided"`. |
 | `prior_type` | `"uninformative"` | Prior source for specificity. Use `"file"` with `prior_file` for a supplied prior table. |
