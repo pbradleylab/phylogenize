@@ -248,6 +248,7 @@ render_core_report(
 | `metadata_file` | `"data/metadata.tsv"` | Sample metadata table. |
 | `biom_file` | `"data/table.biom"` | BIOM file, if using `input_format="biom"`. |
 | `input_format` | `"tabular"` | Either `"tabular"` or `"biom"`. |
+| `separate_metadata` | `FALSE` | For BIOM input, set to `TRUE` when metadata are in a separate tabular file. |
 | `db` | `"human-gut"` | Database to use. Choose one matching your taxon IDs. |
 | `data_dir` | package extdata directory | Directory containing `databases.csv` and database files. Set this for custom database locations. |
 | `taxon_level` | `"family"` | Taxonomic level to test: `"phylum"`, `"class"`, `"order"`, `"family"`, or `"genus"`. |
@@ -257,12 +258,55 @@ render_core_report(
 | `env_column` | `"status"` | Metadata column containing environment, group, or numeric phenotype values. |
 | `dset_column` | `"study"` | Metadata column containing study/batch labels. |
 | `single_dset` | `TRUE` | Use when all samples are from one dataset and no dataset column is needed. |
+| `assume_below_LOD` | `TRUE` | For prevalence, treat taxa absent from the abundance table as zero-prevalence instead of dropping them. This can retain more taxa/genes and make association testing much slower; set to `FALSE` when nondetection should be treated as unknown. |
+| `quantile_normalize` | `FALSE` | Quantile-normalize the calculated phenotype before association testing. |
+| `phenotype_file` | `"phenotype.tsv"` | Input phenotype table when `which_phenotype="provided"`. |
+| `prior_type` | `"uninformative"` | Prior source for specificity. Use `"file"` with `prior_file` for a supplied prior table. |
+| `prior_file` | `"priors.tsv"` | Prior file used when `prior_type="file"`. |
+| `categorical` | `TRUE` | For abundance/correlation-style analyses, whether `env_column` should be treated as categorical rather than numeric. |
 | `diff_abund_method` | `"ANCOMBC2"` | Differential abundance method for `which_phenotype="abundance"`. |
+| `core_method` | `"permutrate-rlm"` | Association method. Options include `"permutrate-rlm"`, `"permutrate-lm"`, `"permulate-rlm"`, `"permulate-lm"`, `"phylolm"`, `"lm"`, and `"POMS"`. |
+| `fdr_method` | `"BH"` | Multiple-testing correction method: `"BH"`, `"BY"`, or `"qvalue"`. |
+| `meas_err` | `TRUE` | Estimate measurement error in phylogenetic linear models when applicable. |
+| `minimum` | `3` | Minimum number of present and absent observations required for a gene to be tested or retained. |
+| `gene_min_frac` | `0.5` | For fractional gene matrices, value above which a gene is treated as present. |
+| `min_fx` | `0` | Minimum effect size used by the non-equivalence filter for significant hits. |
+| `pctmin` | `0.025` | Minimum fraction of a tree's tips that must be observed or retained for that taxon to be tested. |
+| `treemin` | `10` | Minimum number of retained tips required for a taxon/tree to be tested. |
+| `only_specific_taxa` | `NULL` | Optional character vector limiting association tests to named taxa. |
 | `ncl` | `4` | Number of worker processes. Increase when running on a machine or cluster node with more cores. |
 | `out_dir` | `"output/my_run"` | Output directory. |
 | `output_file` | `"phylogenize-report.html"` | Report file name. |
 | `rds_output_file` | `"core_output.rds"` | Saved RDS result file name. Set to `""` to disable. |
 | `verbosity` | `1` | Progress-message detail. Increase to `2` or `3` for more diagnostics. |
+| `error_to_file` | `TRUE` | Write progress messages, warnings, and errors to `error_file` in `out_dir`. |
+| `error_file` | `"errmsg.txt"` | File name for logged messages when `error_to_file=TRUE`. |
+| `skip_graphs` | `FALSE` | Skip graph-heavy report sections. Useful for faster report rendering or lower memory use. |
+| `separate_process` | `TRUE` | Run memory-heavy report plotting in a separate process when possible. |
+| `relative_out_dir` | `NULL` | Optional output path used by report rendering internals. Most users can leave this unset. |
+| `use_rmd_params` | `FALSE` | Use parameters embedded in the report R Markdown. Most command-line/R-interface runs should leave this `FALSE`. |
+| `working_dir` | `"."` | Working directory used to resolve relative paths. |
+| `devel` | `FALSE` | Developer option for loading the package from source in worker processes. |
+| `devel_pkgdir` | `"package/phylogenize"` | Source package directory used when `devel=TRUE`. |
+| `type_16S` | `FALSE` | Set to `TRUE` for 16S/ASV input that must be mapped to database taxa. |
+| `which_16s_method` | `"appspam"` | 16S mapping method: `"vsearch"`, `"appspam"`, or `"jplace"`. |
+| `vsearch_16sfile` | `"16s_gtdb.frn"` | Reference 16S FASTA file used by `vsearch`. |
+| `vsearch_cutoff` | `0.985` | Percent-identity cutoff for assigning denoised sequences with `vsearch`. |
+| `vsearch_dir` | `""` | Directory containing the `vsearch` binary. |
+| `named_asv_file` | `"input_seqs.txt"` | Temporary/input sequence file name for 16S mapping. |
+| `vsearch_outfile` | `"output_assignments.txt"` | Output assignment file name from `vsearch`. |
+| `appspam_path` | `"/usr/local/bin/appspam"` | Path to the App-SpaM executable. |
+| `aln_path_16s` | `""` | Multiple alignment used for 16S phylogenetic placement. |
+| `tree_path_16s` | `""` | Tree used for 16S phylogenetic placement. |
+| `jplace_file` | `""` | Existing `.jplace` file when `which_16s_method="jplace"`. |
+| `min_frac_16s` | `0.8` | Minimum fraction of 16S assignments that must agree to keep an ASV assignment. |
+| `prev_color_high` | `"orange2"` | High-prevalence color in report plots. |
+| `prev_color_low` | `"black"` | Low-prevalence color in report plots. |
+| `spec_color_high` | `"tomato"` | High-specificity color in report plots. |
+| `spec_color_mid` | `"gray80"` | Midpoint color for specificity plots. |
+| `spec_color_low` | `"slateblue"` | Low-specificity color in report plots. |
+| `gene_color_present` | `"coral"` | Color for present genes in report gene plots. |
+| `gene_color_absent` | `"white"` | Color for absent genes in report gene plots. |
 
 #### Troubleshooting first runs
 
