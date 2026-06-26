@@ -46,7 +46,7 @@ Descriptions of these options follow.
 \section{Computing phenotypes and results}{
 
 \describe{
-  \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: TRUE}
+  \item{assume_below_LOD}{Boolean. If TRUE, MIDAS species that are not present are assumed to have a prevalence of zero; if FALSE, they are dropped from the analysis. Default: FALSE}
   \item{quantile_normalize}{Boolean. If TRUE, all phenotypes will be quantile-normalized to the normal distribution. Default: FALSE}
   \item{db}{String. Which database to use. Default: "human-gut"}
   \item{dset_column}{String. Name of column in metadata file containing the dataset annotations. Default: "dataset"}
