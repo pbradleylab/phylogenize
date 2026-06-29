@@ -302,10 +302,20 @@ qvals <- function(x, ..., .opts=NULL) {
     }
     names(x_numeric) <- x_names
     nonmissing <- !is.na(x_numeric)
-    if (any(!is.finite(x_numeric[nonmissing])) ||
-        any(x_numeric[nonmissing] < 0 | x_numeric[nonmissing] > 1)) {
-        pz.error("p-values must be finite values between 0 and 1",
-                 .opts=opts)
+    invalid <- nonmissing & (!is.finite(x_numeric) |
+                             x_numeric < 0 |
+                             x_numeric > 1)
+    if (any(invalid)) {
+        pz.warning(
+            paste0(
+                "Marking ",
+                sum(invalid),
+                " invalid p-value(s) as NA before FDR correction"
+            ),
+            .opts=opts
+        )
+        x_numeric[invalid] <- NA_real_
+        nonmissing <- !is.na(x_numeric)
     }
     q <- rep(NA_real_, length(x_numeric))
     names(q) <- names(x_numeric)
@@ -326,11 +336,13 @@ qvals <- function(x, ..., .opts=NULL) {
                                      fdr=T,
                                      lambda=seq(0.001, 0.95, 0.005))$qvalues,
                       error=function(e) {
-                          pz.warning("Trying lambda=0...", ...)
-                          tryCatch(qvalue::qvalue(x_valid, fdr=T, lambda=0)$qvalues,
+                          pz.warning("Trying lambda=0...", .opts=opts)
+                          tryCatch(qvalue::qvalue(x_valid,
+                                                  fdr=T,
+                                                  lambda=0)$qvalues,
                                    error=function(e) {
-                                       pz.warning(e, ...)
-                                       pz.warning("Falling back to BH", ...)
+                                       pz.warning(e, .opts=opts)
+                                       pz.warning("Falling back to BH", .opts=opts)
                                        p.adjust(x_valid, 'BH')
                                    })
                       })

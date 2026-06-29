@@ -142,10 +142,18 @@ test_that("qvals validates methods and p-values", {
                             error_to_file=FALSE),
         "Invalid fdr_method"
     )
-    expect_error(
-        phylogenize:::qvals(c(0.01, 1.2), fdr_method="BH",
-                            error_to_file=FALSE),
-        "p-values must be finite"
+    expect_warning(
+        invalid_observed <- phylogenize:::qvals(
+            c(g1=0.01, g2=Inf, g3=NaN, g4=0.20, g5=-0.1, g6=1.2),
+            fdr_method="BH",
+            error_to_file=FALSE
+        ),
+        "Marking 3 invalid p-value\\(s\\) as NA"
+    )
+    expect_equal(
+        invalid_observed,
+        c(g1=0.02, g2=NA_real_, g3=NA_real_,
+          g4=0.20, g5=NA_real_, g6=NA_real_)
     )
 })
 
