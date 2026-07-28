@@ -62,8 +62,8 @@ default_params <- list(
     vsearch_16sfile = "16s_gtdb.frn",
     vsearch_cutoff = 0.985,
     vsearch_dir = "",
-    named_asv_file = "input_seqs.txt",
-    vsearch_outfile = "output_assignments.txt"
+    named_asv_file = "",
+    vsearch_outfile = ""
 )
 
 
@@ -96,9 +96,9 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{which_16s_method}{String. Required when \code{type_16S=TRUE}. Can be "vsearch" (best-hit alignment), "appspam" (perform phylogenetic placement), or "jplace" (bring-your-own .jplace file). Default: ""}
 #'   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_gtdb.frn"}
 #'   \item{vsearch_dir}{String. Path where the binary of the aligner is found. Default: "/usr/local/bin/"}
-#'   \item{named_asv_file}{String. Path where sequences will be written to disk and then read into the aligner/AppSpam. Default: "input_seqs.txt"}
-#'   \item{vsearch_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: "output_assignments.txt"}
-#'   \item{jplace_file}{String. Path to write .jplace file (if which_16s_method is "appspam") or to read user-provided .jplace file (if which_16s_method is "jplace".) \emph{phylogenize}. Default: ""}
+#'   \item{named_asv_file}{String. Path where sequences will be written to disk and then read into the aligner/AppSpam. Default: \code{file.path(out_dir, "phylogenize-16s-asvs.fna")}}
+#'   \item{vsearch_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: \code{file.path(out_dir, "phylogenize-16s-vsearch.tsv")}}
+#'   \item{jplace_file}{String. Path to write .jplace file (if which_16s_method is "appspam") or to read user-provided .jplace file (if which_16s_method is "jplace".) Default for appspam: \code{file.path(out_dir, "phylogenize-16s.jplace")}}
 #'   \item{aln_path_16s}{String. Path to the multiple alignment of 16S sequences used for phylogenetic placement. Default: ""}
 #'   \item{tree_path_16s}{String. Path to the tree of 16S sequences used for phylogenetic placement. \emph{phylogenize}. Default: ""}
 #'   \item{min_frac_16s}{Numeric. Should be between 0.5 and 1. Only keep ASVs where at least this fraction of assignments are to the same species. Allows some tolerance for mislabeled or phylogenetically-inconsistent 16S sequences in the database. Default: 0.8}

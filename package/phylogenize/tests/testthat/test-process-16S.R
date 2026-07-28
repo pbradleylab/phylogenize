@@ -271,6 +271,55 @@ test_that("16S helpers can use resolved options without global mutation", {
     expect_equal(pz.options("min_frac_16s"), 1)
 })
 
+test_that("process.16s derives default intermediate paths under out_dir", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("vsearch-default-paths-")
+    out_dir <- file.path(tmp, "out")
+    dir.create(tmp)
+    fake_vsearch <- file.path(tmp, "vsearch")
+    db_file <- file.path(tmp, "db.fna")
+    writeLines(c(">ref;;genus;;species_a", "ACGTACGT"), db_file)
+    writeLines(c(
+        "#!/bin/sh",
+        "out=''",
+        "while [ \"$#\" -gt 0 ]; do",
+        "    if [ \"$1\" = \"--blast6out\" ]; then",
+        "        shift",
+        "        out=\"$1\"",
+        "    fi",
+        "    shift",
+        "done",
+        "printf 'Row1\\tref;;genus;;species_a\\t99\\n' > \"$out\"",
+        "exit 0"
+    ), fake_vsearch)
+    Sys.chmod(fake_vsearch, mode="0755")
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 2),
+            nrow=1,
+            dimnames=list("ACGTACGT", c("sample1", "sample2"))
+        ),
+        metadata=data.frame(sample=c("sample1", "sample2"))
+    )
+
+    processed <- process.16s(
+        abd.meta,
+        which_16s_method="vsearch",
+        vsearch_dir=fake_vsearch,
+        data_dir=tmp,
+        vsearch_16sfile=basename(db_file),
+        out_dir=out_dir,
+        error_to_file=FALSE
+    )
+
+    expect_true(file.exists(file.path(out_dir, "phylogenize-16s-asvs.fna")))
+    expect_true(file.exists(file.path(out_dir, "phylogenize-16s-vsearch.tsv")))
+    expect_equal(rownames(processed$mtx), "species_a")
+})
+
 test_that("process.16s requires an explicit 16S mapping method", {
     abd.meta <- list(
         mtx=matrix(
@@ -387,6 +436,41 @@ test_that("process.16s errors clearly when mapped samples are all zero", {
     )
 })
 
+test_that("get.appspam.results validates jplace input before parsing", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("jplace-validation-")
+    dir.create(tmp)
+    empty_jplace <- file.path(tmp, "empty.jplace")
+    writeLines(character(), empty_jplace)
+
+    expect_error(
+        get.appspam.results(
+            which_16s_method="jplace",
+            jplace_file="",
+            error_to_file=FALSE
+        ),
+        "jplace_file must be provided"
+    )
+    expect_error(
+        get.appspam.results(
+            which_16s_method="jplace",
+            jplace_file=file.path(tmp, "missing.jplace"),
+            error_to_file=FALSE
+        ),
+        "jplace file not found"
+    )
+    expect_error(
+        get.appspam.results(
+            which_16s_method="jplace",
+            jplace_file=empty_jplace,
+            error_to_file=FALSE
+        ),
+        "jplace file was empty"
+    )
+})
+
 test_that("sum.nonunique.vsearch drops ambiguous ties and aggregates targets", {
     opts <- pz.resolve.options(
         min_frac_16s=0.5,
@@ -411,16 +495,26 @@ test_that("sum.nonunique.vsearch drops ambiguous ties and aggregates targets", {
     )
 
     summed <- sum.nonunique.vsearch(vsearch, mtx, .opts=opts)
+    stats <- attr(summed, "phylogenize_16s_stats")
+    summed_mtx <- as.matrix(summed)
+    attr(summed_mtx, "phylogenize_16s_stats") <- NULL
 
     expect_equal(rownames(summed), c("target_b", "target_a"))
     expect_equal(
-        as.matrix(summed),
+        summed_mtx,
         rbind(
             target_b=c(1, 2, 3),
             target_a=c(14, 16, 18)
         ),
         ignore_attr="dimnames"
     )
+    expect_equal(stats$total_asvs, 4)
+    expect_equal(stats$mapped_asvs, 4)
+    expect_equal(stats$retained_asvs, 3)
+    expect_equal(stats$dropped_asvs, 1)
+    expect_equal(stats$retained_species, 2)
+    expect_equal(stats$total_abundance, 78)
+    expect_equal(stats$retained_abundance, 54)
 })
 
 test_that("run.vsearch validates executable and input files", {
