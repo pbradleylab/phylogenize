@@ -1,6 +1,6 @@
 Package: phylogenize
 Title: Associate Microbial Prevalence, Specificity, and Abundance with Gene Presence
-Version: 2.0.3
+Version: 2.0.4
 Authors@R: 
     c(person(given = "Patrick",
            family = "Bradley",
