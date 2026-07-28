@@ -18,13 +18,29 @@ resolve.16s.paths <- function(..., .opts=NULL) {
         named_asv_file=path_or_default(opts('named_asv_file'),
                                        "phylogenize-16s-asvs.fna"),
         vsearch_outfile=path_or_default(opts('vsearch_outfile'),
-                                        "phylogenize-16s-vsearch.tsv")
+                                        "phylogenize-16s-vsearch.tsv"),
+        audit_16s_file=path_or_default(opts('audit_16s_file'),
+                                       "phylogenize-16s-assignments.tsv")
     )
     if (opts('which_16s_method') == "appspam") {
         updates$jplace_file <- path_or_default(opts('jplace_file'),
                                                "phylogenize-16s.jplace")
     }
     do.call(pz.resolve.options, c(list(.opts=opts), updates))
+}
+
+write.16s.audit <- function(audit, ..., .opts=NULL) {
+    opts <- resolve.16s.paths(..., .opts=.opts)
+    audit_file <- opts('audit_16s_file')
+    if (is.null(audit_file) || is.na(audit_file) || audit_file == "") {
+        return(invisible(FALSE))
+    }
+    ensure_parent_dir(audit_file, .opts=opts)
+    readr::write_tsv(audit, audit_file)
+    pz.message(paste0("  ..........16S assignment audit written to ",
+                      audit_file),
+               .opts=opts)
+    invisible(TRUE)
 }
 
 #' Prepare input file for alignment
@@ -269,6 +285,49 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
         dplyr::filter(frac >= min_frac) %>%
         dplyr::filter(dplyr::n() == 1) %>%
         dplyr::ungroup()
+    retained_by_hit <- vs_tbl_f %>%
+        dplyr::transmute(hits, retained_target=targets)
+    decisions <- vs_tbl %>%
+        dplyr::group_by(hits) %>%
+        dplyr::summarise(
+            n_retained_candidates=sum(frac >= min_frac),
+            drop_reason=dplyr::case_when(
+                n_retained_candidates == 1 ~ "retained",
+                n_retained_candidates == 0 ~ "below_min_frac_16s",
+                TRUE ~ "ambiguous_assignment"
+            ),
+            .groups="drop"
+        ) %>%
+        dplyr::left_join(retained_by_hit, by="hits")
+    audit <- vs_tbl %>%
+        dplyr::left_join(decisions, by="hits") %>%
+        dplyr::transmute(
+            asv_row=hits,
+            asv_sequence=rownames(mtx)[hits],
+            candidate_target=targets,
+            assignment_count=n,
+            assignment_fraction=frac,
+            retained_target=retained_target,
+            retained=!is.na(retained_target) & targets == retained_target,
+            drop_reason=drop_reason
+        )
+    unmapped_hits <- setdiff(seq_len(total_asvs), unique(vs_tbl$hits))
+    if (length(unmapped_hits) > 0) {
+        audit <- dplyr::bind_rows(
+            audit,
+            tibble::tibble(
+                asv_row=unmapped_hits,
+                asv_sequence=rownames(mtx)[unmapped_hits],
+                candidate_target=NA_character_,
+                assignment_count=0L,
+                assignment_fraction=0,
+                retained_target=NA_character_,
+                retained=FALSE,
+                drop_reason="unmapped"
+            )
+        )
+    }
+    audit <- dplyr::arrange(audit, asv_row, candidate_target)
     rh <- vs_tbl_f$hits
     rt <- vs_tbl_f$targets
     subset.abd <- mtx[rh, , drop=FALSE]
@@ -284,6 +343,7 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
         total_abundance=sum(mtx),
         retained_abundance=sum(out)
     )
+    attr(out, "phylogenize_16s_audit") <- audit
     out
 }
 

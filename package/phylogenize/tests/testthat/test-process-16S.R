@@ -317,6 +317,22 @@ test_that("process.16s derives default intermediate paths under out_dir", {
 
     expect_true(file.exists(file.path(out_dir, "phylogenize-16s-asvs.fna")))
     expect_true(file.exists(file.path(out_dir, "phylogenize-16s-vsearch.tsv")))
+    expect_true(file.exists(file.path(out_dir,
+                                      "phylogenize-16s-assignments.tsv")))
+    audit <- readr::read_tsv(
+        file.path(out_dir, "phylogenize-16s-assignments.tsv"),
+        show_col_types=FALSE
+    )
+    expect_equal(
+        names(audit),
+        c("asv_row", "asv_sequence", "candidate_target",
+          "assignment_count", "assignment_fraction", "retained_target",
+          "retained", "drop_reason")
+    )
+    expect_equal(audit$asv_sequence, "ACGTACGT")
+    expect_equal(audit$candidate_target, "species_a")
+    expect_true(audit$retained)
+    expect_equal(audit$drop_reason, "retained")
     expect_equal(rownames(processed$mtx), "species_a")
 })
 
@@ -381,6 +397,7 @@ test_that("process.16s errors clearly when no ASVs are retained", {
             vsearch_16sfile=basename(db_file),
             named_asv_file=query_file,
             vsearch_outfile=hits_file,
+            audit_16s_file=file.path(tmp, "audit.tsv"),
             min_frac_16s=0.5,
             error_to_file=FALSE
         ),
@@ -429,6 +446,7 @@ test_that("process.16s errors clearly when mapped samples are all zero", {
             vsearch_16sfile=basename(db_file),
             named_asv_file=query_file,
             vsearch_outfile=hits_file,
+            audit_16s_file=file.path(tmp, "audit.tsv"),
             min_frac_16s=1,
             error_to_file=FALSE
         ),
@@ -496,8 +514,10 @@ test_that("sum.nonunique.vsearch drops ambiguous ties and aggregates targets", {
 
     summed <- sum.nonunique.vsearch(vsearch, mtx, .opts=opts)
     stats <- attr(summed, "phylogenize_16s_stats")
+    audit <- attr(summed, "phylogenize_16s_audit")
     summed_mtx <- as.matrix(summed)
     attr(summed_mtx, "phylogenize_16s_stats") <- NULL
+    attr(summed_mtx, "phylogenize_16s_audit") <- NULL
 
     expect_equal(rownames(summed), c("target_b", "target_a"))
     expect_equal(
@@ -515,6 +535,16 @@ test_that("sum.nonunique.vsearch drops ambiguous ties and aggregates targets", {
     expect_equal(stats$retained_species, 2)
     expect_equal(stats$total_abundance, 78)
     expect_equal(stats$retained_abundance, 54)
+    expect_equal(nrow(audit), 5)
+    expect_equal(
+        audit$drop_reason[match(3, audit$asv_row)],
+        "ambiguous_assignment"
+    )
+    expect_true(all(!audit$retained[audit$asv_row == 3]))
+    expect_equal(
+        audit$retained_target[audit$asv_row == 4],
+        "target_a"
+    )
 })
 
 test_that("run.vsearch validates executable and input files", {

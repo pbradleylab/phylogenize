@@ -63,7 +63,8 @@ default_params <- list(
     vsearch_cutoff = 0.985,
     vsearch_dir = "",
     named_asv_file = "",
-    vsearch_outfile = ""
+    vsearch_outfile = "",
+    audit_16s_file = ""
 )
 
 
@@ -98,6 +99,7 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{vsearch_dir}{String. Path where the binary of the aligner is found. Default: "/usr/local/bin/"}
 #'   \item{named_asv_file}{String. Path where sequences will be written to disk and then read into the aligner/AppSpam. Default: \code{file.path(out_dir, "phylogenize-16s-asvs.fna")}}
 #'   \item{vsearch_outfile}{String. File name where the aligner writes output which is then read back into \emph{phylogenize}. Default: \code{file.path(out_dir, "phylogenize-16s-vsearch.tsv")}}
+#'   \item{audit_16s_file}{String. File name where the 16S ASV-to-species assignment audit table is written. Default: \code{file.path(out_dir, "phylogenize-16s-assignments.tsv")}}
 #'   \item{jplace_file}{String. Path to write .jplace file (if which_16s_method is "appspam") or to read user-provided .jplace file (if which_16s_method is "jplace".) Default for appspam: \code{file.path(out_dir, "phylogenize-16s.jplace")}}
 #'   \item{aln_path_16s}{String. Path to the multiple alignment of 16S sequences used for phylogenetic placement. Default: ""}
 #'   \item{tree_path_16s}{String. Path to the tree of 16S sequences used for phylogenetic placement. \emph{phylogenize}. Default: ""}

@@ -829,6 +829,10 @@ process.16s <- function(abd.meta, ..., .opts=NULL) {
     }
     summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ..., .opts=opts)
     stats_16s <- attr(summed.uniq, "phylogenize_16s_stats")
+    audit_16s <- attr(summed.uniq, "phylogenize_16s_audit")
+    if (!is.null(audit_16s)) {
+        write.16s.audit(audit_16s, .opts=opts)
+    }
     if (!is.null(stats_16s)) {
         pz.message(paste0(
             "  ..........16S mapping retained ",

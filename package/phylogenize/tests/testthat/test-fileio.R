@@ -414,6 +414,7 @@ test_that("tabular 16S import maps ASVs to species with vsearch", {
     query_file <- file.path(tmp, "input.fna")
     db_file <- file.path(tmp, "db.fna")
     hits_file <- file.path(tmp, "hits.tsv")
+    audit_file <- file.path(tmp, "audit.tsv")
     fake_vsearch <- file.path(tmp, "vsearch")
 
     writeLines(c(
@@ -467,12 +468,19 @@ test_that("tabular 16S import maps ASVs to species with vsearch", {
         vsearch_16sfile=basename(db_file),
         named_asv_file=query_file,
         vsearch_outfile=hits_file,
+        audit_16s_file=audit_file,
         min_frac_16s=1,
         error_to_file=FALSE
     )
 
     expect_true(file.exists(query_file))
     expect_true(file.exists(hits_file))
+    expect_true(file.exists(audit_file))
+    audit <- readr::read_tsv(audit_file, show_col_types=FALSE)
+    expect_equal(
+        audit$drop_reason[audit$asv_sequence == "GGGGAAAA"],
+        "unmapped"
+    )
     expect_equal(rownames(abd.meta$mtx), c("species_a", "species_b"))
     expect_equal(colnames(abd.meta$mtx), paste0("s", 1:4))
     expect_equal(as.numeric(abd.meta$mtx["species_a", ]), c(1, 0, 2, 3))
