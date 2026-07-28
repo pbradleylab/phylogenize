@@ -291,6 +291,102 @@ test_that("process.16s requires an explicit 16S mapping method", {
     )
 })
 
+test_that("process.16s errors clearly when no ASVs are retained", {
+    tmp <- tempfile("vsearch-no-asvs-")
+    dir.create(tmp)
+    fake_vsearch <- file.path(tmp, "vsearch")
+    db_file <- file.path(tmp, "db.fna")
+    query_file <- file.path(tmp, "input.fna")
+    hits_file <- file.path(tmp, "hits.tsv")
+    writeLines(c(">ref;;genus;;species_a", "ACGTACGT"), db_file)
+    writeLines(c(
+        "#!/bin/sh",
+        "out=''",
+        "while [ \"$#\" -gt 0 ]; do",
+        "    if [ \"$1\" = \"--blast6out\" ]; then",
+        "        shift",
+        "        out=\"$1\"",
+        "    fi",
+        "    shift",
+        "done",
+        "printf 'Row1\\tref;;genus;;species_a\\t99\\nRow1\\tref;;genus;;species_b\\t99\\n' > \"$out\"",
+        "exit 0"
+    ), fake_vsearch)
+    Sys.chmod(fake_vsearch, mode="0755")
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 2),
+            nrow=1,
+            dimnames=list("ACGTACGT", c("sample1", "sample2"))
+        ),
+        metadata=data.frame(sample=c("sample1", "sample2"))
+    )
+
+    expect_error(
+        process.16s(
+            abd.meta,
+            which_16s_method="vsearch",
+            vsearch_dir=fake_vsearch,
+            data_dir=tmp,
+            vsearch_16sfile=basename(db_file),
+            named_asv_file=query_file,
+            vsearch_outfile=hits_file,
+            min_frac_16s=0.5,
+            error_to_file=FALSE
+        ),
+        "No 16S ASVs were retained after mapping"
+    )
+})
+
+test_that("process.16s errors clearly when mapped samples are all zero", {
+    tmp <- tempfile("vsearch-zero-samples-")
+    dir.create(tmp)
+    fake_vsearch <- file.path(tmp, "vsearch")
+    db_file <- file.path(tmp, "db.fna")
+    query_file <- file.path(tmp, "input.fna")
+    hits_file <- file.path(tmp, "hits.tsv")
+    writeLines(c(">ref;;genus;;species_a", "ACGTACGT"), db_file)
+    writeLines(c(
+        "#!/bin/sh",
+        "out=''",
+        "while [ \"$#\" -gt 0 ]; do",
+        "    if [ \"$1\" = \"--blast6out\" ]; then",
+        "        shift",
+        "        out=\"$1\"",
+        "    fi",
+        "    shift",
+        "done",
+        "printf 'Row1\\tref;;genus;;species_a\\t99\\n' > \"$out\"",
+        "exit 0"
+    ), fake_vsearch)
+    Sys.chmod(fake_vsearch, mode="0755")
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(0, 0),
+            nrow=1,
+            dimnames=list("ACGTACGT", c("sample1", "sample2"))
+        ),
+        metadata=data.frame(sample=c("sample1", "sample2"))
+    )
+
+    expect_error(
+        process.16s(
+            abd.meta,
+            which_16s_method="vsearch",
+            vsearch_dir=fake_vsearch,
+            data_dir=tmp,
+            vsearch_16sfile=basename(db_file),
+            named_asv_file=query_file,
+            vsearch_outfile=hits_file,
+            min_frac_16s=1,
+            error_to_file=FALSE
+        ),
+        "No samples retained nonzero abundance after 16S mapping"
+    )
+})
+
 test_that("sum.nonunique.vsearch drops ambiguous ties and aggregates targets", {
     opts <- pz.resolve.options(
         min_frac_16s=0.5,

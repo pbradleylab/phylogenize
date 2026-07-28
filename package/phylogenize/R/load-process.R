@@ -828,8 +828,21 @@ process.16s <- function(abd.meta, ..., .opts=NULL) {
         ), .opts=opts)
     }
     summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ..., .opts=opts)
+    if (nrow(summed.uniq) == 0) {
+        pz.error(paste0(
+            "No 16S ASVs were retained after mapping; check reference ",
+            "coverage, min_frac_16s, and ambiguous assignments"
+        ), .opts=opts)
+    }
     csu <- colSums(summed.uniq)
-    abd.meta$mtx <- summed.uniq[, which(csu > 0), drop=FALSE]
+    keep_samples <- which(csu > 0)
+    if (length(keep_samples) == 0) {
+        pz.error(paste0(
+            "No samples retained nonzero abundance after 16S mapping; ",
+            "check ASV assignments and abundance values"
+        ), .opts=opts)
+    }
+    abd.meta$mtx <- summed.uniq[, keep_samples, drop=FALSE]
     # don't convert to relative abundance...
     # abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],
     #                       2,
