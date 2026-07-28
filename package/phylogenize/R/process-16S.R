@@ -259,19 +259,64 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
 #' @export run.appspam
 run.appspam <- function(..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
+    appspam_path <- opts('appspam_path')
+    if (appspam_path == "" || !(file.exists(appspam_path))) {
+        pz.error(paste0("AppSpam executable not found: ", appspam_path),
+                 .opts=opts)
+    }
+    if (file.access(appspam_path, mode=1) != 0) {
+        pz.error(paste0("AppSpam executable is not runnable: ",
+                        appspam_path),
+                 .opts=opts)
+    }
+    aln_file <- opts('aln_path_16s')
+    if (aln_file == "" || !(file.exists(aln_file))) {
+        pz.error(paste0("16S alignment file not found: ", aln_file),
+                 .opts=opts)
+    }
+    tree_file <- opts('tree_path_16s')
+    if (tree_file == "" || !(file.exists(tree_file))) {
+        pz.error(paste0("16S tree file not found: ", tree_file),
+                 .opts=opts)
+    }
+    query_file <- opts('named_asv_file')
+    if (query_file == "" || !(file.exists(query_file))) {
+        pz.error(paste0("16S query FASTA not found: ", query_file),
+                 .opts=opts)
+    }
+    jplace_file <- opts('jplace_file')
+    if (jplace_file == "") {
+        pz.error("jplace_file must be provided for AppSpam output",
+                 .opts=opts)
+    }
+    jplace_dir <- dirname(jplace_file)
+    if (!(dir.exists(jplace_dir))) {
+        pz.error(paste0("AppSpam output directory not found: ", jplace_dir),
+                 .opts=opts)
+    }
+    if (file.access(jplace_dir, mode=2) != 0) {
+        pz.error(paste0("AppSpam output directory is not writable: ",
+                        jplace_dir),
+                 .opts=opts)
+    }
+    ncl <- suppressWarnings(as.numeric(opts('ncl')))
+    if (is.na(ncl) || !is.finite(ncl) || ncl < 1 || ncl != as.integer(ncl)) {
+        pz.error("ncl must be a positive integer for AppSpam",
+                 .opts=opts)
+    }
     appspam_args <- c(
             "-s", 
-            opts('aln_path_16s'),
+            aln_file,
             "-t",
-            opts('tree_path_16s'),
+            tree_file,
             "-q",
-            opts('named_asv_file'),
+            query_file,
 	    "--threads",
-            opts('ncl'),
+            ncl,
             "-o",
-            opts('jplace_file') # in setup should check if exists
+            jplace_file
     )
-    run.external.tool(opts('appspam_path'),
+    run.external.tool(appspam_path,
                       appspam_args,
                       error_label="AppSpam",
                       .opts=opts)

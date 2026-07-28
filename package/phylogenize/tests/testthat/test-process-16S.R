@@ -50,6 +50,13 @@ test_that("run.appspam uses shared external command runner", {
     dir.create(tmp)
     capture_file <- file.path(tmp, "appspam-args.txt")
     fake_appspam <- file.path(tmp, "appspam")
+    aln_file <- file.path(tmp, "aln.fna")
+    tree_file <- file.path(tmp, "tree.nwk")
+    query_file <- file.path(tmp, "input.fna")
+    jplace_file <- file.path(tmp, "out.jplace")
+    writeLines(c(">ref", "ACGT"), aln_file)
+    writeLines("(ref:1);", tree_file)
+    writeLines(c(">Row1", "ACGT"), query_file)
     writeLines(c(
         "#!/bin/sh",
         sprintf("printf '%%s\\n' \"$@\" > %s", shQuote(capture_file)),
@@ -59,21 +66,21 @@ test_that("run.appspam uses shared external command runner", {
 
     expect_true(run.appspam(
         appspam_path=fake_appspam,
-        aln_path_16s=file.path(tmp, "aln.fna"),
-        tree_path_16s=file.path(tmp, "tree.nwk"),
-        named_asv_file=file.path(tmp, "input.fna"),
-        jplace_file=file.path(tmp, "out.jplace"),
+        aln_path_16s=aln_file,
+        tree_path_16s=tree_file,
+        named_asv_file=query_file,
+        jplace_file=jplace_file,
         ncl=3,
         error_to_file=FALSE
     ))
 
     expect_equal(
         readLines(capture_file),
-        c("-s", file.path(tmp, "aln.fna"),
-          "-t", file.path(tmp, "tree.nwk"),
-          "-q", file.path(tmp, "input.fna"),
+        c("-s", aln_file,
+          "-t", tree_file,
+          "-q", query_file,
           "--threads", "3",
-          "-o", file.path(tmp, "out.jplace"))
+          "-o", jplace_file)
     )
 
     writeLines(c("#!/bin/sh", "exit 7"), fake_appspam)
@@ -81,14 +88,137 @@ test_that("run.appspam uses shared external command runner", {
     expect_error(
         run.appspam(
             appspam_path=fake_appspam,
-            aln_path_16s=file.path(tmp, "aln.fna"),
-            tree_path_16s=file.path(tmp, "tree.nwk"),
-            named_asv_file=file.path(tmp, "input.fna"),
-            jplace_file=file.path(tmp, "out.jplace"),
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
             ncl=3,
             error_to_file=FALSE
         ),
         "AppSpam failed with error code 7"
+    )
+})
+
+test_that("run.appspam validates executable, inputs, and output options", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("appspam-validation-")
+    dir.create(tmp)
+    fake_appspam <- file.path(tmp, "appspam")
+    aln_file <- file.path(tmp, "aln.fna")
+    tree_file <- file.path(tmp, "tree.nwk")
+    query_file <- file.path(tmp, "input.fna")
+    jplace_file <- file.path(tmp, "out.jplace")
+    writeLines(c("#!/bin/sh", "exit 0"), fake_appspam)
+    writeLines(c(">ref", "ACGT"), aln_file)
+    writeLines("(ref:1);", tree_file)
+    writeLines(c(">Row1", "ACGT"), query_file)
+
+    expect_error(
+        run.appspam(
+            appspam_path=file.path(tmp, "missing-appspam"),
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "AppSpam executable not found"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "AppSpam executable is not runnable"
+    )
+
+    Sys.chmod(fake_appspam, mode="0755")
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=file.path(tmp, "missing-aln.fna"),
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "16S alignment file not found"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=file.path(tmp, "missing-tree.nwk"),
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "16S tree file not found"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=file.path(tmp, "missing-input.fna"),
+            jplace_file=jplace_file,
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "16S query FASTA not found"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file="",
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "jplace_file must be provided"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=file.path(tmp, "missing-dir", "out.jplace"),
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "AppSpam output directory not found"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
+            ncl=1.5,
+            error_to_file=FALSE
+        ),
+        "ncl must be a positive integer"
     )
 })
 
