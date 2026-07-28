@@ -205,7 +205,8 @@ get.vsearch.results <- function(..., .opts=NULL) {
 #' \code{sum.nonunique.vsearch} takes vsearch results and an abundance or
 #' presence/absence matrix, drops any rows that mapped to multiple MIDAS IDs
 #' (i.e. that couldn't confidently be assigned to a MIDAS species),
-#' then sums any rows that mapped to the same MIDAS ID.
+#' then sums any rows that mapped to the same MIDAS ID. An ASV is retained only
+#' if exactly one MIDAS ID reaches \code{min_frac_16s}.
 #'
 #' Some particularly relevant options are:
 #' \describe{
@@ -233,7 +234,11 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
 	    dplyr::count(targets, name="n") %>%
 	    dplyr::mutate(frac = n/sum(n)) %>%
 	    dplyr::ungroup()
-    vs_tbl_f <- dplyr::filter(vs_tbl, frac >= min_frac)
+    vs_tbl_f <- vs_tbl %>%
+        dplyr::group_by(hits) %>%
+        dplyr::filter(frac >= min_frac) %>%
+        dplyr::filter(dplyr::n() == 1) %>%
+        dplyr::ungroup()
     rh <- vs_tbl_f$hits
     rt <- vs_tbl_f$targets
     subset.abd <- mtx[rh, , drop=FALSE]
