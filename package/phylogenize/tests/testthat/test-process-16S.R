@@ -489,6 +489,66 @@ test_that("get.appspam.results validates jplace input before parsing", {
     )
 })
 
+test_that("process.16s maps ASVs from a jplace placement", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("jplace-workflow-")
+    dir.create(tmp)
+    jplace_file <- file.path(tmp, "placements.jplace")
+    audit_file <- file.path(tmp, "audit.tsv")
+    writeLines("{}", jplace_file)
+
+    tr <- ape::read.tree(text=paste0(
+        "((gene1____genus____species_a:1,",
+        "gene2____genus____species_a:1):1,",
+        "(gene3____genus____species_b:1,",
+        "gene4____genus____species_b:1):1);"
+    ))
+    pl <- tibble::tibble(
+        edge_num=c(2L, 5L),
+        name=c("Row1", "Row2")
+    )
+    testthat::local_mocked_bindings(
+        read.jplace=function(file) {
+            expect_equal(file, jplace_file)
+            list()
+        },
+        get.tree=function(placements) tr,
+        get.placements=function(placements) pl,
+        .package="treeio"
+    )
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 0, 2, 3,
+              0, 4, 1, 5),
+            nrow=2,
+            byrow=TRUE,
+            dimnames=list(c("ACGTACGT", "TTTTCCCC"), paste0("sample", 1:4))
+        ),
+        metadata=data.frame(sample=paste0("sample", 1:4))
+    )
+
+    processed <- process.16s(
+        abd.meta,
+        which_16s_method="jplace",
+        jplace_file=jplace_file,
+        audit_16s_file=audit_file,
+        min_frac_16s=1,
+        ncl=1,
+        error_to_file=FALSE
+    )
+
+    expect_equal(rownames(processed$mtx), c("species_a", "species_b"))
+    expect_equal(as.numeric(processed$mtx["species_a", ]), c(1, 0, 2, 3))
+    expect_equal(as.numeric(processed$mtx["species_b", ]), c(0, 4, 1, 5))
+    expect_true(file.exists(audit_file))
+    audit <- readr::read_tsv(audit_file, show_col_types=FALSE)
+    expect_true(all(audit$retained))
+    expect_equal(unique(audit$drop_reason), "retained")
+})
+
 test_that("sum.nonunique.vsearch drops ambiguous ties and aggregates targets", {
     opts <- pz.resolve.options(
         min_frac_16s=0.5,

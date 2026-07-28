@@ -456,14 +456,19 @@ get.appspam.results <- function(..., .opts=NULL) {
     placements <- treeio::read.jplace(jplace_file)
     tr <- treeio::get.tree(placements)
     pl <- treeio::get.placements(placements)
-    edge <- tibble::as_tibble(tr$edge) %>%
+    edge <- tibble::tibble(V1=tr$edge[, 1], V2=tr$edge[, 2]) %>%
         dplyr::mutate(edge_num=row_number()) %>%
-        dplyr::inner_join(., pl)
-    cl <- parallel::makeCluster(opts('ncl'))
-    on.exit(parallel::stopCluster(cl), add=TRUE)
-    tidy_tips <- parallel::parLapply(cl, edge$V1, \(.x, tr) {
+        dplyr::inner_join(., pl, by="edge_num")
+    get_tips <- function(.x, tr) {
         tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
-    }, tr)
+    }
+    if (opts('ncl') == 1) {
+        tidy_tips <- lapply(edge$V1, get_tips, tr)
+    } else {
+        cl <- parallel::makeCluster(opts('ncl'))
+        on.exit(parallel::stopCluster(cl), add=TRUE)
+        tidy_tips <- parallel::parLapply(cl, edge$V1, get_tips, tr)
+    }
     #tidy_tips <- purrr::map(edge$V1, ~ {
     #    tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
     #}, .progress=TRUE)
