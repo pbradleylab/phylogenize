@@ -58,7 +58,7 @@ default_params <- list(
     jplace_file="",
     min_frac_16s=0.8,		       
     appspam_path="/usr/local/bin/appspam",
-    which_16s_method="appspam",
+    which_16s_method="",
     vsearch_16sfile = "16s_gtdb.frn",
     vsearch_cutoff = 0.985,
     vsearch_dir = "",
@@ -93,7 +93,7 @@ PZ_OPTIONS <- settings::options_manager(.list=default_params)
 #'   \item{output_file}{String. Name of output file: "results.html"}
 #'   \item{prior_file}{String. File name of optional pre-computed prior. Default: ""}
 #'   \item{separate_metadata}{Boolean. For BIOM data, is there a separate tabular metadata table? Default: FALSE}
-#'   \item{which_16s_method}{String. Can be "vsearch" (best-hit alignment), "appspam" (perform phylogenetic placement), or "jplace" (bring-your-own .jplace file). Default: "appspam"}
+#'   \item{which_16s_method}{String. Required when \code{type_16S=TRUE}. Can be "vsearch" (best-hit alignment), "appspam" (perform phylogenetic placement), or "jplace" (bring-your-own .jplace file). Default: ""}
 #'   \item{vsearch_16sfile}{String. Path to the 16S FASTA database that maps back to MIDAS species. Default: "16s_gtdb.frn"}
 #'   \item{vsearch_dir}{String. Path where the binary of the aligner is found. Default: "/usr/local/bin/"}
 #'   \item{named_asv_file}{String. Path where sequences will be written to disk and then read into the aligner/AppSpam. Default: "input_seqs.txt"}

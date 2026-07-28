@@ -271,6 +271,26 @@ test_that("16S helpers can use resolved options without global mutation", {
     expect_equal(pz.options("min_frac_16s"), 1)
 })
 
+test_that("process.16s requires an explicit 16S mapping method", {
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 0, 0, 1),
+            nrow=2,
+            dimnames=list(c("ACGTACGT", "TTTTCCCC"), c("sample1", "sample2"))
+        ),
+        metadata=data.frame(sample=c("sample1", "sample2"))
+    )
+
+    expect_error(
+        process.16s(
+            abd.meta,
+            which_16s_method="",
+            error_to_file=FALSE
+        ),
+        "type_16S=TRUE requires which_16s_method to be explicitly set"
+    )
+})
+
 test_that("sum.nonunique.vsearch drops ambiguous ties and aggregates targets", {
     opts <- pz.resolve.options(
         min_frac_16s=0.5,

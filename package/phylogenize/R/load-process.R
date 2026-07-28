@@ -822,8 +822,10 @@ process.16s <- function(abd.meta, ..., .opts=NULL) {
     } else if (opts('which_16s_method')=="jplace") {
         results_16s <- get.appspam.results(..., .opts=opts)
     } else {
-        pz.error("which_16s_method must be vsearch, appspam, or jplace",
-                 .opts=opts)
+        pz.error(paste0(
+            "type_16S=TRUE requires which_16s_method to be explicitly set ",
+            "to vsearch, appspam, or jplace"
+        ), .opts=opts)
     }
     summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ..., .opts=opts)
     csu <- colSums(summed.uniq)
