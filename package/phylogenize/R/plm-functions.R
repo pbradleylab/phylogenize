@@ -1615,6 +1615,7 @@ pz.warning <- function(msgtext, ...) {
 threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
     Min <- opts('minimum')
+    GMF <- opts('gene_min_frac')
     mapply(pz.db$trees[phy.with.sigs],
            pos.sig[phy.with.sigs],
            pz.db$gene.presence[phy.with.sigs],
@@ -1623,8 +1624,9 @@ threshold.pos.sigs <- function(pz.db, phy.with.sigs, pos.sig, ..., .opts=NULL) {
                if (length(i) == 0) { return(character(0)) }
                if (length(x) == 0) { return(character(0)) }
                y2 <- y[x, i, drop=FALSE]
-               r1 <- rowSums(y2)
-               r2 <- rowSums(1 - y2)
+               ybin <- y2 > GMF
+               r1 <- Matrix::rowSums(ybin)
+               r2 <- Matrix::rowSums(!ybin)
                names(which((r2 >= Min) & (r1 >= Min)))
            },
            SIMPLIFY=FALSE)

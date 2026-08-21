@@ -413,7 +413,9 @@ single.cluster.plot <- function(gene.presence,
     if (length(sig.genes) > 1) {
         if (length(sig.genes) >= 10) {
             # cluster within three relative PD groups
-            rel_pds <- apply(sig.bin, 1, \(x) get_rel_pd(x, tree, flip_sign = TRUE))
+            rel_pds <- apply(sig.bin, 1, \(x) {
+                get_rel_pd(x, tree, flip_sign = TRUE, .opts=opts)
+            })
             #pd_groups <- cut(rank(rel_pds), 3)
             pd_groups <- cut(rel_pds, rel_pd_cut)
             names(pd_groups) <- names(rel_pds)
@@ -422,7 +424,8 @@ single.cluster.plot <- function(gene.presence,
                 if (length(these_genes) < 2) {
                     return(these_genes)
                 } else {
-                    this_clust <- hclust(dist(1 * (sig.bin[these_genes, ] >= 0.05), method='canberra'))
+                    gene_bin <- 1 * (sig.bin[these_genes, ] > opts('gene_min_frac'))
+                    this_clust <- hclust(dist(gene_bin, method='canberra'))
                     return(this_clust$labels[this_clust$order])
                 }
             })
@@ -465,8 +468,9 @@ single.cluster.plot <- function(gene.presence,
 #' Get relative PD for a gene given a tree.
 #' Relative PD here means dividing by the total branch length of the original tree.
 #' If flip_sign is TRUE, will return PD of the minor allele.
-get_rel_pd <- function(gene, tree, flip_sign=TRUE) {
-    gene_bin <- 1 * (gene >= 0.05) # hardcoded for now
+get_rel_pd <- function(gene, tree, flip_sign=TRUE, ..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    gene_bin <- 1 * (gene > opts('gene_min_frac'))
     if (flip_sign) {
         if (mean(gene_bin) > 0.5) {
             gene_bin <- 1 - gene_bin
@@ -477,6 +481,9 @@ get_rel_pd <- function(gene, tree, flip_sign=TRUE) {
     if (length(taxa_in_common) == 0) {
         pz.warning("no tips in common with tree")
         return(NA)
+    }
+    if (length(taxa_in_common) < 2) {
+        return(0)
     }
     subt <- castor::get_subtree_with_tips(tree, taxa_in_common)$subtree
     total_pd <- sum(tree$edge.length)
