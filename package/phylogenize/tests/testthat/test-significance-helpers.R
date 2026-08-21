@@ -307,3 +307,35 @@ test_that("negative-only significant taxa are retained after thresholding", {
     expect_equal(out$neg.sig.thresh$TaxonNeg, "g_neg")
     expect_equal(out$phy.with.sigs, "TaxonNeg")
 })
+
+test_that("significant gene thresholding uses binary gene_min_frac calls", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    opts <- pz.resolve.options(
+        minimum=2,
+        gene_min_frac=0.5,
+        verbosity=0,
+        error_to_file=FALSE
+    )
+    pz.db <- list(
+        trees=list(TaxonA=ape::read.tree(text="(s1:1,s2:1,s3:1,s4:1);")),
+        gene.presence=list(
+            TaxonA=Matrix::Matrix(
+                matrix(
+                    c(1.0, 0.3, 0.3, 0.4,
+                      1.0, 1.0, 0.0, 0.0),
+                    nrow=2,
+                    byrow=TRUE,
+                    dimnames=list(c("g_fractional_singleton", "g_binary_ok"),
+                                  paste0("s", 1:4))
+                ),
+                sparse=TRUE
+            )
+        )
+    )
+    pos.sig <- list(TaxonA=c("g_fractional_singleton", "g_binary_ok"))
+
+    filtered <- threshold.pos.sigs(pz.db, "TaxonA", pos.sig, .opts=opts)
+
+    expect_equal(filtered$TaxonA, "g_binary_ok")
+})

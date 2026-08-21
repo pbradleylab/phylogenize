@@ -73,3 +73,17 @@ test_that("add.plotly.tree.branches appends branch traces to interactive trees",
     expect_s3_class(p, "plotly")
     expect_true(length(p$x$attrs) > 0 || length(p$x$data) > 0)
 })
+
+test_that("get_rel_pd handles singleton gene subtrees", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+    opts <- pz.resolve.options(
+        gene_min_frac=0.5,
+        verbosity=0,
+        error_to_file=FALSE
+    )
+    tr <- ape::read.tree(text="((s1:1,s2:1):1,s3:1);")
+    gene <- c(s1=1, s2=0, s3=0)
+
+    expect_equal(get_rel_pd(gene, tr, flip_sign=FALSE, .opts=opts), 0)
+})

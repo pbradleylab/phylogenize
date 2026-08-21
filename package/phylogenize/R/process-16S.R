@@ -1,6 +1,48 @@
 
 #--- Process 16S data---#
 
+resolve.16s.paths <- function(..., .opts=NULL) {
+    opts <- pz.resolve.options(..., .opts=.opts)
+    out_dir <- opts('out_dir')
+    if (is.null(out_dir) || is.na(out_dir) || out_dir == "") {
+        out_dir <- "."
+    }
+    path_or_default <- function(value, filename) {
+        if (is.null(value) || is.na(value) || value == "") {
+            file.path(out_dir, filename)
+        } else {
+            value
+        }
+    }
+    updates <- list(
+        named_asv_file=path_or_default(opts('named_asv_file'),
+                                       "phylogenize-16s-asvs.fna"),
+        vsearch_outfile=path_or_default(opts('vsearch_outfile'),
+                                        "phylogenize-16s-vsearch.tsv"),
+        audit_16s_file=path_or_default(opts('audit_16s_file'),
+                                       "phylogenize-16s-assignments.tsv")
+    )
+    if (opts('which_16s_method') == "appspam") {
+        updates$jplace_file <- path_or_default(opts('jplace_file'),
+                                               "phylogenize-16s.jplace")
+    }
+    do.call(pz.resolve.options, c(list(.opts=opts), updates))
+}
+
+write.16s.audit <- function(audit, ..., .opts=NULL) {
+    opts <- resolve.16s.paths(..., .opts=.opts)
+    audit_file <- opts('audit_16s_file')
+    if (is.null(audit_file) || is.na(audit_file) || audit_file == "") {
+        return(invisible(FALSE))
+    }
+    ensure_parent_dir(audit_file, .opts=opts)
+    readr::write_tsv(audit, audit_file)
+    pz.message(paste0("  ..........16S assignment audit written to ",
+                      audit_file),
+               .opts=opts)
+    invisible(TRUE)
+}
+
 #' Prepare input file for alignment
 #'
 #' \code{prepare.vsearch.input} outputs a FASTA file of the sequences in the
@@ -16,7 +58,7 @@
 #'   amplicon sequence variant DNA sequences.
 #' @export
 prepare.vsearch.input <- function(mtx, ..., .opts=NULL) {
-    opts <- pz.resolve.options(..., .opts=.opts)
+    opts <- resolve.16s.paths(..., .opts=.opts)
     check.dna <- is.dna(rownames(mtx))
     if (!(all(check.dna))) {
         pz.error(paste0(
@@ -28,6 +70,7 @@ prepare.vsearch.input <- function(mtx, ..., .opts=NULL) {
     }
     asvnames = paste0("Row", (1:nrow(mtx)))
     asvs = rownames(mtx)
+    ensure_parent_dir(opts('named_asv_file'), .opts=opts)
     seqinr::write.fasta(as.list(asvs),
                         asvnames,
                         file.out=opts('named_asv_file'),
@@ -83,7 +126,7 @@ run.external.tool <- function(command,
 #' @return Returns TRUE unless an error is thrown.
 #' @export run.vsearch
 run.vsearch <- function(..., .opts=NULL) {
-    opts <- pz.resolve.options(..., .opts=.opts)
+    opts <- resolve.16s.paths(..., .opts=.opts)
     vsearch_path <- opts('vsearch_dir')
     if (dir.exists(vsearch_path)) {
         vsearch_path <- file.path(vsearch_path, "vsearch")
@@ -112,6 +155,7 @@ run.vsearch <- function(..., .opts=NULL) {
                  .opts=opts)
     }
     binary <- basename(vsearch_path)
+    ensure_parent_dir(opts('vsearch_outfile'), .opts=opts)
     vsearch_args <- c("--db",
 			     db_file,
 			     "--usearch_global",
@@ -149,7 +193,7 @@ run.vsearch <- function(..., .opts=NULL) {
 #'     data frame of the assignments as they came out of vsearch.
 #' @export
 get.vsearch.results <- function(..., .opts=NULL) {
-    opts <- pz.resolve.options(..., .opts=.opts)
+    opts <- resolve.16s.paths(..., .opts=.opts)
     vf <- opts('vsearch_outfile')
     if (!(file.exists(vf))) {
         pz.error(paste0("vsearch output file not found: ", vf), .opts=opts)
@@ -205,7 +249,8 @@ get.vsearch.results <- function(..., .opts=NULL) {
 #' \code{sum.nonunique.vsearch} takes vsearch results and an abundance or
 #' presence/absence matrix, drops any rows that mapped to multiple MIDAS IDs
 #' (i.e. that couldn't confidently be assigned to a MIDAS species),
-#' then sums any rows that mapped to the same MIDAS ID.
+#' then sums any rows that mapped to the same MIDAS ID. An ASV is retained only
+#' if exactly one MIDAS ID reaches \code{min_frac_16s}.
 #'
 #' Some particularly relevant options are:
 #' \describe{
@@ -228,18 +273,78 @@ get.vsearch.results <- function(..., .opts=NULL) {
 sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
     opts <- pz.resolve.options(..., .opts=.opts)
     min_frac <- opts("min_frac_16s")
+    total_asvs <- nrow(mtx)
+    mapped_asvs <- length(unique(vsearch$hits))
     vs_tbl <- tibble::tibble(hits=vsearch$hits, targets=vsearch$targets) %>% 
 	    dplyr::group_by(hits) %>%
 	    dplyr::count(targets, name="n") %>%
 	    dplyr::mutate(frac = n/sum(n)) %>%
 	    dplyr::ungroup()
-    vs_tbl_f <- dplyr::filter(vs_tbl, frac >= min_frac)
+    vs_tbl_f <- vs_tbl %>%
+        dplyr::group_by(hits) %>%
+        dplyr::filter(frac >= min_frac) %>%
+        dplyr::filter(dplyr::n() == 1) %>%
+        dplyr::ungroup()
+    retained_by_hit <- vs_tbl_f %>%
+        dplyr::transmute(hits, retained_target=targets)
+    decisions <- vs_tbl %>%
+        dplyr::group_by(hits) %>%
+        dplyr::summarise(
+            n_retained_candidates=sum(frac >= min_frac),
+            drop_reason=dplyr::case_when(
+                n_retained_candidates == 1 ~ "retained",
+                n_retained_candidates == 0 ~ "below_min_frac_16s",
+                TRUE ~ "ambiguous_assignment"
+            ),
+            .groups="drop"
+        ) %>%
+        dplyr::left_join(retained_by_hit, by="hits")
+    audit <- vs_tbl %>%
+        dplyr::left_join(decisions, by="hits") %>%
+        dplyr::transmute(
+            asv_row=hits,
+            asv_sequence=rownames(mtx)[hits],
+            candidate_target=targets,
+            assignment_count=n,
+            assignment_fraction=frac,
+            retained_target=retained_target,
+            retained=!is.na(retained_target) & targets == retained_target,
+            drop_reason=drop_reason
+        )
+    unmapped_hits <- setdiff(seq_len(total_asvs), unique(vs_tbl$hits))
+    if (length(unmapped_hits) > 0) {
+        audit <- dplyr::bind_rows(
+            audit,
+            tibble::tibble(
+                asv_row=unmapped_hits,
+                asv_sequence=rownames(mtx)[unmapped_hits],
+                candidate_target=NA_character_,
+                assignment_count=0L,
+                assignment_fraction=0,
+                retained_target=NA_character_,
+                retained=FALSE,
+                drop_reason="unmapped"
+            )
+        )
+    }
+    audit <- dplyr::arrange(audit, asv_row, candidate_target)
     rh <- vs_tbl_f$hits
     rt <- vs_tbl_f$targets
     subset.abd <- mtx[rh, , drop=FALSE]
     urt <- unique(rt)
     summed.uniq <- rowsum(as.matrix(subset.abd), group=rt, reorder=FALSE)
-    summed.uniq[urt, , drop=FALSE]
+    out <- summed.uniq[urt, , drop=FALSE]
+    attr(out, "phylogenize_16s_stats") <- list(
+        total_asvs=total_asvs,
+        mapped_asvs=mapped_asvs,
+        retained_asvs=length(unique(rh)),
+        dropped_asvs=total_asvs - length(unique(rh)),
+        retained_species=nrow(out),
+        total_abundance=sum(mtx),
+        retained_abundance=sum(out)
+    )
+    attr(out, "phylogenize_16s_audit") <- audit
+    out
 }
 
 
@@ -258,20 +363,65 @@ sum.nonunique.vsearch <- function(vsearch, mtx, ..., .opts=NULL) {
 #' @return Returns TRUE unless an error is thrown.
 #' @export run.appspam
 run.appspam <- function(..., .opts=NULL) {
-    opts <- pz.resolve.options(..., .opts=.opts)
+    opts <- resolve.16s.paths(..., .opts=.opts)
+    appspam_path <- opts('appspam_path')
+    if (appspam_path == "" || !(file.exists(appspam_path))) {
+        pz.error(paste0("AppSpam executable not found: ", appspam_path),
+                 .opts=opts)
+    }
+    if (file.access(appspam_path, mode=1) != 0) {
+        pz.error(paste0("AppSpam executable is not runnable: ",
+                        appspam_path),
+                 .opts=opts)
+    }
+    aln_file <- opts('aln_path_16s')
+    if (aln_file == "" || !(file.exists(aln_file))) {
+        pz.error(paste0("16S alignment file not found: ", aln_file),
+                 .opts=opts)
+    }
+    tree_file <- opts('tree_path_16s')
+    if (tree_file == "" || !(file.exists(tree_file))) {
+        pz.error(paste0("16S tree file not found: ", tree_file),
+                 .opts=opts)
+    }
+    query_file <- opts('named_asv_file')
+    if (query_file == "" || !(file.exists(query_file))) {
+        pz.error(paste0("16S query FASTA not found: ", query_file),
+                 .opts=opts)
+    }
+    jplace_file <- opts('jplace_file')
+    if (jplace_file == "") {
+        pz.error("jplace_file must be provided for AppSpam output",
+                 .opts=opts)
+    }
+    jplace_dir <- dirname(jplace_file)
+    if (!(dir.exists(jplace_dir))) {
+        pz.error(paste0("AppSpam output directory not found: ", jplace_dir),
+                 .opts=opts)
+    }
+    if (file.access(jplace_dir, mode=2) != 0) {
+        pz.error(paste0("AppSpam output directory is not writable: ",
+                        jplace_dir),
+                 .opts=opts)
+    }
+    ncl <- suppressWarnings(as.numeric(opts('ncl')))
+    if (is.na(ncl) || !is.finite(ncl) || ncl < 1 || ncl != as.integer(ncl)) {
+        pz.error("ncl must be a positive integer for AppSpam",
+                 .opts=opts)
+    }
     appspam_args <- c(
             "-s", 
-            opts('aln_path_16s'),
+            aln_file,
             "-t",
-            opts('tree_path_16s'),
+            tree_file,
             "-q",
-            opts('named_asv_file'),
+            query_file,
 	    "--threads",
-            opts('ncl'),
+            ncl,
             "-o",
-            opts('jplace_file') # in setup should check if exists
+            jplace_file
     )
-    run.external.tool(opts('appspam_path'),
+    run.external.tool(appspam_path,
                       appspam_args,
                       error_label="AppSpam",
                       .opts=opts)
@@ -287,19 +437,38 @@ run.appspam <- function(..., .opts=NULL) {
 #'     data frame of the assignments as they came out of AppSpam 
 #' @export
 get.appspam.results <- function(..., .opts=NULL) {
-    opts <- pz.resolve.options(..., .opts=.opts)
+    opts <- resolve.16s.paths(..., .opts=.opts)
+    jplace_file <- opts('jplace_file')
+    if (jplace_file == "") {
+        pz.error("jplace_file must be provided for jplace input", .opts=opts)
+    }
+    if (!(file.exists(jplace_file))) {
+        pz.error(paste0("jplace file not found: ", jplace_file), .opts=opts)
+    }
+    if (file.access(jplace_file, mode=4) != 0) {
+        pz.error(paste0("jplace file is not readable: ", jplace_file),
+                 .opts=opts)
+    }
+    if (file.info(jplace_file)$size == 0) {
+        pz.error(paste0("jplace file was empty: ", jplace_file), .opts=opts)
+    }
     # map to MIDAS IDs using vsearch
-    placements <- treeio::read.jplace(opts('jplace_file'))
+    placements <- treeio::read.jplace(jplace_file)
     tr <- treeio::get.tree(placements)
     pl <- treeio::get.placements(placements)
-    edge <- tibble::as_tibble(tr$edge) %>%
+    edge <- tibble::tibble(V1=tr$edge[, 1], V2=tr$edge[, 2]) %>%
         dplyr::mutate(edge_num=row_number()) %>%
-        dplyr::inner_join(., pl)
-    cl <- parallel::makeCluster(opts('ncl'))
-    on.exit(parallel::stopCluster(cl), add=TRUE)
-    tidy_tips <- parallel::parLapply(cl, edge$V1, \(.x, tr) {
+        dplyr::inner_join(., pl, by="edge_num")
+    get_tips <- function(.x, tr) {
         tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
-    }, tr)
+    }
+    if (opts('ncl') == 1) {
+        tidy_tips <- lapply(edge$V1, get_tips, tr)
+    } else {
+        cl <- parallel::makeCluster(opts('ncl'))
+        on.exit(parallel::stopCluster(cl), add=TRUE)
+        tidy_tips <- parallel::parLapply(cl, edge$V1, get_tips, tr)
+    }
     #tidy_tips <- purrr::map(edge$V1, ~ {
     #    tr$tip.label[tidytree::offspring(tr, .x, type="tips")]
     #}, .progress=TRUE)

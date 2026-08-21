@@ -50,6 +50,13 @@ test_that("run.appspam uses shared external command runner", {
     dir.create(tmp)
     capture_file <- file.path(tmp, "appspam-args.txt")
     fake_appspam <- file.path(tmp, "appspam")
+    aln_file <- file.path(tmp, "aln.fna")
+    tree_file <- file.path(tmp, "tree.nwk")
+    query_file <- file.path(tmp, "input.fna")
+    jplace_file <- file.path(tmp, "out.jplace")
+    writeLines(c(">ref", "ACGT"), aln_file)
+    writeLines("(ref:1);", tree_file)
+    writeLines(c(">Row1", "ACGT"), query_file)
     writeLines(c(
         "#!/bin/sh",
         sprintf("printf '%%s\\n' \"$@\" > %s", shQuote(capture_file)),
@@ -59,21 +66,21 @@ test_that("run.appspam uses shared external command runner", {
 
     expect_true(run.appspam(
         appspam_path=fake_appspam,
-        aln_path_16s=file.path(tmp, "aln.fna"),
-        tree_path_16s=file.path(tmp, "tree.nwk"),
-        named_asv_file=file.path(tmp, "input.fna"),
-        jplace_file=file.path(tmp, "out.jplace"),
+        aln_path_16s=aln_file,
+        tree_path_16s=tree_file,
+        named_asv_file=query_file,
+        jplace_file=jplace_file,
         ncl=3,
         error_to_file=FALSE
     ))
 
     expect_equal(
         readLines(capture_file),
-        c("-s", file.path(tmp, "aln.fna"),
-          "-t", file.path(tmp, "tree.nwk"),
-          "-q", file.path(tmp, "input.fna"),
+        c("-s", aln_file,
+          "-t", tree_file,
+          "-q", query_file,
           "--threads", "3",
-          "-o", file.path(tmp, "out.jplace"))
+          "-o", jplace_file)
     )
 
     writeLines(c("#!/bin/sh", "exit 7"), fake_appspam)
@@ -81,14 +88,137 @@ test_that("run.appspam uses shared external command runner", {
     expect_error(
         run.appspam(
             appspam_path=fake_appspam,
-            aln_path_16s=file.path(tmp, "aln.fna"),
-            tree_path_16s=file.path(tmp, "tree.nwk"),
-            named_asv_file=file.path(tmp, "input.fna"),
-            jplace_file=file.path(tmp, "out.jplace"),
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
             ncl=3,
             error_to_file=FALSE
         ),
         "AppSpam failed with error code 7"
+    )
+})
+
+test_that("run.appspam validates executable, inputs, and output options", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("appspam-validation-")
+    dir.create(tmp)
+    fake_appspam <- file.path(tmp, "appspam")
+    aln_file <- file.path(tmp, "aln.fna")
+    tree_file <- file.path(tmp, "tree.nwk")
+    query_file <- file.path(tmp, "input.fna")
+    jplace_file <- file.path(tmp, "out.jplace")
+    writeLines(c("#!/bin/sh", "exit 0"), fake_appspam)
+    writeLines(c(">ref", "ACGT"), aln_file)
+    writeLines("(ref:1);", tree_file)
+    writeLines(c(">Row1", "ACGT"), query_file)
+
+    expect_error(
+        run.appspam(
+            appspam_path=file.path(tmp, "missing-appspam"),
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "AppSpam executable not found"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "AppSpam executable is not runnable"
+    )
+
+    Sys.chmod(fake_appspam, mode="0755")
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=file.path(tmp, "missing-aln.fna"),
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "16S alignment file not found"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=file.path(tmp, "missing-tree.nwk"),
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "16S tree file not found"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=file.path(tmp, "missing-input.fna"),
+            jplace_file=jplace_file,
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "16S query FASTA not found"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file="",
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "jplace_file must be provided"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=file.path(tmp, "missing-dir", "out.jplace"),
+            ncl=1,
+            error_to_file=FALSE
+        ),
+        "AppSpam output directory not found"
+    )
+
+    expect_error(
+        run.appspam(
+            appspam_path=fake_appspam,
+            aln_path_16s=aln_file,
+            tree_path_16s=tree_file,
+            named_asv_file=query_file,
+            jplace_file=jplace_file,
+            ncl=1.5,
+            error_to_file=FALSE
+        ),
+        "ncl must be a positive integer"
     )
 })
 
@@ -141,7 +271,285 @@ test_that("16S helpers can use resolved options without global mutation", {
     expect_equal(pz.options("min_frac_16s"), 1)
 })
 
-test_that("sum.nonunique.vsearch aggregates duplicate hits in target order", {
+test_that("process.16s derives default intermediate paths under out_dir", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("vsearch-default-paths-")
+    out_dir <- file.path(tmp, "out")
+    dir.create(tmp)
+    fake_vsearch <- file.path(tmp, "vsearch")
+    db_file <- file.path(tmp, "db.fna")
+    writeLines(c(">ref;;genus;;species_a", "ACGTACGT"), db_file)
+    writeLines(c(
+        "#!/bin/sh",
+        "out=''",
+        "while [ \"$#\" -gt 0 ]; do",
+        "    if [ \"$1\" = \"--blast6out\" ]; then",
+        "        shift",
+        "        out=\"$1\"",
+        "    fi",
+        "    shift",
+        "done",
+        "printf 'Row1\\tref;;genus;;species_a\\t99\\n' > \"$out\"",
+        "exit 0"
+    ), fake_vsearch)
+    Sys.chmod(fake_vsearch, mode="0755")
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 2),
+            nrow=1,
+            dimnames=list("ACGTACGT", c("sample1", "sample2"))
+        ),
+        metadata=data.frame(sample=c("sample1", "sample2"))
+    )
+
+    processed <- process.16s(
+        abd.meta,
+        which_16s_method="vsearch",
+        vsearch_dir=fake_vsearch,
+        data_dir=tmp,
+        vsearch_16sfile=basename(db_file),
+        out_dir=out_dir,
+        error_to_file=FALSE
+    )
+
+    expect_true(file.exists(file.path(out_dir, "phylogenize-16s-asvs.fna")))
+    expect_true(file.exists(file.path(out_dir, "phylogenize-16s-vsearch.tsv")))
+    expect_true(file.exists(file.path(out_dir,
+                                      "phylogenize-16s-assignments.tsv")))
+    audit <- readr::read_tsv(
+        file.path(out_dir, "phylogenize-16s-assignments.tsv"),
+        show_col_types=FALSE
+    )
+    expect_equal(
+        names(audit),
+        c("asv_row", "asv_sequence", "candidate_target",
+          "assignment_count", "assignment_fraction", "retained_target",
+          "retained", "drop_reason")
+    )
+    expect_equal(audit$asv_sequence, "ACGTACGT")
+    expect_equal(audit$candidate_target, "species_a")
+    expect_true(audit$retained)
+    expect_equal(audit$drop_reason, "retained")
+    expect_equal(rownames(processed$mtx), "species_a")
+})
+
+test_that("process.16s requires an explicit 16S mapping method", {
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 0, 0, 1),
+            nrow=2,
+            dimnames=list(c("ACGTACGT", "TTTTCCCC"), c("sample1", "sample2"))
+        ),
+        metadata=data.frame(sample=c("sample1", "sample2"))
+    )
+
+    expect_error(
+        process.16s(
+            abd.meta,
+            which_16s_method="",
+            error_to_file=FALSE
+        ),
+        "type_16S=TRUE requires which_16s_method to be explicitly set"
+    )
+})
+
+test_that("process.16s errors clearly when no ASVs are retained", {
+    tmp <- tempfile("vsearch-no-asvs-")
+    dir.create(tmp)
+    fake_vsearch <- file.path(tmp, "vsearch")
+    db_file <- file.path(tmp, "db.fna")
+    query_file <- file.path(tmp, "input.fna")
+    hits_file <- file.path(tmp, "hits.tsv")
+    writeLines(c(">ref;;genus;;species_a", "ACGTACGT"), db_file)
+    writeLines(c(
+        "#!/bin/sh",
+        "out=''",
+        "while [ \"$#\" -gt 0 ]; do",
+        "    if [ \"$1\" = \"--blast6out\" ]; then",
+        "        shift",
+        "        out=\"$1\"",
+        "    fi",
+        "    shift",
+        "done",
+        "printf 'Row1\\tref;;genus;;species_a\\t99\\nRow1\\tref;;genus;;species_b\\t99\\n' > \"$out\"",
+        "exit 0"
+    ), fake_vsearch)
+    Sys.chmod(fake_vsearch, mode="0755")
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 2),
+            nrow=1,
+            dimnames=list("ACGTACGT", c("sample1", "sample2"))
+        ),
+        metadata=data.frame(sample=c("sample1", "sample2"))
+    )
+
+    expect_error(
+        process.16s(
+            abd.meta,
+            which_16s_method="vsearch",
+            vsearch_dir=fake_vsearch,
+            data_dir=tmp,
+            vsearch_16sfile=basename(db_file),
+            named_asv_file=query_file,
+            vsearch_outfile=hits_file,
+            audit_16s_file=file.path(tmp, "audit.tsv"),
+            min_frac_16s=0.5,
+            error_to_file=FALSE
+        ),
+        "No 16S ASVs were retained after mapping"
+    )
+})
+
+test_that("process.16s errors clearly when mapped samples are all zero", {
+    tmp <- tempfile("vsearch-zero-samples-")
+    dir.create(tmp)
+    fake_vsearch <- file.path(tmp, "vsearch")
+    db_file <- file.path(tmp, "db.fna")
+    query_file <- file.path(tmp, "input.fna")
+    hits_file <- file.path(tmp, "hits.tsv")
+    writeLines(c(">ref;;genus;;species_a", "ACGTACGT"), db_file)
+    writeLines(c(
+        "#!/bin/sh",
+        "out=''",
+        "while [ \"$#\" -gt 0 ]; do",
+        "    if [ \"$1\" = \"--blast6out\" ]; then",
+        "        shift",
+        "        out=\"$1\"",
+        "    fi",
+        "    shift",
+        "done",
+        "printf 'Row1\\tref;;genus;;species_a\\t99\\n' > \"$out\"",
+        "exit 0"
+    ), fake_vsearch)
+    Sys.chmod(fake_vsearch, mode="0755")
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(0, 0),
+            nrow=1,
+            dimnames=list("ACGTACGT", c("sample1", "sample2"))
+        ),
+        metadata=data.frame(sample=c("sample1", "sample2"))
+    )
+
+    expect_error(
+        process.16s(
+            abd.meta,
+            which_16s_method="vsearch",
+            vsearch_dir=fake_vsearch,
+            data_dir=tmp,
+            vsearch_16sfile=basename(db_file),
+            named_asv_file=query_file,
+            vsearch_outfile=hits_file,
+            audit_16s_file=file.path(tmp, "audit.tsv"),
+            min_frac_16s=1,
+            error_to_file=FALSE
+        ),
+        "No samples retained nonzero abundance after 16S mapping"
+    )
+})
+
+test_that("get.appspam.results validates jplace input before parsing", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("jplace-validation-")
+    dir.create(tmp)
+    empty_jplace <- file.path(tmp, "empty.jplace")
+    writeLines(character(), empty_jplace)
+
+    expect_error(
+        get.appspam.results(
+            which_16s_method="jplace",
+            jplace_file="",
+            error_to_file=FALSE
+        ),
+        "jplace_file must be provided"
+    )
+    expect_error(
+        get.appspam.results(
+            which_16s_method="jplace",
+            jplace_file=file.path(tmp, "missing.jplace"),
+            error_to_file=FALSE
+        ),
+        "jplace file not found"
+    )
+    expect_error(
+        get.appspam.results(
+            which_16s_method="jplace",
+            jplace_file=empty_jplace,
+            error_to_file=FALSE
+        ),
+        "jplace file was empty"
+    )
+})
+
+test_that("process.16s maps ASVs from a jplace placement", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("jplace-workflow-")
+    dir.create(tmp)
+    jplace_file <- file.path(tmp, "placements.jplace")
+    audit_file <- file.path(tmp, "audit.tsv")
+    writeLines("{}", jplace_file)
+
+    tr <- ape::read.tree(text=paste0(
+        "((gene1____genus____species_a:1,",
+        "gene2____genus____species_a:1):1,",
+        "(gene3____genus____species_b:1,",
+        "gene4____genus____species_b:1):1);"
+    ))
+    pl <- tibble::tibble(
+        edge_num=c(2L, 5L),
+        name=c("Row1", "Row2")
+    )
+    testthat::local_mocked_bindings(
+        read.jplace=function(file) {
+            expect_equal(file, jplace_file)
+            list()
+        },
+        get.tree=function(placements) tr,
+        get.placements=function(placements) pl,
+        .package="treeio"
+    )
+
+    abd.meta <- list(
+        mtx=matrix(
+            c(1, 0, 2, 3,
+              0, 4, 1, 5),
+            nrow=2,
+            byrow=TRUE,
+            dimnames=list(c("ACGTACGT", "TTTTCCCC"), paste0("sample", 1:4))
+        ),
+        metadata=data.frame(sample=paste0("sample", 1:4))
+    )
+
+    processed <- process.16s(
+        abd.meta,
+        which_16s_method="jplace",
+        jplace_file=jplace_file,
+        audit_16s_file=audit_file,
+        min_frac_16s=1,
+        ncl=1,
+        error_to_file=FALSE
+    )
+
+    expect_equal(rownames(processed$mtx), c("species_a", "species_b"))
+    expect_equal(as.numeric(processed$mtx["species_a", ]), c(1, 0, 2, 3))
+    expect_equal(as.numeric(processed$mtx["species_b", ]), c(0, 4, 1, 5))
+    expect_true(file.exists(audit_file))
+    audit <- readr::read_tsv(audit_file, show_col_types=FALSE)
+    expect_true(all(audit$retained))
+    expect_equal(unique(audit$drop_reason), "retained")
+})
+
+test_that("sum.nonunique.vsearch drops ambiguous ties and aggregates targets", {
     opts <- pz.resolve.options(
         min_frac_16s=0.5,
         error_to_file=FALSE
@@ -165,18 +573,37 @@ test_that("sum.nonunique.vsearch aggregates duplicate hits in target order", {
     )
 
     summed <- sum.nonunique.vsearch(vsearch, mtx, .opts=opts)
+    stats <- attr(summed, "phylogenize_16s_stats")
+    audit <- attr(summed, "phylogenize_16s_audit")
+    summed_mtx <- as.matrix(summed)
+    attr(summed_mtx, "phylogenize_16s_stats") <- NULL
+    attr(summed_mtx, "phylogenize_16s_audit") <- NULL
 
-    expect_equal(rownames(summed), c("target_b", "target_a",
-                                     "target_c", "target_d"))
+    expect_equal(rownames(summed), c("target_b", "target_a"))
     expect_equal(
-        as.matrix(summed),
+        summed_mtx,
         rbind(
             target_b=c(1, 2, 3),
-            target_a=c(14, 16, 18),
-            target_c=c(7, 8, 9),
-            target_d=c(7, 8, 9)
+            target_a=c(14, 16, 18)
         ),
         ignore_attr="dimnames"
+    )
+    expect_equal(stats$total_asvs, 4)
+    expect_equal(stats$mapped_asvs, 4)
+    expect_equal(stats$retained_asvs, 3)
+    expect_equal(stats$dropped_asvs, 1)
+    expect_equal(stats$retained_species, 2)
+    expect_equal(stats$total_abundance, 78)
+    expect_equal(stats$retained_abundance, 54)
+    expect_equal(nrow(audit), 5)
+    expect_equal(
+        audit$drop_reason[match(3, audit$asv_row)],
+        "ambiguous_assignment"
+    )
+    expect_true(all(!audit$retained[audit$asv_row == 3]))
+    expect_equal(
+        audit$retained_target[audit$asv_row == 4],
+        "target_a"
     )
 })
 

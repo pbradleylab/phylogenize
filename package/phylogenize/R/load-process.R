@@ -805,7 +805,7 @@ change.tree.tax.level <- function(tree, taxon, tax, ..., .opts=NULL) {
 #' @return none
 #' @export
 process.16s <- function(abd.meta, ..., .opts=NULL) {
-    opts <- pz.resolve.options(..., .opts=.opts)
+    opts <- resolve.16s.paths(..., .opts=.opts)
     if (!(all(is.dna(rownames(abd.meta$mtx))))) {
         pz.error(paste0("expected rows to be DNA sequences but found illegal ",
                         "characters"),
@@ -822,12 +822,57 @@ process.16s <- function(abd.meta, ..., .opts=NULL) {
     } else if (opts('which_16s_method')=="jplace") {
         results_16s <- get.appspam.results(..., .opts=opts)
     } else {
-        pz.error("which_16s_method must be vsearch, appspam, or jplace",
-                 .opts=opts)
+        pz.error(paste0(
+            "type_16S=TRUE requires which_16s_method to be explicitly set ",
+            "to vsearch, appspam, or jplace"
+        ), .opts=opts)
     }
     summed.uniq <- sum.nonunique.vsearch(results_16s, abd.meta$mtx, ..., .opts=opts)
+    stats_16s <- attr(summed.uniq, "phylogenize_16s_stats")
+    audit_16s <- attr(summed.uniq, "phylogenize_16s_audit")
+    if (!is.null(audit_16s)) {
+        write.16s.audit(audit_16s, .opts=opts)
+    }
+    if (!is.null(stats_16s)) {
+        pz.message(paste0(
+            "  ..........16S mapping retained ",
+            stats_16s$retained_asvs,
+            " of ",
+            stats_16s$total_asvs,
+            " ASV(s) as ",
+            stats_16s$retained_species,
+            " species row(s)"
+        ), .opts=opts)
+        pz.message(paste0(
+            "  ..........16S mapping retained ",
+            signif(stats_16s$retained_abundance, 4),
+            " of ",
+            signif(stats_16s$total_abundance, 4),
+            " total abundance"
+        ), .opts=opts)
+    }
+    if (nrow(summed.uniq) == 0) {
+        pz.error(paste0(
+            "No 16S ASVs were retained after mapping; check reference ",
+            "coverage, min_frac_16s, and ambiguous assignments"
+        ), .opts=opts)
+    }
     csu <- colSums(summed.uniq)
-    abd.meta$mtx <- summed.uniq[, which(csu > 0), drop=FALSE]
+    keep_samples <- which(csu > 0)
+    if (length(keep_samples) == 0) {
+        pz.error(paste0(
+            "No samples retained nonzero abundance after 16S mapping; ",
+            "check ASV assignments and abundance values"
+        ), .opts=opts)
+    }
+    pz.message(paste0(
+        "  ..........16S mapping retained ",
+        length(keep_samples),
+        " of ",
+        ncol(summed.uniq),
+        " sample(s) with nonzero mapped abundance"
+    ), .opts=opts)
+    abd.meta$mtx <- summed.uniq[, keep_samples, drop=FALSE]
     # don't convert to relative abundance...
     # abd.meta$mtx <- apply(summed.uniq[, which(csu > 0), drop=FALSE],
     #                       2,

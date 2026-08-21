@@ -403,6 +403,88 @@ test_that("BIOM import reads native BIOM with separate metadata", {
     expect_true(is.factor(observed$metadata$env))
 })
 
-test_that("16S mapping test documents optional external reference data", {
-    skip("16S mapping requires external FASTA and vsearch/appspam data not distributed with tests.")
+test_that("tabular 16S import maps ASVs to species with vsearch", {
+    old_opts <- pz.options()
+    on.exit(do.call(pz.options, old_opts), add=TRUE)
+
+    tmp <- tempfile("tabular-16s-")
+    dir.create(tmp)
+    abundance_file <- file.path(tmp, "abundance.tsv")
+    metadata_file <- file.path(tmp, "metadata.tsv")
+    query_file <- file.path(tmp, "input.fna")
+    db_file <- file.path(tmp, "db.fna")
+    hits_file <- file.path(tmp, "hits.tsv")
+    audit_file <- file.path(tmp, "audit.tsv")
+    fake_vsearch <- file.path(tmp, "vsearch")
+
+    writeLines(c(
+        "taxon\ts1\ts2\ts3\ts4",
+        "ACGTACGT\t1\t0\t2\t3",
+        "TTTTCCCC\t0\t4\t1\t5",
+        "GGGGAAAA\t9\t9\t9\t9"
+    ), abundance_file)
+    writeLines(c(
+        "sample\tdataset\tenv",
+        "s1\td1\tA",
+        "s2\td1\tA",
+        "s3\td1\tB",
+        "s4\td1\tB"
+    ), metadata_file)
+    writeLines(c(
+        ">ref;;genus;;species_a",
+        "ACGTACGT",
+        ">ref;;genus;;species_b",
+        "TTTTCCCC"
+    ), db_file)
+    writeLines(c(
+        "#!/bin/sh",
+        "out=''",
+        "while [ \"$#\" -gt 0 ]; do",
+        "    if [ \"$1\" = \"--blast6out\" ]; then",
+        "        shift",
+        "        out=\"$1\"",
+        "    fi",
+        "    shift",
+        "done",
+        "printf 'Row1\\tref;;genus;;species_a\\t99\\nRow2\\tref;;genus;;species_b\\t99\\n' > \"$out\"",
+        "exit 0"
+    ), fake_vsearch)
+    Sys.chmod(fake_vsearch, mode="0755")
+
+    abd.meta <- read.abd.metadata(
+        input_format="tabular",
+        abundance_file=abundance_file,
+        metadata_file=metadata_file,
+        sample_column="sample",
+        dset_column="dataset",
+        env_column="env",
+        which_envir="A",
+        which_phenotype="abundance",
+        categorical=TRUE,
+        type_16S=TRUE,
+        which_16s_method="vsearch",
+        vsearch_dir=fake_vsearch,
+        data_dir=tmp,
+        vsearch_16sfile=basename(db_file),
+        named_asv_file=query_file,
+        vsearch_outfile=hits_file,
+        audit_16s_file=audit_file,
+        min_frac_16s=1,
+        error_to_file=FALSE
+    )
+
+    expect_true(file.exists(query_file))
+    expect_true(file.exists(hits_file))
+    expect_true(file.exists(audit_file))
+    audit <- readr::read_tsv(audit_file, show_col_types=FALSE)
+    expect_equal(
+        audit$drop_reason[audit$asv_sequence == "GGGGAAAA"],
+        "unmapped"
+    )
+    expect_equal(rownames(abd.meta$mtx), c("species_a", "species_b"))
+    expect_equal(colnames(abd.meta$mtx), paste0("s", 1:4))
+    expect_equal(as.numeric(abd.meta$mtx["species_a", ]), c(1, 0, 2, 3))
+    expect_equal(as.numeric(abd.meta$mtx["species_b", ]), c(0, 4, 1, 5))
+    expect_false("GGGGAAAA" %in% rownames(abd.meta$mtx))
+    expect_equal(as.character(abd.meta$metadata$sample), paste0("s", 1:4))
 })
